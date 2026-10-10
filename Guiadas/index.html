@@ -1132,19 +1132,8 @@ function pintarEditor(){
       hl.style.cssText = "font-family:'Chakra Petch',sans-serif;font-size:.8rem;color:var(--teal);margin:8px 0 2px;";
       hl.textContent = nombreLado(lado);
       div.appendChild(hl);
-      const chips = document.createElement("div");
-      chips.className = "chips";
-      (lados[lado] || []).forEach((txt, i)=>{
-        const c = document.createElement("span");
-        c.className = "chip";
-        c.textContent = txt;
-        const x = document.createElement("button");
-        x.textContent = "✕";
-        x.onclick = ()=>{ quitarItem(nv.id, lado, i); };
-        c.appendChild(x);
-        chips.appendChild(c);
-      });
-      div.appendChild(chips);
+      // El campo va PRIMERO y las acciones crecen debajo: asi el campo no se
+      // mueve al agregar y no se pierde de vista en el celular.
       const fila = document.createElement("div");
       fila.className = "filaAdd";
       const inp = document.createElement("input");
@@ -1157,6 +1146,24 @@ function pintarEditor(){
       inp.addEventListener("keydown", (e)=>{ if(e.key === "Enter") agregar(); });
       fila.appendChild(inp); fila.appendChild(btn);
       div.appendChild(fila);
+      // Al reves: la ultima que agregaste queda ARRIBA, pegada al campo. La "✕"
+      // lleva su propio texto y borra por TEXTO, no por posicion: con un indice,
+      // estando la lista al reves, se llevaria otra accion.
+      const chips = document.createElement("div");
+      chips.className = "chips";
+      const arr = lados[lado] || [];
+      for(let k = arr.length - 1; k >= 0; k--){
+        const txt = arr[k];
+        const c = document.createElement("span");
+        c.className = "chip";
+        c.textContent = txt;
+        const x = document.createElement("button");
+        x.textContent = "✕";
+        x.onclick = ()=>{ quitarItem(nv.id, lado, txt); };
+        c.appendChild(x);
+        chips.appendChild(c);
+      }
+      div.appendChild(chips);
     });
     box.appendChild(div);
   });
@@ -1190,9 +1197,16 @@ async function agregarItem(nivel, lado, texto){
   await guardar();
   pintarEditor();
 }
-async function quitarItem(nivel, lado, i){
+// Borra por TEXTO y no por posicion. La lista se dibuja al reves (la mas nueva
+// arriba), asi que un indice borraria la accion equivocada. Como cada accion es
+// unica dentro de su nivel y lado, el texto la identifica sin ambiguedad. Si no
+// aparece, no se borra nada (mejor no hacer nada que borrar lo que no era).
+async function quitarItem(nivel, lado, texto){
   datos[nivel] = normLados(datos[nivel]);
-  datos[nivel][lado].splice(i, 1);
+  const lista = datos[nivel][lado];
+  const idx = lista.indexOf(texto);
+  if(idx < 0) return;
+  lista.splice(idx, 1);
   await guardar();
   pintarEditor();
 }

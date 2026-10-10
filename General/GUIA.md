@@ -1730,6 +1730,25 @@ definicion del pack poner el emoji en `icono`.
   lista sale al menú. En estas pantallas **no** hay botón de regreso arriba a la
   izquierda (se quitaron los "← Jugar"/"← Configurar"). En Encuentros, además,
   las **tomas del editor se precargan** al elegir la actividad desde la lista.
+- **El campo de "Nueva acción" va ARRIBA y la lista al revés (oct-2026):**
+  En `pintarEditor()` de **Encuentros y Guiadas** (mismo patrón), cada bloque de
+  nivel+lado dibujaba `.chips` y luego `.filaAdd`. Como las chips crecen, el
+  campo se iba hacia abajo y en el celular se perdía de vista. Ahora:
+  1. Se agrega **primero** `.filaAdd` y luego `.chips`: el campo no se mueve.
+  2. Las chips se dibujan **al revés** (bucle `for` de `length-1` a `0`), así la
+     **última acción agregada queda arriba**, pegada al campo.
+  El orden guardado **no se toca**: los dos juegos revuelven las acciones al
+  armar la ronda (`mezclar`), así que el orden del arreglo no afecta la partida.
+- **Borrar acciones es por TEXTO, no por posición (oct-2026) — no cambiar:**
+  `quitarItemEd()` (Encuentros) y `quitarItem()` (Guiadas) reciben **el texto** de
+  la acción, no su índice. La "✕" lleva pegado el string y se borra con
+  `indexOf(texto)`; si devuelve `-1`, **no borra nada**. Es obligatorio porque la
+  lista se dibuja al revés: con un índice, la "✕" se llevaría **otra** acción.
+  Es seguro porque ambos juegos **bloquean repetidos** por nivel+lado
+  (`some(t => t.toLowerCase() === texto.toLowerCase())`), así que el texto es
+  único dentro de su lista. El "volver a enfocar" el campo
+  (`querySelectorAll("#nivelesBox .filaAdd input")[li]`) **sigue igual**: mover
+  `.filaAdd` dentro del bloque no cambia el orden entre bloques.
 - **Juego nuevo "Elecciones Peligrosas" (`Opciones/`, oct-2026):** traído de
   "Juego Opciones". Es el "esto o aquello": se muestran 2 opciones y al elegir
   una se elimina (la otra sigue), hasta que a cada quien le queda 1. Los datos
