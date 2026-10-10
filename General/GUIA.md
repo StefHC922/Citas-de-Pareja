@@ -1749,6 +1749,14 @@ definicion del pack poner el emoji en `icono`.
   único dentro de su lista. El "volver a enfocar" el campo
   (`querySelectorAll("#nivelesBox .filaAdd input")[li]`) **sigue igual**: mover
   `.filaAdd` dentro del bloque no cambia el orden entre bloques.
+- **La rejilla de tomas usa los NOMBRES, no "A y B" (oct-2026):** el rótulo de
+  cada nivel decía `" (A y B)"`. Ahora usa `nombreLado("A")` y `nombreLado("B")`,
+  o sea el nombre real de cada usuario de la app (A = administrador, B = pareja;
+  si no hay nombre, cae a "Lado A"/"Lado B" como antes). Son **tres** lugares y
+  hay que cambiarlos juntos: el editor de **Encuentros** (`tomasGridEncEd`), el
+  editor de **Guiadas** (`tomasGrid`) y el modal de MultiActividades de
+  **Guiadas** (`multiTomasGrid`). En Encuentros el modal de MultiActividades
+  (`tomasGridEncuentros`) usa solo el nombre del nivel: ahí no aplica.
 - **Juego nuevo "Elecciones Peligrosas" (`Opciones/`, oct-2026):** traído de
   "Juego Opciones". Es el "esto o aquello": se muestran 2 opciones y al elegir
   una se elimina (la otra sigue), hasta que a cada quien le queda 1. Los datos

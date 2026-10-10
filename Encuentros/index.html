@@ -1236,7 +1236,7 @@ function pintarEditor(){
   const tomas = tomasGuardadasEd(docActualEd || actividadEd);
   NIVELES.forEach(nv=>{
     const lab = document.createElement("label");
-    lab.textContent = nv.nombre + " (A y B)";
+    lab.textContent = nv.nombre + " (" + nombreLado("A") + " y " + nombreLado("B") + ")";
     const inp = document.createElement("input");
     inp.type = "number";
     inp.min = "0"; inp.max = "20";
