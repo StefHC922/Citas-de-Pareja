@@ -362,7 +362,7 @@ import {
 
 import firebaseConfigBase from "../firebase-config.js";
 import { resolverFirebase, resolverTelegram, baseUrl, cargarUsuarios } from "../config.js";
-import { confirmar } from "../confirmar.js";
+import { confirmar, aviso } from "../confirmar.js";
 const firebaseConfig = resolverFirebase(firebaseConfigBase);
 
 const app = initializeApp(firebaseConfig);
@@ -953,7 +953,7 @@ async function eliminarReto(reto, id){
     avisarTelegram("🗑️ " + miIdentidad.nombre + " eliminó el reto: " + (reto.actividad || ""), APP_URL + "Retos/");
   }catch(e){
     console.error(e);
-    alert("Error al eliminar el reto. Revisa tu conexión.");
+    aviso("Error al eliminar el reto. Revisa tu conexión.");
   }
 }
 
@@ -982,7 +982,7 @@ async function marcarCumplida(reto, id){
     avisarTelegram(msg, APP_URL + "Retos/?reto=" + id);
   }catch(e){
     console.error(e);
-    alert("Error al dar el punto. Revisa tu conexión.");
+    aviso("Error al dar el punto. Revisa tu conexión.");
   }finally{
     btnProponerReto.disabled = false;
   }
@@ -997,7 +997,7 @@ async function cobrarRecompensaVisual(reto, id){
     avisarTelegram("💰 " + reto.asignadoA.nombre + " cobró su recompensa: " + (reto.recompensa || "") + " (" + reto.actividad + ")", APP_URL + "Retos/?reto=" + id);
   }catch(e){
     console.error(e);
-    alert("Error al cobrar la recompensa. Revisa tu conexión.");
+    aviso("Error al cobrar la recompensa. Revisa tu conexión.");
   }
 }
 
@@ -1014,7 +1014,7 @@ async function aplicarCastigoVisual(reto, id){
     avisarTelegram("⚠️ Castigo para " + reto.asignadoA.nombre + ": " + (reto.castigo || "") + " (" + reto.actividad + ")", APP_URL + "Retos/?reto=" + id);
   }catch(e){
     console.error(e);
-    alert("Error al aplicar el castigo. Revisa tu conexión.");
+    aviso("Error al aplicar el castigo. Revisa tu conexión.");
   }
 }
 

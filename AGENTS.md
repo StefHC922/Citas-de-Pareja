@@ -66,10 +66,13 @@ probarla no justifica el rato perdido.
 3. No inventar reglas nuevas de Firestore: se reutiliza lo que ya funciona.
 4. No agregar reglas de seguridad que rompan el modo invitado (nada de "solo el
    anfitrion escribe", porque el invitado escribe su identidad).
-4b. **No se usa `confirm()` ni `alert()` del sistema para preguntar o confirmar
-   algo.** Van todos en `confirmar.js`, que es la caja de la app. Los `alert()`
-   de error si se dejan: son fallos, no decisiones.
+4b. **No se usa `confirm()` ni `alert()` del sistema.** Todo pasa por
+   `confirmar.js`: `confirmar()` para preguntar (se espera) y `aviso()` para
+   decir una cosa (no se espera; el `return` va despues).
 5. Cambios minimos, y **verificar antes de decir "listo"**.
+5b. **Un boton que JavaScript tiene que ocultar, nace oculto en el HTML**
+   (`style="display:none"`). Si nace a la vista, hay un rato en que se ve aunque
+   no deba.
 6. Documentar en `General/GUIA.md` lo que se decida o se descubra. Ese archivo
    es la unica memoria del proyecto.
 

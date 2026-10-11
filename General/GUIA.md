@@ -1238,30 +1238,42 @@ Decisiones que hay que respetar si se vuelve a tocar:
   en su aviso de fin. **Recordar subir el `z-index` de su modal** para que el
   aviso quede por encima de los fuegos.
 
-### El cuadro de confirmacion: `confirmar.js` (oct-2026)
+### Los cuadros de la app: `confirmar.js` (oct-2026)
 
 **Ya no hay ni una ventana del sistema en la app.** Antes, cada "¿estas seguro?"
-era un `confirm()` del navegador: la cajita gris, con los botones del sistema,
-que era la **unica** pantalla que no usaba el diseno de la app y se veia ajena al
-resto.
+era un `confirm()` del navegador y cada "no lo puedes hacer" era un `alert()`:
+la cajita gris, con los botones del sistema, que era la **unica** pantalla que no
+usaba el diseno de la app y se veia ajena al resto.
 
-Ahora hay **una sola caja** en `confirmar.js` (raiz), con el mismo molde de los
+Ahora hay **una sola pieza** en `confirmar.js` (raiz), con el mismo molde de los
 modales que ya usaba cada juego: fondo oscurecido, caja con borde turquesa,
 titulo en Chakra Petch, circulito ⚠️ cuando hace falta, boton grande con el
 degradado coral→turquesa y "Cancelar" debajo.
 
-```js
-import { confirmar } from "../confirmar.js";   // o "./confirmar.js" en la raiz
+**Dos funciones, segun lo que se tenga que decir:**
 
+```js
+import { confirmar, aviso } from "../confirmar.js";   // o "./confirmar.js" en la raiz
+
+// 1) PREGUNTA: hay algo que confirmar o cancelar. Devuelve una promesa.
 if(!await confirmar({
   aviso:true,                                  // circulito ⚠️ (por omision false)
   titulo:"¿Eliminar a Ana?",                   // la pregunta, en grande
   texto:"No se puede deshacer.",               // la consecuencia, chica (opcional)
   ok:"Eliminar"                                // el boton de adelante
 })) return;
+
+// 2) AVISO: se dice UNA cosa y no hay nada que cancelar. Un solo boton,
+//    "Entendido", y SIEMPRE con ⚠️. NO se espera: se llama y ya.
+if(!esAnfitrion()){ aviso("Terminar la partida es cosa del anfitrión."); return; }
 ```
 
-Devuelve una promesa: `true` si le dio adelante, `false` si cancelo.
+**Por que `aviso()` no se espera y `confirmar()` si:** con `alert()` el codigo
+se paraba hasta que le dieras OK, y habia que respetarlo (los candados hacen
+`aviso(...); return;`, asi que se cortan igual). Con la caja, `aviso()` pinta y
+el codigo sigue: **los candados siguen funcionando porque el `return` viene
+despues**. **Regla: si cambias un `alert()` por `aviso()`, el `return` (o el
+`return null`) tiene que quedarse donde estaba.**
 
 **Decisiones que hay que respetar si se vuelve a tocar:**
 
@@ -1285,10 +1297,9 @@ Devuelve una promesa: `true` si le dio adelante, `false` si cancelo.
   `display:flex` y le cuelgas hijos "de adorno", revisa que ninguno sea hermano
   de la caja.**
 - **La regla de la casa: no se vuelve a usar `confirm()` ni `alert()` del
-  sistema.** Si toca, es `confirmar()`. (Los `alert()` de error siguen siendo
-  del sistema a proposito: son fallos, no decisiones.)
+  sistema.** Si toca, es `confirmar()` o `aviso()`.
 
-**Los 20 lugares** (se cambiaron todos de golpe):
+**Los 59 lugares** (se cambiaron todos de golpe, en dos rondas):
 
 | Pantalla | Que es |
 |---|---|
@@ -1301,12 +1312,63 @@ Devuelve una promesa: `true` si le dio adelante, `false` si cancelo.
 | `Panel/catalogo.html`, `Panel/oficiales.html`, `Panel/permisos.html` | Eliminar del catalogo · quitar publicador |
 | `Autorizar/` | Revocar · negar · eliminar solicitud |
 
+| | Donde |
+|---|---|
+| **20 preguntas** (`confirmar()`) | las de la tabla de arriba |
+| **39 avisos** (`aviso()`) | `Acompanante/` 1 · `Autorizar/` 8 · `Encuentros/` 11 · `Guiadas/` 4 · `Opciones/` 11 · `Retos/` 4 |
+
+Los 39 avisos son de tres familias: **"eso no lo puedes hacer"** (los 10 de
+*"…es cosa del anfitrión"*), **"te falta algo"** (no hay acciones, la lista esta
+vacia, muy pocas opciones) y **fallos** (*"revisa conexión"*). Los tres van con
+⚠️ y un solo botón.
+
 **Un texto que se acorto (decision de Fredy, oct-2026):** el de **salir de modo
 invitado** era largo y avisaba lo que mas se necesita saber:
 *"¿Salir de invitado y volver a tu base? **Tambien te borro de sus usuarios.**"*
 Quedo solo **"¿Salir de modo invitado?"**. El invitado ya **no ve ahi** que
 tambien se le borra de la lista de quien lo invito. Si alguna vez molesta, se
 devuelve con `texto:`.
+
+### Los botones de anfitrion tienen que NACER ocultos (oct-2026)
+
+**Lo que reporto Fredy:** jugando como la pareja, en `Opciones/` le aparecio el
+boton de "Terminar Partida", lo apachaba y le salia *"Terminar la partida es
+cosa del anfitrión"*. El candado hizo bien su trabajo (no termino nada), pero el
+boton **no debia estar a la vista**.
+
+**Por que se le quedaba pegado:** `btnTerminar`, `btnQR` y `btnTerminarPartida`
+**no traian `style="display:none"` en el HTML**, a diferencia de `btnSaltar` y
+`btnAgregarInv`, que si lo traen. O sea: dependian 100% de que se ejecutara
+`mostrarBotonesAdmin()`... y ese refresco **solo corria al entrar** a la partida.
+Dentro del juego, `pintarPaso()` solo refrescaba `btnSaltar`.
+
+**El arreglo (dos partes, las dos hacen falta):**
+
+1. Los tres botones **nacen con `display:none`**, igual que sus dos hermanos.
+2. `pintarPaso()` ahora llama a `mostrarBotonesAdmin()` **en cada pasada**, al
+   lado de donde ya refrescaba la sala. Va **antes** del corte `if(!jugando)`
+   porque **al pausar los botones NO deben desaparecer**: al reanudar tienen
+   que volver.
+
+**Regla que sale de aqui:** un boton que depende de JavaScript para estar
+oculto **tiene que nacer oculto en el HTML**. Si nace a la vista, hay un
+instante —o una ruta entera— en que se ve aunque no deba. Y si su estado cambia
+durante el juego, el refresco va **en la pasada que ya se corre en cada jugada**,
+no solo al entrar.
+
+**Donde se aplico (los 3 que lo tenian):** `Opciones/` y `Encuentros/`. En los
+dos, los botones de anfitrion (`btnTerminar`, `btnTerminarPartida`, `btnQR`,
+`btnSaltar`) ahora nacen con `display:none`, y `pintarPaso()` llama a
+`mostrarBotonesAdmin()` en cada pasada.
+
+**`Guiadas/` NO lo tenía, y no se tocó (a proposito).** Alli `btnTerminar`
+("Terminar") **no tiene candado**: no hay `esAnfitrion()`, ni `mostrarBotonesAdmin()`,
+ni sala, ni invitados. El `soyHost` que hay es una variable suelta dentro de la
+escucha, que solo decide si se ofrece "Continuar cita anterior?" o "Unirme".
+Es decir, ese boton **debe** verse siempre, para todos: esconderlo al nacer
+habria sido un error. Esto viene de la decision de oct-2026 de no portar a
+Guiadas el bloque de anfitrion/QR/sala. **Si alguna vez se le pone un candado de
+anfitrion ahi, entonces si aplica la regla de nacer oculto.**
 
 ### Pantallas de configuracion: Actividades y Accesorios (oct-2026)
 

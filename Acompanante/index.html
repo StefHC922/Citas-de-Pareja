@@ -112,7 +112,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/fireba
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "../firebase-config.js";
 import { resolverFirebase } from "../config.js";
-import { confirmar } from "../confirmar.js";
+import { confirmar, aviso } from "../confirmar.js";
 
 const CLAVE_LOCAL = "appPareja_quienSoy";
 const CLAVE_LLAVE = "pareja_aiKey";
@@ -379,7 +379,7 @@ async function crearReto(i, btn){
     guardarHist(); pintar();
   }catch(e){
     btn.disabled = false;
-    alert("No se pudo crear. Revisa tu conexión.");
+    aviso("No se pudo crear. Revisa tu conexión.");
   }
 }
 

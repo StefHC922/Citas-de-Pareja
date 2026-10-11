@@ -209,9 +209,9 @@
   <div id="finMsg" style="display:none">¡Gracias por jugar!</div>
   <button class="btnSec" id="btnSaltar" style="display:none">Saltar turno</button>
   <div class="filaBotones">
-    <button class="btnSec" id="btnTerminar">Pausar y Salir</button>
-    <button class="btnSec" id="btnQR">QR Invita a Alguien</button>
-    <button class="btnSec" id="btnTerminarPartida">Terminar Partida</button>
+    <button class="btnSec" id="btnTerminar" style="display:none">Pausar y Salir</button>
+    <button class="btnSec" id="btnQR" style="display:none">QR Invita a Alguien</button>
+    <button class="btnSec" id="btnTerminarPartida" style="display:none">Terminar Partida</button>
     <button class="btnSec" id="btnAgregarInv" style="display:none">➕ Agregar invitado</button>
   </div>
 
@@ -346,7 +346,7 @@ import { verificarCodigo, verificarFirma } from "../taquilla.js";
 import { miProyecto, appTaq, leerLicencias, guardarLicencia, quitarLicencia, tengoAcceso, escucharItem } from "../acceso.js";
 import { publicarInvitacion, retirarInvitacion, pausarInvitacion } from "../invitado.js";
 import { encenderFuegos, apagarFuegos } from "../fuegos.js";
-import { confirmar } from "../confirmar.js";
+import { confirmar, aviso } from "../confirmar.js";
 
 function mezclar(a){
   const x = (a || []).slice();
@@ -584,7 +584,7 @@ async function entrar(){
     // La pareja (no invitado) tambien tiene su pantalla de inicio y puede jugar
     // por su cuenta, como el administrador. El invitado sigue esperando.
     if(!esInvitadoFlag){
-      if(esAdminFlag && modoLocal){ try{ alert("Sin conexión. Se jugará en este celular."); }catch(e){} }
+      if(esAdminFlag && modoLocal){ try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){} }
       await cargarOpciones();
       pintarInicio();
       ver("vistaInicio", false);
@@ -784,7 +784,7 @@ async function pickSesion(choice){
 }
 async function saltarTurno(){
   const d = sesionActual;
-  if(!d || !d.activa || d.hostUid !== miId){ alert("Solo el anfitrión puede saltar un turno."); return; }
+  if(!d || !d.activa || d.hostUid !== miId){ aviso("Solo el anfitrión puede saltar un turno."); return; }
   const deQuien = nombreCabeza((d.orden || [])[d.turno || 0]);
   if(d.orden[d.turno || 0] === miId){ pintarPaso(); return; }
   const saltar = await confirmar({
@@ -931,6 +931,14 @@ function pintarPaso(){
   // La sala se repinta en cada pasada, antes de los cortes: asi se apaga sola
   // cuando ya no se esta jugando.
   try{ pintarSala(); }catch(e){}
+  // Los botones de anfitrion tambien se refrescan aqui, en CADA pasada. Antes
+  // solo se recalculaban al entrar a la partida, asi que si alguien abria la
+  // pantalla de juego sin pasar por ahi, o le cambiaba el turno de anfitrion a
+  // media partida, se le quedaban "Pausar y Salir" y "Terminar Partida" a la
+  // vista aunque no fuera el anfitrion (lo reporto Fredy, oct-2026). Va antes
+  // del corte de "no se esta jugando" porque al pausar los botones NO deben
+  // desaparecer: al reanudar tienen que volver.
+  try{ mostrarBotonesAdmin(); }catch(e){}
   if(!jugando || !d){ return; }
   if(d.terminada){
     cardsRow.style.display = "none";
@@ -1043,9 +1051,9 @@ async function agregarInvitado(id){
   const R = (estado && estado.rondas) || 0;
   const ronda = (estado && estado.ronda) || 1;
   const restantes = R - ronda;   // empieza la ronda siguiente
-  if(restantes < 1){ alert("Ya no quedan rondas para que entre."); return; }
+  if(restantes < 1){ aviso("Ya no quedan rondas para que entre."); return; }
   const fuente = ((cab.lado === "A") ? opciones.A : opciones.B) || [];
-  if(!fuente.length){ alert("La lista de ese lado está vacía."); return; }
+  if(!fuente.length){ aviso("La lista de ese lado está vacía."); return; }
   const deck = mezclar(fuente);
   const pool = [];
   for(let i = 0; i < restantes; i++) pool.push(deck[i % deck.length]);
@@ -1150,13 +1158,13 @@ async function iniciar(modo, ladoSoloElegido, unCelularFlag){
     const f = (c.lado === "A") ? opciones.A : opciones.B;
     return !Array.isArray(f) || f.length < 2;
   });
-  if(faltan.length){ alert("Cada lista necesita al menos 2 opciones. Configúralas en el engrane ⚙️."); return; }
+  if(faltan.length){ aviso("Cada lista necesita al menos 2 opciones. Configúralas en el engrane ⚙️."); return; }
   let maxR = 50;
   new Set(cabezasIn.map(c=>c.lado)).forEach(l=>{ maxR = Math.min(maxR, ((l === "A") ? opciones.A : opciones.B).length); });
-  if(R > maxR){ alert("El número de rondas no puede pasar de " + maxR + " (lo que tiene la lista más corta)."); return; }
+  if(R > maxR){ aviso("El número de rondas no puede pasar de " + maxR + " (lo que tiene la lista más corta)."); return; }
   const quiereCompartido = (modo !== "solo") && !unCelularFlag;
   const compartido = quiereCompartido && !modoLocal;
-  if(quiereCompartido && modoLocal){ try{ alert("Sin conexión. Se jugará en este celular."); }catch(e){} }
+  if(quiereCompartido && modoLocal){ try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){} }
   jugandoCompartido = compartido;
   const pools = repartirOpciones(cabezasIn, opciones, R);
   const d = iniciarEstado(cabezasIn, pools);
@@ -1173,7 +1181,7 @@ async function iniciar(modo, ladoSoloElegido, unCelularFlag){
   sidMostrado = sid;
   if(compartido){
     try{ await setDoc(sesionRef(), nueva); }
-    catch(e){ try{ alert("No se pudo iniciar. Revisa conexión."); }catch(x){} }
+    catch(e){ try{ aviso("No se pudo iniciar. Revisa conexión."); }catch(x){} }
     anunciarInvitacion(sid, cabezasIn, nueva.hostNombre);
   }else{
     try{ await cerrarSesion(); }catch(e){}
@@ -1187,7 +1195,7 @@ async function iniciar(modo, ladoSoloElegido, unCelularFlag){
 
 // ---------- pausar / terminar ----------
 document.getElementById("btnTerminar").onclick = async ()=>{
-  if(!esAnfitrion()){ alert("Pausar la partida es cosa del anfitrión."); return; }
+  if(!esAnfitrion()){ aviso("Pausar la partida es cosa del anfitrión."); return; }
   jugando = false;
   if(jugandoCompartido){
     try{ await setDoc(sesionRef(), { pausada: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
@@ -1197,7 +1205,7 @@ document.getElementById("btnTerminar").onclick = async ()=>{
   entrar();
 };
 document.getElementById("btnTerminarPartida").onclick = async ()=>{
-  if(!esAnfitrion()){ alert("Terminar la partida es cosa del anfitrión."); return; }
+  if(!esAnfitrion()){ aviso("Terminar la partida es cosa del anfitrión."); return; }
   jugando = false;
   if(jugandoCompartido){
     try{ await setDoc(sesionRef(), { activa: false, terminada: true, porAdmin: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
@@ -1257,7 +1265,7 @@ async function continuarPartida(){
 document.getElementById("btnContinuar").onclick = ()=>{ continuarPartida(); };
 document.getElementById("btnNueva").onclick = async ()=>{
   seguirFuera();
-  if(!esAnfitrion()){ alert("Quien inicia o renueva la partida es el anfitrión."); return; }
+  if(!esAnfitrion()){ aviso("Quien inicia o renueva la partida es el anfitrión."); return; }
   try{ await cerrarSesion(); }catch(e){}
   jugando = false;
   if(accionPendiente){ const f = accionPendiente; accionPendiente = null; f(); return; }

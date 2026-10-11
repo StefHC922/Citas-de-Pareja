@@ -5,7 +5,7 @@
 //  pantalla de la app que no usaba el diseno propio: salia la cajita gris del
 //  navegador, con los botones del sistema, y se veia ajena al resto.
 //
-//      import { confirmar } from "../confirmar.js";
+//      import { confirmar, aviso } from "../confirmar.js";
 //
 //      if(!await confirmar({
 //        aviso:true,
@@ -13,6 +13,8 @@
 //        texto:"No se puede deshacer.",
 //        ok:"Eliminar"
 //      })) return;
+//
+//      await aviso("Sin conexión. Se jugará en este celular.");
 //
 //  Que acepta:
 //    aviso  - true: circulito con ⚠️ arriba. Por omision false, para lo que da
@@ -75,7 +77,18 @@ function cerrar(quanto){
 }
 
 export function confirmar(op){
-  const o = op || {};
+  return abrir(op || {}, true);
+}
+
+// Aviso sin pregunta: sale para decir UNA cosa, y no hay nada que cancelar.
+// Adentro siempre va el circulito ⚠️. Acepta un texto suelto o {titulo, texto}.
+export function aviso(op){
+  const o = (typeof op === "string") ? { titulo: op } : (op || {});
+  o.aviso = true;
+  return abrir(o, false);
+}
+
+function abrir(o, conCancelar){
   ponerEstilo();
   // Nunca dos cajas encimadas: la que estaba abierta se cierra como "no".
   cerrar(false);
@@ -113,16 +126,18 @@ export function confirmar(op){
     const si = document.createElement("button");
     si.type = "button";
     si.className = "cfOk";
-    si.textContent = o.ok || "Aceptar";
+    si.textContent = o.ok || (conCancelar ? "Aceptar" : "Entendido");
     si.onclick = ()=>cerrar(true);
     caja.appendChild(si);
 
-    const no = document.createElement("button");
-    no.type = "button";
-    no.className = "cfNo";
-    no.textContent = "Cancelar";
-    no.onclick = ()=>cerrar(false);
-    caja.appendChild(no);
+    if(conCancelar){
+      const no = document.createElement("button");
+      no.type = "button";
+      no.className = "cfNo";
+      no.textContent = "Cancelar";
+      no.onclick = ()=>cerrar(false);
+      caja.appendChild(no);
+    }
 
     c.appendChild(caja);
     document.body.appendChild(c);

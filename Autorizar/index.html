@@ -100,7 +100,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/fireba
 import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { TAQUILLA_FIREBASE, firmarAcceso } from "../taquilla.js";
-import { confirmar } from "../confirmar.js";
+import { confirmar, aviso } from "../confirmar.js";
 
 const CLAVE_PRIV = "taquilla_priv";
 const app = initializeApp(TAQUILLA_FIREBASE);
@@ -124,7 +124,7 @@ document.getElementById("btnGoogle").onclick = async ()=>{
     const res = await signInWithPopup(auth, new GoogleAuthProvider());
     yoEmail = String(res.user.email || "").trim().toLowerCase();
     pintarYo();
-  }catch(e){ alert("No se pudo entrar con Google. Revisa que el dominio esté autorizado."); }
+  }catch(e){ aviso("No se pudo entrar con Google. Revisa que el dominio esté autorizado."); }
 };
 onAuthStateChanged(auth, (u)=>{
   yoEmail = u && u.email ? String(u.email).trim().toLowerCase() : "";
@@ -162,12 +162,12 @@ function diasAVence(dias){
 }
 async function firmar(para, item, dias, email, btn){
   const priv = leerPriv();
-  if(!priv){ alert("Guarda tu llave privada primero."); return null; }
+  if(!priv){ aviso("Guarda tu llave privada primero."); return null; }
   para = (para || "").trim();
   item = (item || "").trim();
   email = String(email || "").trim().toLowerCase();
-  if(!para || !item){ alert("Falta destino o juego."); return null; }
-  if(!email || email.indexOf("@") < 0){ alert("Falta correo válido."); return null; }
+  if(!para || !item){ aviso("Falta destino o juego."); return null; }
+  if(!email || email.indexOf("@") < 0){ aviso("Falta correo válido."); return null; }
   btn.disabled = true;
   try{
     const v = diasAVence(dias);
@@ -267,7 +267,7 @@ function pintarSol(){
         if(!confirmado) return;
         rev.disabled = true;
         try{ await updateDoc(doc(db, "solicitudes", id), { estado: "revocado", revocadoEn: serverTimestamp() }); }
-        catch(e){ alert("No se pudo revocar. Entra con Google y revisa que tu correo esté en la lista de publicadores."); }
+        catch(e){ aviso("No se pudo revocar. Entra con Google y revisa que tu correo esté en la lista de publicadores."); }
         finally{ rev.disabled = false; }
       };
       fila.appendChild(rev);
@@ -294,13 +294,13 @@ function pintarSol(){
             aprobadoEn: serverTimestamp(), pideDesrevocar: false,
             graciaUsada: finito ? false : null
           });
-        }catch(e){ alert("No se pudo aprobar. Entra con Google y revisa que tu correo esté en la lista de publicadores."); }
+        }catch(e){ aviso("No se pudo aprobar. Entra con Google y revisa que tu correo esté en la lista de publicadores."); }
       };
       no.onclick = async ()=>{
         const confirmado = await confirmar({ aviso: true, titulo: "¿Negar este acceso?", ok: "Negar" });
         if(!confirmado) return;
         try{ await updateDoc(doc(db, "solicitudes", id), { estado: "negado" }); }
-        catch(e){ alert("No se pudo negar. Entra con Google y revisa que tu correo esté en la lista de publicadores."); }
+        catch(e){ aviso("No se pudo negar. Entra con Google y revisa que tu correo esté en la lista de publicadores."); }
       };
       fila.appendChild(inp); fila.appendChild(ok); fila.appendChild(no);
       div.appendChild(fila);
@@ -320,7 +320,7 @@ function pintarSol(){
           if(!confirmado) return;
           del.disabled = true;
           try{ await deleteDoc(doc(db, "solicitudes", id)); }
-          catch(e){ alert("No se pudo eliminar. Revisa reglas."); del.disabled = false; }
+          catch(e){ aviso("No se pudo eliminar. Revisa reglas."); del.disabled = false; }
         };
         filaDel.appendChild(del);
         div.appendChild(filaDel);

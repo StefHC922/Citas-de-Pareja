@@ -211,16 +211,19 @@
 
   <!-- El hueco de arriba esta reservado aunque el boton no se vea. -->
   <div class="filaSaltar">
-    <button class="btnSec" id="btnSaltar">Saltar turno</button>
+    <button class="btnSec" id="btnSaltar" style="display:none">Saltar turno</button>
   </div>
 
   <!-- Misma cuadricula 2x2 que Elecciones Peligrosas: QR junto a "Pausar y
        Salir" y "Agregar invitado" junto a "Terminar Partida". Los dos de invitar
-       los enciende y apaga mostrarBotonesAdmin(). -->
+       los enciende y apaga mostrarBotonesAdmin().
+       Los tres de aqui NACEN ocultos: los que dependan de JavaScript para
+       esconderse tienen que arrancar escondidos, o hay un rato en que se ven
+       aunque no deban (el que avisa el anfitrion que no es). -->
   <div class="filaBotones">
-    <button class="btnSec" id="btnTerminar">Pausar y Salir</button>
+    <button class="btnSec" id="btnTerminar" style="display:none">Pausar y Salir</button>
     <button class="btnSec" id="btnQR" style="display:none">QR Invita a Alguien</button>
-    <button class="btnSec" id="btnTerminarPartida">Terminar Partida</button>
+    <button class="btnSec" id="btnTerminarPartida" style="display:none">Terminar Partida</button>
     <button class="btnSec" id="btnAgregarInv" style="display:none">➕ Agregar invitado</button>
   </div>
 
@@ -336,7 +339,7 @@ import { miProyecto, appTaq, leerLicencias, guardarLicencia, quitarLicencia, ten
 import { publicarInvitacion, retirarInvitacion, pausarInvitacion } from "../invitado.js";
 // Fuegos de celebracion al acabar el encuentro (igual que Elecciones Peligrosas).
 import { encenderFuegos, apagarFuegos } from "../fuegos.js";
-import { confirmar } from "../confirmar.js";
+import { confirmar, aviso } from "../confirmar.js";
 
 const NIVELES = [
   { id: "basico", nombre: "Básico" },
@@ -631,7 +634,7 @@ async function entrar(){
     // La pareja (no invitado) tambien tiene su pantalla de inicio y puede jugar
     // por su cuenta, como el administrador. El invitado sigue esperando.
     if(!esInvitadoFlag){
-      if(esAdminFlag && modoLocal){ try{ alert("Sin conexión. Se jugará en este celular."); }catch(e){} }
+      if(esAdminFlag && modoLocal){ try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){} }
       pintarLista("listaActs");
       ver("vistaLista", false);
     }else{
@@ -810,7 +813,7 @@ async function avanzarSesion(){
 async function saltarTurno(){
   const d = sesionActual;
   if(!d || !d.activa || d.hostUid !== miId){
-    alert("Solo el anfitrión puede saltar un turno.");
+    aviso("Solo el anfitrión puede saltar un turno.");
     return;
   }
   const deQuien = nombreCabeza((d.orden || [])[d.turno || 0]);
@@ -1417,7 +1420,7 @@ async function generarYIniciar(activities, tomas){
   const largoCalc = NIVELES.reduce((t, nv)=> t + Math.max(0, tomas[nv.id] || 0), 0);
   const minLargo = cabezasIn.length;
   if(largoCalc < minLargo){
-    alert("El mínimo de acciones por lista es " + minLargo + " (2 + invitados registrados). Súbelo.");
+    aviso("El mínimo de acciones por lista es " + minLargo + " (2 + invitados registrados). Súbelo.");
     return;
   }
   const actsData = [];
@@ -1432,12 +1435,12 @@ async function generarYIniciar(activities, tomas){
   const listasNuevas = generarListas(cabezasIn, actsData, tomas);
   const realLargo = listasNuevas[cabezasIn[0].id] ? listasNuevas[cabezasIn[0].id].length : 0;
   if(!realLargo){
-    alert("Sin acciones en esas actividades. Aliméntalas en Citas Guiadas ⚙️.");
+    aviso("Sin acciones en esas actividades. Aliméntalas en Citas Guiadas ⚙️.");
     return;
   }
   const lens = cabezasIn.map(c=> (listasNuevas[c.id] || []).length);
   if(Math.max.apply(null, lens) !== Math.min.apply(null, lens)){
-    alert("No se pudieron armar listas parejas: falta surtido de un lado. Prueba otra actividad.");
+    aviso("No se pudieron armar listas parejas: falta surtido de un lado. Prueba otra actividad.");
     return;
   }
   const sid = String(Date.now()) + Math.random().toString(36).slice(2, 6);
@@ -1466,7 +1469,7 @@ async function generarYIniciar(activities, tomas){
   // Compartido solo si de verdad hay internet; sin conexión cae a un celular.
   const compartido = quiereCompartido && !modoLocal;
   if(quiereCompartido && modoLocal){
-    try{ alert("Sin conexión. Se jugará en este celular."); }catch(e){}
+    try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){}
   }
   jugandoCompartido = compartido;
   cargarEnMemoria(nueva);
@@ -1476,7 +1479,7 @@ async function generarYIniciar(activities, tomas){
   try{ multiRefrescar(); }catch(e){}
   if(compartido){
     try{ await setDoc(sesionRef(), nueva); }
-    catch(e){ try{ alert("No se pudo iniciar. Revisa conexión."); }catch(x){} }
+    catch(e){ try{ aviso("No se pudo iniciar. Revisa conexión."); }catch(x){} }
     // Anunciar la partida para que la sala de espera avise a los invitados.
     anunciarInvitacion(sid, cabezasIn, nueva.hostNombre);
   }else{
@@ -1569,6 +1572,14 @@ function pintarPaso(){
   // La sala se repinta en cada pasada, antes de los cortes: asi se apaga sola
   // cuando ya no se esta jugando.
   try{ pintarSala(); }catch(e){}
+  // Los botones de anfitrion tambien se refrescan aqui, en CADA pasada. Antes
+  // solo se recalculaban al entrar a la partida, asi que si alguien abria la
+  // pantalla de juego sin pasar por ahi, o le cambiaba el turno de anfitrion a
+  // media partida, se le quedaban "Pausar y Salir" y "Terminar Partida" a la
+  // vista aunque no fuera el anfitrion. Va antes del corte de "no se esta
+  // jugando" porque al pausar los botones NO deben desaparecer: al reanudar
+  // tienen que volver.
+  try{ mostrarBotonesAdmin(); }catch(e){}
   if(!jugando || ronda >= total || !orden.length){
     elAct.textContent = "";
     tag.style.display = "none";
@@ -1697,7 +1708,7 @@ async function agregarInvitado(id){
     const cabs = (cabezas || []).some(c=> c.id === nuevo.id) ? cabezas : (cabezas || []).concat([nuevo]);
     anunciarInvitacion(sidMostrado, cabs, nombreAdmin());
   }catch(e){
-    try{ alert("No se pudo agregar. Revisa tu conexión."); }catch(x){}
+    try{ aviso("No se pudo agregar. Revisa tu conexión."); }catch(x){}
   }
 }
 document.getElementById("btnAgregarInv").onclick = ()=>{ abrirAgregar(); };
@@ -1729,7 +1740,7 @@ document.getElementById("btnQRNo").onclick = ()=>{ cerrarModal("modalQR"); };
 
 document.getElementById("btnTerminar").onclick = async ()=>{
   // PAUSA la partida (se puede retomar). Solo el anfitrion.
-  if(!esAnfitrion()){ alert("Pausar la partida es cosa del anfitrión."); return; }
+  if(!esAnfitrion()){ aviso("Pausar la partida es cosa del anfitrión."); return; }
   jugando = false;
   if(jugandoCompartido){
     try{ await setDoc(sesionRef(), { pausada: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
@@ -1744,7 +1755,7 @@ document.getElementById("btnTerminar").onclick = async ()=>{
 document.getElementById("btnTerminarPartida").onclick = async ()=>{
   // TERMINA la partida de forma definitiva (no se retoma). Solo el anfitrion.
   // A los invitados les llega el aviso y, al aceptar, salen del modo invitado.
-  if(!esAnfitrion()){ alert("Terminar la partida es cosa del anfitrión."); return; }
+  if(!esAnfitrion()){ aviso("Terminar la partida es cosa del anfitrión."); return; }
   jugando = false;
   if(jugandoCompartido){
     try{ await setDoc(sesionRef(), { activa: false, terminada: true, porAdmin: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
@@ -1787,7 +1798,7 @@ document.getElementById("btnContinuar").onclick = async ()=>{
 };
 document.getElementById("btnNueva").onclick = async ()=>{
   seguirFuera();
-  if(!esAnfitrion()){ alert("Quien inicia o renueva el encuentro es el anfitrión."); return; }
+  if(!esAnfitrion()){ aviso("Quien inicia o renueva el encuentro es el anfitrión."); return; }
   try{ await cerrarSesion(); }catch(e){}
   jugando = false;
   if(pendienteEsMulti){
