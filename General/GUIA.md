@@ -1489,6 +1489,55 @@ sea a la hora en que le diste "aceptar". Ahora usan `finDeUltimoDia()`, igual qu
 los retos propuestos a mano. **Esa función se movió a `config.js`** porque ahora la
 necesitan los dos lados; no debe copiarse en cada archivo.
 
+### Descartar un reto de la IA, y que los retos dejen de ser aburridos (oct-2026)
+
+**1. Faltaba el "no".** El reto que propone la IA salía con **un solo botón**,
+"➕ Crear este reto (N pts)". No había forma de decir que no, y el botón **se
+quedaba ahí para siempre** en los mensajes viejos: uno lo apachaba sin querer y
+se creaba un reto que nadie había pedido.
+
+Ahora hay **fila de dos**: "➕ Crear este reto" y **"Descartar"**. Descartar **no
+borra nada de la base y no crea nada**: solo marca `retoDescartado` en el mensaje
+de ese chat, esconde los dos botones y pone *"Reto descartado"* en su lugar. La
+marca se guarda con el historial, así que sigue descartado aunque recargues.
+
+**2. Los retos salían demasiado típicos ("tomar café").** La instrucción decía
+"atrevido", "picarón", "coqueteo intenso": **adjetivos**, y un modelo no obedece
+adjetivos. Se cambió por **ejemplos con contraste**, que es lo que sí funciona:
+
+- **ESTO SÍ es reto tuyo:** "dile al oído algo que nunca le hayas dicho", "que se
+  vista pensando en ti y tú no dices nada hasta la cena", "déjale una nota a
+  medio día que solo tenga sentido cuando llegue a casa"…
+- **ESTO NO es reto tuyo y NUNCA lo propones:** "tomar café", "caminar por el
+  parque", "salir a cenar", "ver una película", "hacer ejercicio", "relajarse".
+
+Y la definición de arriba: *un reto es una acción concreta que obliga a alguien a
+**exponerse** un poco. Nada de planes lindos.*
+
+**3. Los ejemplos iban dirigidos a la pareja, no al abstracto (oct-2026).** Los
+primeros ejemplos eran retos "de hacer algo" (ir a un lugar, poner música) y
+salían neutros. Fredy pidió que el registro fuera **dirigido a la pareja y de
+doble sentido**. Así quedó:
+
+> un reto tuyo es una acción concreta, con nombre y apellido, **que le haces A TU
+> PAREJA** y que lo obliga a EXPONERSE un poco. Tu especialidad es el **DOBLE
+> SENTIDO**: insinúas, insinúas fuerte, pero nunca cuentas qué va a pasar. Un
+> reto bueno **se entiende con la cabeza y se siente con otra cosa**.
+
+Ejemplos: *"acaríciala por donde sabes que le gusta, y por donde a ti más te
+gusta, sin decir una sola palabra"*, *"quítale la ropa despacio, como si
+tuvieras todo el tiempo del mundo, y deja que se relaje"*, *"masaje en la espalda
+que poco a poco se vaya convirtiendo en otra cosa; cuando llegue, no explicas
+nada"*.
+
+**El límite sigue siendo el mismo:** doble sentido y sugerencia, **nunca
+describir el acto**. Esa línea está aparte en la instrucción y no se tocó.
+
+**Ojo: esto es dirección, no un botón.** No se puede garantizar qué genera el
+modelo. Si aun así salen retos planos, el siguiente escalón es un filtro en
+`extraerReto()` (una lista de palabras prohibidas que avise "ese reto no sirve" y
+pida otro), y eso ya sería decisión de producto.
+
 ### El nombre de la IA en el campo de escritura (oct-2026)
 
 El campo del chat tenía el texto fijo *"Escríbele a Chispa..."*, aunque el nombre
