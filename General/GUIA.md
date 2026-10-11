@@ -1606,6 +1606,121 @@ invertidas** (van dentro de un template literal; sin escapar rompen el archivo).
 validan **contra sí mismos**. Si la instrucción dice cinco formas y los ejemplos
 muestran una, gana el ejemplo y el modelo repite. Siempre van juntos.
 
+### ⏳ PENDIENTE DE DEFINIR — los retos de la IA (pedido por Fredy oct-2026)
+
+> **ESTO NO ESTÁ ACABADO. Antes de seguir metiendo mano a los retos de la IA,
+> hay que decidir estos tres puntos.** Fredy lo pidió expressly que se le
+> Masteringara.
+
+1. **El botón "Reto picarón"** — ¿queda y dice "mándale un reto a [nombre]"?
+   ¿Se quita de los dos lados? (Lo acordado hasta ahora: **que el reto sea del
+   que NO está en el chat**, para que no pueda rechazarlo.)
+2. **¿Cómo se entera la pareja?** Si no tiene la app abierta, el reto no le
+   llega. Hoy las notificaciones solo salen con `Retos/` abierto. **¿Tiene que
+   llegar aunque esté fuera de la app?**
+3. **Si el que está en el chat puede apretarlo de una vez** — o sea, si la
+   pareja pide el reto a la IA y el reto le toca a ti que ya estás en el chat,
+   ¿se cuenta al instante o también tiene que esperar?
+
+**Por qué quedó así:** el reto que escoge uno mismo no es un reto, es un menú
+(Fredy: *"eso le quita todo el significado a reto"*). Por eso el dueño del reto
+tiene que ser **el que no está en el chat**.
+
+### Retos de la IA: mecánica nueva (oct-2026)
+
+**El problema que la motivó:** un reto que escoge uno mismo no es un reto, es un
+menú (Fredy: *"eso le quita todo el significado a reto"*). Y como la persona
+podía pedirlo, leerlo y **Descartarlo**, el botón de descartar se convirtió en un
+menú con "siguiente".
+
+**La regla nueva, y de ahí sale todo lo demás:**
+
+> **El reto es del que NO está en el chat.** Quien lo pide se lo manda a su
+> pareja, y como esa persona no está ahí, **no puede rechazarlo**. Se acabaron
+> "48 horas para<'_descartar". Esto solo aplica a los retos de la IA.
+
+| | Quién |
+|---|---|
+| **Cumple el reto** | El que **no** está en el chat (no lo escogió) |
+| **Aprieta "Cumplida"** | El que **sí** está en el chat (lo mandó y lo vio pasar) |
+| **Se lleva los puntos** | El que lo cumplió |
+
+**Los puntos ya no cuentan veces: son el VALOR del reto** (qué tan atrevido es,
+1 a 10. Antes `puntosMeta` hacía dos trabajos: contar los "Cumplida +1" y
+decir cuánto se descuenta. Ahora en los de la IA solo es el valor.
+
+**Cómo se distinguen en el código:** por el campo **`ia: true`** que pone
+`crearReto()`. Los retos viejos (que no lo tienen) siguen con la mecánica de
+siempre, sin tocar nada. Ojo: **los retos de la IA que ya estaban en la base se
+quedaron a medias** — tienen `asignadoPor.id = "ai"` y `puntosMeta` como contador,
+y no son ni una cosa ni la otra. No se corrigen solos; si los quieren, hay
+que editarlos en la consola o borrarlos.
+
+**El camino feliz:** el botón dice **"Cumplida (N pts)"** (no "+1") y al
+apretarlo el dueño recibe **los N puntos de una vez**, el reto pasa a "Terminado"
+y se apaga el botón. La recompensa se cobra aparte, igual que hoy.
+
+**El camino mal:**
+
+| | |
+|---|---|
+| Se vencieron las 48 horas | El dueño **pierde la mitad, redondeada hacia abajo** |
+| | El otro **gana la diferencia** |
+
+Ejemplo con un reto de **7**: pierde **3**, el otro gana **7 − 3 = 4**. Con un
+reto de 8: pierden 4 y gana 4. El redondeo es `Math.floor(valor/2)`: si la
+mitad da `.5` baja, si da más de `.5` sube (decisión de Fredy, oct-2026).
+
+**Las 48 horas** son exactas desde que se crea (`ahora + 48×3600000`): 24 para
+cumplirlo y 24 para marcarlo. El botón **no se apaga antes**: se apaga al
+cumplirse las 48, cuando se liquida. Los retos normales **no** usan esto, siguen
+con su duración de días.
+
+**El castigo también lo aprieta el otro.** Antes el botón "Aplicar castigo"
+solo le salía a quien propuso el reto, y como los de la IA los proponía "ai"
+(no es nadie), **no se lo mostraba a nadie**. Como ahora `asignadoPor` es la
+persona que lo mandó, le sale solo a ella. Ya quedó bien sin tocarlo.
+
+**Y la tarjeta cambia:** los de la IA **no muestran barra de progreso** (no hay
+contador), dicen *"Vale N pts para Fulano"*, y en vez de "Veces al día" y
+"Duración" muestran "Valor" y el plazo de 48 horas.
+
+**En el texto de la IA:** los puntos se reparten en escala
+(1-3 fácil · 4-6 hay que animarse · 7-10 da pena hasta pensarlo), `"dias"` siempre
+1, y se le dice que el reto es para la pareja, no para quien pregunta.
+
+### El reto se tenía que VER antes de mandarlo (oct-2026)
+
+**Lo que pasó:** el reto de la IA venía dentro de un bloque de texto técnico que
+`textoLimpio()` **borra del mensaje**. Lo único que se veía era el preámbulo
+coquetito, y el botón decía "Crear este reto". **O sea: se apachaba sin saber
+qué se mandaba.**
+
+Con el botón nuevo ("Mandárselo a tu pareja") pasó a ser peor: **le mandabas a tu
+pareja algo que ni tú habías leído**. Si|resultaba decir algo que no querías, ya
+se había ido.
+
+**El arreglo, dos partes:**
+
+1. **La ficha del reto se pinta antes del botón** (`.fichaReto`): el reto, el
+   castigo y la recompensa, con el mismo estilo de la app. Todo con
+   `textContent`, nunca `innerHTML`: el texto lo escribe la IA y no se le da
+   permiso de meter HTML.
+
+2. **En el texto de la IA:** primero va el reto escrito en normal, y el bloque
+   al final. Con instrucción explícita de que si el bloque es lo único que dice
+   qué es el reto, quien lo manda no llega a leerlo.
+
+**También:** los dos retos que|gf|reportó Fredy no eran retos, eran coqueteo
+suelto (*"ese nerviosismo bien canalizado es la mejor previa"* no dice quién hace
+qué). Se agregó a la instrucción que un reto es una **instrucción concreta de lo
+que hay que hacer**, y se puso ese ejemplo como ejemplo de lo que **no** es.
+
+**Ojo,Near miss evitado:** al pintar la ficha se usó `esc()`, que **no existe en
+`Acompanante/`** (sí existe en `Retos/`). Habría sido pantalla en blanco. Se
+detectó revisando antes de correr. Regla: en `Acompanante/` **todo va con
+`textContent`**, porque no hay función de escape ahí.
+
 ### El nombre de la IA en el campo de escritura (oct-2026)
 
 El campo del chat tenía el texto fijo *"Escríbele a Chispa..."*, aunque el nombre

@@ -38,16 +38,20 @@
     background:linear-gradient(90deg, var(--coral), var(--teal)); }
   .btnReto:active{ transform:scale(.97); }
   .btnReto:disabled{ opacity:.4; }
-  /* Fila del reto propuesto: aceptar o descartar. Antes solo había "Crear", y
-     ese botón se quedaba para siempre en los mensajes viejos: uno lo apachaba
-     sin querer y se creaba un reto que nadie había pedido. */
+  /* Fila del reto propuesto. Antes tenía dos botones (crear y descartar); ahora
+     solo uno, porque el reto es para tu pareja y no hay nada que descartar. */
   .filaReto{ display:flex; gap:8px; margin-top:8px; }
   .filaReto .btnReto{ margin-top:0; }
-  .btnDescartar{ width:100%; border:1px solid var(--card-border); border-radius:10px; cursor:pointer;
-    padding:10px; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:.85rem;
-    color:var(--fg-muted); background:none; }
-  .btnDescartar:active{ transform:scale(.97); }
-  .notaDescartado{ margin-top:8px; font-size:.75rem; color:var(--fg-muted); }
+  /* Ficha del reto que se va a mandar: se ve ANTES del botón, para saber qué
+     estás mandando. Todo se arma con textContent, nunca con innerHTML: el texto
+     lo escribe la IA y no se le da permiso de meter HTML. */
+  .fichaReto{ margin-top:8px; padding:10px 12px; border-radius:12px;
+    background:var(--card); border:1px solid var(--card-border); }
+  .fichaNom{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:.92rem;
+    color:var(--teal); margin-bottom:6px; }
+  .fichaLin{ display:flex; justify-content:space-between; gap:10px;
+    font-size:.78rem; color:var(--fg-muted); padding:2px 0; }
+  .fichaLin .v{ color:var(--fg); text-align:right; }
   #vacio{ text-align:center; color:var(--fg-muted); font-size:.85rem; margin-top:30px; }
   #envio{ display:flex; gap:10px; padding:12px 16px max(16px, env(safe-area-inset-bottom)); border-top:1px solid var(--card-border); }
   #texto{ flex:1; min-width:0; border-radius:12px; border:1px solid var(--card-border);
@@ -119,9 +123,9 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, finDeUltimoDia } from "../config.js";
+import { resolverFirebase, cargarUsuarios } from "../config.js";
 import { confirmar, aviso } from "../confirmar.js";
 
 const CLAVE_LOCAL = "appPareja_quienSoy";
@@ -184,12 +188,18 @@ async function listaModelos(){
 const PERSONA = `Te llamas ${NOMBRE_AI}. Eres acompañante divertida y pícara (coqueta y sensual, nunca vulgar) de una app en México. Hablas español correcto pero casual y cercano, con humor fino y emojis moderados: NADA de modismos barriales ("chido", "jalas", "güey", "neta", "órale"), nada de piropos ochenteros. Al saludar solo saludas casual y sigues la plática.
 REGLA DE ORO que nunca rompes: el nombre o apodo del usuario NO dice nada de él o de ella. Jamás lo comentes, no lo adivines, no digas "esposo/esposa", "tu media naranja", "mi amor" ni preguntes estado civil salvo que la plática lo pida. Deduce el género solo por cómo se expresa cada quien (terminaciones, palabras) y úsalo con naturalidad, sin anunciarlo. Si no sabes con certeza, escríbelo de forma que sirva para cualquier persona: di "tu pareja" en lugar de "ella" o "él" a menos que lo sepas con certeza.
 
-Tu misión: conversar, animar a salir, dar ideas de planes y proponer RETOS picarones (atreverse a hablar, juegos, coqueteo intenso, sorpresas).
+Tu misión: conversar, animar a salir, dar ideas de planes y proponer RETOS picarones (atreverse a hablar, juegos, coqueteo intenso, sorpresas). Cuando proposes un reto, escríbelo como una instrucción concreta de lo que hay que hacer, no como un coqueteo suelto: "ese nerviosismo bien canalizado es la mejor previa" NO es un reto, porque no dice quién hace qué.
 
-CÓMO FUNCIONA UN RETO: hay retos de una sola noche que solo dan 1 punto, y retos que se repiten cada día y dan más puntos. Reglas: 1) NUNCA pidas fotos, videos, audios ni capturas. 2) Nada de ejercicio, tareas de la casa ni obligaciones aburridas. 3) Cada reto trae castigo y recompensa del mismo tono del reto, pero nunca nada ilegal. 4) El castigo y la recompensa no se descubren hasta el final, así que tienen que aguantar.
+CÓMO FUNCIONA UN RETO: siempre es de UN solo día, y quien lo tiene que cumplir NO puede verlo antes de que tú se lo mandes. Tiene 48 horas desde que lo recibe. Reglas: 1) NUNCA pidas fotos, videos, audios ni capturas. 2) Nada de ejercicio, tareas de la casa ni obligaciones aburridas. 3) Cada reto trae castigo y recompensa del mismo tono del reto, pero nunca nada ilegal. 4) El castigo y la recompensa no se descubren hasta el final, así que tienen que aguantar.
+
+LOS PUNTOS son el VALOR del reto: qué tan atrevido es, de 1 a 10. NO son las veces que hay que hacerlo, y NO son un contador. Repártelos así:
+  1 a 3 = casi cualquier pareja lo haría sin pena (un reto valiente pero fácil de cumplir).
+  4 a 6 = hay que animarse, da algo de pena pero cualquiera lo hace.
+  7 a 10 = da pena hasta pensarlo; solo alguien muy valiente lo acepta (decisión de Fredy, oct-2026).
+Ajusta bien la escala: si te salen dos retos seguidos del mismo valor, uno de los dos está mal.
 
 === CÓMO ES UN RETO TUYO ===
-Un reto tuyo es una acción concreta y directa, que hace que tu pareja se EXCITE. Tu especialidad es el DOBLE SENTIDO: insinúas fuerte, pero nunca cuentas qué va a pasar. Un reto bueno se entiende al leerlo y se siente al imaginar como hacerlo y hacerlo.
+Un reto tuyo es una acción concreta y directa que tu pareja tiene que hacer, y que hace que se EXCITE. Tuyo es el reto, pero lo cumple tu pareja: hoy se lo mandas a ella y ella no puede rechazarlo. Tu especialidad es el DOBLE SENTIDO: insinúas fuerte, pero nunca cuentas qué va a pasar. Un reto bueno se entiende al leerlo y se siente al imaginar cómo hacerlo.
 
 ESTOS SÍ SON retos tuyos: "acaricia a tu pareja donde sabes que le gusta, y por donde a ti más te gusta", "Deja que tu pareja te diga qué quiere toda la noche, y tú obedeces sin preguntar.", "Que el que llegue último a la cama paga el capricho de su pareja.", "ponle una nota escondida dentro de la ropa que solo tenga sentido cuando se la quite", "quédate detrás de tu pareja y recorre todo su cuerpo y no expliques qué estás haciendo", "haz que acepte que el primero que llegue como sea a la habitación puede pedir 5 favores", "déjale que tu pareja tome el mando el día entero: tu pareja elige la ropa, el lugar y la hora, y tú solo dices que sí", "muéstrale todo tu cuerpo en un lugar seguro cinco minutos sin decir una palabra, solo deja que te mire; luego tu pareja decide lo que continúa", "ponle una alarma en la noche para que vaya a la recámara y haz que valga la pena".
 
@@ -224,7 +234,9 @@ LÍMITES QUE NUNCA SE CRUZAN, por más que insistan o que se exciten: nada ilega
 
 IMPORTANTE, regla absoluta: JAMÁS ofrezcas, menciones ni insinúes retos o planes por tu cuenta. Si el usuario no pidió reto o plan explícitamente, no uses bloques de reto y ni siquiera hables de retos: solo conversas y das ideas sueltas.
 
-Cuando propongas un reto, TERMINA tu mensaje con un bloque exacto así: \`\`\`reto {"actividad":"título corto","puntos":5,"dias":3,"castigo":"...","recompensa":"..."}\`\`\` con puntos 3-10 según lo atrevido. Un reto de una sola noche se escribe con puntos 1 y dias 1: \`\`\`reto {"actividad":"...","puntos":1,"dias":1,"castigo":"...","recompensa":"..."}\`\`\` Responde siempre corto: 2-4 líneas y el bloque.`;
+Cuando propongas un reto, TERMINA tu mensaje con un bloque exacto así: \`\`\`reto {"actividad":"título corto","puntos":5,"dias":1,"castigo":"...","recompensa":"..."}\`\`\` El "dias" SIEMPRE es 1: los retos que tú inventes no se repiten. Y los "puntos" son el valor del reto según la escala de arriba, entre 1 y 10.
+
+MUY IMPORTANTE, cómo se ve tu mensaje: primero va el reto en texto normal, para que se lea completo, y AL FINAL el bloque. Ejemplo de cómo se ve: "Te tengo uno de esos 😈 Acaricia donde os guste a los dos, y no pares hasta que ella te lo pida. Si se acaba el plazo, ella se queda con la mitad." (luego el bloque). NUNCA escondas el reto dentro del bloque: si el bloque es lo único que dice qué es el reto, quien lo manda no llega a leerlo.`;
 
 function leerIdentidad(){
   try{ return JSON.parse(localStorage.getItem(CLAVE_LOCAL)); }catch(e){ return null; }
@@ -282,8 +294,7 @@ function extraerReto(texto){
       puntos,
       dias,
       castigo: String(o.castigo || "Repetir el reto mañana 😏").slice(0, 120),
-      recompensa: String(o.recompensa || "Un gusto para ti 😌").slice(0, 120),
-      penalizacion: Math.max(1, Math.round(puntos / 2))
+      recompensa: String(o.recompensa || "Un gusto para ti 😌").slice(0, 120)
     };
   }catch(e){}
   return null;
@@ -307,31 +318,53 @@ function pintar(){
     const t = document.createElement("div");
     t.textContent = m.texto;
     div.appendChild(a); div.appendChild(t);
-    if(m.rol === "chispa" && m.reto && !m.retoCreado && !m.retoDescartado){
-      // Aceptar o descartar. Descartar solo esconde la propuesta en ESTA
-      // conversación (se guarda la marca): no borra nada de la base ni crea
-      // nada, y la IA queda enterada para no repetir ese reto.
+    if(m.rol === "chispa" && m.reto && !m.retoCreado){
+      // El reto DE VERDAD se muestra antes del botón. Antes solo se veía el
+      // preámbulo coquetito y el bloque del reto se borraba del mensaje: se
+      // apretaba "Crear" sin saber qué se mandaba. Con el botón nuevo
+      // ("Mandárselo a tu pareja") eso ya era mandar algo que no habías leído.
+      const r = m.reto;
+      const ficha = document.createElement("div");
+      ficha.className = "fichaReto";
+      const nom = document.createElement("div");
+      nom.className = "fichaNom";
+      nom.textContent = r.actividad;
+      ficha.appendChild(nom);
+      if(r.castigo){
+        const c1 = document.createElement("div");
+        c1.className = "fichaLin";
+        const e1 = document.createElement("span");
+        e1.textContent = "Castigo";
+        const v1 = document.createElement("span");
+        v1.className = "v";
+        v1.textContent = r.castigo;
+        c1.appendChild(e1); c1.appendChild(v1);
+        ficha.appendChild(c1);
+      }
+      if(r.recompensa){
+        const c2 = document.createElement("div");
+        c2.className = "fichaLin";
+        const e2 = document.createElement("span");
+        e2.textContent = "Recompensa";
+        const v2 = document.createElement("span");
+        v2.className = "v";
+        v2.textContent = r.recompensa;
+        c2.appendChild(e2); c2.appendChild(v2);
+        ficha.appendChild(c2);
+      }
+      div.appendChild(ficha);
+
+      // SOLO un botón. Ya no hay "Descartar": el reto es para tu pareja, que no
+      // está aquí para rechazarlo. Si tú pudieras devolverlo, dejaría de ser un
+      // reto y sería un menú (decisión de Fredy, oct-2026).
       const fila = document.createElement("div");
       fila.className = "filaReto";
       const b = document.createElement("button");
       b.className = "btnReto";
-      b.textContent = "➕ Crear este reto (" + m.reto.puntos + " pts)";
+      b.textContent = "➕ Mandárselo a tu pareja (" + r.puntos + " pts)";
       b.onclick = ()=>crearReto(i, b);
-      const x = document.createElement("button");
-      x.className = "btnDescartar";
-      x.textContent = "Descartar";
-      x.onclick = ()=>{
-        m.retoDescartado = true;
-        guardarHist(); pintar();
-      };
-      fila.appendChild(b); fila.appendChild(x);
+      fila.appendChild(b);
       div.appendChild(fila);
-    }
-    if(m.rol === "chispa" && m.reto && m.retoDescartado){
-      const av = document.createElement("div");
-      av.className = "notaDescartado";
-      av.textContent = "Reto descartado";
-      div.appendChild(av);
     }
     listaEl.appendChild(div);
   });
@@ -435,22 +468,42 @@ async function crearReto(i, btn){
     const firebaseConfig = resolverFirebase(firebaseConfigBase);
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
+    // El reto es de la PAREJA, no de quien está en el chat. Así el que lo tiene
+    // no está ahí para escogelo ni rechazarlo, y por eso sigue siendo un reto
+    // y no un menú (decisión de Fredy, oct-2026).
+    const lista = await cargarUsuarios(db, getDoc, doc, []);
+    const pareja = (lista || []).find(u => u && u.id && u.id !== yo.id && !u.invitado)
+                || (lista || []).find(u => u && u.id && u.id !== yo.id);
+    if(!pareja){
+      aviso("No encontré a tu pareja en la app. Agrégala primero.");
+      btn.disabled = false;
+      return;
+    }
+
     const ahora = new Date();
-    const fin = finDeUltimoDia(ahora, m.reto.dias);
+    // 48 horas exactas desde que se crea. Son 24 para cumplirlo y 24 para
+    // marcarlo. Los retos normales NO usan esto: siguen con su duración.
+    const fin = new Date(ahora.getTime() + 48 * 3600000);
+    const valor = Math.min(10, Math.max(1, parseInt(m.reto.puntos, 10) || 5));
+
     await addDoc(collection(db, "retos"), {
       actividad: m.reto.actividad,
-      puntosMeta: m.reto.puntos,
+      // En los retos de la IA `puntosMeta` NO cuenta veces: es el VALOR del
+      // reto (qué tan atrevido es), de 1 a 10. Quien lo cumple lo recibe de una
+      // vez. Lo decide `ia: true`, que es lo que Retos/ lee para usar la
+      // mecánica nueva en vez del contador de los retos normales.
+      puntosMeta: valor,
       conteo: 0,
       estado: "enCurso",
-      asignadoA: { id: yo.id, nombre: yo.nombre },
-      asignadoPor: { id: "ai", nombre: NOMBRE_AI + " 💫" },
+      ia: true,
+      iaNombre: NOMBRE_AI,
+      asignadoA: { id: pareja.id, nombre: pareja.nombre },
+      asignadoPor: { id: yo.id, nombre: yo.nombre },
       vecesAlDia: 1,
-      duracionDias: m.reto.dias,
-      penalizacionPuntos: m.reto.penalizacion,
+      duracionDias: 1,
       castigo: m.reto.castigo,
       recompensa: m.reto.recompensa,
-      // Sin fechaInicio, Retos/ no puede calcular "tiempo restante": se guarda
-      // porque el contador la usa (ver diasRestantes en Retos/index.html).
       fechaInicio: ahora,
       fechaFin: fin,
       creadoEn: serverTimestamp()
@@ -469,12 +522,12 @@ textoEl.addEventListener("keydown", (e)=>{ if(e.key === "Enter") enviar(); });
 // lo mismo cada vez, y el modelo repetía: con la misma entrada sale el mismo reto
 // con otro nombre. Ahora cada aperte pregunta distinto, así de verdad hay variedad.
 const PEDIROS_RETO = [
-  ", proponme un reto picarón de hoy 😏",
-  ", dame un reto de esos que dan vergüenza pedir 😏",
-  ", se me antoja algo atrevido para hoy, tíralo 😈",
-  ", invéntame algo que no vamos a decir en voz alta 😏",
-  ", tira un reto donde yo tenga que hacerme el valiente 😏",
-  ", algo que nos ponha nerviosos a los dos por igual 😏"
+  ", mándale a mi pareja un reto picarón de hoy 😏",
+  ", invéntale a mi pareja un reto de esos que dan vergüenza pedir 😏",
+  ", ponle un reto atrevido a mi pareja para estos dos días 😈",
+  ", invéntale algo a mi pareja que no vamos a decir en voz alta 😏",
+  ", ponle a mi pareja un reto donde tenga que hacerse la valiente 😏",
+  ", algo que a mi pareja le dé algo de nervio, pero no te lo cuentes 😏"
 ];
 
 const PEDIROS_PLAN = [

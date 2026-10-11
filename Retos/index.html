@@ -540,6 +540,11 @@ function diasRestantes(reto){
   if(!reto) return null;
   const fin = reto.fechaFin ? momentoFecha(reto.fechaFin).getTime() : null;
   if(fin !== null && fin <= Date.now()) return 0;
+  // Los retos de la IA duran 48 horas exactas, no días de calendario: se
+  // cuentan por horas para que salgan "2 días" y no "1".
+  if(reto.ia && fin !== null){
+    return Math.max(1, Math.ceil((fin - Date.now()) / 86400000));
+  }
   const total = parseInt(reto.duracionDias, 10) || 0;
   if(!total) return null;
   if(!reto.fechaInicio) return null;
@@ -982,6 +987,44 @@ async function retirarReto(id){
   avisarTelegram("🗑️ " + miIdentidad.nombre + " retiró la propuesta: " + (r ? r.actividad : ""), APP_URL + "Retos/");
 }
 
+// ====== RETO DE LA IA: se cumple de una vez, no cuenta veces ======
+// En un reto de la IA `puntosMeta` es el VALOR (qué tan atrevido es, 1 a 10),
+// no el número de veces que hay que apretar. Al apretar "Cumplida" el dueño del
+// reto (asignadoA, que es quien lo tiene que hacer) recibe ese valor entero, de
+// una sola vez. Lo aprieta quien lo mandó, que es el otro (decisión de Fredy,
+// oct-2026).
+async function cumplirRetoIA(reto, id){
+  if(!id || !reto) return;
+  const asig = reto.asignadoA || {};
+  const valor = Math.max(1, parseInt(reto.puntosMeta, 10) || 1);
+  const confirmado = await confirmar({
+    titulo: "¿Marcar el reto como cumplido?",
+    texto: "Se le suman " + valor + " puntos a " + (asig.nombre || "tu pareja") + ".",
+    ok: "Cumplida"
+  });
+  if(!confirmado) return;
+  btnProponerReto.disabled = true;
+  try{
+    suprimir(id);
+    const batch = writeBatch(db);
+    batch.update(doc(db, "retos", id), {
+      estado: "cobrada",
+      conteo: valor,
+      liquidadoEn: serverTimestamp(),
+      ultimaAccionPor: { id: miIdentidad.id, nombre: miIdentidad.nombre }
+    });
+    // Los puntos van al que CUMPLIÓ, que es el dueño del reto.
+    if(asig.id) batch.set(doc(db, "puntosUsuarios", asig.id), { balance: increment(valor) }, { merge: true });
+    await batch.commit();
+    avisarTelegram("⭐ " + miIdentidad.nombre + " confirmó el reto de " + (reto.actividad || "") + ": " + valor + " pts para " + (asig.nombre || "su pareja") + ".", APP_URL + "Retos/?reto=" + id);
+  }catch(e){
+    console.error(e);
+    aviso("Error al marcar el reto. Revisa tu conexión.");
+  }finally{
+    btnProponerReto.disabled = false;
+  }
+}
+
 async function eliminarReto(reto, id){
   const confirmado = await confirmar({
     aviso: true,
@@ -1085,6 +1128,27 @@ async function finalizarRetosVencidos(){
         if(!actual.exists) return;
         const data = actual.data();
         if(data.estado !== "enCurso") return;
+        // Un reto de la IA nunca se cumple "por puntos": o se aprieta el botón
+        // (y entonces ya no sigue enCurso) o se vencieron las 48 horas. Así que
+        // si llegamos aquí y es de la IA, es que NO se cumplió.
+        if(data.ia){
+          // El dueño pierde LA MITAD del valor, redondeada HACIA ABAJO (decisión
+          // de Fredy, oct-2026: si la mitad da .5, baja; si da más de .5, sube).
+          // Y la otra persona se lleva la diferencia: lo que el dueño NO perdió.
+          const valor = Math.max(1, parseInt(data.puntosMeta, 10) || 1);
+          const pierde = Math.floor(valor / 2);
+          const gana = valor - pierde;
+          t.update(ref, { estado: "noCumplido", liquidadoEn: serverTimestamp() });
+          if(data.asignadoA && data.asignadoA.id && pierde > 0){
+            t.set(doc(db, "puntosUsuarios", data.asignadoA.id), { balance: increment(-pierde) }, { merge: true });
+          }
+          // La diferencia va a quien MANDÓ el reto, que es el otro.
+          const otro = (data.asignadoPor && data.asignadoPor.id) || "";
+          if(otro && otro !== (data.asignadoA && data.asignadoA.id) && gana > 0){
+            t.set(doc(db, "puntosUsuarios", otro), { balance: increment(gana) }, { merge: true });
+          }
+          return;
+        }
         const cumplido = (data.conteo || 0) >= (data.puntosMeta || 0);
         if(cumplido){
           t.update(ref, { estado: "cobrada", liquidadoEn: serverTimestamp() });
@@ -1125,19 +1189,26 @@ function renderRetos(){
     html += '<div class="reto" id="reto-' + id + '">';
     html += '<div class="fila-top"><div class="actividad">' + esc(c.actividad) + '</div>';
     html += '<div class="badge ' + esc(estado) + '">' + esc(etiquetaEstado(estado)) + '</div></div>';
-    html += '<div class="quien">' + esc(c.asignadoPor.nombre) + ' propuso para ' + esc(c.asignadoA.nombre) + '</div>';
+    html += '<div class="quien">' + esc(c.asignadoPor.nombre) + (c.ia ? " le mandó el reto" : " propuso") + ' para ' + esc(c.asignadoA.nombre) + '</div>';
 
     if(estado === "enCurso" || estado === "cumplido" || estado === "cobrada" || estado === "noCumplido" || estado === "propuesta"){
-      if(estado !== "propuesta"){
+      // En los retos de la IA no hay barra de progreso: los puntos son el valor
+      // del reto, no un contador de veces. Se marca con "Vale N pts".
+      if(estado !== "propuesta" && !c.ia){
         html += '<div class="meta"><div class="barra"><i style="width:' + pct + '%"></i></div>';
         html += '<div class="metaNum">' + conteo + ' / ' + meta + '</div></div>';
       }
+      if(c.ia){
+        html += '<div class="meta"><div class="metaNum">Vale ' + esc(meta) + ' pts para ' + esc(c.asignadoA.nombre) + '</div></div>';
+      }
 
       html += '<div class="lienzo">';
-      html += '<div><span class="k">Veces al día</span><span class="v">' + esc(c.vecesAlDia) + '</span></div>';
-      html += '<div><span class="k">Duración</span><span class="v">' + esc(c.duracionDias) + ' días</span></div>';
-      html += '<div><span class="k">Meta</span><span class="v">' + esc(meta) + ' pts</span></div>';
-      html += '<div><span class="k">Penalización</span><span class="v">' + esc(c.penalizacionPuntos) + ' pts</span></div>';
+      if(!c.ia){
+        html += '<div><span class="k">Veces al día</span><span class="v">' + esc(c.vecesAlDia) + '</span></div>';
+        html += '<div><span class="k">Duración</span><span class="v">' + esc(c.duracionDias) + ' días</span></div>';
+      }
+      html += '<div><span class="k">' + (c.ia ? "Valor" : "Meta") + '</span><span class="v">' + esc(meta) + ' pts</span></div>';
+      if(!c.ia) html += '<div><span class="k">Penalización</span><span class="v">' + esc(c.penalizacionPuntos) + ' pts</span></div>';
       html += '<div><span class="k">Castigo</span><span class="v">' + esc(c.castigo) + '</span></div>';
       if(c.recompensa) html += '<div><span class="k">Recompensa</span><span class="v">' + esc(c.recompensa) + '</span></div>';
       else html += '<div><span class="k">Recompensa</span><span class="v">Por definir</span></div>';
@@ -1150,7 +1221,11 @@ function renderRetos(){
     }
 
     if(estado === "enCurso" && faltanTiempo(c)){
-      html += '<div class="nota warn">Si al vencer alcanzas los ' + esc(meta) + ' puntos, se entrega la recompensa (' + esc(c.recompensa || "por definir") + ') y se descuentan ' + esc(c.puntosMeta) + ' pts. Si no, se descuentan ' + esc(c.penalizacionPuntos) + ' pts.</div>';
+      if(c.ia){
+        html += '<div class="nota warn">Vale ' + esc(meta) + ' pts para quien lo tiene que hacer. Tienes 48 horas desde que se mandó. Si se cumple, se los lleva enteros; si no, esa persona pierde la mitad y tú te quedas con la diferencia.</div>';
+      }else{
+        html += '<div class="nota warn">Si al vencer alcanzas los ' + esc(meta) + ' puntos, se entrega la recompensa (' + esc(c.recompensa || "por definir") + ') y se descuentan ' + esc(c.puntosMeta) + ' pts. Si no, se descuentan ' + esc(c.penalizacionPuntos) + ' pts.</div>';
+      }
     }
 
     // --- mensajes según estado ---
@@ -1161,7 +1236,12 @@ function renderRetos(){
       html += '<div class="nota bien">¡Meta cumplida! Recompensa: ' + esc(c.recompensa || "por definir") + '</div>';
     }
     if(estado === "noCumplido"){
-      html += '<div class="nota mal">No se cumplió la meta · Se descontaron ' + esc(c.penalizacionPuntos) + ' puntos · Castigo: ' + esc(c.castigo || "—") + '</div>';
+      if(c.ia){
+        const mitad = Math.floor(meta / 2);
+        html += '<div class="nota mal">No se cumplió · ' + esc(c.asignadoA.nombre) + ' perdió ' + mitad + ' pts y tú te quedaste con ' + (meta - mitad) + ' pts · Castigo: ' + esc(c.castigo || "—") + '</div>';
+      }else{
+        html += '<div class="nota mal">No se cumplió la meta · Se descontaron ' + esc(c.penalizacionPuntos) + ' puntos · Castigo: ' + esc(c.castigo || "—") + '</div>';
+      }
     }
     if(estado === "rechazada"){
       html += '<div class="nota mal">Rechazada por ' + esc((c.ultimaAccionPor && c.ultimaAccionPor.nombre) || "la administradora") + '</div>';
@@ -1179,14 +1259,15 @@ function renderRetos(){
       }
     }
     if(estado === "enCurso"){
-      // En un reto normal marca quien lo propuso. En uno de la IA NO hay
-      // proponente real (viene con asignadoPor.id = "ai"), asi que marca el
-      // OTRO: si el reto es de Fulano, lo marca su pareja, y al reves
-      // (decision de Fredy, oct-2026). Antes no le salia a nadie y el reto se
-      // quedaba parado sin poder avanzar nunca.
-      const esDeLaIA = !!(c.asignadoPor && c.asignadoPor.id === "ai");
-      if(soyProponente || (esDeLaIA && !soyAsignado)){
-        acciones.push({ tipo:"cumplida", clase:"btnPrincipal", texto:"Cumplida +1" });
+      // EN UN RETO NORMAL marca quien lo propuso. En uno de la IA (`ia:true`)
+      // los puntos NO cuentan veces: son el valor del reto, y se entregan de
+      // una vez al que lo cumplió (el que NO lo propuso, o sea el dueño).
+      // El botón lo aprieta quien lo mandó, que es el otro.
+      if(soyProponente){
+        const esIA = !!c.ia;
+        acciones.push(esIA
+          ? { tipo:"cumplidaIA", clase:"btnPrincipal", texto:"Cumplida (" + meta + " pts)" }
+          : { tipo:"cumplida", clase:"btnPrincipal", texto:"Cumplida +1" });
       }
       if(soyAsignado){
         const texto = c.recompensa ? "Editar mi recompensa" : "Definir mi recompensa";
@@ -1240,6 +1321,7 @@ function renderRetos(){
     else if(tipo === "rechazar") btn.onclick = ()=> rechazarReto(id);
     else if(tipo === "retirar") btn.onclick = ()=> retirarReto(id);
     else if(tipo === "cumplida") btn.onclick = ()=> marcarCumplida(c, id);
+    else if(tipo === "cumplidaIA") btn.onclick = ()=> cumplirRetoIA(c, id);
     else if(tipo === "recompensa") btn.onclick = ()=> abrirOverlayRecompensa(c, id);
     else if(tipo === "cobrar") btn.onclick = ()=> cobrarRecompensaVisual(c, id);
     else if(tipo === "aplicarCastigo") btn.onclick = ()=> aplicarCastigoVisual(c, id);
@@ -1270,6 +1352,7 @@ let vistosRetos = null;
 function firmaReto(c){
   return [c.estado, c.actividad, c.conteo, c.recompensa, c.recompensaCobrada, c.castigoAplicado,
     c.vecesAlDia, c.duracionDias, c.puntosMeta, c.penalizacionPuntos, c.castigo,
+    c.ia, c.castigoAplicado, c.conteo,
     c.asignadoA && c.asignadoA.id, c.asignadoPor && c.asignadoPor.id,
     c.ultimaAccionPor && c.ultimaAccionPor.id].join("~");
 }
@@ -1306,7 +1389,9 @@ function escucharRetos(){
       const antes = vistosRetos[id];
       if(antes === undefined){
         if(esRelevanteReto(c) && !(c.asignadoPor && c.asignadoPor.id === yo)){
-          notificar("🏆 Nuevo reto para " + (c.asignadoA && c.asignadoA.nombre) + ": " + c.actividad, "reto-" + id);
+          notificar(c.ia
+            ? "😏 " + miIdentidad.nombre + " te mandó un reto: " + c.actividad
+            : "🏆 Nuevo reto para " + (c.asignadoA && c.asignadoA.nombre) + ": " + c.actividad, "reto-" + id);
         }
       }else if(antes.f !== ahora[id].f){
         if(!esRelevanteReto(c)) return;
