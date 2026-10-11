@@ -1756,6 +1756,21 @@ nada a la base). Los retos manuales siguen diciendo "[pareja] propuso para [X]".
 **Verificado:** sintaxis (`herramientas/sintaxis/`) en los dos archivos. **Falta
 la prueba en vivo** (Fredy, en Pages), por ser cambio de datos del reto.
 
+### ⏳ PENDIENTE (oct-2026): redacción del castigo y la recompensa de la IA
+
+El castigo y la recompensa de un reto de la IA llegan **tal cual los escribe el
+modelo**: la app no los reescribe. A veces salen **mal redactados**, cambiando de
+persona y mezclando a quien manda el reto con quien lo tiene que cumplir (ejemplo
+que reportó Fredy: *"Si se le olvida o lo ignora, te debe el capricho más pesado
+que se le ocurra pedirte mañana."*).
+
+**Pendiente al próximo cambio de `Acompanante/`:** ajustar la instrucción de
+`PERSONA` para que el castigo y la recompensa vayan en un **solo punto de vista**
+(el de quien tiene que cumplir el reto) y en un tono parejo. Ojo: el texto de la
+instrucción vive en `Documents\Default Project\instruccion-IA.txt` y se mete con
+`Temp\opencode\aplicar_persona.py` (ver más abajo). **No se toca ahora** (decisión
+de Fredy, oct-2026).
+
 ### El nombre de la IA en el campo de escritura (oct-2026)
 
 El campo del chat tenía el texto fijo *"Escríbele a Chispa..."*, aunque el nombre
