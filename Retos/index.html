@@ -199,6 +199,9 @@
   .campo{ margin-bottom:16px; }
   .campo label{ display:block; font-size:.85rem; color: var(--fg-muted); margin-bottom:6px; }
   .campo .hint{ font-size:.75rem; color: var(--fg-muted); margin-top:4px; }
+  /* "Puntos para cumplir" NO se escribe a mano: lo calcula la app. Se ve
+     apagado y con borde punteado para que quede claro que no hay que tocarlo. */
+  #fMeta{ opacity:.7; border-style:dashed; cursor:default; }
   .fila{ display:flex; gap:12px; }
   .fila .campo{ flex:1; }
   #formMsg{ color: var(--rojo); font-size:.85rem; min-height:18px; margin-bottom:10px; }
@@ -303,7 +306,8 @@
     <div class="fila">
       <div class="campo">
         <label for="fMeta">Puntos para cumplir</label>
-        <input id="fMeta" type="number" min="1" step="1" placeholder="veces × días">
+        <input id="fMeta" type="number" min="1" step="1" readonly>
+        <div class="hint" id="hintMeta"></div>
       </div>
       <div class="campo">
         <label for="fPenalizacion">Penalización (puntos)</label>
@@ -496,6 +500,7 @@ const fAsignado = document.getElementById("fAsignado");
 const fVeces = document.getElementById("fVeces");
 const fDias = document.getElementById("fDias");
 const fMeta = document.getElementById("fMeta");
+const hintMeta = document.getElementById("hintMeta");
 const fPenalizacion = document.getElementById("fPenalizacion");
 const fCastigo = document.getElementById("fCastigo");
 const campoRecompensa = document.getElementById("campoRecompensa");
@@ -526,10 +531,24 @@ function formatearFecha(valor){
   return f.toLocaleString("es-MX", { day:"numeric", month:"long", hour:"2-digit", minute:"2-digit" });
 }
 
-function diasRestantes(fechaFin){
-  if(!fechaFin) return null;
-  const f = (fechaFin.toDate ? fechaFin.toDate() : new Date(fechaFin));
-  return Math.ceil((f.getTime() - Date.now()) / 86400000);
+// Días que le quedan al reto. Se cuenta por DÍAS DE CALENDARIO, no restando
+// horas: como el reto vence a las 11:59 de la noche, la resta de horas daba un
+// día de menos (decía 6 cuando eran 7). Se usa la duración menos los días que ya
+// van, y no la fecha de fin: así el número no depende de la hora en que se
+// propuso, y a los retos que ya existían no les cambia lo que se ve.
+function diasRestantes(reto){
+  if(!reto) return null;
+  const fin = reto.fechaFin ? momentoFecha(reto.fechaFin).getTime() : null;
+  if(fin !== null && fin <= Date.now()) return 0;
+  const total = parseInt(reto.duracionDias, 10) || 0;
+  if(!total) return null;
+  if(!reto.fechaInicio) return null;
+  const ini = new Date(momentoFecha(reto.fechaInicio).getTime());
+  ini.setHours(0, 0, 0, 0);
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const van = Math.round((hoy.getTime() - ini.getTime()) / 86400000);
+  // El mínimo es 1 mientras el reto siga vivo: el último día no es "0 días".
+  return Math.max(1, total - van);
 }
 
 function momentoFecha(valor){
@@ -642,17 +661,40 @@ function actualizarVisibilidadRecompensa(){
   if(aVer !== miIdentidad.id) fRecompensa.value = "";
 }
 
-function rellenarMetaSiVacio(){
+// ---------- la meta se calcula sola: "veces al día" x "duración" ----------
+// El campo NO se escribe a mano. Antes se rellenaba UNA vez y ya: en cuanto
+// tenía un número, `rellenarMetaSiVacio` ya no volvía a hacer nada, así que
+// cambiar los días después dejaba la meta congelada (y al editar un reto viejo,
+// que ya traía su número, nunca se recalculaba). Ahora sigue a los dos campos.
+//
+// Abriendo un reto ya guardado se RESPETA la meta que tenía (aunque no cuadre
+// con sus días): los datos que ya existen no se tocan (decisión de Fredy,
+// oct-2026). Solo los retos nuevos usan el cálculo automático.
+let metaLibre = false;
+
+function pintarHintMeta(){
+  if(metaLibre){
+    hintMeta.textContent = "Este reto ya traía su propia meta. No se recalcula.";
+    return;
+  }
   const veces = parseInt(fVeces.value, 10) || 0;
   const dias = parseInt(fDias.value, 10) || 0;
-  if(fMeta.value === "" && veces > 0 && dias > 0){
-    fMeta.value = veces * dias;
+  hintMeta.textContent = (veces > 0 && dias > 0)
+    ? ("Se calcula solo: " + veces + " × " + dias + " = " + (veces * dias) + " puntos.")
+    : "Pon “veces al día” y “duración” y los puntos se calculan solos.";
+}
+function calcularMeta(){
+  if(!metaLibre){
+    const veces = parseInt(fVeces.value, 10) || 0;
+    const dias = parseInt(fDias.value, 10) || 0;
+    fMeta.value = (veces > 0 && dias > 0) ? String(veces * dias) : "";
   }
+  pintarHintMeta();
 }
 
 fAsignado.onchange = actualizarVisibilidadRecompensa;
-fVeces.oninput = rellenarMetaSiVacio;
-fDias.oninput = rellenarMetaSiVacio;
+fVeces.oninput = calcularMeta;
+fDias.oninput = calcularMeta;
 
 function resumenHtml(reto){
   const nom = u=> (u && u.nombre) || "—";
@@ -682,7 +724,8 @@ function abrirFormulario(modo, reto, id){
     fActividad.value = "";
     fVeces.value = 1;
     fDias.value = 7;
-    fMeta.value = "";
+    metaLibre = false;
+    calcularMeta();
     fPenalizacion.value = 0;
     fCastigo.value = "";
     fRecompensa.value = "";
@@ -698,7 +741,9 @@ function abrirFormulario(modo, reto, id){
     llenarSelectAsignado(reto.asignadoA ? reto.asignadoA.id : null);
     fVeces.value = reto.vecesAlDia || 1;
     fDias.value = reto.duracionDias || 7;
+    metaLibre = true;
     fMeta.value = reto.puntosMeta || "";
+    pintarHintMeta();
     fPenalizacion.value = reto.penalizacionPuntos || 0;
     fCastigo.value = reto.castigo || "";
     fRecompensa.value = reto.recompensa || "";
@@ -712,7 +757,9 @@ function abrirFormulario(modo, reto, id){
     llenarSelectAsignado(reto.asignadoA ? reto.asignadoA.id : null);
     fVeces.value = reto.vecesAlDia || 1;
     fDias.value = reto.duracionDias || 7;
+    metaLibre = true;
     fMeta.value = reto.puntosMeta || "";
+    pintarHintMeta();
     fPenalizacion.value = reto.penalizacionPuntos || 0;
     fCastigo.value = reto.castigo || "";
     fRecompensa.value = reto.recompensa || "";
@@ -746,6 +793,19 @@ function leerFormulario(){
     castigo: fCastigo.value.trim(),
     recompensa: campoRecompensa.style.display === "block" ? fRecompensa.value.trim() : ""
   };
+}
+
+// El reto vive hasta el FINAL de su último día, no a la misma hora en que se
+// propuso. Antes vencía a esa hora, y como la meta es "veces x días", quedaban
+// unas horas menos de las que la cuenta prometía: 2 al día durante 7 días pedía
+// 14 puntos, pero en realidad había 6 días completos y un medio, y el resultado
+// dependía de la hora en que se apachó el botón. Con esto "7 días" son 7 días
+// de verdad.
+function finDeUltimoDia(base, dias){
+  const f = new Date(base.getTime());
+  f.setHours(23, 59, 59, 999);
+  f.setDate(f.getDate() + (dias - 1));
+  return f;
 }
 
 function validarFormulario(f, requiereRecompensa){
@@ -785,7 +845,7 @@ btnAccion.onclick = async ()=>{
           estado: "enCurso",
           creadoEn: serverTimestamp(),
           fechaInicio: ahora,
-          fechaFin: new Date(ahora.getTime() + f.duracionDias * 86400000),
+        fechaFin: finDeUltimoDia(ahora, f.duracionDias),
           autorizadaPor: { id: miIdentidad.id, nombre: miIdentidad.nombre }
         });
         avisarTelegram("🏆 Nuevo reto en curso de " + miIdentidad.nombre + " para " + usuarios.find(u=>u.id===f.asignadoAId).nombre + ": " + f.actividad + " (" + f.puntosMeta + " pts)", APP_URL + "Retos/?reto=" + refNuevo.id);
@@ -858,7 +918,7 @@ btnAccion.onclick = async ()=>{
         recompensa: soyReceptor ? f.recompensa : (retoActual ? retoActual.recompensa : ""),
         estado: "enCurso",
         fechaInicio: ahora,
-        fechaFin: new Date(ahora.getTime() + f.duracionDias * 86400000),
+        fechaFin: finDeUltimoDia(ahora, f.duracionDias),
         autorizadaPor: { id: miIdentidad.id, nombre: miIdentidad.nombre }
       });
       avisarTelegram("✅ " + miIdentidad.nombre + " autorizó el reto: " + f.actividad + " para " + usuarios.find(u=>u.id===f.asignadoAId).nombre + ". ¡En curso!", APP_URL + "Retos/?reto=" + retoEnEdicion);
@@ -1092,7 +1152,7 @@ function renderRetos(){
       else html += '<div><span class="k">Recompensa</span><span class="v">Por definir</span></div>';
       if(estado === "enCurso" || estado === "cumplido" || estado === "cobrada" || estado === "noCumplido"){
         html += '<div><span class="k">Termina</span><span class="v">' + esc(formatearFecha(c.fechaFin)) + '</span></div>';
-        const faltan = diasRestantes(c.fechaFin);
+        const faltan = diasRestantes(c);
         if(faltan !== null && estado === "enCurso") html += '<div><span class="k">Tiempo restante</span><span class="v">' + faltan + ' día(s)</span></div>';
       }
       html += '</div>';

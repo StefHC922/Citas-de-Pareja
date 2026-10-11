@@ -1370,6 +1370,61 @@ habria sido un error. Esto viene de la decision de oct-2026 de no portar a
 Guiadas el bloque de anfitrion/QR/sala. **Si alguna vez se le pone un candado de
 anfitrion ahi, entonces si aplica la regla de nacer oculto.**
 
+### La meta de un reto se calcula sola (oct-2026)
+
+En `Retos/`, al proponer un reto hay tres campos pegados: "veces al día",
+"duración (días)" y "puntos para cumplir". La meta es **`veces × días`**, y eso
+**ya no se escribe a mano**: se calcula solo y el campo queda **de solo lectura**
+(se ve apagado, con borde punteado). Debajo dice la cuenta: *"Se calcula solo:
+2 × 7 = 14 puntos."*
+
+**El arreglo tiene dos partes, y las dos hacen falta:**
+
+**1. El campo obedecía una sola vez.** La función se llamaba
+`rellenarMetaSiVacio()`: rellenaba **solo si estaba vacío**. En cuanto tenía un
+número, ya no volvía a hacer nada. O sea: escribías los días, se llenaba una vez,
+y si después cambiabas los días **la meta se quedaba congelada**. Y al **editar
+un reto viejo** (que ya traía su número guardado) **nunca** se recalculaba. Por
+eso el campo era editable: era el rodeo para poder escribir un número que sí se
+alcanzara. Ahora es `calcularMeta()` y sigue a los dos campos siempre.
+
+**2. La cuenta daba un desfase de horas.** El vencimiento era
+`ahora + duracionDias × 86400000`, o sea **a la misma hora en que se apachó el
+botón**. Ejemplo: propones lunes a las 4 de la tarde, 2 al día durante 7 días → la
+meta pedía 14 puntos, pero el reto vencía lunes siguiente a las 4 de la tarde:
+había **6 días completos y un medio**, y 14 era casi imposible. Peor: a las 11 de
+la noche sí se alcanzaba y a las 4 de la tarde no. **Dependía de la hora.**
+
+**Ahora el reto vive hasta el FINAL de su último día** (`finDeUltimoDia()`): se
+pone a las 11:59:59 de la noche del día N y se suma `N - 1` días. Así "7 días"
+son 7 días de verdad, da igual a qué hora se proponga. Ojo: **esto mueve la
+fecha de vencimiento de los retos nuevos** (terminan unas horas después, que es
+justo lo que se busca). Los que ya están guardados conservan su `fechaFin` y no
+se tocan.
+
+**Los retos ya guardados no se recalculan (decisión de Fredy, oct-2026).** Al
+abrir uno viejo, el campo trae **el número que ya tenía** aunque no cuadre con
+sus días, y debajo lo avisa: *"Este reto ya traía su propia meta. No se
+recalcula."* Es lo que hace la bandera `metaLibre`: en `true` la meta no se
+toca, y en `false` (reto nuevo) se calcula sola. **Los datos que ya existen no
+se cambian por sorpresa.**
+
+**Y el contador de "Tiempo restante" (`diasRestantes()`) cuenta días de
+calendario, no horas.** Antes dividía las horas que faltaban entre 24; como el
+reto vence a las 11:59 de la noche, eso daba **un día de menos** (decía 6
+cuando eran 7). Ahora usa `duración − días que ya van`, a partir de
+`fechaInicio`. El mínimo es 1 mientras el reto siga vivo, para que el último día
+no se vea como "0 días".
+
+**Comprobado con números** (reto de 2 al día durante 7 días, propuesto lunes a
+las 4 de la tarde): 7 → 6 → 4 → 1 → 1 → 0 días. Y los retos viejos muestran
+exactamente lo mismo que antes.
+
+**Ojo, pendiente y NO se ha tocado:** `Retos/index.html` tiene un
+`id="formBotones"` **repetido** (el del formulario y el de "definir recompensa",
+L326 y L347). Hoy no rompe nada porque ningún JavaScript lo usa —solo el CSS—,
+pero es una bomba de tiempo. Se arregla aparte.
+
 ### Pantallas de configuracion: Actividades y Accesorios (oct-2026)
 
 Estan en `Citas/actividades.html` y `Citas/accesorios.html`, y se llega por el
