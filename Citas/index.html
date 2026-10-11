@@ -601,6 +601,24 @@ function ordenarAccesorios(){
   sinMarcar.forEach(n=> listaAccesoriosForm.appendChild(n));
 }
 
+// El campo es type="datetime-local": su valor llega como "AAAA-MM-DDTHH:MM" en
+// hora local y sin zona, que es como new Date() lo interpreta.
+function esEnPasado(valor){
+  const f = new Date(valor);
+  // Si la fecha no se entiende, no se bloquea: que no deje agendar nada por un
+  // problema de formato es peor que dejar pasar una fecha rara.
+  if(isNaN(f.getTime())) return false;
+  return f.getTime() < Date.now();
+}
+// El min es en el mismo formato que el campo, pero en la hora local de quien
+// está: se le resta el desfase para que no salga corrida. Con esto el calendario
+// del celular pinta en gris lo que ya pasó, sin dejar escribirlo a mano.
+function ponerMinimoFecha(){
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  fCampoFecha.min = d.toISOString().slice(0, 16);
+}
+
 async function abrirFormulario(modo, citaExistente){
   formMsg.textContent = "";
   llenarSelectActividades();
@@ -610,6 +628,7 @@ async function abrirFormulario(modo, citaExistente){
     editandoId = null;
     formTitulo.textContent = "Nueva cita";
     fCampoFecha.value = "";
+    ponerMinimoFecha();
     fCampoActividad.value = actividades[0] || "";
     fCampoDescripcion.value = "";
     llenarAccesoriosForm([]);
@@ -618,6 +637,9 @@ async function abrirFormulario(modo, citaExistente){
     editandoId = citaExistente.id;
     formTitulo.textContent = "Modificar cita";
     fCampoFecha.value = citaExistente.fechaCita || "";
+    // Sin mínimo al modificar: una cita vieja puede estar en el pasado y hay
+    // que poder corregirla (cambiarle una palabra) sin que el campo la rechace.
+    fCampoFecha.removeAttribute("min");
     fCampoActividad.value = citaExistente.actividad || (actividades[0] || "");
     fCampoDescripcion.value = citaExistente.descripcion || "";
     llenarAccesoriosForm(citaExistente.accesorios || []);
@@ -653,6 +675,12 @@ btnGuardarCita.onclick = async ()=>{
 
   if(!fecha){
     formMsg.textContent = "Elige una fecha y hora.";
+    return;
+  }
+  // No se agenda en el pasado. Al MODIFICAR no se bloquea: la cita ya existe y
+  // lo que se está corrigiendo puede ser una fecha vieja a propósito.
+  if(!editandoId && esEnPasado(fecha)){
+    formMsg.textContent = "Esa fecha ya pasó. Elige una fecha de hoy o de un día futuro.";
     return;
   }
   if(!actividad){

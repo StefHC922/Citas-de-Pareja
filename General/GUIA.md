@@ -1425,6 +1425,40 @@ exactamente lo mismo que antes.
 L326 y L347). Hoy no rompe nada porque ningún JavaScript lo usa —solo el CSS—,
 pero es una bomba de tiempo. Se arregla aparte.
 
+### Una cita no se agenda en el pasado (oct-2026)
+
+En `Citas/`, al agendar solo se comprobaba que el campo de fecha **no estuviera
+vacío**: una cita del martes pasado se guardaba sin que nadie dijera nada.
+
+**Son dos cosas, y hacen falta las dos:**
+
+1. **`fCampoFecha` lleva `min`.** Como es `type="datetime-local"`, el `min` va en ese mismo formato (`"AAAA-MM-DDTHH:MM"`) y en **hora local**, no en UTC. Por eso se calcula restando el desfase:
+
+   ```js
+   const d = new Date();
+   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+   fCampoFecha.min = d.toISOString().slice(0,16);
+   ```
+
+   Con eso el calendario del celular **pinta en gris** lo que ya pasó. Ojo: si
+   se hiciera con `toISOString()` a secas, saldría corrido (en Ciudad de México
+   saldría 6 horas adelantado) y el `min` dejaría de tener sentido.
+
+2. **`esEnPasado()` en `btnGuardarCita.onclick`**, que es la que de verdad
+   impide guardar. Si la fecha no se entiende (`NaN`) **no bloquea**: que no
+   deje agendar nada por un problema de formato es peor que dejar pasar una
+   fecha rara.
+
+**Al MODIFICAR una cita NO se bloquea, y el `min` se quita.** Una cita vieja puede
+estar en el pasado a propósito (un recuerdo, una cita ya vivida) y hay que poder
+corregirle una palabra sin que el campo la rechace. Si algún día se quiere
+apretar esa regla también al modificar, es una línea: quitar el `!editandoId &&`.
+
+**Nota de formato:** el valor del campo llega como `"AAAA-MM-DDTHH:MM"`, sin zona.
+`new Date()` lo interpreta como **hora local**, que es justo lo que hay que
+comparar contra `Date.now()`. El mismo parseo ya lo usa `formatearFecha()`, así
+que no se inventó nada.
+
 ### Pantallas de configuracion: Actividades y Accesorios (oct-2026)
 
 Estan en `Citas/actividades.html` y `Citas/accesorios.html`, y se llega por el
