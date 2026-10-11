@@ -35,7 +35,8 @@
 
 const ESTILO = `
 .cfCapa{ position:fixed; inset:0; z-index:95; background:rgba(0,0,0,.6);
-  display:flex; align-items:center; justify-content:center; padding:20px; }
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:20px; }
 .cfCaja{ width:100%; max-width:380px; text-align:center;
   background:var(--card, var(--tarjeta)); border:1px solid var(--teal);
   border-radius:16px; padding:22px 20px; }
@@ -85,15 +86,17 @@ export function confirmar(op){
     const c = document.createElement("div");
     c.className = "cfCapa";
 
+    const caja = document.createElement("div");
+    caja.className = "cfCaja";
+
+    // El circulito va DENTRO de la caja, arriba del titulo. Si se colgara como
+    // hermano de la caja se pondrian de lado y la caja se iba a la derecha.
     if(o.aviso){
       const av = document.createElement("div");
       av.className = "cfAviso";
       av.textContent = "⚠️";
-      c.appendChild(av);
+      caja.appendChild(av);
     }
-
-    const caja = document.createElement("div");
-    caja.className = "cfCaja";
 
     const t = document.createElement("div");
     t.className = "cfTitulo";

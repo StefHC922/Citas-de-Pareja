@@ -1277,6 +1277,13 @@ Devuelve una promesa: `true` si le dio adelante, `false` si cancelo.
 - **Cambiar un `confirm()` por este obliga a que la funcion sea `async`.** Ya se
   hizo en dos que no lo eran: `volverAlOriginal()` en `Diablitos/` y el
   `onclick` de "vaciar chat" en `Acompanante/`.
+- **El circulito ⚠️ va DENTRO de la caja, no afuera como hermano.** Afuera se
+  ponian de lado: el circulito empujaba la caja a la derecha y el par se salia
+  del borde en los angostos (lo reporto Fredy, oct-2026). Por eso la capa lleva
+  `flex-direction:column`: si alguna vez se cuelga un elemento suelto, se apila
+  y se centra, en vez de correrse a un lado. **Regla general: cuando una capa es
+  `display:flex` y le cuelgas hijos "de adorno", revisa que ninguno sea hermano
+  de la caja.**
 - **La regla de la casa: no se vuelve a usar `confirm()` ni `alert()` del
   sistema.** Si toca, es `confirmar()`. (Los `alert()` de error siguen siendo
   del sistema a proposito: son fallos, no decisiones.)
