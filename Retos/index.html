@@ -161,6 +161,8 @@
   .badge.rechazada{ background: rgba(255,92,122,.15); color: var(--rojo); }
 
   .reto .quien{ color: var(--fg-muted); font-size:.82rem; margin-bottom:10px; }
+  /* El "que hacer" del reto de la IA, tal cual se genero. */
+  .reto .retoDesc{ font-size:.95rem; line-height:1.45; margin:2px 0 10px; white-space:pre-wrap; }
   .meta{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
   .barra{ flex:1; height:8px; border-radius:10px; background: var(--bg-2); overflow:hidden; }
   .barra i{ display:block; height:100%; border-radius:10px; background: linear-gradient(90deg, var(--coral), var(--teal)); transition: width .3s ease; }
@@ -1189,7 +1191,18 @@ function renderRetos(){
     html += '<div class="reto" id="reto-' + id + '">';
     html += '<div class="fila-top"><div class="actividad">' + esc(c.actividad) + '</div>';
     html += '<div class="badge ' + esc(estado) + '">' + esc(etiquetaEstado(estado)) + '</div></div>';
-    html += '<div class="quien">' + esc(c.asignadoPor.nombre) + (c.ia ? " le mandó el reto" : " propuso") + ' para ' + esc(c.asignadoA.nombre) + '</div>';
+    // El "que hacer" completo, debajo del titulo. Solo en los retos de la IA
+    // (los manuales usan el titulo como nombre y no traen descripcion).
+    if(c.ia && c.descripcion){
+      html += '<div class="retoDesc">' + esc(c.descripcion) + '</div>';
+    }
+    // Quien lo mando: en un reto de la IA no fue la pareja, fue la IA. Se muestra
+    // el nombre que la pareja le puso en el chat (ya viene guardado en el reto).
+    if(c.ia){
+      html += '<div class="quien">' + esc((c.iaNombre || "IA") + " IA") + ' le mandó el reto para ' + esc(c.asignadoA.nombre) + '</div>';
+    }else{
+      html += '<div class="quien">' + esc(c.asignadoPor.nombre) + ' propuso para ' + esc(c.asignadoA.nombre) + '</div>';
+    }
 
     if(estado === "enCurso" || estado === "cumplido" || estado === "cobrada" || estado === "noCumplido" || estado === "propuesta"){
       // En los retos de la IA no hay barra de progreso: los puntos son el valor

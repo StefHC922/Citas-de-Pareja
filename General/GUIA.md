@@ -1721,6 +1721,41 @@ que hay que hacer**, y se puso ese ejemplo como ejemplo de lo que **no** es.
 detectó revisando antes de correr. Regla: en `Acompanante/` **todo va con
 `textContent`**, porque no hay función de escape ahí.
 
+### El reto de la IA: se ve qué hacer, sale el botón y dice quién lo mandó (oct-2026)
+
+**Tres arreglos alrededor de los retos de la IA.** Pedido de Fredy.
+
+**1. En `Retos/` no se sabía qué hacer.** La tarjeta solo guardaba el
+`actividad`, que la IA escribe como **título corto**; la instrucción completa
+(*"muéstrale todo tu cuerpo…"*) se quedaba nada más en el chat y nunca se
+guardaba en el reto. Ahora `crearReto()` (en `Acompanante/`) guarda también
+**`descripcion`** = el texto del reto tal cual se generó, y la tarjeta lo muestra
+**abajo del título**. Se muestra **solo si `ia: true` y hay `descripcion`**: los
+retos manuales y los viejos no traen el campo y no cambian en nada.
+
+**2. A veces no salía el botón "Mandárselo a tu pareja".** El botón dependía de
+que la IA terminara con el bloque exacto ` ```reto {...}```. Cuando lo escribía
+de otra forma, o no lo escribía, el reto se perdía (el bloque, si venía mal, se
+borraba del texto y no quedaba botón). **Es la IA desobedeciendo el formato, no
+el chat.** Se arregló en dos niveles:
+- **Tolerancia** (`bloqueRetoBruto` + `parsearJson`): acepta ` ```reto`, ` ```json`,
+  sin las tres comillas, comillas curvas, comas sobrantes y saltos de línea
+  reales dentro del texto.
+- **Reserva** (`retoDeReserva`): si de plano no hubo bloque pero **lo que se
+  pidió era un reto** (el botón, o la palabra "reto" en lo que se escribió), el
+  chat **arma el reto solo** con el texto como descripción y valores de reserva
+  (valor 5, castigo y recompensa de fábrica). El único hueco que queda es pedir
+  un reto **sin usar la palabra "reto"** (p. ej. "sorpréndeme"): ahí no hay
+  reserva. **No se toca la instrucción de la IA ni los retos ya guardados.**
+
+**3. Decía que lo había mandado la pareja.** En un reto de la IA quien lo manda
+no es la pareja, es la IA. Ahora la tarjeta dice **"[nombre de la IA] IA le mandó
+el reto para [X]"** (`iaNombre`, que **ya se guardaba** con el reto; no se agregó
+nada a la base). Los retos manuales siguen diciendo "[pareja] propuso para [X]".
+
+**Verificado:** sintaxis (`herramientas/sintaxis/`) en los dos archivos. **Falta
+la prueba en vivo** (Fredy, en Pages), por ser cambio de datos del reto.
+
 ### El nombre de la IA en el campo de escritura (oct-2026)
 
 El campo del chat tenía el texto fijo *"Escríbele a Chispa..."*, aunque el nombre
