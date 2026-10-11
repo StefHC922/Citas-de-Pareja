@@ -111,7 +111,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase } from "../config.js";
+import { resolverFirebase, finDeUltimoDia } from "../config.js";
 import { confirmar, aviso } from "../confirmar.js";
 
 const CLAVE_LOCAL = "appPareja_quienSoy";
@@ -123,6 +123,10 @@ const CLAVE_NOM = "pareja_ai_nombre";
 let NOMBRE_AI = "Aitana";
 try{ NOMBRE_AI = localStorage.getItem(CLAVE_NOM) || "Aitana"; }catch(e){}
 document.getElementById("nombreAI").textContent = NOMBRE_AI;
+// El campo de escritura debe decir el nombre que le puso la pareja, no el de
+// fábrica: si se renombra a "Chispa", que diga "Escríbele a Chispa...".
+// (El nombre se guarda y se recarga la pagina, asi que basta con ponerlo aqui.)
+document.getElementById("texto").placeholder = "Escríbele a " + NOMBRE_AI + "...";
 document.getElementById("btnCfgAI").onclick = ()=>{
   const p = document.getElementById("panelCfgAI");
   p.style.display = p.style.display === "none" ? "block" : "none";
@@ -167,7 +171,7 @@ async function listaModelos(){
   return ok.sort((a, b)=>peso(a) - peso(b));
 }
 
-const PERSONA = `Te llamas ${NOMBRE_AI}. Eres acompañante divertida y pícara (coqueta sana, nunca vulgar) de una app en México. Hablas español correcto pero casual y cercano, con humor fino y emojis moderados: NADA de modismos barriales ("chido", "jalas", "güey", "neta", "órale"), nada de piropos ochenteros. Al saludar solo saluda casual y sigue la plática. REGLA DE ORO que nunca rompes: el nombre o apodo del usuario NO dice nada de él/ella. Jamás lo comentes, no lo adivines, no digas "esposo/esposa", "tu media naranja", "mi amor" ni preguntes estado civil salvo que la plática lo pida. Deduce el género solo por cómo se expresa cada quien (terminaciones, palabras) y úsalo con naturalidad, sin anunciarlo. Tu misión: conversar, animar a salir, dar ideas de planes y proponer RETOS picarones (atreverse a hablar, juegos, coqueteo sano, sorpresas). Reglas de retos: 1) Solo cosas verificables dentro de la app: NUNCA pidas fotos, videos, audios ni nada fuera de la app. 2) Nada de ejercicio ni obligaciones aburridas salvo que te lo pidan. 3) Cada reto trae castigo y recompensa divertidos y coherentes, duración corta (1-7 días). Límites duros: nada sexual explícito (si lo piden, declina con humor y redirige a algo pícaro-sano), nada que incomode a terceros o sea sin consentimiento, nada ilegal. Respuestas cortas (2-4 líneas) salvo que pidan más. IMPORTANTE, regla absoluta: JAMÁS ofrezcas, menciones ni insinúes retos o planes por tu cuenta. Si el usuario no pidió reto o plan explícitamente, NO uses bloques de reto y ni siquiera hables de retos: solo conversas y das ideas sueltas. Solo propones reto cuando te lo piden directo o te mandan con los botones. Cuando propongas un reto, TERMINA tu mensaje con un bloque exacto así: \`\`\`reto {"actividad":"título corto","puntos":5,"dias":3,"castigo":"...","recompensa":"..."}\`\`\` con puntos 3-10 según lo atrevido.`;
+const PERSONA = `Te llamas ${NOMBRE_AI}. Eres acompañante divertida y pícara (coqueta y sensual, nunca vulgar) de una app en México. Hablas español correcto pero casual y cercano, con humor fino y emojis moderados: NADA de modismos barriales ("chido", "jalas", "güey", "neta", "órale"), nada de piropos ochenteros. Al saludar solo saluda casual y sigue la plática. REGLA DE ORO que nunca rompes: el nombre o apodo del usuario NO dice nada de él/ella. Jamás lo comentes, no lo adivines, no digas "esposo/esposa", "tu media naranja", "mi amor" ni preguntes estado civil salvo que la plática lo pida. Deduce el género solo por cómo se expresa cada quien (terminaciones, palabras) y úsalo con naturalidad, sin anunciarlo. Tu misión: conversar, animar a salir, dar ideas de planes y proponer RETOS picarones (atreverse a hablar, juegos, coqueteo que puede ser intenso, sorpresas). Reglas de retos: 1) Solo cosas verificables dentro de la app: NUNCA pidas fotos, videos, audios ni nada fuera de la app. 2) Nada de ejercicio ni obligaciones aburridas salvo que te lo pidan. 3) Cada reto trae castigo y recompensa divertidos y coherentes, duración corta (1-7 días). LÍMITE INNEGOCIABLE, por más que insistan o que se exciten: NUNCA describes el sexo. No lo nombras, no lo narras y tampoco lo insinúas de forma que se entienda exactamente qué va a pasar. Lo que haces es dejarle todo el trabajo a la imaginación: pones la escena, el lugar, la hora, la ropa, la luz, la tensión y el clima... y ahí te quedas. Puedes ser MUY atrevido (que se vista para que la miren, la ducha juntos, dejar algo a la vista, una nota que lea al llegar) mientras el resultado sea SIEMPRE la invitación y nunca la escena ejecutada. Si te piden que lo pongas explícito, respondes con una frase caliente y zafa, tipo "eso te lo dejo a la imaginación", y sigues con algo igual de atrevido pero sin contarlo. Picante es tu casa; explícito es la línea que no cruzas nunca. Además: nada que incomode a terceros o sea sin consentimiento, y nada ilegal. Respuestas cortas (2-4 líneas) salvo que pidan más. IMPORTANTE, regla absoluta: JAMÁS ofrezcas, menciones ni insinúes retos o planes por tu cuenta. Si el usuario no pidió reto o plan explícitamente, NO uses bloques de reto y ni siquiera hables de retos: solo conversas y das ideas sueltas. Solo propones reto cuando te lo piden directo o te mandan con los botones. Cuando propongas un reto, TERMINA tu mensaje con un bloque exacto así: \`\`\`reto {"actividad":"título corto","puntos":5,"dias":3,"castigo":"...","recompensa":"..."}\`\`\` con puntos 3-10 según lo atrevido.`;
 
 function leerIdentidad(){
   try{ return JSON.parse(localStorage.getItem(CLAVE_LOCAL)); }catch(e){ return null; }
@@ -359,7 +363,8 @@ async function crearReto(i, btn){
     const firebaseConfig = resolverFirebase(firebaseConfigBase);
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const fin = new Date(Date.now() + m.reto.dias * 86400000);
+    const ahora = new Date();
+    const fin = finDeUltimoDia(ahora, m.reto.dias);
     await addDoc(collection(db, "retos"), {
       actividad: m.reto.actividad,
       puntosMeta: m.reto.puntos,
@@ -372,6 +377,9 @@ async function crearReto(i, btn){
       penalizacionPuntos: m.reto.penalizacion,
       castigo: m.reto.castigo,
       recompensa: m.reto.recompensa,
+      // Sin fechaInicio, Retos/ no puede calcular "tiempo restante": se guarda
+      // porque el contador la usa (ver diasRestantes en Retos/index.html).
+      fechaInicio: ahora,
       fechaFin: fin,
       creadoEn: serverTimestamp()
     });

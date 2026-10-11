@@ -1459,6 +1459,62 @@ apretar esa regla también al modificar, es una línea: quitar el `!editandoId &
 comparar contra `Date.now()`. El mismo parseo ya lo usa `formatearFecha()`, así
 que no se inventó nada.
 
+### Los retos que propone la IA de Acompanante (oct-2026)
+
+**La pareja le pide un reto a la IA, lo acepta, y este se crea en la colección
+`retos`. Antes salía a medias, con tres problemas:**
+
+**1. El reto nunca avanzaba.** Los retos de la IA se guardan con
+`asignadoPor: { id: "ai" }`, y en `Retos/` el botón **"Cumplida +1"** solo le
+sale a `soyProponente` (es decir, a quien lo propuso). Como `"ai"` no es el id de
+nadie, **no le salía a ninguno de los dos**: el reto se veía con todos sus datos
+y nunca podía avanzar. **Ahora lo marca el OTRO**: si el reto es de Fulano, lo
+marca su pareja, y al revés (decisión de Fredy, oct-2026).
+
+```js
+const esDeLaIA = !!(c.asignadoPor && c.asignadoPor.id === "ai");
+if(soyProponente || (esDeLaIA && !soyAsignado)){ ... }
+```
+
+**Ojo: los retos viejos que ya hizo la IA siguen sin botón.** No se les puso el
+`id` a nadie y no se van a editar a mano. Si hace falta que esos también sirvan,
+habría que corregirles el documento en la consola.
+
+**2. Se guardaban sin `fechaInicio`.** Es el campo que usa `diasRestantes()` para
+calcular el "tiempo restante", así que esos retos se quedaban **sin ese renglón**.
+Por eso `crearReto()` ahora lo guarda.
+
+**3. Usaban la fecha de vencimiento vieja** (`Date.now() + días × 86400000`), o
+sea a la hora en que le diste "aceptar". Ahora usan `finDeUltimoDia()`, igual que
+los retos propuestos a mano. **Esa función se movió a `config.js`** porque ahora la
+necesitan los dos lados; no debe copiarse en cada archivo.
+
+### El nombre de la IA en el campo de escritura (oct-2026)
+
+El campo del chat tenía el texto fijo *"Escríbele a Chispa..."*, aunque el nombre
+se puede cambiar en la esquina superior derecha (`pareja_ai_nombre` en
+`localStorage`, por omisión "Aitana"). Ahora el placeholder se arma con
+`NOMBRE_AI` al arrancar. **Como guardar el nombre recarga la página, con ponerlo
+una vez al inicio basta.**
+
+### El tono de la IA (oct-2026)
+
+El `PERSONA` de `Acompanante/` tenía prohibido el tema sexual: si se lo pedían,
+"declinaba con humor y redirigía a algo pícaro-sano". Ahora el límite es otro,
+mucho más alto pero igual de firme (decisión de Fredy, oct-2026):
+
+> **NUNCA describes el sexo.** No lo nombras, no lo narras y tampoco lo insinúas
+> de forma que se entienda exactamente qué va a pasar. Lo que haces es dejarle
+> todo el trabajo a la imaginación: pones la escena, el lugar, la hora, la ropa,
+> la luz, la tensión y el clima... y ahí te quedas. El resultado es SIEMPRE la
+> invitación y nunca la escena ejecutada.
+
+También se quitan las dos frases que tenían el tope viejo ("coqueta sana" →
+"coqueta y sensual"). **El resto de las reglas NO se tocaron**: sigue sin pedir
+fotos, videos ni audios, sigue sin meterse con terceros sin consentimiento, y
+**sigue sin ofrecer retos por su cuenta**: solo cuando los piden directo o con
+los botones.
+
 ### Pantallas de configuracion: Actividades y Accesorios (oct-2026)
 
 Estan en `Citas/actividades.html` y `Citas/accesorios.html`, y se llega por el

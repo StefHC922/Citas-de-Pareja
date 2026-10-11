@@ -365,7 +365,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, resolverTelegram, baseUrl, cargarUsuarios } from "../config.js";
+import { resolverFirebase, resolverTelegram, baseUrl, cargarUsuarios, finDeUltimoDia } from "../config.js";
 import { confirmar, aviso } from "../confirmar.js";
 const firebaseConfig = resolverFirebase(firebaseConfigBase);
 
@@ -797,17 +797,8 @@ function leerFormulario(){
 
 // El reto vive hasta el FINAL de su último día, no a la misma hora en que se
 // propuso. Antes vencía a esa hora, y como la meta es "veces x días", quedaban
-// unas horas menos de las que la cuenta prometía: 2 al día durante 7 días pedía
-// 14 puntos, pero en realidad había 6 días completos y un medio, y el resultado
-// dependía de la hora en que se apachó el botón. Con esto "7 días" son 7 días
-// de verdad.
-function finDeUltimoDia(base, dias){
-  const f = new Date(base.getTime());
-  f.setHours(23, 59, 59, 999);
-  f.setDate(f.getDate() + (dias - 1));
-  return f;
-}
-
+// unas horas menos de las que la cuenta prometía. La función vive en config.js
+// porque Acompanante/ la necesita también (ahí crea los retos que propone la IA).
 function validarFormulario(f, requiereRecompensa){
   if(!f.actividad){ return "Escribe el nombre de la actividad."; }
   if(!f.asignadoAId){ return "Elige a quién se le asigna el reto."; }
@@ -1188,7 +1179,13 @@ function renderRetos(){
       }
     }
     if(estado === "enCurso"){
-      if(soyProponente){
+      // En un reto normal marca quien lo propuso. En uno de la IA NO hay
+      // proponente real (viene con asignadoPor.id = "ai"), asi que marca el
+      // OTRO: si el reto es de Fulano, lo marca su pareja, y al reves
+      // (decision de Fredy, oct-2026). Antes no le salia a nadie y el reto se
+      // quedaba parado sin poder avanzar nunca.
+      const esDeLaIA = !!(c.asignadoPor && c.asignadoPor.id === "ai");
+      if(soyProponente || (esDeLaIA && !soyAsignado)){
         acciones.push({ tipo:"cumplida", clase:"btnPrincipal", texto:"Cumplida +1" });
       }
       if(soyAsignado){

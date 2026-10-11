@@ -47,9 +47,26 @@ export function resolverTelegram(){
   return { token: PH.token, chat: PH.chat };
 }
 
+/**
+ * Un reto vive hasta el FINAL de su último día, no a la misma hora en que se
+ * propuso. Antes se vencía con `ahora + días × 86400000`, o sea a la misma hora,
+ * y como la meta de un reto es "veces × días", quedaban unas horas menos de las
+ * que la cuenta prometía: 2 al día durante 7 días pedía 14 puntos pero había 6
+ * días completos y un medio. Peor: a las 11 de la noche sí se alcanzaba y a las
+ * 4 de la tarde no. Dependía de la hora en que se apretó el botón.
+ *
+ * Con esto "7 días" son 7 días de verdad, sin importar la hora. Vive aquí y no
+ * en cada juego porque Retos/ y Acompanante/ lo necesitan.
+ */
+export function finDeUltimoDia(base, dias){
+  const f = new Date(base.getTime());
+  f.setHours(23, 59, 59, 999);
+  f.setDate(f.getDate() + (dias - 1));
+  return f;
+}
+
 /** Raíz de la app calculada de la URL actual (sirve en Pages, local y file). */
-export function baseUrl(){
-  try{
+export function baseUrl(){  try{
     let u = location.href.split("?")[0].split("#")[0];
     u = u.replace(/[^/]+\.html?$/i, "");
     if(!/\/$/.test(u)) u += "/";
