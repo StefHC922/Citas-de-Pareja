@@ -346,6 +346,7 @@ import { verificarCodigo, verificarFirma } from "../taquilla.js";
 import { miProyecto, appTaq, leerLicencias, guardarLicencia, quitarLicencia, tengoAcceso, escucharItem } from "../acceso.js";
 import { publicarInvitacion, retirarInvitacion, pausarInvitacion } from "../invitado.js";
 import { encenderFuegos, apagarFuegos } from "../fuegos.js";
+import { confirmar } from "../confirmar.js";
 
 function mezclar(a){
   const x = (a || []).slice();
@@ -786,7 +787,13 @@ async function saltarTurno(){
   if(!d || !d.activa || d.hostUid !== miId){ alert("Solo el anfitrión puede saltar un turno."); return; }
   const deQuien = nombreCabeza((d.orden || [])[d.turno || 0]);
   if(d.orden[d.turno || 0] === miId){ pintarPaso(); return; }
-  if(!confirm("¿Saltar el turno de " + deQuien + "?\n\nEsa persona pierde su turno y el juego sigue con el siguiente.")) return;
+  const saltar = await confirmar({
+    aviso: true,
+    titulo: "¿Saltar el turno de " + deQuien + "?",
+    texto: "Esa persona pierde su turno y el juego sigue con el siguiente.",
+    ok: "Saltar turno"
+  });
+  if(!saltar) return;
   let termino = false;
   try{
     await runTransaction(db, async (tx)=>{

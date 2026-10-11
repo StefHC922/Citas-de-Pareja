@@ -362,6 +362,7 @@ import {
 
 import firebaseConfigBase from "../firebase-config.js";
 import { resolverFirebase, resolverTelegram, baseUrl, cargarUsuarios } from "../config.js";
+import { confirmar } from "../confirmar.js";
 const firebaseConfig = resolverFirebase(firebaseConfigBase);
 
 const app = initializeApp(firebaseConfig);
@@ -910,7 +911,8 @@ function buscarReto(id){
   return d ? (d.data ? d.data() : d) : null;
 }
 async function rechazarReto(id){
-  if(!confirm("¿Seguro que quieres rechazar este reto?")) return;
+  const confirmado = await confirmar({ aviso: true, titulo: "¿Rechazar este reto?", ok: "Rechazar" });
+  if(!confirmado) return;
   const r = buscarReto(id);
   suprimir(id);
   await updateDoc(doc(db, "retos", id), {
@@ -921,7 +923,8 @@ async function rechazarReto(id){
 }
 
 async function retirarReto(id){
-  if(!confirm("¿Seguro que quieres retirar esta propuesta?")) return;
+  const confirmado = await confirmar({ aviso: true, titulo: "¿Retirar esta propuesta?", ok: "Retirar" });
+  if(!confirmado) return;
   const r = buscarReto(id);
   suprimir(id);
   await deleteDoc(doc(db, "retos", id));
@@ -929,7 +932,13 @@ async function retirarReto(id){
 }
 
 async function eliminarReto(reto, id){
-  if(!confirm("¿Seguro que quieres eliminar este reto? Esta acción no se puede deshacer.")) return;
+  const confirmado = await confirmar({
+    aviso: true,
+    titulo: "¿Eliminar este reto?",
+    texto: "No se puede deshacer.",
+    ok: "Eliminar"
+  });
+  if(!confirmado) return;
   suprimir(id);
   try{
     const conteo = (reto.estado === "enCurso") ? (reto.conteo || 0) : 0;
@@ -949,7 +958,11 @@ async function eliminarReto(reto, id){
 }
 
 async function marcarCumplida(reto, id){
-  if(!confirm("¿Le das un punto a " + reto.asignadoA.nombre + " por cumplir esta actividad?")) return;
+  const confirmado = await confirmar({
+    titulo: "¿Le das un punto a " + reto.asignadoA.nombre + "?",
+    ok: "Dar el punto"
+  });
+  if(!confirmado) return;
   btnProponerReto.disabled = true;
   try{
     const nuevoConteo = (reto.conteo || 0) + 1;
@@ -976,7 +989,8 @@ async function marcarCumplida(reto, id){
 }
 
 async function cobrarRecompensaVisual(reto, id){
-  if(!confirm("¿Cobrar tu recompensa?")) return;
+  const confirmado = await confirmar({ titulo: "¿Cobrar tu recompensa?", ok: "Cobrar" });
+  if(!confirmado) return;
   try{
     suprimir(id);
     await updateDoc(doc(db, "retos", id), { recompensaCobrada: true });
@@ -988,7 +1002,12 @@ async function cobrarRecompensaVisual(reto, id){
 }
 
 async function aplicarCastigoVisual(reto, id){
-  if(!confirm("¿Aplicar el castigo: «" + (reto.castigo || "") + "»?")) return;
+  const confirmado = await confirmar({
+    titulo: "¿Aplicar el castigo?",
+    texto: "«" + (reto.castigo || "") + "»",
+    ok: "Aplicar"
+  });
+  if(!confirmado) return;
   try{
     suprimir(id);
     await updateDoc(doc(db, "retos", id), { castigoAplicado: true });

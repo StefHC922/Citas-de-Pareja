@@ -30,6 +30,7 @@ no deben buscarse ni correrse. El único chequeo que queda es el de sintaxis.
 | `Autorizar/` y las reglas de Firebase | Parte 4 |
 | Decisiones ya tomadas (no sobrescribir sin preguntar) | Parte 5 |
 | Pendientes, limites conocidos y notas de mantenimiento | Parte 6 |
+| Como esta guardada la base, que esta mal y como normalizarla | **`Modelo-Datos.md`** |
 
 ## Regla de escritura (evita copias y doble escritura)
 
@@ -1192,6 +1193,12 @@ pantalla que escribe**, no solo la que se está tocando. `Autorizar/` era la
 
 ## Parte 6 - Pendientes, limites y mantenimiento
 
+> oct-2026: el estado de la base de datos (que colecciones hay, que campos, que
+> esta duplicado, que esta mal y cual es el plan para normalizarlo) esta en
+> **`General/Modelo-Datos.md`**. Es una **propuesta, no un cambio aplicado.**
+> Ahi tambien estan 3 fallas verificadas con numero de linea que conviene mirar
+> antes de tocar Retos o el modo invitado.
+
 ### Fuegos artificiales al final de la partida (`fuegos.js`, oct-2026)
 
 `fuegos.js` esta en la **raiz** y es un modulo ES reutilizable. Venia de
@@ -1230,6 +1237,69 @@ Decisiones que hay que respetar si se vuelve a tocar:
 - Si se quiere en otro juego: importar el modulo y llamar `encenderFuegos()`
   en su aviso de fin. **Recordar subir el `z-index` de su modal** para que el
   aviso quede por encima de los fuegos.
+
+### El cuadro de confirmacion: `confirmar.js` (oct-2026)
+
+**Ya no hay ni una ventana del sistema en la app.** Antes, cada "¿estas seguro?"
+era un `confirm()` del navegador: la cajita gris, con los botones del sistema,
+que era la **unica** pantalla que no usaba el diseno de la app y se veia ajena al
+resto.
+
+Ahora hay **una sola caja** en `confirmar.js` (raiz), con el mismo molde de los
+modales que ya usaba cada juego: fondo oscurecido, caja con borde turquesa,
+titulo en Chakra Petch, circulito ⚠️ cuando hace falta, boton grande con el
+degradado coral→turquesa y "Cancelar" debajo.
+
+```js
+import { confirmar } from "../confirmar.js";   // o "./confirmar.js" en la raiz
+
+if(!await confirmar({
+  aviso:true,                                  // circulito ⚠️ (por omision false)
+  titulo:"¿Eliminar a Ana?",                   // la pregunta, en grande
+  texto:"No se puede deshacer.",               // la consecuencia, chica (opcional)
+  ok:"Eliminar"                                // el boton de adelante
+})) return;
+```
+
+Devuelve una promesa: `true` si le dio adelante, `false` si cancelo.
+
+**Decisiones que hay que respetar si se vuelve a tocar:**
+
+- **El texto entra siempre con `textContent`**, nunca con `innerHTML`: varios de
+  estos textos traen nombres, correos o accesorios que **vienen de Firebase**.
+- Va en **Z 95**: encima de los modales normales (60) y de los fuegos (70).
+- **Nunca dos cajas encimadas**: si se pide otra confirmacion con una abierta,
+  la anterior se cierra como "no".
+- Los colores se piden con `--card` y **caen a `--tarjeta`** (y asi con los
+  demas), porque cada pantalla les puso un nombre distinto: **Diablitos** usa la
+  otra serie (`--fondo`, `--tarjeta`, `--texto`, `--apagado`). Sin ese fallback,
+  la caja salia sin fondo ni texto en Diablitos.
+- **Cambiar un `confirm()` por este obliga a que la funcion sea `async`.** Ya se
+  hizo en dos que no lo eran: `volverAlOriginal()` en `Diablitos/` y el
+  `onclick` de "vaciar chat" en `Acompanante/`.
+- **La regla de la casa: no se vuelve a usar `confirm()` ni `alert()` del
+  sistema.** Si toca, es `confirmar()`. (Los `alert()` de error siguen siendo
+  del sistema a proposito: son fallos, no decisiones.)
+
+**Los 20 lugares** (se cambiaron todos de golpe):
+
+| Pantalla | Que es |
+|---|---|
+| `Opciones/`, `Encuentros/` | Saltar turno |
+| `Diablitos/` | Volver a los originales |
+| Inicio ⚙️ Usuarios | Salir de modo invitado · eliminar a alguien |
+| `Citas/`, `Citas/accesorios.html` | Eliminar cita · eliminar accesorio |
+| `Acompanante/` | Eliminar la conversacion |
+| `Retos/` | Rechazar · retirar · eliminar · dar un punto · cobrar · aplicar castigo |
+| `Panel/catalogo.html`, `Panel/oficiales.html`, `Panel/permisos.html` | Eliminar del catalogo · quitar publicador |
+| `Autorizar/` | Revocar · negar · eliminar solicitud |
+
+**Un texto que se acorto (decision de Fredy, oct-2026):** el de **salir de modo
+invitado** era largo y avisaba lo que mas se necesita saber:
+*"¿Salir de invitado y volver a tu base? **Tambien te borro de sus usuarios.**"*
+Quedo solo **"¿Salir de modo invitado?"**. El invitado ya **no ve ahi** que
+tambien se le borra de la lista de quien lo invito. Si alguna vez molesta, se
+devuelve con `texto:`.
 
 ### Pantallas de configuracion: Actividades y Accesorios (oct-2026)
 

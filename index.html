@@ -414,6 +414,7 @@ import {
 } from "./config.js";
 // Lógica de licencias compartida con el resto de la app (ver acceso.js).
 import { miProyecto, appTaq, leerLicencias, graciasDisponibles, escucharCatalogo } from "./acceso.js";
+import { confirmar } from "./confirmar.js";
 // Modo invitado: la regla de "cuándo eres invitado de verdad" vive aquí.
 import {
   CLAVE_BACKUP, CLAVE_LOCAL, hayRespaldo, soyInvitado, quedasteMedioCamino,
@@ -1050,7 +1051,13 @@ async function pintarInvUsuarios(){
       x.setAttribute("aria-label", "Eliminar " + u.nombre);
       x.style.cssText = "background:none;border:none;color:var(--rojo);font-size:1.1rem;cursor:pointer;padding:8px;";
       x.onclick = async ()=>{
-        if(!confirm("¿Eliminar a " + u.nombre + " de la app?")) return;
+        const confirmado = await confirmar({
+          aviso: true,
+          titulo: "¿Eliminar a " + u.nombre + " de la app?",
+          texto: "No se puede deshacer.",
+          ok: "Eliminar"
+        });
+        if(!confirmado) return;
         try{
           const ref = doc(db, "config", "ajustes");
           const snap = await getDoc(ref);
@@ -1334,7 +1341,8 @@ document.getElementById("invVolverTop").onclick = async ()=>{
 };
 document.getElementById("invSalir").onclick = async ()=>{
   if(!soyInvitado()) return;
-  if(!confirm("¿Salir de invitado y volver a tu base? También te borro de sus usuarios.")) return;
+  const confirmado = await confirmar({ aviso: true, titulo: "¿Salir de modo invitado?", ok: "Salir" });
+  if(!confirmado) return;
   await salirDeInvitado(dbActual());
   location.replace("./");
 };

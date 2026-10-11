@@ -260,6 +260,7 @@ import {
 
 import firebaseConfigBase from "../firebase-config.js";
 import { resolverFirebase, resolverTelegram, baseUrl, cargarUsuarios, asegurarFabrica, unirConFabrica } from "../config.js";
+import { confirmar } from "../confirmar.js";
 const firebaseConfig = resolverFirebase(firebaseConfigBase);
 
 const app = initializeApp(firebaseConfig);
@@ -731,7 +732,12 @@ async function rechazarCita(id){
 }
 
 async function eliminarCita(id){
-  const confirmado = confirm("¿Seguro que quieres eliminar esta cita? Esta acción no se puede deshacer.");
+  const confirmado = await confirmar({
+    aviso: true,
+    titulo: "¿Eliminar esta cita?",
+    texto: "No se puede deshacer.",
+    ok: "Eliminar"
+  });
   if(!confirmado) return;
   const c = citasPorId[id];
   suprimir(id);

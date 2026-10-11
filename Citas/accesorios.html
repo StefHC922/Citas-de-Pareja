@@ -186,6 +186,7 @@ import {
 
 import firebaseConfigBase from "../firebase-config.js";
 import { resolverFirebase, leerConfigGuardada, cargarUsuarios, asegurarFabrica } from "../config.js";
+import { confirmar } from "../confirmar.js";
 const firebaseConfig = resolverFirebase(firebaseConfigBase);
 
 const app = initializeApp(firebaseConfig);
@@ -372,7 +373,13 @@ async function eliminar(){
   if(!docObjetivo) return;
 
   const cual = inputEl.value.trim();
-  if(!confirm("¿Eliminar el accesorio \u00ab" + cual + "\u00bb?\n\nSe quita de tu lista. No se puede deshacer.")) return;
+  const confirmado = await confirmar({
+    aviso: true,
+    titulo: "¿Eliminar el accesorio «" + cual + "»?",
+    texto: "No se puede deshacer.",
+    ok: "Eliminar"
+  });
+  if(!confirmado) return;
 
   btnAgregar.disabled = true;
   try{

@@ -336,6 +336,7 @@ import { miProyecto, appTaq, leerLicencias, guardarLicencia, quitarLicencia, ten
 import { publicarInvitacion, retirarInvitacion, pausarInvitacion } from "../invitado.js";
 // Fuegos de celebracion al acabar el encuentro (igual que Elecciones Peligrosas).
 import { encenderFuegos, apagarFuegos } from "../fuegos.js";
+import { confirmar } from "../confirmar.js";
 
 const NIVELES = [
   { id: "basico", nombre: "Básico" },
@@ -814,7 +815,13 @@ async function saltarTurno(){
   }
   const deQuien = nombreCabeza((d.orden || [])[d.turno || 0]);
   if(d.orden[d.turno || 0] === miId){ pintarPaso(); return; }
-  if(!confirm("¿Saltar el turno de " + deQuien + "?\n\nEsa persona pierde su turno y el juego sigue con el siguiente.")) return;
+  const saltar = await confirmar({
+    aviso: true,
+    titulo: "¿Saltar el turno de " + deQuien + "?",
+    texto: "Esa persona pierde su turno y el juego sigue con el siguiente.",
+    ok: "Saltar turno"
+  });
+  if(!saltar) return;
   try{
     await runTransaction(db, async (tx)=>{
       const ref = sesionRef();

@@ -100,6 +100,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/fireba
 import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { TAQUILLA_FIREBASE, firmarAcceso } from "../taquilla.js";
+import { confirmar } from "../confirmar.js";
 
 const CLAVE_PRIV = "taquilla_priv";
 const app = initializeApp(TAQUILLA_FIREBASE);
@@ -257,7 +258,13 @@ function pintarSol(){
       const rev = document.createElement("button");
       rev.className = "btn danger"; rev.textContent = "Revocar";
       rev.onclick = async ()=>{
-        if(!confirm("¿Revocar acceso a " + (s.email || s.quien || "?") + "? Se le quitará en ese momento si está conectado.")) return;
+        const confirmado = await confirmar({
+          aviso: true,
+          titulo: "¿Revocar el acceso de " + (s.email || s.quien || "?") + "?",
+          texto: "No se puede deshacer.",
+          ok: "Revocar"
+        });
+        if(!confirmado) return;
         rev.disabled = true;
         try{ await updateDoc(doc(db, "solicitudes", id), { estado: "revocado", revocadoEn: serverTimestamp() }); }
         catch(e){ alert("No se pudo revocar. Entra con Google y revisa que tu correo esté en la lista de publicadores."); }
@@ -290,7 +297,8 @@ function pintarSol(){
         }catch(e){ alert("No se pudo aprobar. Entra con Google y revisa que tu correo esté en la lista de publicadores."); }
       };
       no.onclick = async ()=>{
-        if(!confirm("¿Negar acceso?")) return;
+        const confirmado = await confirmar({ aviso: true, titulo: "¿Negar este acceso?", ok: "Negar" });
+        if(!confirmado) return;
         try{ await updateDoc(doc(db, "solicitudes", id), { estado: "negado" }); }
         catch(e){ alert("No se pudo negar. Entra con Google y revisa que tu correo esté en la lista de publicadores."); }
       };
@@ -303,7 +311,13 @@ function pintarSol(){
         const del = document.createElement("button");
         del.className = "btn danger"; del.textContent = "Eliminar";
         del.onclick = async ()=>{
-          if(!confirm("¿Eliminar esta solicitud " + s.estado + " de " + (s.email || s.quien || "?") + "?")) return;
+          const confirmado = await confirmar({
+            aviso: true,
+            titulo: "¿Eliminar esta solicitud?",
+            texto: "No se puede deshacer.",
+            ok: "Eliminar"
+          });
+          if(!confirmado) return;
           del.disabled = true;
           try{ await deleteDoc(doc(db, "solicitudes", id)); }
           catch(e){ alert("No se pudo eliminar. Revisa reglas."); del.disabled = false; }

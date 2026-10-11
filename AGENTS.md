@@ -16,8 +16,8 @@ tenia el contexto a la mano.
 - Todo el codigo es **HTML estatico con JavaScript adentro**. No hay build, no
   hay npm, no hay framework. Se edita el archivo y ya.
 - Los modulos compartidos viven **en la raiz** (`acceso.js`, `invitado.js`,
-  `config.js`, `firebase-config.js`, `taquilla.js`) y se importan por ruta
-  relativa al **modulo**, no al archivo que lo importa.
+  `config.js`, `firebase-config.js`, `taquilla.js`, `fuegos.js`, `confirmar.js`) y
+  se importan por ruta relativa al **modulo**, no al archivo que lo importa.
 - **Reglas de Firestore:** no estan en el repo. Viven en la consola de Firebase.
   Cualquier tarea sobre permisos es manual y hay que decirlo.
 - **No hay `git` disponible en el entorno de trabajo.** Para revisar cambios se
@@ -66,6 +66,9 @@ probarla no justifica el rato perdido.
 3. No inventar reglas nuevas de Firestore: se reutiliza lo que ya funciona.
 4. No agregar reglas de seguridad que rompan el modo invitado (nada de "solo el
    anfitrion escribe", porque el invitado escribe su identidad).
+4b. **No se usa `confirm()` ni `alert()` del sistema para preguntar o confirmar
+   algo.** Van todos en `confirmar.js`, que es la caja de la app. Los `alert()`
+   de error si se dejan: son fallos, no decisiones.
 5. Cambios minimos, y **verificar antes de decir "listo"**.
 6. Documentar en `General/GUIA.md` lo que se decida o se descubra. Ese archivo
    es la unica memoria del proyecto.

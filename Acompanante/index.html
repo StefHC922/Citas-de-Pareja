@@ -112,6 +112,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/fireba
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "../firebase-config.js";
 import { resolverFirebase } from "../config.js";
+import { confirmar } from "../confirmar.js";
 
 const CLAVE_LOCAL = "appPareja_quienSoy";
 const CLAVE_LLAVE = "pareja_aiKey";
@@ -133,8 +134,13 @@ document.getElementById("btnGuardaNombre").onclick = ()=>{
   try{ localStorage.setItem(CLAVE_NOM, v); }catch(e){}
   location.reload();
 };
-document.getElementById("btnVaciarChat").onclick = ()=>{
-  if(!confirm("¿Borrar la conversación?")) return;
+document.getElementById("btnVaciarChat").onclick = async ()=>{
+  const confirmado = await confirmar({
+    aviso: true,
+    titulo: "¿Eliminar la conversación?",
+    ok: "Eliminar"
+  });
+  if(!confirmado) return;
   hist = [];
   guardarHist(); pintar();
   document.getElementById("panelCfgAI").style.display = "none";

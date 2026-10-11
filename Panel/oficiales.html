@@ -108,6 +108,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/fireba
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { TAQUILLA_FIREBASE } from "../taquilla.js";
+import { confirmar } from "../confirmar.js";
 
 const CLAVE_PRIV = "taquilla_priv";
 try{
@@ -385,7 +386,13 @@ async function cargar(){
     const bor = document.createElement("button");
     bor.className = "btn danger"; bor.textContent = "Borrar";
     bor.onclick = async ()=>{
-      if(!confirm("¿Borrar " + p.id + " del catálogo?")) return;
+      const confirmado = await confirmar({
+        aviso: true,
+        titulo: "¿Eliminar «" + p.id + "» del catálogo?",
+        texto: "No se puede deshacer.",
+        ok: "Eliminar"
+      });
+      if(!confirmado) return;
       if(!yoEmail){ msg("Entra con Google primero."); return; }
       if(!(await soyPublicador())){ msg("Ese Google no está en Correos que publican."); return; }
       bor.disabled = true;

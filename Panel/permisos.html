@@ -71,6 +71,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/fireba
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { TAQUILLA_FIREBASE } from "../taquilla.js";
+import { confirmar } from "../confirmar.js";
 
 const CLAVE_PRIV = "taquilla_priv";
 try{
@@ -152,7 +153,8 @@ async function pintar(){
     const x = document.createElement("button");
     x.textContent = "✕";
     x.onclick = async ()=>{
-      if(!confirm("¿Quitar " + em + "?")) return;
+      const confirmado = await confirmar({ aviso: true, titulo: "¿Quitar a " + em + "?", ok: "Quitar" });
+      if(!confirmado) return;
       if(!(await puedoEditar())){ msg("Entra con Google de un publicador."); return; }
       try{
         const act = (await leer()) || [];
