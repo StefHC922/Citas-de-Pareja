@@ -1538,6 +1538,74 @@ modelo. Si aun así salen retos planos, el siguiente escalón es un filtro en
 `extraerReto()` (una lista de palabras prohibidas que avise "ese reto no sirve" y
 pida otro), y eso ya sería decisión de producto.
 
+### La variedad de los retos de la IA (oct-2026)
+
+**Lo que existía:** los botones mandaban **siempre la misma frase** al modelo
+(`", proponme un reto picarón de hoy 😏"`). Con la misma entrada, el modelo devuelve
+el mismo reto con otro nombre. Fredy lo notó: *"todos son prácticamente lo mismo,
+solo hace un juego de palabras o moviendo el lugar"*.
+
+**El arreglo que de verdad mueve la aguja no son los ejemplos: es la entrada.**
+Los botones ahora eligen al azar entre varias peticiones distintas:
+
+```js
+const PEDIROS_RETO = [ ", proponme un reto picarón de hoy 😏",
+                       ", dame un reto de esos que dan vergüenza pedir 😏", ... ];
+const pedirAlAzar = (lista)=> lista[Math.floor(Math.random() * lista.length)];
+document.getElementById("btnIdea").onclick = ()=>enviar(NOMBRE_AI + pedirAlAzar(PEDIROS_RETO));
+```
+
+**6 peticiones para retos y 5 para planes.** Distinta entrada → respuesta de
+verdad distinta. Esto es lo que quitó el patrón; los ejemplos solo lo acompañan.
+
+**Además se amplió la instrucción:**
+
+- Se pasaron de 5 a **10 ejemplos de retos**, variando la acción, el lugar y
+  **quién manda** (a veces ella, a veces tú), y se agregó al final: *"OJO: no te
+  repitas. Cada reto es distinto de los demás en la acción, en el lugar y en
+  quién manda. Si se te ocurre uno que se parece a otro, ese no lo mandes."*
+- **Los planes tenían cero guía**, y por eso salían tipo "cena romántica". Ahora
+  tienen su propio bloque, con 5 ejemplos del mismo registro de doble sentido, y
+  su propia lista de prohibidos.
+
+**El límite sigue igual:** doble sentido y sugerencia, **nunca se cuenta qué va a
+pasar**. Esa instrucción no se tocó en esta ronda.
+
+### La instrucción de la IA se reescribió completa (oct-2026)
+
+Fredy detectó que la instrucción de `PERSONA` (en `Acompanante/`) **tenía contradicciones internas**, y tenía razón: eran la razón de que los retos salieran siempre parecidos.
+
+**El texto vive en un archivo aparte, editable:**
+`Documents\Default Project\instruccion-IA.txt` (texto plano, sin código).
+Ahí se edita a gusto con el Bloc de notas y se pasa por
+`Temp\opencode\aplicar_persona.py`, que lo mete en `Acompanante/index.html`
+cambiando `{SU_NOMBRE}` por `${NOMBRE_AI}` y **escapando las comillas
+invertidas** (van dentro de un template literal; sin escapar rompen el archivo).
+
+**Las cinco cosas que estaban mal y cómo quedaron:**
+
+| Antes | Ahora |
+|---|---|
+| *"Solo cosas **verificables dentro de la app**"* — contradecía todos los ejemplos (un masaje no se verifica en un celular) | Se quitó. Quedó *"NUNCA pidas fotos, videos, audios ni capturas"* |
+| El límite era solo "nunca explícito", y los ejemplos **ya se pasaban de la raya** | **Dos lados explícitos**: PUEDES (ropa, cuerpo, piel, excitación, el cebo) / NO PUEDES (describir el acto, decir paso a paso, palabras crudas) |
+| 9 ejemplos, **6 de la misma forma** → por eso repetía | Repartidos entre las **5 formas** (A: tú le haces · B: te lo hace · C: los dos · D: al azar o regla · E: cebo) |
+| Nada decía de días | *"Hay retos de una sola noche que dan 1 punto, y retos que se repiten cada día y dan más"*, **con ejemplo en el bloque**: `"puntos":1,"dias":1` |
+| Todo en femenino, contra su propia regla de no suponer el género | **"tu pareja"** en los ejemplos. Los dos "ella" que quedan están en la regla que lo prohíbe, y es lo correcto |
+
+**Ojo, dos cosas que se supieron en el camino:**
+
+- **"Hotel de paso" NO es pagar por compañía.** Es un hotel por hora para que
+  la pareja tenga privacidad. Fredy loquitó porque **era justo el ejemplo que más
+  le gustaba**, y yo lo habíaiator marcado por una confusión mía. **No volver a
+  plantear esa duda.**
+- **No hay candado de "una vez al día" en el juego.** `marcarCumplida()` solo suma
+  1 al contador, sin mirar la fecha (revisado en el código). Así que un reto de
+  una sola noche **sí** se completa apretando las veces necesarias.
+
+**Regla para cuando se toque este texto:** la instrucción y sus ejemplos se
+validan **contra sí mismos**. Si la instrucción dice cinco formas y los ejemplos
+muestran una, gana el ejemplo y el modelo repite. Siempre van juntos.
+
 ### El nombre de la IA en el campo de escritura (oct-2026)
 
 El campo del chat tenía el texto fijo *"Escríbele a Chispa..."*, aunque el nombre
