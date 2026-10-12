@@ -5,15 +5,15 @@
 //  SOLO. No es un juego ni un aviso: es para cuando alguien se queda mirando la
 //  pantalla sin hacer nada.
 //
-//      import { glueSiEstaQuieto } from "./glue.js";
-//      glueSiEstaQuieto(10);       // a los 10 segundos quieto, cae el chorro
+//      import { glueSiEstaQuieto, glueOlvidado } from "./glue.js";
+//      glueSiEstaQuieto(30);       // a los 30 segundos quieto, cae el chorro
 //
 //  Que hace, exacto:
 //   - Cuenta los segundos SIN INTERACTUAR. Cualquier toque, scroll o tecla lo
 //     reinicia, asi que si la persona esta usando la pantalla, no pasa nada.
 //   - Cuando se cumplen los segundos, prende el chorro.
-//   - El chorro se mantiene SOLO en bucle, y ADEMAS baja desde arriba un
-//     "oleaje": láminas de agua con el frente ondulado, crestas y espuma.
+//   - El chorro se mantiene SOLO en bucle: gotas que caen y charcos que se van
+//     pegando a la pantalla.
 //   - El PRIMER toque lo apaga al instante y borra el lienzo: no queda rastro.
 //
 //  Notas de seguridad (esto es lo importante):
@@ -22,10 +22,9 @@
 //   - Al apagar, se quitan el lienzo, el bucle y los escuchas. Si algo falla,
 //     la pagina sigue igual: por eso va aparte y no se mete en el juego.
 //   - **Todo tiene tope**: 70 charcos (los viejos se desvanecen, no se borran de
-//     golpe) y 3 olas de agua. Ademas hay un REDUCTOR AUTOMATICO: si el telefono
-//     baja de velocidad, el modulo se achica solo (menos olas, menos charcos) y
-//     se vuelve a agrandar cuando se recupera. Por eso puede correr todo el rato
-//     sin trabar el celular.
+//     golpe). Ademas hay un REDUCTOR AUTOMATICO: si el telefono baja de
+//     velocidad, se sueltan menos gotas por tanda y se vuelve a subir cuando se
+//     recupera. Por eso puede correr todo el rato sin trabar el celular.
 //   - Si la persona se cambia de pestana, se apaga sola (no gasta bateria).
 //   - Se respeta la opcion "glue_mute" del almacenamiento local, que lo apaga
 //     sin quitar nada mas de la pantalla.
@@ -42,12 +41,6 @@ const MAX_BLOBS = 70;
 const DESVANECER = 1.2;         // segundos que tarda un charco viejo en irse
 const GRAV = 2000;
 
-// Reglas del agua que baja desde arriba (el "oleaje"). Los topes son la red de
-// seguridad: aun en el peor caso el telefono tiene que aguantar.
-const MAX_OLAS = 3;            // nunca mas de este many a la vez
-const MAX_OLAS_BAJO = 2;       // con el celu lento, solo dos
-const PASO_FRENTE = 10;        // px entre puntos del frente ondulado
-
 let lienzo = null;
 let ctx = null;
 let W = 0, H = 0, dpr = 1;
@@ -56,14 +49,12 @@ let rafId = 0;
 let activo = false;
 let temporizador = 0;
 let temporizadorGlue = 0;
-let temporizadorAgua = 0;
 let escuchando = false;
 let drops = [];
 const blobs = [];
-const olas = [];
 
-// Red de seguridad del rendimiento: si el celu empieza a ir lento, se baja sola
-// la cantidad de agua y de chorro. Se vuelve a subir cuando vuelve la velocidad.
+// Red de seguridad del rendimiento: si el celu empieza a ir lento, se sueltan
+// menos gotas por tanda. Se vuelve a subir cuando vuelve la velocidad.
 // `calidad` va de 0 a 1 y multiplica topes, no cambia el dibujo.
 let calidad = 1;
 let acumCuadros = 0, acumTiempo = 0;
@@ -297,151 +288,34 @@ function drawBlob(b){
   ctx.restore();
 }
 
-// ---------- Oleaje: el agua que baja desde arriba ----------
-// Viene del archivo de trabajo (glue-splat.html). Cada ola es una lamina de agua
-// que baja con el frente ondulado, crestas y espuma. Se dibuja DEBAJO del
-// pegamento: el agua primero, el chorro encima.
-//
-// El agua SOLO ocupa el TERCIO DE ARRIBA de la pantalla (decision de Fredy,
-// oct-2026): asi queda como una superficie en la parte de arriba y NO se ve el
-// "vacio" cuando una ola se apaga. Se logra con tres cosas a la vez:
-//   1) la ola nace ya casi dentro de la pantalla y baja mas rapido,
-//   2) se apaga SOLO entre el 2% y el 30% de la altura (ahi se va del todo),
-//   3) salen olas mucho mas seguido y se saltan si ya hay el tope. Asi siempre
-//      hay 2 o 3 superpuestas: una va saliendo mientras entran las otras.
-const BANDA_F0 = 0.02;   // sigue totalmente opaca
-const BANDA_F1 = 0.30;   // ya del todo apagada: termina aqui
-const RITMO_OLA = 1.1;   // cada quantito sale otra
-
-function spawnOla(){
-  olas.push({
-    y: -H * 0.02,                      // apenas por encima: entra enseguida
-    v: rnd(38, 70),                     // baja mas rapido (la banda es corta)
-    amp: rnd(H * 0.015, H * 0.035),     // ondas mas chicas, propias de una banda
-    k: rnd(0.004, 0.010),               // longitud de onda corta: mas ondulado
-    ph: rnd(0, 6.28),
-    sp: rnd(0.5, 1.1),
-    a: 0,
-    fade: 1
-  });
-}
-function updateOlas(dt){
-  temporizadorAgua += dt;
-  if(temporizadorAgua > rnd(RITMO_OLA, RITMO_OLA * 1.8)){
-    temporizadorAgua = 0;
-    // Si ya hay suficientes, NO se lanza otra: la ola que esta bajando se deja
-    // terminar su desvanecido sola. Antes se echaba la vieja de golpe y el
-    // oleaje solo se veía asomarse arriba y desaparecer (bug, oct-2026).
-    if(olas.length < topeOlas()) spawnOla();
-  }
-  // Se apaga DENTRO de la banda de arriba y ahi se va del todo.
-  const f0 = H * BANDA_F0, f1 = H * BANDA_F1;
-  for(let i = olas.length - 1; i >= 0; i--){
-    const o = olas[i];
-    o.y += o.v * dt;
-    o.ph += o.sp * dt;
-    o.a = Math.min(1, o.a + dt * 1.6);       // se ve rapido al entrar
-    o.fade = 1 - clamp((o.y - f0) / (f1 - f0), 0, 1);
-    if(o.fade <= 0.003 || o.y > f1) olas.splice(i, 1);
-  }
-}
-// El frente: tres senos sumados, para que la ola ondule de verdad.
-function frenteY(o, x, off = 0){
-  return o.y + off
-    + Math.sin(x * o.k + o.ph) * o.amp
-    + Math.sin(x * o.k * 2.3 - o.ph * 1.3) * o.amp * 0.5
-    + Math.sin(x * o.k * 4.1 + o.ph * 2.1) * o.amp * 0.14;
-}
-function drawOlas(){
-  if(!olas.length) return;
-  ctx.save();
-  ctx.globalCompositeOperation = "lighter";
-  for(const o of olas){
-    const A = o.a * o.fade;
-    if(A <= 0.01) continue;
-
-    // cuerpo de agua: del borde superior hasta el frente ondulado
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(W, 0);
-    for(let x = W; x >= 0; x -= PASO_FRENTE) ctx.lineTo(x, frenteY(o, x));
-    ctx.closePath();
-    const g = ctx.createLinearGradient(0, 0, 0, Math.max(1, o.y));
-    g.addColorStop(0, "rgba(88, 128, 155, " + (0.45 * A) + ")");
-    g.addColorStop(0.5, "rgba(78, 116, 143, " + (0.32 * A) + ")");
-    g.addColorStop(1, "rgba(70, 105, 132, 0)");
-    ctx.fillStyle = g;
-    ctx.fill();
-
-    // crestas: lineas de luz que ondean detras del frente
-    for(let l = 1; l <= 3; l++){
-      ctx.beginPath();
-      for(let x = 0; x <= W; x += PASO_FRENTE){
-        const y = frenteY(o, x, -l * o.amp * 0.85);
-        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.strokeStyle = "rgba(215, 238, 250, " + (0.38 * A / l) + ")";
-      ctx.lineWidth = Math.max(1, 3 - l);
-      ctx.stroke();
-    }
-
-    // espuma en el borde del frente
-    ctx.beginPath();
-    for(let x = 0; x <= W; x += PASO_FRENTE){
-      const y = frenteY(o, x);
-      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    }
-    ctx.strokeStyle = "rgba(238, 250, 255, " + (0.65 * A) + ")";
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    // brillos que se desplazan con el oleaje
-    for(let i = 0; i < 12; i++){
-      const x = (i * 173 + o.ph * 120) % W;
-      const y = o.y * ((i * 0.41) % 1);
-      ctx.beginPath();
-      ctx.ellipse(x, y, 30, 3.5, 0, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(225, 245, 255, " + (0.05 * A) + ")";
-      ctx.fill();
-    }
-  }
-  ctx.restore();
-  ctx.globalCompositeOperation = "source-over";
-}
-
-// ---------- red de seguridad del rendimiento ----------
-// Si el telefono no da mas, se baja la calidad sola (menos agua, menos chorro) y
-// se vuelve a subir cuando se recupera. Asi el chorro puede correr todo el rato
-// sin que la pantalla se vuelva arrastrada.
+// Si el telefono no da mas, se suelta menos chorro (menos gotas por tanda) y se
+// recupera solo cuando vuelve la velocidad. Nunca desaparece el efecto.
 function medirRendimiento(dt){
   acumCuadros++; acumTiempo += dt;
   if(acumCuadros < 60) return;
-  const prom = acumTiempo / acumCuadros;
-  let nueva = calidad;
-  if(prom > 0.031) nueva = 0.4;        // ~32 fps o menos: bajamos fuerte
-  else if(prom > 0.025) nueva = 0.7;   // ~40 fps o menos: bajamos un poco
-  else nueva = 1;                      // va bien: calidad completa
-  if(nueva !== calidad) calidad = nueva;
+  const prom = acumTiempo / acumCuadros;   // segundos por cuadro
+  if(prom > 1 / 32) calidad = 0.4;         // ~32 fps o menos: bajamos fuerte
+  else if(prom > 1 / 40) calidad = 0.7;    // ~40 fps o menos: bajamos tantito
+  else calidad = 1;                        // va bien: calidad completa
   acumCuadros = 0; acumTiempo = 0;
 }
-const topeOlas = ()=> calidad < 1 ? MAX_OLAS_BAJO : MAX_OLAS;
 
 // ---------- bucle ----------
-function cuadro(now){
+function bucle(now){
+  rafId = requestAnimationFrame(bucle);
   const dt = Math.min((now - anterior) / 1000, 0.033);
   anterior = now;
+
   ctx.clearRect(0, 0, W, H);
-  medirRendimiento(dt);
 
-  // el agua va DEBAJO del pegamento (asi el chorro se ve encima)
-  updateOlas(dt);
-  drawOlas();
-
-  // ritmo del chorro (esto es lo que lo hace ciclico). Con el celu lento sale
-  // una gota menos por tanda.
+  // ritmo del chorro: una gota menos por tanda si el celular va lento.
   temporizadorGlue += dt;
-  if(temporizadorGlue > rnd(0.28, 0.6)){ temporizadorGlue = 0; pour(calidad >= 1 ? 2 : 1); }
+  if(temporizadorGlue > rnd(0.28, 0.6)){
+    temporizadorGlue = 0;
+    pour(calidad >= 1 ? 2 : 1);
+  }
 
+  // gotas
   for(let i = drops.length - 1; i >= 0; i--){
     const d = drops[i];
     d.t += dt;
@@ -451,6 +325,7 @@ function cuadro(now){
     d.x += d.vx * dt;
     d.w += dt * 6;
 
+    // rastro: chorro continuo de gotas que deja la gota principal
     if(Math.random() < 0.85){
       d.trail.push({ x: d.x + rnd(-5, 5), y: d.y + rnd(-6, 18), r: rnd(3, 8) });
       if(d.trail.length > 48) d.trail.shift();
@@ -463,6 +338,7 @@ function cuadro(now){
       ctx.ellipse(p.x, p.y, p.r, p.r * 1.6, 0, 0, Math.PI * 2);
       ctx.fill();
     }
+    // gota principal: se estira en la direccion del movimiento
     const sp = Math.hypot(d.vx, d.vy) || 1;
     const stretch = clamp(1 + sp / 900, 1, 3.4);
     ctx.translate(d.x, d.y);
@@ -472,12 +348,14 @@ function cuadro(now){
     ctx.fill();
     ctx.restore();
 
+    // impacto con la pantalla
     if(d.y <= d.ty + d.r * 0.3){
       makeBlob(clamp(d.x, 10, W - 10), Math.min(d.ty + d.r * 0.3, H - 8), d.r);
       drops.splice(i, 1);
     }
   }
 
+  // charcos: crecen y se asientan; los que se sobran se desvanecen y se van.
   for(const b of blobs){
     b.life += dt;
     b.grow = Math.min(b.grow + dt * 1.6, 2);
@@ -485,48 +363,39 @@ function cuadro(now){
     b.yOff += (b.settle * 40 - b.yOff) * Math.min(1, dt * 2.2);
     if(b.muriendo) b.muerte = Math.min(1, b.muerte + dt / DESVANECER);
   }
-  // los que ya se desvanecieron por completo, fuera de la lista
   for(let i = blobs.length - 1; i >= 0; i--){
     if(blobs[i].muerte >= 1) blobs.splice(i, 1);
   }
-  for(const b of blobs) drawBlob(b);
+  for(const b of blobs) drawBlob(b);   // orden de llegada: el ultimo queda encima
 
-  rafId = requestAnimationFrame(cuadro);
+  medirRendimiento(dt);
 }
 
 // ---------- prender y apagar ----------
-export function glueEstaEncendido(){ return activo; }
-
-export function encenderGlue(){
+function encenderGlue(){
   if(activo || estaMuteado()) return;
   try{
+    activo = true;
     armarLienzo();
     drops.length = 0;
     blobs.length = 0;
-    olas.length = 0;
     temporizadorGlue = 0;
-    temporizadorAgua = 0;
     calidad = 1;
     acumCuadros = 0; acumTiempo = 0;
     anterior = performance.now();
-    activo = true;
     window.addEventListener("resize", ajustar);
-    rafId = requestAnimationFrame(cuadro);
+    rafId = requestAnimationFrame(bucle);
   }catch(e){
-    // Si algo falla, la pagina sigue igual: nada de dejar el lienzo a medias.
     apagarGlue();
   }
 }
 
 export function apagarGlue(){
-  try{
-    if(rafId) cancelAnimationFrame(rafId);
-  }catch(e){}
+  try{ if(rafId) cancelAnimationFrame(rafId); }catch(e){}
   rafId = 0;
   activo = false;
   drops.length = 0;
   blobs.length = 0;
-  olas.length = 0;
   try{ window.removeEventListener("resize", ajustar); }catch(e){}
   if(lienzo && lienzo.parentNode) lienzo.parentNode.removeChild(lienzo);
   lienzo = null;
@@ -544,13 +413,13 @@ function hayMovimiento(){
   }, Math.max(1, SEGUNDOS) * 1000);
 }
 
-let SEGUNDOS = 10;
+let SEGUNDOS = 30;
 
 /**
  * Prende el chorro si la persona lleva `segundos` sin interactuar en la pagina.
  * Se vuelve a armar solo despues de cada toque, asi que puede volver a pasar.
  */
-export function glueSiEstaQuieto(segundos = 10){
+export function glueSiEstaQuieto(segundos = 30){
   SEGUNDOS = segundos;
   if(escuchando){ hayMovimiento(); return; }
   escuchando = true;

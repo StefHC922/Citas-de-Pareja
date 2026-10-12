@@ -1686,23 +1686,29 @@ tiempo perdido fue por no leer dos archivos que ya tenían la respuesta.
 ### Chorro de pegamento si te quedas quieto (`glue.js`, oct-2026)
 
 **Modulo en la raiz**, igual que `fuegos.js`. Si alguien entra al submenú
-**Experiencias en Pareja** y se queda **10 segundos sin tocar nada**, cae un chorro
+**Experiencias en Pareja** y se queda **30 segundos sin tocar nada**, cae un chorro
 de pegamento encima de la pantalla y se va llenando de charcos. **Al primer toque
 se apaga al instante** y no queda rastro.
 
 ```js
 import { glueSiEstaQuieto, glueOlvidado } from "./glue.js";
-glueSiEstaQuieto(10);   // abre la espera; en cerrarExp() va glueOlvidado()
+glueSiEstaQuieto(30);   // abre la espera; en cerrarExp() va glueOlvidado()
 ```
+
+**Se quitó el OLEAJE (oct-2026).** El chorro tenia ademas unas "olas" de agua que
+bajaban por el tercio de arriba; se estaban retirando y **se terminaron de
+quitar**: el modulo ahora es **solo el chorro y los charcos**. La espera tambien
+paso de 10 a **30 segundos**. Todo lo que sigue sobre el oleaje es registro
+historico: ya no existe en `glue.js`.
 
 **El comportamiento exacto (decidido por Fredy, oct-2026):**
 
 | Que | Como |
 |---|---|
-| Cuando cae | A los **10 segundos sin interactuar**. Cualquier toque, scroll o tecla **reinicia** la cuenta |
+| Cuando cae | A los **30 segundos sin interactuar**. Cualquier toque, scroll o tecla **reinicia** la cuenta |
 | Ciclo | El chorro **se mantiene solo en bucle**, todo el tiempo que haga falta |
 | Cuando se para | **Al primer toque**, en cualquier parte. Se borra el lienzo y ya |
-| Si vuelve a pasar | Si se queda quieto otros 10 segundos, **vuelve a caer**. La espera se rearma sola en cada toque |
+| Si vuelve a pasar | Si se queda quieto otros 30 segundos, **vuelve a caer**. La espera se rearma sola en cada toque |
 | Cuándo se para solo | Si se cambia de pestaña (`visibilitychange`): no gasta batería |
 
 **Lo importante para que no rompa nada:**
@@ -1794,9 +1800,9 @@ rato sin arrastrar la pantalla.**
 pixel: en un celular de 400 px son ~40 puntos por linea, y con 3 olas + 3 crestas se
 mantiene barato.
 
-Viene de `Documents\Default Project\glue-splat.html` (la copia de trabajo, **ya
-actualizada**). Se quitaron el fondo, el texto y los controles de prueba; solo se
-quedó el chorro y el oleaje.
+Viene de `Documents\Default Project\glue-splat.html` (copia de trabajo, **borrada
+oct-2026** junto con el oleaje). De ahi se quitaron el fondo, el texto y los
+controles de prueba.
 
 **Verificado:** sintaxis OK en `glue.js` e `index.html`; `glue.js` quedó registrado
 en `herramientas/sintaxis/extract.py`. **Falta la prueba en vivo.**
