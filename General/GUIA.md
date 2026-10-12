@@ -1527,6 +1527,21 @@ solo de su saldo. Los puntos son los mismos de `puntosUsuarios` que dan los reto
 | `index.html` | El botón **🛒** por usuario en Usuarios y el overlay de los 2 números (`ptsActivar`, `precioCompra`) |
 | `herramientas/sintaxis/extract.py` | Se registró `Retos/centro.html` para que pase la revisión |
 
+**Encabezado estándar:** la pantalla usa el mismo molde que `Retos/` y `Citas/`:
+`#app` (oculto por JS) + `#encabezado` con saludo grande con degradado ("Hola, [nombre]")
++ `#fechaHoy` + "Volver" arriba a la derecha. **Las tres vistas comparten el mismo
+contenedor** (`max-width:560px`, centrado). Antes solo el catálogo lo tenía y las
+otras dos se estiraban de lado a lado: por eso los datos se veían "por toda la
+pantalla" (decisión de Fredy, oct-2026).
+
+**Orden de la tarjeta:** el "Centro" lleva `orden: 20` (Retos lleva `10`), porque el
+listado se ordena por `orden` y luego alfabéticamente: sin eso, "Centro..." caía
+**antes** que "Retos".
+
+**"Volver" del catálogo** va a `../index.html#retos` (el **submenú** Retos del
+menú), no a la pantalla de Retos: el Centro cuelga de ese submenú, así que se
+regresa al submenú. En las otras dos vistas solo vuelve al catálogo.
+
 **Un detalle de `tarjetaPack()`:** armaba `href = ruta + "/"`, que sirve para las
 carpetas ("Retos" → "Retos/") pero rompía con un archivo suelto
 ("Retos/centro.html/" no existe). Ahora, si la ruta ya trae `.html`, se usa tal cual.

@@ -639,15 +639,17 @@ async function renderPacksDeVerdad(){
     // camino que Diablitos y el botón aparece siempre (oct-2026).
     { id: "retos", titulo: "Retos", icono: "🏆",
       desc: "Propón retos, gana puntos y cobra recompensas",
-      ruta: "Retos", seccion: "retos", libre: true },
+      ruta: "Retos", seccion: "retos", libre: true, orden: 10 },
     // El Centro vive DENTRO del submenú de Retos (no en la pantalla de Retos):
     // el titulo lleva el nombre de tu pareja, asi que se arma aqui, con el
     // nombre que tenga ahora. Si no hay pareja registrada, la tarjeta no sale
     // (el Centro es de dos). Es un archivo suelto, por eso la ruta trae .html
     // y `tarjetaPack` ya no le agrega la "/" (oct-2026).
+    // `orden: 20` lo deja DEBAJO de la tarjeta de Retos: sin esto el listado se
+    // ordenaba por nombre y "Centro..." caia antes que "Retos".
     { id: "centro", titulo: "Centro de Adquisiciones", icono: "🛒",
       desc: "Tu lista de deseos y la tienda de tu pareja",
-      ruta: "Retos/centro.html", seccion: "retos", libre: true, necesitaPareja: true }
+      ruta: "Retos/centro.html", seccion: "retos", libre: true, necesitaPareja: true, orden: 20 }
   ];
   const FIJOS = ["guiadas", "diablitos", "retos", "centro"];
   try{

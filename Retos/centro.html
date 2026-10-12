@@ -49,23 +49,34 @@
   }
   textarea{ resize:vertical; min-height:70px; }
 
+  /* ---------- app principal ---------- */
+  #app{ display:none; min-height:100dvh; flex-direction:column; }
+
   /* ---------- encabezado ---------- */
   #encabezado{
     padding:20px 20px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px;
     border-bottom:1px solid var(--card-border);
   }
   #encabezado .saludo{ font-size:1.2rem; }
-  #encabezado .saludo.grande{ font-size:1.4rem; font-family:'Chakra Petch',sans-serif; font-weight:700; }
+  #encabezado .saludo.grande{ font-size:1.7rem; font-family:'Chakra Petch',sans-serif; font-weight:700; }
   #encabezado .saludo span{
     background:linear-gradient(90deg, var(--coral), var(--teal));
     -webkit-background-clip:text; background-clip:text; color:transparent;
   }
+  #fechaHoy{ font-size:.82rem; color:var(--fg-muted); margin-top:2px; }
+  #encabezado .derecha{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
   #btnVolver{
     background:none; color:var(--fg-muted); font-size:.75rem;
     text-decoration:underline; padding:4px; font-weight:500; font-family:'Inter',sans-serif;
   }
 
-  #contenido{ padding:20px; max-width:560px; width:100%; margin:0 auto; padding-bottom:40px; }
+  /* Las TRES vistas usan este mismo contenedor. Antes solo el catálogo lo tenía,
+     y las otras dos se estiraban de lado a lado de la pantalla: por eso se veian
+     los datos "por toda la pantalla" (decisión de Fredy, oct-2026). */
+  #contenido, #contenidoDeseos, #contenidoPedidos{
+    flex:1; padding:20px; padding-bottom:120px;
+    max-width:560px; width:100%; margin:0 auto;
+  }
   .seccionTitulo{
     font-family:'Chakra Petch',sans-serif; font-size:.8rem;
     letter-spacing:.25em; text-transform:uppercase;
@@ -172,20 +183,21 @@
 </head>
 <body>
 
+<div id="app">
 <div id="encabezado">
   <div>
-    <div class="saludo grande">Centro de <span id="nombrePareja">…</span></div>
-    <div id="subAqui" style="font-size:.82rem;color:var(--fg-muted);margin-top:2px;">Tienda de tu pareja</div>
+    <div class="saludo grande">Hola, <span id="nombreActual">…</span></div>
+    <div id="fechaHoy"></div>
   </div>
   <div class="derecha">
-    <a href="#" id="btnVolver">← Volver</a>
+    <a href="../index.html#retos" id="btnVolver">← Volver</a>
   </div>
 </div>
 
 <!-- ================= VISTA: CATÁLOGO (entrada) ================= -->
 <div id="vistaCatalogo">
   <div id="contenido">
-    <div class="seccionTitulo">En venta</div>
+    <div class="seccionTitulo">Tienda de <span id="nombrePareja">tu pareja</span></div>
     <div id="cajaCatalogo"></div>
     <div id="vacioCatalogo" class="vacio" style="display:none;">
       Todavía no hay nada a la venta. Activa un deseo desde “Mis deseos”.
@@ -199,9 +211,9 @@
 </div>
 
 <!-- ================= VISTA: MIS DESEOS ================= -->
-<div id="vistaDeseos" style="display:none;">
+<div id="vistaDeseos" style="display:none;flex:1;">
   <div id="contenidoDeseos">
-    <div class="seccionTitulo">Mi lista secreta</div>
+    <div class="seccionTitulo">Mi lista de deseos</div>
     <div id="listaDeseos"></div>
     <div id="vacioDeseos" class="vacio" style="display:none;">
       Todavía no has anotado ningún deseo.
@@ -211,9 +223,9 @@
 </div>
 
 <!-- ================= VISTA: MIS PEDIDOS ================= -->
-<div id="vistaPedidos" style="display:none;">
+<div id="vistaPedidos" style="display:none;flex:1;">
   <div id="contenidoPedidos">
-    <div class="seccionTitulo">Pedidos</div>
+    <div class="seccionTitulo">Mis pedidos</div>
     <div id="pestanas">
       <button type="button" id="tabComprados" class="on">Los que yo compré</button>
       <button type="button" id="tabRecibidos">Los que me compraron</button>
@@ -224,6 +236,7 @@
     <div id="vacioRecibidos" class="vacio" style="display:none;">No te han comprado ningún deseo.</div>
   </div>
 </div>
+</div><!-- /#app -->
 
 <!-- ================= OVERLAY: nuevo / editar deseo ================= -->
 <div id="overlay">
@@ -319,8 +332,8 @@ const vistaPedidosEl  = el("vistaPedidos");
 function irA(cual){
   vista = cual;
   vistaCatalogoEl.style.display = (cual === "catalogo") ? "block" : "none";
-  vistaDeseosEl.style.display   = (cual === "deseos")   ? "block" : "none";
-  vistaPedidosEl.style.display  = (cual === "pedidos")  ? "block" : "none";
+  vistaDeseosEl.style.display   = (cual === "deseos")   ? "flex"  : "none";
+  vistaPedidosEl.style.display  = (cual === "pedidos")  ? "flex"  : "none";
   el("btnNuevoDeseo").style.display = (cual === "deseos") ? "block" : "none";
   window.scrollTo(0, 0);
 }
@@ -331,9 +344,13 @@ function ver(which){
     try{ history.pushState({centro: which}, "", "#" + which); }catch(e){}
   }
 }
+// "Volver" desde el catalogo se va al **submenu Retos del menu**, no a la
+// pantalla de Retos: el Centro esta colgado de ese submenu, asi que se regresa
+// al submenu (igual que un juego regresa a su submenu). En las otras dos vistas
+// solo se vuelve al catalogo, que es donde ya estabas (decisión de Fredy, oct-2026).
 el("btnVolver").onclick = (ev)=>{
   ev.preventDefault();
-  if(vista === "catalogo"){ location.href = "index.html"; return; }
+  if(vista === "catalogo"){ location.href = "../index.html#retos"; return; }
   ver("catalogo");
 };
 el("linkDeseos").onclick  = (e)=>{ e.preventDefault(); ver("deseos"); };
@@ -663,7 +680,12 @@ async function iniciar(){
   pareja = usuarios.find(u=> u && u.id && u.id !== yo.id && !u.invitado)
           || usuarios.find(u=> u && u.id && u.id !== yo.id) || null;
   el("nombrePareja").textContent = pareja ? pareja.nombre : "tu pareja";
-  if(pareja) el("subAqui").textContent = "Lo que " + pareja.nombre + " tiene que entregarte";
+  el("nombreActual").textContent = yo.nombre;
+  try{
+    const f = new Date().toLocaleDateString("es-MX", { weekday:"long", day:"numeric", month:"long" });
+    el("fechaHoy").textContent = f.charAt(0).toUpperCase() + f.slice(1);
+  }catch(e){}
+  el("app").style.display = "flex";
 
   // Si entro por hash (#deseos / #pedidos), abro esa vista de una vez.
   const h = (location.hash || "").replace("#","");
