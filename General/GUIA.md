@@ -1734,26 +1734,42 @@ de golpe se veía raro**.
 | Los que se sobran | **NO se borran de golpe**: el más viejo se pone a **desvanecerse** en 1.2 s (`muerte` + `muriendo`) y se va solo |
 | Peor caso | Si aun así se juntan más de 70×1.5, se borra de golpe el más viejo de los que ya se desvanecían, para que la lista no crezca sin freno |
 
-**Y se agregó el agua que escurre desde arriba:** columnas de agua que bajan por
-toda la pantalla dejando estela, **encima** de los charcos. **No dejan charco al
-llegar abajo** (si no, la pantalla se llenaría de golpe y el tope se acabaría
-solo): se van al llegar al borde.
+**Y se agregó el OLEAJE (no "escurridos").** Ojo: **el archivo de trabajo
+`glue-splat.html` se actualizó a media noche** y trae una cosa que la primera
+versión **no tenía**: un **mar de agua que baja desde arriba**, con el frente
+ondulado. La primera vez se inventaron "escurridos" (gotas finas cayendo de
+arriba) y **no era eso** (decisión de Fredy, oct-2026).
 
-**Todo lleva tope, y hay un reductor automático:**
+**El oleaje es esto:**
+- Una lámina de agua que baja **muy despacio** desde el borde superior.
+- El frente es una suma de **tres senos** (`frenteY`), así que ondula de verdad.
+- Trae **cuerpo** (degradado azulado transparente), **tres crestas** de luz, la
+  **espuma** en el borde del frente y **brillos** que se mueven con el oleaje.
+- Se dibuja con `globalCompositeOperation = "lighter"` (aditivo).
+- Aparece **una ola cada 4–7 s**, y cada una se apaga despacio entre el 10% y el
+  85% de la altura, hasta desaparecer sola.
+- **Va DEBAJO del pegamento** (`drawOlas()` se llama antes que el chorro): el
+  agua primero, el chorro encima.
+
+**Los topes y la red de seguridad:**
 
 | Tope | Valor |
 |---|---|
 | Charcos | 70 (los viejos desvanecen) |
-| Escurridos de agua a la vez | 16 |
-| Puntos de estela por escurrido | 34 |
+| Olas a la vez | **3**, y solo **1** si el celular va lento |
 | **`medirRendimiento()`** | Cada 45 cuadros mide el tiempo promedio. Si baja de ~35 fps la calidad cae a 0.4; de ~47 fps a 0.7; si va bien, 1 |
 
 La calidad multiplica **topes**, no cambia el dibujo: el chorro nunca desaparece,
-solo hay menos agua y sale una gota menos por tanda. **Por eso puede correr todo el
+solo hay menos olas y sale una gota menos por tanda. **Por eso puede correr todo el
 rato sin arrastrar la pantalla.**
 
-Viene de `Documents\Default Project\glue-splat.html` (la copia de trabajo). Se
-quitaron el fondo, el texto y los controles de prueba; solo se quedó el chorro.
+**El frente ondulado se dibuja en pasos de 10 px** (`PASO_FRENTE`), no de pixel en
+pixel: en un celular de 400 px son ~40 puntos por linea, y con 3 olas + 3 crestas se
+mantiene barato.
+
+Viene de `Documents\Default Project\glue-splat.html` (la copia de trabajo, **ya
+actualizada**). Se quitaron el fondo, el texto y los controles de prueba; solo se
+quedó el chorro y el oleaje.
 
 **Verificado:** sintaxis OK en `glue.js` e `index.html`; `glue.js` quedó registrado
 en `herramientas/sintaxis/extract.py`. **Falta la prueba en vivo.**

@@ -12,8 +12,8 @@
 //   - Cuenta los segundos SIN INTERACTUAR. Cualquier toque, scroll o tecla lo
 //     reinicia, asi que si la persona esta usando la pantalla, no pasa nada.
 //   - Cuando se cumplen los segundos, prende el chorro.
-//   - El chorro se mantiene SOLO en bucle, y ADEMAS escurre agua desde arriba
-//     por toda la pantalla.
+//   - El chorro se mantiene SOLO en bucle, y ADEMAS baja desde arriba un
+//     "oleaje": láminas de agua con el frente ondulado, crestas y espuma.
 //   - El PRIMER toque lo apaga al instante y borra el lienzo: no queda rastro.
 //
 //  Notas de seguridad (esto es lo importante):
@@ -22,10 +22,10 @@
 //   - Al apagar, se quitan el lienzo, el bucle y los escuchas. Si algo falla,
 //     la pagina sigue igual: por eso va aparte y no se mete en el juego.
 //   - **Todo tiene tope**: 70 charcos (los viejos se desvanecen, no se borran de
-//     golpe), 16 escurridos de agua y 34 puntos de estela. Ademas hay un
-//     REDUCTOR AUTOMATICO: si el telefono baja de velocidad, el modulo se
-//     achica solo (menos agua, menos charcos) y se vuelve a agrandar cuando se
-//     recupera. Por eso puede correr todo el rato sin trabar el celular.
+//     golpe) y 3 olas de agua. Ademas hay un REDUCTOR AUTOMATICO: si el telefono
+//     baja de velocidad, el modulo se achica solo (menos olas, menos charcos) y
+//     se vuelve a agrandar cuando se recupera. Por eso puede correr todo el rato
+//     sin trabar el celular.
 //   - Si la persona se cambia de pestana, se apaga sola (no gasta bateria).
 //   - Se respeta la opcion "glue_mute" del almacenamiento local, que lo apaga
 //     sin quitar nada mas de la pantalla.
@@ -42,10 +42,11 @@ const MAX_BLOBS = 70;
 const DESVANECER = 1.2;         // segundos que tarda un charco viejo en irse
 const GRAV = 2000;
 
-// Reglas del agua que escurre desde arriba. Los topes son la red de seguridad:
-// aun en el peor caso el telefono tiene que aguantar.
-const MAX_ESCURRIDOS = 16;      // nunca mas de este many a la vez
-const MAX_PUNTOS = 34;           // puntos de estela por escurrido (memoria)
+// Reglas del agua que baja desde arriba (el "oleaje"). Los topes son la red de
+// seguridad: aun en el peor caso el telefono tiene que aguantar.
+const MAX_OLAS = 3;            // nunca mas de este many a la vez
+const MAX_OLAS_BAJO = 1;       // con el celu lento, solo una
+const PASO_FRENTE = 10;        // px entre puntos del frente ondulado
 
 let lienzo = null;
 let ctx = null;
@@ -57,10 +58,9 @@ let temporizador = 0;
 let temporizadorGlue = 0;
 let temporizadorAgua = 0;
 let escuchando = false;
-
 let drops = [];
 const blobs = [];
-const escurridos = [];
+const olas = [];
 
 // Red de seguridad del rendimiento: si el celu empieza a ir lento, se baja sola
 // la cantidad de agua y de chorro. Se vuelve a subir cuando vuelve la velocidad.
@@ -297,43 +297,99 @@ function drawBlob(b){
   ctx.restore();
 }
 
-// ---------- agua que escurre desde arriba ----------
-// Un escurrido es una columna de agua que baja desde el borde superior dejando
-// una estela. No deja charco al llegar abajo (si no, llenaria la pantalla de
-// golpe y se acabaria el tope solo): solo se va desvaneciendo al final.
-function nuevoEscurrido(){
-  escurridos.push({
-    x: rnd(-8, W + 8),
-    y: -20,
-    ancho: rnd(3, 9),
-    vel: rnd(240, 620),
-    puntos: []
+// ---------- Oleaje: el mar que baja desde arriba ----------
+// Viene del archivo de trabajo (glue-splat.html). Cada ola es una lamina de agua
+// que baja muy despacio desde el borde superior, con el frente ondulado, crestas
+// y espuma. Se dibuja DEBAJO del pegamento: el agua primero, el chorro encima.
+function spawnOla(){
+  olas.push({
+    y: -H * 0.05,                      // arranca justo arriba, ya casi visible
+    v: rnd(16, 28),                     // baja despacio
+    amp: rnd(H * 0.03, H * 0.075),      // ondas mas marcadas
+    k: rnd(0.004, 0.010),               // longitud de onda corta: mas ondulado
+    ph: rnd(0, 6.28),
+    sp: rnd(0.5, 1.1),
+    a: 0,
+    fade: 1
   });
+  while(olas.length > topeOlas()) olas.shift();
 }
-function drawEscurrido(e){
-  ctx.save();
-  // la estela: puntos que se van afinando hacia arriba
-  for(let i = e.puntos.length - 1; i >= 0; i--){
-    const p = e.puntos[i];
-    const t = (i + 1) / e.puntos.length;      // 1 = cabeza, 0 = cola
-    ctx.globalAlpha = 0.55 * t * t;
-    ctx.fillStyle = "#dfe7ea";
-    ctx.beginPath();
-    ctx.ellipse(e.x + Math.sin(i * 0.35) * 2.5, p.y, p.r * (0.35 + 0.65 * t), p.r * 2.1, 0, 0, Math.PI * 2);
-    ctx.fill();
+function updateOlas(dt){
+  temporizadorAgua += dt;
+  if(temporizadorAgua > rnd(4, 7)){ temporizadorAgua = 0; spawnOla(); }
+  // solo baja y se va apagando muy lento hasta desaparecer
+  const f0 = H * 0.10, f1 = H * 0.85;
+  for(let i = olas.length - 1; i >= 0; i--){
+    const o = olas[i];
+    o.y += o.v * dt;
+    o.ph += o.sp * dt;
+    o.a = Math.min(1, o.a + dt * 0.8);
+    o.fade = 1 - clamp((o.y - f0) / (f1 - f0), 0, 1);
+    if(o.fade <= 0.003 || o.y > H) olas.splice(i, 1);
   }
-  // la gota de la cabeza, con su brillo
-  ctx.globalAlpha = 0.8;
-  ctx.fillStyle = "#f2f7f8";
-  ctx.beginPath();
-  ctx.ellipse(e.x + Math.sin(e.puntos.length * 0.35) * 2.5, e.y, e.ancho * 0.9, e.ancho * 1.9, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 0.7;
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.ellipse(e.x - e.ancho * 0.3 + Math.sin(e.puntos.length * 0.35) * 2.5, e.y - e.ancho * 0.5, e.ancho * 0.3, e.ancho * 0.55, 0, 0, Math.PI * 2);
-  ctx.fill();
+}
+// El frente: tres senos sumados, para que la ola ondule de verdad.
+function frenteY(o, x, off = 0){
+  return o.y + off
+    + Math.sin(x * o.k + o.ph) * o.amp
+    + Math.sin(x * o.k * 2.3 - o.ph * 1.3) * o.amp * 0.5
+    + Math.sin(x * o.k * 4.1 + o.ph * 2.1) * o.amp * 0.14;
+}
+function drawOlas(){
+  if(!olas.length) return;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  for(const o of olas){
+    const A = o.a * o.fade;
+    if(A <= 0.01) continue;
+
+    // cuerpo de agua: del borde superior hasta el frente ondulado
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(W, 0);
+    for(let x = W; x >= 0; x -= PASO_FRENTE) ctx.lineTo(x, frenteY(o, x));
+    ctx.closePath();
+    const g = ctx.createLinearGradient(0, 0, 0, Math.max(1, o.y));
+    g.addColorStop(0, "rgba(88, 128, 155, " + (0.45 * A) + ")");
+    g.addColorStop(0.5, "rgba(78, 116, 143, " + (0.32 * A) + ")");
+    g.addColorStop(1, "rgba(70, 105, 132, 0)");
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    // crestas: lineas de luz que ondean detras del frente
+    for(let l = 1; l <= 3; l++){
+      ctx.beginPath();
+      for(let x = 0; x <= W; x += PASO_FRENTE){
+        const y = frenteY(o, x, -l * o.amp * 0.85);
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = "rgba(215, 238, 250, " + (0.38 * A / l) + ")";
+      ctx.lineWidth = Math.max(1, 3 - l);
+      ctx.stroke();
+    }
+
+    // espuma en el borde del frente
+    ctx.beginPath();
+    for(let x = 0; x <= W; x += PASO_FRENTE){
+      const y = frenteY(o, x);
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = "rgba(238, 250, 255, " + (0.65 * A) + ")";
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // brillos que se desplazan con el oleaje
+    for(let i = 0; i < 12; i++){
+      const x = (i * 173 + o.ph * 120) % W;
+      const y = o.y * ((i * 0.41) % 1);
+      ctx.beginPath();
+      ctx.ellipse(x, y, 30, 3.5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(225, 245, 255, " + (0.05 * A) + ")";
+      ctx.fill();
+    }
+  }
   ctx.restore();
+  ctx.globalCompositeOperation = "source-over";
 }
 
 // ---------- red de seguridad del rendimiento ----------
@@ -351,7 +407,7 @@ function medirRendimiento(dt){
   if(nueva !== calidad) calidad = nueva;
   acumCuadros = 0; acumTiempo = 0;
 }
-const topeEscurridos = ()=> Math.max(4, Math.round(MAX_ESCURRIDOS * calidad));
+const topeOlas = ()=> calidad < 1 ? MAX_OLAS_BAJO : MAX_OLAS;
 
 // ---------- bucle ----------
 function cuadro(now){
@@ -360,26 +416,14 @@ function cuadro(now){
   ctx.clearRect(0, 0, W, H);
   medirRendimiento(dt);
 
+  // el agua va DEBAJO del pegamento (asi el chorro se ve encima)
+  updateOlas(dt);
+  drawOlas();
+
   // ritmo del chorro (esto es lo que lo hace ciclico). Con el celu lento sale
   // una gota menos por tanda.
   temporizadorGlue += dt;
   if(temporizadorGlue > rnd(0.28, 0.6)){ temporizadorGlue = 0; pour(calidad >= 1 ? 2 : 1); }
-
-  // ritmo del agua que escurre desde arriba
-  temporizadorAgua += dt;
-  if(temporizadorAgua > rnd(0.4, 1.2)){
-    temporizadorAgua = 0;
-    if(escurridos.length < topeEscurridos()) nuevoEscurrido();
-  }
-  const maxPuntos = Math.round(MAX_PUNTOS * calidad);
-  for(let i = escurridos.length - 1; i >= 0; i--){
-    const e = escurridos[i];
-    e.y += e.vel * dt;
-    e.puntos.unshift({ y: e.y, r: e.ancho });
-    if(e.puntos.length > maxPuntos) e.puntos.pop();
-    // se va al llegar abajo (con un desvanecido corto, no de golpe)
-    if(e.y > H + 30) escurridos.splice(i, 1);
-  }
 
   for(let i = drops.length - 1; i >= 0; i--){
     const d = drops[i];
@@ -430,9 +474,6 @@ function cuadro(now){
   }
   for(const b of blobs) drawBlob(b);
 
-  // el agua va ENCIMA de los charcos ya pegados
-  for(const e of escurridos) drawEscurrido(e);
-
   rafId = requestAnimationFrame(cuadro);
 }
 
@@ -445,7 +486,7 @@ export function encenderGlue(){
     armarLienzo();
     drops.length = 0;
     blobs.length = 0;
-    escurridos.length = 0;
+    olas.length = 0;
     temporizadorGlue = 0;
     temporizadorAgua = 0;
     calidad = 1;
@@ -468,7 +509,7 @@ export function apagarGlue(){
   activo = false;
   drops.length = 0;
   blobs.length = 0;
-  escurridos.length = 0;
+  olas.length = 0;
   try{ window.removeEventListener("resize", ajustar); }catch(e){}
   if(lienzo && lienzo.parentNode) lienzo.parentNode.removeChild(lienzo);
   lienzo = null;
