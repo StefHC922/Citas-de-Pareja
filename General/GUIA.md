@@ -1568,13 +1568,32 @@ es por pedido de Fredy (oct-2026): así **los botones de abajo quedan siempre en
 mismo lugar** y no se mueven cada vez que añades o borras algo.
 
 Se hace con dos clases: `.tablaBox.vacia` (centra el texto) y una función
-`pintaCaja(idCaja, idVacio, filas)` que mete los renglones o, si no hay, el texto
+`pintaCaja(idCaja, nodoVacio, filas)` que mete los renglones o, si no hay, el texto
 de vacío. **Cada recuadro lleva su propio texto de vacío adentro**, así que en
 "Mis pedidos" nunca salen los dos textos a la vez: el de "no te han comprado" solo
 aparece en su pestaña.
 
+**Los botones de abajo caen en el MISMO lugar en las tres vistas.** Para lograrlo:
+- Las vistas que **no** tienen la fila de agregar (Tienda, Mis pedidos) llevan una
+  **copia invisible** de esa misma fila: `<div class="filaAdd filaHueco">` con un
+  input y un botón sin id. Con `visibility:hidden` ocupa el mismo espacio exacto
+  (mismo input, mismo botón) pero no se ve.
+- "Mis pedidos" además tiene **una pestaña ARRIBA** que las otras no, así que a su
+  recuadro se le **descuesta el alto real de esa pestaña**:
+  `ajustarAlturaPedidos()` mide `tabsPedidos.offsetHeight` y pone
+  `height: calc(48dvh - Npx)`. Se mide de verdad, no se estima a ojo, y se vuelve
+  a medir al cambiar de tamaño de pantalla.
+
 **Texto de las vistas:** la Tienda dice **"Catálogo"**, y Mis deseos dice **"Anota
 tus deseos más secretos que quieres hacer realidad"**.
+
+**Ojo, un bug que costó un rato (oct-2026):** los textos de vacío se agarran **una
+sola vez, al arrancar**, en `VACIO_CAT`, `VACIO_DES`, `VACIO_COM` y `VACIO_REC`.
+**No se pueden volver a buscar con `el()` dentro de `pintaCaja()`**: la función
+borra el recuadro con `innerHTML = ""`, que se lleva el texto, y entonces
+`appendChild(null)` revienta. Como `pintaCaja()` se llama desde `pintarTodo()`, el
+error **cortaba el pintado entero**: el catálogo salía sin su texto y **los deseos
+nunca se veían**. Menos mal que estos dos fallos eran el mismo.
 
 **Las pestañas de abajo** se marcan solas con `marcarNav()`: la de la vista
 actual queda `.activo`. Por eso hay dos juegos de botones (`navDeseos`/`navDeseos2`,

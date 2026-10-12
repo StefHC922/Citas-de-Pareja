@@ -102,6 +102,11 @@
   .filaAdd button{ border:none; border-radius:12px; cursor:pointer; padding:12px 16px;
     font-family:'Chakra Petch',sans-serif; font-weight:700; color:var(--bg);
     background:linear-gradient(90deg, var(--coral), var(--teal)); }
+  /* Copia invisible de esa misma fila en las vistas que NO la tienen. Ocupa el
+     mismo espacio (mismo input, mismo boton) pero no se ve, y sirve para que los
+     botones de navegacion de abajo caigan EXACTAMENTE en el mismo lugar en las
+     tres vistas (decision de Fredy, oct-2026). */
+  .filaHueco{ visibility:hidden; margin-top:12px; }
 
   .vacio{ color:var(--fg-muted); font-size:.85rem; text-align:center; padding:16px; }
   .tablaBox .vacio{ padding:0; }
@@ -123,7 +128,11 @@
   <div class="tablaBox vacia" id="cajaCatalogo">
     <div class="vacio" id="vacioCatalogo">Todavía no hay nada a la venta.<br>Activa un deseo desde “Mis deseos”.</div>
   </div>
-  <div class="tabs" style="margin-top:14px;">
+  <div class="filaAdd filaHueco">
+    <input type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button type="button" tabindex="-1" aria-hidden="true">+</button>
+  </div>
+  <div class="tabs" style="margin-top:12px;">
     <button class="tab tabnav" id="navDeseos">Mis deseos</button>
     <button class="tab tabnav" id="navPedidos">Mis pedidos</button>
   </div>
@@ -150,7 +159,7 @@
 <div class="vista" id="vistaPedidos">
   <h1>Mis pedidos</h1>
   <p class="desc" id="descPedidos">Lo que compraste y lo que te toca entregar.</p>
-  <div class="tabs">
+  <div class="tabs" id="tabsPedidos">
     <button class="tab activo" id="tabComprados">Los que yo compré</button>
     <button class="tab" id="tabRecibidos">Los que me compraron</button>
   </div>
@@ -160,7 +169,11 @@
   <div class="tablaBox vacia" id="cajaRecibidos" style="margin-top:12px;display:none;">
     <div class="vacio" id="vacioRecibidos">No te han comprado ningún deseo.</div>
   </div>
-  <div class="tabs" style="margin-top:14px;">
+  <div class="filaAdd filaHueco">
+    <input type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button type="button" tabindex="-1" aria-hidden="true">+</button>
+  </div>
+  <div class="tabs" style="margin-top:12px;">
     <button class="tab tabnav" id="navTienda2">Tienda</button>
     <button class="tab tabnav" id="navDeseos2">Mis deseos</button>
   </div>
@@ -239,9 +252,11 @@ function ver(id, guardar){
   document.querySelectorAll(".vista").forEach(v=>v.classList.remove("ver"));
   document.getElementById(id).classList.add("ver");
   marcarNav();
+  if(id === "vistaPedidos") ajustarAlturaPedidos();
   if(guardar !== false){ try{ history.pushState({ v: id }, ""); }catch(e){} }
   window.scrollTo(0, 0);
 }
+window.addEventListener("resize", ajustarAlturaPedidos);
 function marcarNav(){
   // Las dos pestañas de abajo: la de la vista actual se ve activa.
   const v = document.querySelector(".vista.ver");
@@ -293,16 +308,24 @@ function fila(texto, detalle, tagTexto, tagClase){
 }
 
 // ---------- helpers ----------
+// Los textos de "vacio" se agarran ANTES de la primera limpieza. Si se buscaran
+// con el() despues, ya no existirian: `caja.innerHTML = ""` se los lleva y
+// `appendChild(null)` revienta, y al reventar se cortaba el pintado entero, asi
+// que los deseos nunca aparecian (bug grave, oct-2026).
+const VACIO_CAT = document.getElementById("vacioCatalogo");
+const VACIO_DES = document.getElementById("vacioDeseos");
+const VACIO_COM = document.getElementById("vacioComprados");
+const VACIO_REC = document.getElementById("vacioRecibidos");
+
 // El recuadro NUNCA se oculta: si esta vacio se le pone la clase `vacia` (que
-// centra el texto) y se esconde el texto de "vacio" mientras esta con datos.
-// Asi el recuadro siempre ocupa lo mismo y los botones de abajo nunca se mueven.
-function pintaCaja(idCaja, idVacio, filas){
+// centra el texto) y se mete el texto de "vacio". Asi el recuadro siempre ocupa
+// lo mismo y los botones de abajo nunca se mueven.
+function pintaCaja(idCaja, nodoVacio, filas){
   const caja = el(idCaja);
   caja.innerHTML = "";
   if(!filas.length){
     caja.classList.add("vacia");
-    caja.appendChild(el(idVacio));
-    el(idVacio).style.display = "block";
+    caja.appendChild(nodoVacio);
     return;
   }
   caja.classList.remove("vacia");
@@ -322,7 +345,7 @@ function pintarCatalogo(){
     f.appendChild(b);
     return f;
   });
-  pintaCaja("cajaCatalogo", "vacioCatalogo", filas);
+  pintaCaja("cajaCatalogo", VACIO_CAT, filas);
 }
 
 // ---------- mis deseos ----------
@@ -339,7 +362,7 @@ function pintarDeseos(){
     f.appendChild(b);
     return f;
   });
-  pintaCaja("cajaDeseos", "vacioDeseos", filas);
+  pintaCaja("cajaDeseos", VACIO_DES, filas);
 }
 
 // ---------- mis pedidos ----------
@@ -363,13 +386,13 @@ function pintarPedidos(){
     }
     return f;
   });
-  pintaCaja("cajaComprados", "vacioComprados", filasMios);
+  pintaCaja("cajaComprados", VACIO_COM, filasMios);
 
   const filasRecibidos = recibidos.map(c=> fila(c.nombreDeseo,
     ((c.comprador && c.comprador.nombre) || "—") + " te lo compró. Tú lo entregas.",
     (c.estado === "entregado") ? "Entregado" : "Te toca entregarlo",
     (c.estado === "entregado") ? "entregado" : "pendiente"));
-  pintaCaja("cajaRecibidos", "vacioRecibidos", filasRecibidos);
+  pintaCaja("cajaRecibidos", VACIO_REC, filasRecibidos);
 }
 function pintarTodo(){ pintarCatalogo(); pintarDeseos(); pintarPedidos(); }
 // Solo se ve el recuadro de la pestaña activa; el otro se oculta. Cada uno lleva
@@ -380,6 +403,17 @@ function pestana(cual){
   el("tabRecibidos").classList.toggle("activo", !esA);
   el("cajaComprados").style.display = esA ? "flex" : "none";
   el("cajaRecibidos").style.display = esA ? "none" : "flex";
+}
+// Mis pedidos tiene UNA PESTANA ARRIBA (los que yo compré / los que me
+// compraron) que las otras dos vistas no tienen. Para que los botones de abajo
+// caigan en el MISMO lugar en las tres, al recuadro de pedidos se le descuenta
+// justamente el alto de esa pestana. Se mide de verdad, no se estima.
+function ajustarAlturaPedidos(){
+  const alto = el("tabsPedidos").offsetHeight;
+  if(!alto) return;
+  const h = "calc(48dvh - " + alto + "px)";
+  el("cajaComprados").style.height = h;
+  el("cajaRecibidos").style.height = h;
 }
 el("tabComprados").onclick = ()=> pestana("comprados");
 el("tabRecibidos").onclick = ()=> pestana("recibidos");
