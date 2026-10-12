@@ -1074,7 +1074,12 @@ async function marcarCumplida(reto, id){
       conteo: increment(1),
       ...(metaAlcanzada ? { estado: "cobrada", cumplidaEn: serverTimestamp() } : {})
     });
-    const delta = metaAlcanzada ? (1 - (reto.puntosMeta || 0)) : 1;
+    // Cada "Cumplida +1" suma un punto y NO se descuenta nada al llegar a la
+    // meta: un reto normal completado deja a quien lo cumplió con `puntosMeta`
+    // puntos (decisión de Fredy, oct-2026). ANTES el último +1 hacía
+    // `1 - meta`, o sea devolvía todos los puntos: un reto completo dejaba en 0
+    // y los puntos no acumulaban (bug reportado por Fredy, oct-2026).
+    const delta = 1;
     batch.set(doc(db, "puntosUsuarios", reto.asignadoA.id), { balance: increment(delta) }, { merge: true });
     await batch.commit();
     let msg = "⭐ " + miIdentidad.nombre + " dio +1 punto a " + reto.asignadoA.nombre + " en " + reto.actividad + " (" + nuevoConteo + "/" + (reto.puntosMeta || 0) + ")";
@@ -1157,8 +1162,11 @@ async function finalizarRetosVencidos(){
         }
         const cumplido = (data.conteo || 0) >= (data.puntosMeta || 0);
         if(cumplido){
+          // Los puntos ya se dieron uno por uno en cada "Cumplida +1", así que
+          // aquí NO se vuelve a restar la meta: completar un reto jamás resta.
+          // Antes lo hacía (`increment(-puntosMeta)`) y por eso los puntos no
+          // acumulaban (decisión de Fredy, oct-2026).
           t.update(ref, { estado: "cobrada", liquidadoEn: serverTimestamp() });
-          t.set(doc(db, "puntosUsuarios", data.asignadoA.id), { balance: increment(-(data.puntosMeta || 0)) }, { merge: true });
         }else{
           t.update(ref, { estado: "noCumplido", liquidadoEn: serverTimestamp() });
           t.set(doc(db, "puntosUsuarios", data.asignadoA.id), { balance: increment(-(data.penalizacionPuntos || 0)) }, { merge: true });

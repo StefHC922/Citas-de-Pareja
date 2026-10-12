@@ -1445,6 +1445,36 @@ por eso "revisa tu conexión" engañaba.
 fallo**, no solo los de red. Cuando un mensaje así sale con buena conexión, casi
 siempre el error está en el código y hay que mirar la consola, no el módem.
 
+### Los puntos de los retos cumplidos no acumulaban (corregido oct-2026)
+
+**Lo reportó Fredy:** los puntos de los retos cumplidos no se acumulaban.
+
+**La causa estaba en `marcarCumplida`** (`Retos/index.html`, retos **normales**).
+Cada "Cumplida +1" sumaba un punto a quien tenía que cumplir, pero **en el último
++1** (cuando se alcanzaba la meta) el código hacía una cosa rara:
+
+```js
+const delta = metaAlcanzada ? (1 - (reto.puntosMeta || 0)) : 1;
+```
+
+Es decir, en vez de `+1` daba `1 - meta`, que es **negativo y se lleva todo lo
+acumulado**. Con una meta de 7: los +1 dan +6 y el último clic mete `-6` →
+**neto 0**. Con cualquier meta el resultado era siempre 0: **los puntos se
+perdían justo al completar el reto**.
+
+**El arreglo (decisión de Fredy, oct-2026):** ahora cada "Cumplida +1" suma un
+punto y **no se descuenta nada al llegar a la meta** (`const delta = 1;`). Un reto
+normal de meta 7 deja a quien lo cumplió con **+7 pts**, que es lo esperable.
+
+**También se quitó el segundo lugar con la misma idea:** en
+`finalizarRetosVencidos()`, cuando un reto normal se liquidaba ya cumplido, se le
+restaba la meta (`increment(-puntosMeta)`). **Completar un reto nunca resta.**
+Ese camino casi no se disparaba (al llegar a la meta el reto ya pasa a
+`cobrada`), pero se quitó para que la regla sea limpia.
+
+**No se tocaron** los retos de la IA (ya daban bien el valor entero) ni la
+penalización de los retos **no cumplidos** (esa resta es a propósito).
+
 ### Una cita no se agenda en el pasado (oct-2026)
 
 En `Citas/`, al agendar solo se comprobaba que el campo de fecha **no estuviera
