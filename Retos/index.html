@@ -237,19 +237,6 @@
   .balDesglose{ margin-top:10px; border-top:1px solid var(--card-border); padding-top:8px; display:flex; flex-direction:column; gap:4px; }
   .balDesglose .b-item{ font-size:.75rem; color: var(--fg-muted); display:flex; justify-content:space-between; gap:8px; }
   .balDesglose .b-item b{ color: var(--fg); font-family:'Chakra Petch',sans-serif; }
-
-  /* ---------- tarjeta: Centro de Adquisiciones ---------- */
-  /* Abre centro.html. El nombre de la pareja lo pone el JS al cargar, asi que
-     nace con texto neutro: nunca hay que ver un nombre equivocado ni un
-     instante con el nombre de otra persona. */
-  #linkCentro{
-    display:block; text-decoration:none; color:var(--fg);
-    background:var(--card); border:1px solid var(--card-border);
-    border-radius:16px; padding:16px;
-  }
-  #linkCentro:active{ transform:scale(.97); }
-  #linkCentro .cNom{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.05rem; }
-  #linkCentro .cSub{ color:var(--fg-muted); font-size:.85rem; margin-top:4px; }
 </style>
 </head>
 <body>
@@ -284,12 +271,6 @@
     <div class="seccionTitulo">Retos</div>
     <div id="listaRetos"></div>
     <div id="vacioMsg" style="display:none;">Todavía no hay retos.</div>
-
-    <div class="seccionTitulo" id="tituloAdquisiciones" style="display:none;">Adquisiciones</div>
-    <a href="centro.html" id="linkCentro" style="display:none;">
-      <div class="cNom" id="centroNom">Centro de Adquisiciones</div>
-      <div class="cSub">Tu lista de deseos y la tienda de tu pareja</div>
-    </a>
   </div>
 
   <button id="btnProponerReto">+ Proponer reto</button>
@@ -665,28 +646,6 @@ function renderBalances(){
 function truncar(s, n){
   s = String(s || "");
   return s.length > n ? s.slice(0, n - 1) + "…" : s;
-}
-
-// ====== TARJETA: CENTRO DE ADQUISICIONES ======
-// Abre centro.html, que es de DOS (yo y mi pareja). Si no hay pareja registrada
-// no se muestra. El nombre va en el texto de la tarjeta y lo pone el JS: por eso
-// nace oculto y con texto neutro, nunca se ve el nombre equivocado.
-function miPareja(){
-  if(!miIdentidad) return null;
-  return usuarios.find(u => u && u.id && u.id !== miIdentidad.id && !u.invitado)
-      || usuarios.find(u => u && u.id && u.id !== miIdentidad.id)
-      || null;
-}
-function pintarCentro(){
-  const link  = document.getElementById("linkCentro");
-  const nom   = document.getElementById("centroNom");
-  const titulo = document.getElementById("tituloAdquisiciones");
-  const p = miPareja();
-  // El titulo y la tarjeta van juntos: si no hay pareja, no sale ninguno de los
-  // dos (si no queda un "Adquisiciones" colgado sin nada debajo).
-  link.style.display   = p ? "block" : "none";
-  titulo.style.display = p ? "block" : "none";
-  if(p) nom.textContent = "Centro de Adquisiciones de " + p.nombre;
 }
 
 // ====== FORMULARIO ======
@@ -1222,11 +1181,6 @@ async function finalizarRetosVencidos(){
 // ====== RENDER ======
 function renderRetos(){
   listaRetosEl.innerHTML = "";
-
-  // La tarjeta del Centro se pinta SIEMPRE, incluso sin retos. Antes estaba al
-  // final de esta función y el `return` de "no hay retos" se la saltaba, asi que
-  // con la lista vacia la tarjeta nunca aparecia (bug, oct-2026).
-  pintarCentro();
 
   if(retos.length === 0){
     vacioMsgEl.style.display = "block";

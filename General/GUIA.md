@@ -1479,8 +1479,18 @@ penalización de los retos **no cumplidos** (esa resta es a propósito).
 
 Cada persona tiene un **Centro de Adquisiciones**: su lista secreta de deseos y la
 tienda donde su pareja puede "comprar" lo que esa persona quiere que cumpla. Se
-entra desde **`Retos/`**, con una tarjeta que dice **"Centro de Adquisiciones de
-[nombre]"** (el nombre de quien **no** eres tú).
+entra desde el **submenú Retos** del menú principal, como una tarjeta más ahí
+junto a "Retos": **"Centro de Adquisiciones de [nombre]"** (el nombre de quien
+**no** eres tú).
+
+**Ojo dónde vive:** la tarjeta está en el **submenú `Retos`** de `index.html`, que
+se arma desde la lista `packs` fija (como Retos y Diablitos), **no** dentro de la
+pantalla `Retos/index.html`. Se puso primero en la pantalla de Retos y ahí no se ve
+bien (decisión de Fredy, oct-2026): lo natural es entrar al submenú y elegir.
+
+**El nombre de la pareja es dinámico:** se arma con `nombreParejaMenu()` (usa la
+copia local de usuarios y solo cae a Firestore si está vacía). Si no hay pareja
+registrada, la tarjeta **no se muestra** (el Centro es de dos).
 
 **Cómo funciona (tú = el que paga en los dos pasos):**
 
@@ -1513,9 +1523,13 @@ solo de su saldo. Los puntos son los mismos de `puntosUsuarios` que dan los reto
 | Archivo | Qué lleva |
 |---|---|
 | **`Retos/centro.html`** | **(nuevo)** La pantalla completa: 3 vistas, lectura en vivo, activar/comprar/borrar/entregar, navegación |
-| `Retos/index.html` | La tarjeta de entrada (`#linkCentro`) + `miPareja()` + `pintarCentro()` |
+| `index.html` | La tarjeta del Centro en el **submenú Retos** (lista `packs` fija, id `centro`, `seccion:"retos"`, `libre:true`, y en `FIJOS`) + `nombreParejaMenu()` + el ajuste de `tarjetaPack()` para rutas con `.html` |
 | `index.html` | El botón **🛒** por usuario en Usuarios y el overlay de los 2 números (`ptsActivar`, `precioCompra`) |
 | `herramientas/sintaxis/extract.py` | Se registró `Retos/centro.html` para que pase la revisión |
+
+**Un detalle de `tarjetaPack()`:** armaba `href = ruta + "/"`, que sirve para las
+carpetas ("Retos" → "Retos/") pero rompía con un archivo suelto
+("Retos/centro.html/" no existe). Ahora, si la ruta ya trae `.html`, se usa tal cual.
 
 **Las vistas** (un solo archivo, no páginas separadas): **Catálogo** (recuadro con
 scroll, más recientes primero) · **Mis deseos** (la lista secreta) · **Mis pedidos**

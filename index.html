@@ -555,7 +555,10 @@ function mostrarMenu(nombre){
   function tarjetaPack(p){
   const a = document.createElement("a");
   a.className = "card";
-  a.href = p.ruta + "/";
+  // La mayoria de las rutas son carpetas ("Retos" -> "Retos/"). El Centro de
+  // Adquisiciones es un archivo suelto ("Retos/centro.html"), asi que si ya
+  // trae extension se usa tal cual y no se le agrega la "/" (oct-2026).
+  a.href = /\.html?$/i.test(p.ruta || "") ? p.ruta : (p.ruta || "") + "/";
   const ic = document.createElement("span");
   ic.className = "icon";
   if(p.id === "diablitos" && SVG_DIABLITOS){
@@ -594,6 +597,21 @@ async function renderPacks(){
     }while(renderPendiente);
   }finally{ renderizando = false; }
 }
+// Nombre de la persona que NO eres tu, para el titulo del Centro de
+// Adquisiciones. Primero usa la copia local de usuarios (rapida, y ya esta
+// actualizada porque `entrar()` la cargo); solo si esta vacia va a Firestore.
+async function nombreParejaMenu(){
+  try{
+    const yo = leerGuardado();
+    if(!yo || !yo.id) return null;
+    let us = leerUsuariosLocal() || [];
+    if(!us.length){ try{ us = await usuariosEfectivos(dbActual()); }catch(e){ us = []; } }
+    if(!Array.isArray(us)) return null;
+    const p = us.find(u => u && u.id && u.id !== yo.id && !u.invitado)
+          || us.find(u => u && u.id && u.id !== yo.id);
+    return p ? p.nombre : null;
+  }catch(e){ return null; }
+}
 async function renderPacksDeVerdad(){
   const boxExp = document.getElementById("packsExp");
   const btnJ = document.getElementById("btnJuegos");
@@ -621,9 +639,17 @@ async function renderPacksDeVerdad(){
     // camino que Diablitos y el botón aparece siempre (oct-2026).
     { id: "retos", titulo: "Retos", icono: "🏆",
       desc: "Propón retos, gana puntos y cobra recompensas",
-      ruta: "Retos", seccion: "retos", libre: true }
+      ruta: "Retos", seccion: "retos", libre: true },
+    // El Centro vive DENTRO del submenú de Retos (no en la pantalla de Retos):
+    // el titulo lleva el nombre de tu pareja, asi que se arma aqui, con el
+    // nombre que tenga ahora. Si no hay pareja registrada, la tarjeta no sale
+    // (el Centro es de dos). Es un archivo suelto, por eso la ruta trae .html
+    // y `tarjetaPack` ya no le agrega la "/" (oct-2026).
+    { id: "centro", titulo: "Centro de Adquisiciones", icono: "🛒",
+      desc: "Tu lista de deseos y la tienda de tu pareja",
+      ruta: "Retos/centro.html", seccion: "retos", libre: true, necesitaPareja: true }
   ];
-  const FIJOS = ["guiadas", "diablitos", "retos"];
+  const FIJOS = ["guiadas", "diablitos", "retos", "centro"];
   try{
     const tdb = getFirestore(appTaq());
     const snap = await getDocs(collection(tdb, "packs"));
@@ -632,6 +658,15 @@ async function renderPacksDeVerdad(){
       packs.push(Object.assign({ id: d.id }, d.data()));
     });
   }catch(e){}
+  // El Centro se titula con el nombre de la persona que NO eres tu. Si no hay
+  // pareja registrada, la tarjeta no se muestra (el Centro es de dos).
+  const nomPareja = await nombreParejaMenu();
+  if(nomPareja){
+    const c = packs.find(p=> p.id === "centro");
+    if(c) c.titulo = "Centro de Adquisiciones de " + nomPareja;
+  }else{
+    packs = packs.filter(p=> !p.necesitaPareja);
+  }
   const miId = miProyecto();
   const lic = leerLicencias();
   // Mapa de gracias disponibles por item (vencido + graciaUsada==false)
