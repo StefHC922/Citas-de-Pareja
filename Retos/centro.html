@@ -4,259 +4,136 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Centro de Adquisiciones</title>
-
+<meta name="theme-color" content="#120e1c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
 <style>
   :root{
-    --bg: #120e1c;
-    --bg-2: #1a1428;
-    --card: #201933;
-    --card-border: #322a4a;
-    --fg: #f4f1fb;
-    --fg-muted: #a599c7;
-    --coral: #ff6a5c;
-    --teal: #2fd9c7;
-    --amarillo: #f4c94c;
-    --rojo: #ff5c7a;
-    --verde: #6dffa0;
+    --bg:#120e1c; --bg-2:#1a1428; --card:#201933; --card-border:#322a4a;
+    --fg:#f4f1fb; --fg-muted:#a599c7; --coral:#ff6a5c; --teal:#2fd9c7; --rojo:#ff5c7a;
+    --amarillo:#f4c94c; --verde:#6dffa0;
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body{
-    margin:0; padding:0; min-height:100%; width:100%;
-    color:var(--fg);
-    font-family:'Inter', system-ui, sans-serif;
-    background:
-      radial-gradient(circle at 15% 0%, var(--bg-2), transparent 55%),
-      radial-gradient(circle at 100% 30%, #1c1330, transparent 45%),
-      var(--bg);
-  }
-  h1,h2{ font-family:'Chakra Petch', sans-serif; font-weight:700; margin:0; }
-  button{
-    font-family:'Chakra Petch', sans-serif; font-weight:700; letter-spacing:.04em;
-    cursor:pointer; border:none; border-radius:16px;
-    transition: transform .15s ease, opacity .2s ease;
-  }
-  button:active{ transform:scale(.97); }
-  button:disabled{ opacity:.4; cursor:default; }
-  input, textarea{
-    font-family:'Inter', sans-serif;
-    border-radius:12px; border:1px solid var(--card-border);
-    background:var(--card); color:var(--fg);
-    padding:12px; font-size:1rem; width:100%;
-  }
-  textarea{ resize:vertical; min-height:70px; }
+  html,body{ margin:0; padding:0; min-height:100%; width:100%; color:var(--fg);
+    font-family:'Inter',system-ui,sans-serif;
+    background:radial-gradient(circle at 15% 0%, var(--bg-2), transparent 55%),
+      radial-gradient(circle at 100% 30%, #1c1330, transparent 45%), var(--bg); }
+  /* Molde de Guiadas/ y Encuentros/: una columna centrada, con aire arriba para
+     que el "Volver" y el engrane (que van sueltos, en absoluto) no se encima. */
+  body{ min-height:100dvh; display:flex; flex-direction:column; align-items:center;
+    padding:max(66px, calc(env(safe-area-inset-top) + 30px)) 20px max(28px, env(safe-area-inset-bottom)); }
 
-  /* ---------- app principal ---------- */
-  #app{ display:none; min-height:100dvh; flex-direction:column; }
+  /* "Volver" SIEMPRE arriba a la derecha. Ahi no hay nada a la izquierda: el
+     engrane no existe en esta pantalla. */
+  .back{ position:absolute; top:max(20px, env(safe-area-inset-top)); right:20px;
+    font-family:'Chakra Petch',sans-serif; font-size:.85rem; color:var(--fg-muted); text-decoration:none; }
+  .back:active{ color:var(--teal); }
 
-  /* ---------- encabezado ---------- */
-  #encabezado{
-    padding:20px 20px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px;
-    border-bottom:1px solid var(--card-border);
-  }
-  #encabezado .saludo{ font-size:1.2rem; }
-  #encabezado .saludo.grande{ font-size:1.7rem; font-family:'Chakra Petch',sans-serif; font-weight:700; }
-  #encabezado .saludo span{
+  .eyebrow{ font-family:'Chakra Petch',sans-serif; font-size:.8rem; letter-spacing:.3em;
+    text-transform:uppercase; color:var(--fg-muted); margin-bottom:10px; }
+  h1{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.8rem; margin:0 0 8px; text-align:center;
     background:linear-gradient(90deg, var(--coral), var(--teal));
-    -webkit-background-clip:text; background-clip:text; color:transparent;
-  }
-  #fechaHoy{ font-size:.82rem; color:var(--fg-muted); margin-top:2px; }
-  #encabezado .derecha{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-  #btnVolver{
-    background:none; color:var(--fg-muted); font-size:.75rem;
-    text-decoration:underline; padding:4px; font-weight:500; font-family:'Inter',sans-serif;
-  }
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+  p.desc{ font-size:.88rem; color:var(--fg-muted); max-width:360px; margin:0 0 18px; text-align:center; }
 
-  /* Las TRES vistas usan este mismo contenedor. Antes solo el catálogo lo tenía,
-     y las otras dos se estiraban de lado a lado de la pantalla: por eso se veian
-     los datos "por toda la pantalla" (decisión de Fredy, oct-2026). */
-  #contenido, #contenidoDeseos, #contenidoPedidos{
-    flex:1; padding:20px; padding-bottom:120px;
-    max-width:560px; width:100%; margin:0 auto;
-  }
-  .seccionTitulo{
-    font-family:'Chakra Petch',sans-serif; font-size:.8rem;
-    letter-spacing:.25em; text-transform:uppercase;
-    color:var(--fg-muted); margin:20px 0 10px;
-  }
+  /* Una columna por vista; solo una se ve. */
+  .vista{ display:none; width:100%; max-width:520px; flex-direction:column; align-items:center; }
+  .vista.ver{ display:flex; }
 
-  /* ---------- recuadro con scroll (catálogo) ---------- */
-  #cajaCatalogo{
-    background:var(--card); border:1px solid var(--card-border); border-radius:16px;
-    max-height:360px; overflow-y:auto; padding:12px;
-    display:flex; flex-direction:column; gap:10px;
-  }
-  .prod{
-    background:var(--bg-2); border:1px solid var(--card-border); border-radius:14px;
-    padding:12px 14px; display:flex; flex-direction:column; gap:6px;
-  }
-  .prod .pNom{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.02rem; }
-  .prod .pDesc{ color:var(--fg-muted); font-size:.85rem; white-space:pre-wrap; }
-  .prod .pPie{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .prod .pPrecio{ font-family:'Chakra Petch',sans-serif; font-size:.9rem; color:var(--teal); }
-  .prod button{ padding:10px 14px; font-size:.82rem; border-radius:12px; }
-
-  /* ---------- enlaces tipo "Volver" del menú ---------- */
-  #enlacesAbajo{ display:flex; justify-content:center; gap:26px; margin-top:18px; }
-  #enlacesAbajo a{
-    color:var(--fg-muted); font-size:.78rem; text-decoration:underline;
-    padding:6px; font-family:'Inter',sans-serif;
-  }
-
-  /* ---------- tarjetas de deseo (lista secreta) ---------- */
-  .deseo{
-    background:var(--card); border:1px solid var(--card-border); border-radius:16px;
-    padding:16px; margin-bottom:12px;
-  }
-  .deseo.enVenta{ border-color:var(--teal); }
-  .deseo .dNom{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.05rem; }
-  .deseo .dDesc{ color:var(--fg-muted); font-size:.88rem; margin-top:6px; white-space:pre-wrap; }
-  .deseo .dEstado{ font-size:.72rem; margin-top:8px; display:inline-block; padding:3px 9px; border-radius:20px; }
-  .deseo .dEstado.vendido{ background:rgba(47,217,199,.15); color:var(--teal); }
-  .deseo .dEstado.secreto{ background:rgba(244,201,76,.15); color:var(--amarillo); }
-  .deseo .dAcciones{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
-  .deseo .dAcciones button{ padding:10px 14px; font-size:.82rem; border-radius:12px; flex:1; min-width:110px; }
-
-  /* ---------- pestañas de pedidos ---------- */
-  #pestanas{ display:flex; gap:8px; margin-bottom:14px; }
-  #pestanas button{
-    flex:1; padding:12px; font-size:.85rem; border-radius:12px;
-    background:var(--card); border:1px solid var(--card-border); color:var(--fg-muted);
-  }
-  #pestanas button.on{
-    border-color:var(--teal); color:var(--teal);
-    background:var(--bg-2);
-  }
-  .pedido{
-    background:var(--card); border:1px solid var(--card-border); border-radius:16px;
-    padding:16px; margin-bottom:12px;
-  }
-  .pedido.pendiente{ border-color:var(--amarillo); }
-  .pedido.entregado{ opacity:.6; }
-  .pedido .peNom{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.02rem; }
-  .pedido .peDesc{ color:var(--fg-muted); font-size:.86rem; margin-top:6px; white-space:pre-wrap; }
-  .pedido .peQuien{ font-size:.78rem; color:var(--fg-muted); margin-top:8px; }
-  .pedido .peEstado{ font-size:.72rem; margin-top:8px; display:inline-block; padding:3px 9px; border-radius:20px; }
-  .pedido .peEstado.pendiente{ background:rgba(244,201,76,.15); color:var(--amarillo); }
-  .pedido .peEstado.entregado{ background:rgba(109,255,160,.15); color:var(--verde); }
-  .pedido button{ margin-top:12px; padding:12px 16px; font-size:.85rem; width:100%; }
-
-  /* ---------- botones comunes ---------- */
-  .btnPrincipal{ color:var(--bg); background:linear-gradient(90deg, var(--coral), var(--teal)); }
-  .btnOscuro{ background:var(--bg-2); color:var(--fg); border:1px solid var(--card-border); }
+  .btnPri{ width:100%; padding:16px; margin-bottom:10px; border:none; border-radius:14px; cursor:pointer;
+    font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1rem; color:var(--bg);
+    background:linear-gradient(90deg, var(--coral), var(--teal)); }
+  .btnPri:active{ transform:scale(.97); }
+  .btnSec{ width:100%; padding:12px; background:none; border:none; cursor:pointer;
+    color:var(--fg-muted); font-size:.9rem; text-decoration:underline; }
+  .btnOscuro{ background:var(--bg-2); color:var(--fg); border:1px solid var(--card-border) !important; }
   .btnRojo{ background:var(--rojo); color:#2b0410; }
   .btnVerde{ background:var(--verde); color:#06281a; }
+  .btnPri:disabled, .btnSec:disabled{ opacity:.4; }
 
-  /* ---------- overlay: nuevo deseo ---------- */
-  #overlay{
-    display:none; position:fixed; inset:0; background:rgba(9,7,15,.75);
-    align-items:flex-end; justify-content:center; z-index:60;
-    backdrop-filter: blur(2px);
-  }
-  #formCard{
-    background:var(--bg); border:1px solid var(--card-border);
-    border-radius:22px 22px 0 0; padding:24px; width:100%; max-width:560px;
-    max-height:90dvh; overflow-y:auto;
-  }
-  #formCard h2{ font-size:1.2rem; margin-bottom:16px; }
-  .campo{ margin-bottom:16px; }
-  .campo label{ display:block; font-size:.85rem; color:var(--fg-muted); margin-bottom:6px; }
-  .campo .hint{ font-size:.75rem; color:var(--fg-muted); margin-top:4px; }
-  #formMsg{ color:var(--rojo); font-size:.85rem; min-height:18px; margin-bottom:10px; }
-  #formBotones{ display:flex; gap:10px; margin-top:6px; }
-  #formBotones button{ flex:1; padding:16px; }
-  #btnCancelarForm{ background:var(--card); color:var(--fg); border:1px solid var(--card-border); }
+  input, textarea{
+    width:100%; border-radius:12px; border:1px solid var(--card-border);
+    background:var(--card); color:var(--fg); padding:13px 14px; font-size:.95rem;
+    font-family:'Inter',sans-serif; }
+  textarea{ resize:vertical; min-height:90px; }
 
-  #vacio{ color:var(--fg-muted); text-align:center; font-size:.88rem; padding:26px 10px; }
+  /* Recuadro con scroll: es el de Guiadas/ (cajaActs). Lo que hay dentro se
+     mueve, la pantalla no. */
+  .caja{ width:100%; max-height:55dvh; overflow-y:auto;
+    border:1px solid var(--card-border); border-radius:16px; padding:10px; background:var(--bg-2); }
 
-  /* ---------- botón flotante: nuevo deseo ---------- */
-  #btnNuevoDeseo{
-    position:fixed; bottom:24px; left:20px; right:20px;
-    padding:18px; font-size:1.05rem;
-    color:var(--bg); background:linear-gradient(90deg, var(--coral), var(--teal));
-    max-width:560px; margin:0 auto;
-  }
+  /* Tarjeta de producto / deseo / pedido: misma forma que .nivel de Guiadas. */
+  .ficha{ width:100%; background:var(--card); border:1px solid var(--card-border);
+    border-radius:16px; padding:16px; margin-bottom:12px; }
+  .ficha h3{ font-family:'Chakra Petch',sans-serif; margin:0 0 4px; font-size:1.05rem; }
+  .ficha .detalle{ font-size:.88rem; color:var(--fg-muted); white-space:pre-wrap; margin-top:4px; }
+  .ficha .pie{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px; }
+  .ficha .precio{ font-family:'Chakra Petch',sans-serif; font-size:.9rem; color:var(--teal); }
+  .ficha .fAcciones{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .ficha .fAcciones button{ flex:1; min-width:110px; padding:12px 14px; font-size:.85rem;
+    border:none; border-radius:14px; cursor:pointer; font-family:'Chakra Petch',sans-serif;
+    font-weight:700; color:var(--bg); }
+  .ficha .fAcciones button:active{ transform:scale(.97); }
+  .tag{ font-size:.7rem; font-family:'Chakra Petch',sans-serif; border-radius:8px; padding:2px 8px;
+    text-transform:uppercase; letter-spacing:.12em; }
+  .tag.vendido{ color:var(--teal); border:1px solid var(--teal); }
+  .tag.secreto{ color:var(--amarillo); border:1px solid var(--amarillo); }
+  .tag.pendiente{ color:var(--amarillo); border:1px solid var(--amarillo); }
+  .tag.entregado{ color:var(--verde); border:1px solid var(--verde); }
+
+  .vacio{ font-size:.88rem; color:var(--fg-muted); text-align:center; padding:22px 10px; }
+  #msg{ min-height:20px; font-size:.85rem; color:var(--rojo); margin:6px 0; text-align:center; }
 </style>
 </head>
 <body>
 
-<div id="app">
-<div id="encabezado">
-  <div>
-    <div class="saludo grande">Hola, <span id="nombreActual">…</span></div>
-    <div id="fechaHoy"></div>
-  </div>
-  <div class="derecha">
-    <a href="../index.html#retos" id="btnVolver">← Volver</a>
-  </div>
+<a class="back" id="lnkInicio" href="../index.html#retos">← Volver</a>
+
+<div class="eyebrow">Centro de Adquisiciones</div>
+
+<!-- ================= CATÁLOGO (entrada) ================= -->
+<div class="vista ver" id="vistaCatalogo">
+  <h1>Tienda de <span id="nombrePareja">tu pareja</span></h1>
+  <p class="desc" id="descCatalogo">Lo que tienes que entregarle.</p>
+  <div class="caja" id="cajaCatalogo"></div>
+  <div class="vacio" id="vacioCatalogo">Todavía no hay nada a la venta.<br>Activa un deseo desde “Mis deseos”.</div>
+  <button class="btnSec" id="linkDeseos" style="margin-top:14px;">Mis deseos</button>
+  <button class="btnSec" id="linkPedidos">Mis pedidos</button>
 </div>
 
-<!-- ================= VISTA: CATÁLOGO (entrada) ================= -->
-<div id="vistaCatalogo">
-  <div id="contenido">
-    <div class="seccionTitulo">Tienda de <span id="nombrePareja">tu pareja</span></div>
-    <div id="cajaCatalogo"></div>
-    <div id="vacioCatalogo" class="vacio" style="display:none;">
-      Todavía no hay nada a la venta. Activa un deseo desde “Mis deseos”.
-    </div>
-
-    <div id="enlacesAbajo">
-      <a href="#" id="linkDeseos">Mis deseos</a>
-      <a href="#" id="linkPedidos">Mis pedidos</a>
-    </div>
-  </div>
+<!-- ================= MIS DESEOS ================= -->
+<div class="vista" id="vistaDeseos">
+  <h1>Mi lista de deseos</h1>
+  <p class="desc">Esto solo lo ves tú. Actívalo para ponerlo a la venta en su tienda.</p>
+  <div class="caja" id="cajaDeseos"></div>
+  <div class="vacio" id="vacioDeseos">Todavía no has anotado ningún deseo.</div>
+  <button class="btnPri" id="btnNuevoDeseo" style="margin-top:14px;">+ Anotar deseo</button>
 </div>
 
-<!-- ================= VISTA: MIS DESEOS ================= -->
-<div id="vistaDeseos" style="display:none;flex:1;">
-  <div id="contenidoDeseos">
-    <div class="seccionTitulo">Mi lista de deseos</div>
-    <div id="listaDeseos"></div>
-    <div id="vacioDeseos" class="vacio" style="display:none;">
-      Todavía no has anotado ningún deseo.
-    </div>
-  </div>
-  <button id="btnNuevoDeseo">+ Anotar deseo</button>
+<!-- ================= MIS PEDIDOS ================= -->
+<div class="vista" id="vistaPedidos">
+  <h1>Mis pedidos</h1>
+  <p class="desc" id="descPedidos">Lo que compraste y lo que te toca entregar.</p>
+  <div class="caja" id="cajaComprados"></div>
+  <div class="vacio" id="vacioComprados">No has comprado ningún deseo.</div>
+  <div class="caja" id="cajaRecibidos" style="display:none;"></div>
+  <div class="vacio" id="vacioRecibidos" style="display:none;">No te han comprado ningún deseo.</div>
+  <button class="btnSec" id="tabA" style="margin-top:14px;">Los que yo compré</button>
+  <button class="btnSec" id="tabB">Los que me compraron</button>
 </div>
 
-<!-- ================= VISTA: MIS PEDIDOS ================= -->
-<div id="vistaPedidos" style="display:none;flex:1;">
-  <div id="contenidoPedidos">
-    <div class="seccionTitulo">Mis pedidos</div>
-    <div id="pestanas">
-      <button type="button" id="tabComprados" class="on">Los que yo compré</button>
-      <button type="button" id="tabRecibidos">Los que me compraron</button>
-    </div>
-    <div id="listaComprados"></div>
-    <div id="vacioComprados" class="vacio" style="display:none;">No has comprado ningún deseo.</div>
-    <div id="listaRecibidos" style="display:none;"></div>
-    <div id="vacioRecibidos" class="vacio" style="display:none;">No te han comprado ningún deseo.</div>
-  </div>
-</div>
-</div><!-- /#app -->
-
-<!-- ================= OVERLAY: nuevo / editar deseo ================= -->
-<div id="overlay">
-  <div id="formCard">
-    <h2 id="formTitulo">Anotar deseo</h2>
-    <div class="campo">
-      <label for="fNombre">El deseo</label>
-      <input id="fNombre" type="text" placeholder="Ej: Una cena a la luz de las velas" maxlength="60">
-    </div>
-    <div class="campo">
-      <label for="fDesc">Qué es exactamente (para ti, es secreto)</label>
-      <textarea id="fDesc" placeholder="Lo que quieres que haga o que te entregue…" maxlength="400"></textarea>
-      <div class="hint">Esto solo lo ves tú hasta que actives el deseo.</div>
-    </div>
-    <div id="formMsg"></div>
-    <div id="formBotones">
-      <button id="btnCancelarForm">Cancelar</button>
-      <button id="btnGuardarForm" class="btnPrincipal">Guardar</button>
-    </div>
-  </div>
+<!-- ================= ANOTAR / EDITAR DESEO ================= -->
+<div class="vista" id="vistaForm">
+  <h1 id="formTitulo">Anotar deseo</h1>
+  <p class="desc" id="formDesc">Escribe lo que quieres que haga. Aquí solo lo ves tú.</p>
+  <label for="fNombre" style="width:100%;font-size:.85rem;color:var(--fg-muted);margin-bottom:6px;">El deseo</label>
+  <input id="fNombre" type="text" placeholder="Ej: Una cena a la luz de las velas" maxlength="60">
+  <label for="fDesc" style="width:100%;font-size:.85rem;color:var(--fg-muted);margin:14px 0 6px;">Qué es exactamente</label>
+  <textarea id="fDesc" placeholder="Lo que quieres que haga o que te entregue…" maxlength="400"></textarea>
+  <div id="msg"></div>
+  <button class="btnPri" id="btnGuardar">Guardar</button>
+  <button class="btnSec" id="btnCancelar">Cancelar</button>
 </div>
 
 <script type="module">
@@ -264,7 +141,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
-  onSnapshot, serverTimestamp, increment, runTransaction, getDoc, getDocs
+  onSnapshot, serverTimestamp, increment, runTransaction, getDoc
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 import firebaseConfigBase from "../firebase-config.js";
@@ -292,10 +169,8 @@ let yo = null;
 let pareja = null;
 let usuarios = [];
 let balance = 0;
-let deseos = [];       // SOLO los mios (deseos/{id} donde duenio = yo)
-let compras = [];      // todas las compras que me tocan (comprador o vendedor)
-let vista = "catalogo";
-let pestaña = "comprados";
+let deseos = [];   // SOLO los mios (deseos/{id} donde duenio = yo)
+let compras = [];  // las que yo compre y las que me compraron
 let editandoId = null;
 
 function esc(s){
@@ -303,7 +178,6 @@ function esc(s){
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 }
-function truncar(s, n){ s = String(s||""); return s.length > n ? s.slice(0, n-1) + "…" : s; }
 async function avisarTelegram(texto, url){
   if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.indexOf("PON_AQUI") === 0) return;
   if(!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID.indexOf("PON_AQUI") === 0) return;
@@ -324,38 +198,33 @@ function miActivar(){ return numConfig(yo && yo.ptsActivar, ACT_POR_DEFECTO); }
 function miPrecio(){ return numConfig(yo && yo.precioCompra, PRECIO_POR_DEFECTO); }
 
 const el = (id)=> document.getElementById(id);
-const vistaCatalogoEl = el("vistaCatalogo");
-const vistaDeseosEl   = el("vistaDeseos");
-const vistaPedidosEl  = el("vistaPedidos");
 
-// ---------- navegación ----------
-function irA(cual){
-  vista = cual;
-  vistaCatalogoEl.style.display = (cual === "catalogo") ? "block" : "none";
-  vistaDeseosEl.style.display   = (cual === "deseos")   ? "flex"  : "none";
-  vistaPedidosEl.style.display  = (cual === "pedidos")  ? "flex"  : "none";
-  el("btnNuevoDeseo").style.display = (cual === "deseos") ? "block" : "none";
+// ---------- navegación (mismo patrón que Guiadas: una .vista a la vez) ----------
+function ver(id, guardar){
+  document.querySelectorAll(".vista").forEach(v=>v.classList.remove("ver"));
+  document.getElementById(id).classList.add("ver");
+  if(guardar !== false){
+    try{ history.pushState({ v: id }, ""); }catch(e){}
+  }
   window.scrollTo(0, 0);
 }
-function ver(which){
-  if(vista === which) return;
-  irA(which);
-  if(window.history && history.pushState){
-    try{ history.pushState({centro: which}, "", "#" + which); }catch(e){}
-  }
-}
-// "Volver" desde el catalogo se va al **submenu Retos del menu**, no a la
-// pantalla de Retos: el Centro esta colgado de ese submenu, asi que se regresa
-// al submenu (igual que un juego regresa a su submenu). En las otras dos vistas
-// solo se vuelve al catalogo, que es donde ya estabas (decisión de Fredy, oct-2026).
-el("btnVolver").onclick = (ev)=>{
-  ev.preventDefault();
-  if(vista === "catalogo"){ location.href = "../index.html#retos"; return; }
-  ver("catalogo");
-};
-el("linkDeseos").onclick  = (e)=>{ e.preventDefault(); ver("deseos"); };
-el("linkPedidos").onclick = (e)=>{ e.preventDefault(); ver("pedidos"); };
-window.addEventListener("popstate", ()=>{ vista = "__externo__"; irA("catalogo"); });
+// El "← Volver" (arriba a la derecha) regresa a la pantalla ANTERIOR del
+// Centro, no al menú: del formulario a la lista, y de las dos vistas al
+// catálogo. Solo desde el catálogo se sale al menú (submenú Retos).
+document.getElementById("lnkInicio").addEventListener("click", (e)=>{
+  const v = document.querySelector(".vista.ver");
+  const id = v ? v.id : "";
+  if(id === "vistaForm"){ e.preventDefault(); ver("vistaDeseos"); return; }
+  if(id === "vistaDeseos" || id === "vistaPedidos"){ e.preventDefault(); ver("vistaCatalogo", false); return; }
+});
+window.addEventListener("popstate", (e)=>{
+  const v = (e.state && e.state.v) || "vistaCatalogo";
+  ver(v, false);
+});
+try{ history.replaceState({ v: "vistaCatalogo" }, ""); }catch(e){}
+
+el("linkDeseos").onclick  = ()=> ver("vistaDeseos");
+el("linkPedidos").onclick = ()=> ver("vistaPedidos");
 
 // ---------- catálogo ----------
 function pintarCatalogo(){
@@ -364,27 +233,27 @@ function pintarCatalogo(){
   // Solo los deseos ACTIVADOS por mi (los que estan en la tienda de mi pareja).
   const enVenta = deseos.filter(d=> d.enVenta).sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
   el("vacioCatalogo").style.display = enVenta.length ? "none" : "block";
-  el("cajaCatalogo").style.display = enVenta.length ? "flex" : "none";
+  caja.style.display = enVenta.length ? "block" : "none";
   enVenta.forEach(d=>{
     const card = document.createElement("div");
-    card.className = "prod";
-    const nom = document.createElement("div");
-    nom.className = "pNom"; nom.textContent = d.nombre || "";
-    card.appendChild(nom);
+    card.className = "ficha";
+    const h = document.createElement("h3");
+    h.textContent = d.nombre || "";
+    card.appendChild(h);
     if(d.descripcion){
-      const des = document.createElement("div");
-      des.className = "pDesc"; des.textContent = d.descripcion || "";
-      card.appendChild(des);
+      const det = document.createElement("div");
+      det.className = "detalle"; det.textContent = d.descripcion || "";
+      card.appendChild(det);
     }
     const pie = document.createElement("div");
-    pie.className = "pPie";
-    const precio = document.createElement("div");
-    precio.className = "pPrecio"; precio.textContent = miPrecio() + " pts";
-    pie.appendChild(precio);
+    pie.className = "pie";
+    const pr = document.createElement("div");
+    pr.className = "precio"; pr.textContent = miPrecio() + " pts";
+    pie.appendChild(pr);
     const b = document.createElement("button");
-    b.className = "btnPrincipal";
+    b.style.background = "linear-gradient(90deg, var(--coral), var(--teal))";
     b.textContent = "Comprar";
-    // NACE OCULTO: si no hay saldo no se compra (regla de la casa).
+    // NACE OCULTO: sin saldo no se compra (regla de la casa).
     b.style.display = (balance >= miPrecio()) ? "block" : "none";
     b.onclick = ()=> comprar(d.id);
     pie.appendChild(b);
@@ -393,33 +262,34 @@ function pintarCatalogo(){
   });
 }
 
-// ---------- lista de deseos ----------
+// ---------- mis deseos (lista secreta) ----------
 function pintarDeseos(){
-  const lista = el("listaDeseos");
-  lista.innerHTML = "";
+  const caja = el("cajaDeseos");
+  caja.innerHTML = "";
   const mios = deseos.slice().sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
   el("vacioDeseos").style.display = mios.length ? "none" : "block";
+  caja.style.display = mios.length ? "block" : "none";
   mios.forEach(d=>{
     const card = document.createElement("div");
-    card.className = "deseo" + (d.enVenta ? " enVenta" : "");
-    const nom = document.createElement("div");
-    nom.className = "dNom"; nom.textContent = d.nombre || "";
-    card.appendChild(nom);
+    card.className = "ficha";
+    const h = document.createElement("h3");
+    h.textContent = d.nombre || "";
+    card.appendChild(h);
     if(d.descripcion){
-      const des = document.createElement("div");
-      des.className = "dDesc"; des.textContent = d.descripcion || "";
-      card.appendChild(des);
+      const det = document.createElement("div");
+      det.className = "detalle"; det.textContent = d.descripcion || "";
+      card.appendChild(det);
     }
-    const est = document.createElement("div");
-    est.className = "dEstado " + (d.enVenta ? "vendido" : "secreto");
-    est.textContent = d.enVenta ? ("En venta · " + miPrecio() + " pts") : "Secreto";
-    card.appendChild(est);
+    const t = document.createElement("span");
+    t.className = "tag " + (d.enVenta ? "vendido" : "secreto");
+    t.textContent = d.enVenta ? ("En venta · " + miPrecio() + " pts") : "Secreto";
+    card.appendChild(t);
 
     const acc = document.createElement("div");
-    acc.className = "dAcciones";
+    acc.className = "fAcciones";
     if(!d.enVenta){
       const bAct = document.createElement("button");
-      bAct.className = "btnPrincipal";
+      bAct.style.background = "linear-gradient(90deg, var(--coral), var(--teal))";
       bAct.textContent = "Activar · " + miActivar() + " pts";
       bAct.style.display = (balance >= miActivar()) ? "block" : "none";
       bAct.onclick = ()=> activar(d.id);
@@ -435,92 +305,96 @@ function pintarDeseos(){
     acc.appendChild(bDel);
 
     card.appendChild(acc);
-    lista.appendChild(card);
+    caja.appendChild(card);
   });
 }
 
-// ---------- pedidos ----------
+// ---------- mis pedidos ----------
 function pintarPedidos(){
   const mios = compras.filter(c=> c.comprador && c.comprador.id === yo.id)
                       .sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
   const recibidos = compras.filter(c=> c.vendedor && c.vendedor.id === yo.id)
                       .sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
 
-  const lc = el("listaComprados");
-  lc.innerHTML = "";
+  const cc = el("cajaComprados");
+  cc.innerHTML = "";
   el("vacioComprados").style.display = mios.length ? "none" : "block";
+  cc.style.display = mios.length ? "block" : "none";
   mios.forEach(c=>{
     const card = document.createElement("div");
-    card.className = "pedido " + (c.estado || "pendiente");
-    const nom = document.createElement("div");
-    nom.className = "peNom"; nom.textContent = c.nombreDeseo || "";
-    card.appendChild(nom);
+    card.className = "ficha";
+    const h = document.createElement("h3");
+    h.textContent = c.nombreDeseo || "";
+    card.appendChild(h);
     if(c.descripcion){
-      const des = document.createElement("div");
-      des.className = "peDesc"; des.textContent = c.descripcion || "";
-      card.appendChild(des);
+      const det = document.createElement("div");
+      det.className = "detalle"; det.textContent = c.descripcion || "";
+      card.appendChild(det);
     }
     const quien = document.createElement("div");
-    quien.className = "peQuien"; quien.textContent = "Se lo pediste a " + ((c.vendedor&&c.vendedor.nombre)||"—");
+    quien.className = "detalle";
+    quien.textContent = "Se lo pediste a " + ((c.vendedor && c.vendedor.nombre) || "—");
     card.appendChild(quien);
-    const est = document.createElement("div");
-    est.className = "peEstado " + (c.estado || "pendiente");
-    est.textContent = (c.estado === "entregado") ? "Entregado" : "Pendiente";
-    card.appendChild(est);
+    const t = document.createElement("span");
+    t.className = "tag " + (c.estado || "pendiente");
+    t.textContent = (c.estado === "entregado") ? "Entregado" : "Pendiente";
+    card.appendChild(t);
     if(c.estado !== "entregado"){
+      const acc = document.createElement("div");
+      acc.className = "fAcciones";
       const b = document.createElement("button");
       b.className = "btnVerde"; b.textContent = "Marcar entregado";
       b.onclick = ()=> marcarEntregado(c.id);
-      card.appendChild(b);
+      acc.appendChild(b);
+      card.appendChild(acc);
     }
-    lc.appendChild(card);
+    cc.appendChild(card);
   });
 
-  const lr = el("listaRecibidos");
-  lr.innerHTML = "";
+  const cr = el("cajaRecibidos");
+  cr.innerHTML = "";
   el("vacioRecibidos").style.display = recibidos.length ? "none" : "block";
+  cr.style.display = recibidos.length ? "block" : "none";
   recibidos.forEach(c=>{
     const card = document.createElement("div");
-    card.className = "pedido " + (c.estado || "pendiente");
-    const nom = document.createElement("div");
-    nom.className = "peNom"; nom.textContent = c.nombreDeseo || "";
-    card.appendChild(nom);
+    card.className = "ficha";
+    const h = document.createElement("h3");
+    h.textContent = c.nombreDeseo || "";
+    card.appendChild(h);
     if(c.descripcion){
-      const des = document.createElement("div");
-      des.className = "peDesc"; des.textContent = c.descripcion || "";
-      card.appendChild(des);
+      const det = document.createElement("div");
+      det.className = "detalle"; det.textContent = c.descripcion || "";
+      card.appendChild(det);
     }
     const quien = document.createElement("div");
-    quien.className = "peQuien"; quien.textContent = ((c.comprador&&c.comprador.nombre)||"—") + " te lo compró. Tú lo entregas.";
+    quien.className = "detalle";
+    quien.textContent = ((c.comprador && c.comprador.nombre) || "—") + " te lo compró. Tú lo entregas.";
     card.appendChild(quien);
-    const est = document.createElement("div");
-    est.className = "peEstado " + (c.estado || "pendiente");
-    est.textContent = (c.estado === "entregado") ? "Entregado" : "Te toca entregarlo";
-    card.appendChild(est);
-    lr.appendChild(card);
+    const t = document.createElement("span");
+    t.className = "tag " + (c.estado || "pendiente");
+    t.textContent = (c.estado === "entregado") ? "Entregado" : "Te toca entregarlo";
+    card.appendChild(t);
+    cr.appendChild(card);
   });
 }
-function mostrarPestana(cual){
-  pestaña = cual;
-  const esC = (cual === "comprados");
-  el("tabComprados").classList.toggle("on", esC);
-  el("tabRecibidos").classList.toggle("on", !esC);
-  el("listaComprados").style.display = esC ? "block" : "none";
-  el("vacioComprados").style.display = esC ? "block" : "none";
-  el("listaRecibidos").style.display = esC ? "none" : "block";
-  el("vacioRecibidos").style.display = esC ? "none" : "block";
-}
-el("tabComprados").onclick = ()=> mostrarPestana("comprados");
-el("tabRecibidos").onclick = ()=> mostrarPestana("recibidos");
-
 function pintarTodo(){
   pintarCatalogo();
   pintarDeseos();
   pintarPedidos();
-  if(vista === "pedidos") mostrarPestana(pestaña);
 }
+function pestana(cual){
+  const esA = (cual === "comprados");
+  el("tabA").style.color = esA ? "var(--teal)" : "";
+  el("tabB").style.color = esA ? "" : "var(--teal)";
+  el("cajaComprados").style.display = esA ? "" : "none";
+  el("vacioComprados").style.display = esA ? "" : "none";
+  el("cajaRecibidos").style.display = esA ? "none" : "";
+  el("vacioRecibidos").style.display = esA ? "none" : "";
+}
+el("tabA").onclick = ()=> pestana("comprados");
+el("tabB").onclick = ()=> pestana("recibidos");
 
-// ---------- acciones: activating / comprar / borrar / entregar ----------
+// ---------- acciones ----------
 async function activar(id){
   const d = deseos.find(x=> x.id === id);
   if(!d || d.enVenta) return;
@@ -610,26 +484,24 @@ async function borrarDeseo(d){
   }catch(e){ aviso("No se pudo borrar. Revisa tu conexión."); }
 }
 
-// ---------- overlay: anotar / editar deseo ----------
+// ---------- anotar / editar deseo ----------
 function abrirFormulario(d){
   editandoId = d ? d.id : null;
   el("formTitulo").textContent = d ? "Editar deseo" : "Anotar deseo";
-  el("fNombre").value = d ? (d.nombre||"") : "";
-  el("fDesc").value   = d ? (d.descripcion||"") : "";
-  el("formMsg").textContent = "";
-  el("overlay").style.display = "flex";
-  el("fNombre").focus();
-}
-function cerrarFormulario(){
-  el("overlay").style.display = "none";
-  editandoId = null;
+  el("formDesc").textContent = d
+    ? "Cambia lo que quieras. Si ya está en venta, no cambia el precio."
+    : "Escribe lo que quieres que haga. Aquí solo lo ves tú.";
+  el("fNombre").value = d ? (d.nombre || "") : "";
+  el("fDesc").value   = d ? (d.descripcion || "") : "";
+  el("msg").textContent = "";
+  ver("vistaForm");
 }
 el("btnNuevoDeseo").onclick = ()=> abrirFormulario(null);
-el("btnCancelarForm").onclick = cerrarFormulario;
-el("btnGuardarForm").onclick = async ()=>{
+el("btnCancelar").onclick = ()=> ver("vistaDeseos", false);
+el("btnGuardar").onclick = async ()=>{
   const nombre = el("fNombre").value.trim().slice(0, 60);
   const desc   = el("fDesc").value.trim().slice(0, 400);
-  if(!nombre){ el("formMsg").textContent = "Escribe el deseo."; return; }
+  if(!nombre){ el("msg").textContent = "Escribe el deseo."; return; }
   try{
     if(editandoId){
       await updateDoc(doc(db, "deseos", editandoId), { nombre, descripcion: desc });
@@ -641,27 +513,25 @@ el("btnGuardarForm").onclick = async ()=>{
         creadoEn: serverTimestamp()
       });
     }
-    cerrarFormulario();
-  }catch(e){ el("formMsg").textContent = "No se pudo guardar. Revisa tu conexión."; }
+    editandoId = null;
+    ver("vistaDeseos", false);
+  }catch(e){ el("msg").textContent = "No se pudo guardar. Revisa tu conexión."; }
 };
 
 // ---------- lecturas en vivo ----------
 function escuchar(){
-  // Solo mis deseos (se listen todos y se filtran por duenio).
   onSnapshot(deseosRef, (snap)=>{
     deseos = snap.docs
       .map(d=>({ id: d.id, ...d.data() }))
       .filter(d=> d.duenio && d.duenio.id === yo.id);
     pintarTodo();
   });
-  // Compras: me tocan las que YO compre y las que me compraron.
   onSnapshot(comprasRef, (snap)=>{
     compras = snap.docs
       .map(d=>({ id: d.id, ...d.data() }))
       .filter(c=> (c.comprador && c.comprador.id === yo.id) || (c.vendedor && c.vendedor.id === yo.id));
     pintarTodo();
   });
-  // Mi saldo.
   onSnapshot(puntosUsuariosRef, (snap)=>{
     const mi = snap.docs.find(d=> d.id === yo.id);
     balance = mi ? (mi.data().balance || 0) : 0;
@@ -680,21 +550,12 @@ async function iniciar(){
   pareja = usuarios.find(u=> u && u.id && u.id !== yo.id && !u.invitado)
           || usuarios.find(u=> u && u.id && u.id !== yo.id) || null;
   el("nombrePareja").textContent = pareja ? pareja.nombre : "tu pareja";
-  el("nombreActual").textContent = yo.nombre;
-  try{
-    const f = new Date().toLocaleDateString("es-MX", { weekday:"long", day:"numeric", month:"long" });
-    el("fechaHoy").textContent = f.charAt(0).toUpperCase() + f.slice(1);
-  }catch(e){}
-  el("app").style.display = "flex";
-
-  // Si entro por hash (#deseos / #pedidos), abro esa vista de una vez.
-  const h = (location.hash || "").replace("#","");
-  irA((h === "deseos" || h === "pedidos") ? h : "catalogo");
-
-  mostrarPestana("comprados");
-  if(!pareja){
-    aviso("Registra a tu pareja para usar el Centro.");
-  }
+  el("descCatalogo").textContent = pareja
+    ? ("Lo que " + pareja.nombre + " tiene que entregarte.")
+    : "Registra a tu pareja para usar el Centro.";
+  ver("vistaCatalogo", false);
+  pestana("comprados");
+  if(!pareja) aviso("Registra a tu pareja para usar el Centro.");
   escuchar();
 }
 iniciar();

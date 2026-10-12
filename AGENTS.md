@@ -103,6 +103,67 @@ radios de 12, 14 y 16px. **No es un bug, pero lo nuevo va con la tabla de
 arriba.** Unificar los viejos se hace aparte, pantalla por pantalla, porque
 tocarlos todos de golpe es Riesgoso sin verlos.
 
+## Pantalla nueva = COPIAR una existente (regla dura)
+
+**Antes de escribir una pantalla desde cero, abrir una que ya exista y copiarla.**
+No se diseña nada: se replica. Si la pantalla nueva no se ve igual que las demás,
+es un bug, aunque funcione.
+
+**Hay DOS moldes en la app, y son distintos. El que pide Fredy para las pantallas
+de juego y con varias vistas es el de `Guiadas/index.html` (idéntico al de
+`Encuentros/`).** No confundirlo con el de `Citas/` o `Retos/`, que es otro.
+
+### Molde A — el de `Guiadas/` y `Encuentros/` (el que se usa)
+
+Varias vistas en la misma pantalla, una visible a la vez. **Este es el molde de
+referencia.**
+
+```html
+<body>                                  <!-- una columna, centrada -->
+  <a class="back" id="lnkInicio" href="../index.html#submenu">← Volver</a>
+  <div class="eyebrow">Nombre de la sección</div>
+  <div class="vista ver" id="vistaX">
+    <h1>Título</h1>
+    <p class="desc">Subtítulo centrado.</p>
+    ...
+  </div>
+</body>
+```
+
+Se copia tal cual:
+
+| Que | Medida / clase |
+|---|---|
+| `body` | `display:flex; flex-direction:column; align-items:center; padding:max(66px, calc(env(safe-area-inset-top) + 30px)) 20px max(28px, env(safe-area-inset-bottom));` |
+| **"Volver"** | clase `.back`, `position:absolute; top:max(20px, env(safe-area-inset-top)); right:20px` |
+| `.eyebrow` | `.8rem`, mayúsculas, `letter-spacing:.3em`, apagado |
+| `h1` | `1.8rem`, Chakra Petch, **centrado y con degradado coral→turquesa** |
+| `p.desc` | `.88rem`, apagado, `max-width:360px`, centrado |
+| `.vista` | `display:none; width:100%; max-width:520px; flex-direction:column; align-items:center` |
+| `.vista.ver` | `display:flex` (la vista visible) |
+| Botón principal | `.btnPri` — degradado, `padding:16px`, `border-radius:14px` |
+| Botón secundario | `.btnSec` — sin fondo, apagado, subrayado, `padding:12px` |
+| Recuadro con scroll | `.caja` — `max-height:55dvh; overflow-y:auto; border-radius:16px; background:var(--bg-2)` |
+| Tarjeta | `.ficha` — `background:var(--card); border-radius:16px; padding:16px` |
+
+**Navegación:** se cambian las clases con una función `ver(id)` que quita `.ver` a
+todas y se la pone a una, y el **"Volver" es contextual** con `preventDefault()`:
+regresa a la pantalla anterior, y solo desde la vista principal sale al menú
+(`../index.html#submenu`). Con `history.pushState` + `popstate` para que el botón
+atrás del celular no se salga de la pantalla.
+
+### Molde B — el de `Citas/`, `Retos/` y `Opciones/`
+
+Una sola vista, con `#app` + `#encabezado` (saludo con degradado + fecha) +
+`#contenido` (`max-width:560px`). **Solo se usa si la pantalla es de una sola
+vista.** Si tiene varias, es el molde A.
+
+**Antes de decir "listo", chequear en una pantalla nueva:**
+- `<div>` y `</div>` cuadran.
+- No hay `id` repetidos.
+- **Todos los `id` que usa el JS existen en el HTML.**
+- El JS pasa `jscheck.py`.
+
 ## Estándar de navegación (botones de volver y esquinas)
 
 **1. El botón "Volver" de un juego se llama `‹ Volver`, nunca "Inicio",** y
@@ -133,6 +194,17 @@ manda al menú principal sin querer. Ya pasó dos veces con Retos (oct-2026).
 **Un juego se pone en UN submenú, no en dos.** Retos estaba como tarjeta fija
 dentro de Experiencias y además tenía su propio submenú vacío (oct-2026). Por eso
 "Volver" lo dejaba en un lugar sin nada.
+
+**1g. Una pantalla que cuelga de un submenú regresa a ESE submenú, no a la
+pantabra hermana.** El Centro de Adquisiciones cuelga del submenú Retos, así que su
+"Volver" va a `../index.html#retos` y **no** a `Retos/index.html`. Lo mismo aplica a
+cualquier pantalla nueva: se pregunta "¿de dónde salí?" y ahí se vuelve.
+
+**1h. El orden de las tarjetas lo manda `orden`, no el alfabeto.** Las tarjetas de
+`packs` se ordenan por `orden` y, si empatan, por título. **Si no se pone `orden`,
+caen en `10` y se ordenan por nombre**: por eso "Centro de Adquisiciones" salía
+**antes** que "Retos" (oct-2026). **Cada tarjeta fija lleva su `orden` explícito y
+único.**
 
 `index.html` lee el `#` al arrancar y abre esa subpantalla directo
 (`abrirJuegos()` / `abrirExp()`). Para agregar otro submenú: se agrega su

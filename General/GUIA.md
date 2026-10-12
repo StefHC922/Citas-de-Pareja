@@ -1527,12 +1527,25 @@ solo de su saldo. Los puntos son los mismos de `puntosUsuarios` que dan los reto
 | `index.html` | El botón **🛒** por usuario en Usuarios y el overlay de los 2 números (`ptsActivar`, `precioCompra`) |
 | `herramientas/sintaxis/extract.py` | Se registró `Retos/centro.html` para que pase la revisión |
 
-**Encabezado estándar:** la pantalla usa el mismo molde que `Retos/` y `Citas/`:
-`#app` (oculto por JS) + `#encabezado` con saludo grande con degradado ("Hola, [nombre]")
-+ `#fechaHoy` + "Volver" arriba a la derecha. **Las tres vistas comparten el mismo
-contenedor** (`max-width:560px`, centrado). Antes solo el catálogo lo tenía y las
-otras dos se estiraban de lado a lado: por eso los datos se veían "por toda la
-pantalla" (decisión de Fredy, oct-2026).
+**Encabezado y estructura: el molde es `Guiadas/` (NO `Citas/`).** Hay dos moldes
+en la app y se confundieron (oct-2026):
+
+| Molde | Cuándo | Cómo se ve |
+|---|---|---|
+| **`Guiadas/` y `Encuentros/`** | **Pantallas con varias vistas (este caso)** | `.vista` con clase `.ver`, `.back` arriba a la derecha, `.eyebrow`, `h1` con degradado, `p.desc`, `.btnPri`/`.btnSec`, recuadro `.caja` con `max-height:55dvh` |
+| `Citas/`, `Retos/`, `Opciones/` | Pantallas de **una sola** vista | `#app` + `#encabezado` (saludo + fecha) + `#contenido` (`max-width:560px`) |
+
+El Centro quedó con el **molde A**: una columna centrada, `← Volver` con clase
+`.back`, el eyebrow "Centro de Adquisiciones", y cada vista con su `<h1>` y su
+`<p class="desc">`. Las cuatro vistas (`vistaCatalogo`, `vistaDeseos`,
+`vistaPedidos`, `vistaForm`) son `.vista` y se cambian con `ver(id)`.
+
+**"Volver" es contextual**, como en `Guiadas/`: del formulario → a Mis deseos; de
+las dos vistas → al catálogo; **solo desde el catálogo se sale al submenú Retos**
+(`../index.html#retos`). Con `pushState` + `popstate` para el botón atrás.
+
+**Antes de escribir una pantalla hay que abrir la que se va a copiar.** La regla
+completa está en `AGENTS.md`, sección "Pantalla nueva = COPIAR una existente".
 
 **Orden de la tarjeta:** el "Centro" lleva `orden: 20` (Retos lleva `10`), porque el
 listado se ordena por `orden` y luego alfabéticamente: sin eso, "Centro..." caía
@@ -1581,9 +1594,33 @@ deseos, compras y retos, porque quedan huérfanos.
 **Los puntos se descuentan con `runTransaction`**, que relee el saldo dentro de la
 transacción: dos celulares apretando "Comprar" al mismo tiempo no pueden gastar dos
 veces lo que no hay (el bug B3 de `Modelo-Datos.md`, pero aquí sí prevenido).
-**Verificado:** sintaxis OK en los 3 archivos; `<div>` cuadrados (32/32), sin ids
+**Verificado:** sintaxis OK en los 3 archivos; `<div>` cuadrados (33/33), sin ids
 repetidos y sin ids de JS inexistentes en `centro.html`. **Falta la prueba en
 vivo** (Fredy, en Pages y con los dos celulares).
+
+### Lo que salió mal la primera vez (y la regla que dejó)
+
+La primera versión del Centro **funcionaba pero se veía mal**, y Fredy tuvo que
+señalarlo. Cuatro cosas, todas por no haber copiado el estándar de una pantalla
+que ya existe:
+
+| Fallo | Por qué | Regla |
+|---|---|---|
+| Las vistas de deseos y pedidos se veían **de lado a lado**, y el catálogo centrado | Solo `#contenido` tenía ancho; `#contenidoDeseos` y `#contenidoPedidos` no existían en el CSS | **Todas las vistas de una pantalla comparten el mismo contenedor** |
+| El encabezado no era como los demás | Se inventó uno ("Centro de …") en vez de copiar el de `Retos/` | **Pantalla nueva = copia de una existente.** El molde vive en `AGENTS.md` |
+| La tarjeta salía **arriba** de "Retos" | Sin `orden`, todo cae en `10` y el listado se ordena alfabéticamente: "Centro…" < "Retos" | **Cada tarjeta fija lleva `orden` explícito y único** |
+| "Volver" mandaba a la pantalla de Retos | Se puso `index.html` a ojo | **Preguntarse "¿de dónde salí?" y volver ahí** (aquí: al submenú, `#retos`) |
+
+**La regla general está en `AGENTS.md`, sección "Pantalla nueva = COPIAR una
+existente (regla dura)".** Ahí están **los dos moldes** (el de `Guiadas/` para
+pantallas de varias vistas y el de `Citas/`/`Retos/` para las de una sola), con las
+medidas exactas de cada uno, y los 4 chequeos que hay que correr antes de decir
+"listo" (`<div>` cuadrados, sin ids repetidos, **todos los ids del JS existen**, y
+`jscheck.py`).
+
+**Lo que de verdad salió mal fue de método, no de código:** se maquetó la pantalla
+sin abrir primero la que había que copiar, y se copió la equivocada. Todo el
+tiempo perdido fue por no leer dos archivos que ya tenían la respuesta.
 
 ### Una cita no se agenda en el pasado (oct-2026)
 
