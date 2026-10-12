@@ -904,6 +904,10 @@ btnAccion.onclick = async ()=>{
     if(err){ formMsg.textContent = err; return; }
     btnAccion.disabled = true;
     try{
+      // `ahora` solo existía en la rama de "nueva". Sin declararlo aquí, el
+      // updateDoc de autorizar tronaba y salía "Revisa tu conexión" aunque la
+      // conexión estuviera bien (bug reportado por Fredy, oct-2026).
+      const ahora = new Date();
       suprimir(retoEnEdicion);
       await updateDoc(doc(db, "retos", retoEnEdicion), {
         actividad: f.actividad,

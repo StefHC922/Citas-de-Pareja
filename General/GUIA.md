@@ -1425,6 +1425,26 @@ exactamente lo mismo que antes.
 L326 y L347). Hoy no rompe nada porque ningún JavaScript lo usa —solo el CSS—,
 pero es una bomba de tiempo. Se arregla aparte.
 
+### Autorizar un reto fallaba con "Revisa tu conexión" (corregido oct-2026)
+
+**Lo reportó Fredy:** en el celular, capturar y proponer un reto iba bien, pero al
+**autorizarlo** salía *"Error al guardar. Revisa tu conexión."* con internet
+perfecto.
+
+**La causa no era la conexión:** en `Retos/index.html`, la rama de `autorizar`
+escribía `fechaInicio: ahora` y `fechaFin: finDeUltimoDia(ahora, …)`, pero
+**`ahora` no existía en esa rama**. Esa variable solo se declaraba dentro de la
+rama de **"nueva"** (`const ahora = new Date();`). Al no estar, JavaScript lanzaba
+un error, el `catch` lo atrapaba y mostraba el mensaje de conexión.
+
+**El arreglo:** declarar `const ahora = new Date();` también dentro de la rama de
+`autorizar`, antes del `updateDoc`. **Un error real de programación, no de red** —
+por eso "revisa tu conexión" engañaba.
+
+**Regla que deja:** el `catch` genérico *"Revisa tu conexión"* **oculta cualquier
+fallo**, no solo los de red. Cuando un mensaje así sale con buena conexión, casi
+siempre el error está en el código y hay que mirar la consola, no el módem.
+
 ### Una cita no se agenda en el pasado (oct-2026)
 
 En `Citas/`, al agendar solo se comprobaba que el campo de fecha **no estuviera
