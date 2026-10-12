@@ -1532,16 +1532,43 @@ en la app y se confundieron (oct-2026):
 
 | Molde | Cuándo | Cómo se ve |
 |---|---|---|
-| **`Guiadas/` y `Encuentros/`** | **Pantallas con varias vistas (este caso)** | `.vista` con clase `.ver`, `.back` arriba a la derecha, `.eyebrow`, `h1` con degradado, `p.desc`, `.btnPri`/`.btnSec`, recuadro `.caja` con `max-height:55dvh` |
+| **`Guiadas/` y `Encuentros/`** | **Pantallas con varias vistas (este caso)** | `.vista` con clase `.ver`, `.back` arriba a la derecha, `.eyebrow`, `h1` con degradado, `p.desc` |
 | `Citas/`, `Retos/`, `Opciones/` | Pantallas de **una sola** vista | `#app` + `#encabezado` (saludo + fecha) + `#contenido` (`max-width:560px`) |
 
-El Centro quedó con el **molde A**: una columna centrada, `← Volver` con clase
-`.back`, el eyebrow "Centro de Adquisiciones", y cada vista con su `<h1>` y su
-`<p class="desc">`. Las cuatro vistas (`vistaCatalogo`, `vistaDeseos`,
-`vistaPedidos`, `vistaForm`) son `.vista` y se cambian con `ver(id)`.
+**El estilo de LAS LISTAS es el del engrane de `Opciones/` (Juegos → Elecciones
+Peligrosas → ⚙️).** Se copiaron sus clases tal cual:
 
-**"Volver" es contextual**, como en `Guiadas/`: del formulario → a Mis deseos; de
-las dos vistas → al catálogo; **solo desde el catálogo se sale al submenú Retos**
+| Clase | Qué es |
+|---|---|
+| `.tabs` / `.tab` / `.tab.activo` | Las pestañas: dos botones en la misma línea, el activo con el degradado |
+| `.tablaBox` | **El recuadro que delimita la lista**: `max-height:48dvh; overflow-y:auto; border-radius:12px; background:var(--bg-2)` |
+| `.fila` + `.celda` + `.x` | Cada renglón: la pastilla con el texto a la izquierda y la ✕ (roja) a la derecha |
+| `.filaAdd` | La fila de agregar: input + botón **+** |
+| `.tag` | El chipito de estado ("Secreto", "En venta", "Pendiente", "Entregado") |
+
+**Cómo quedó el Centro (3 vistas, las tres con el mismo esqueleto):**
+
+```
+h1 + p.desc
+[ recuadro .tablaBox con los datos ]
+[ .tabs con las otras dos vistas ]   ← abajo del recuadro, en la misma línea
+```
+
+- **Tienda:** los deseos que activaste, cada uno con su botón **Comprar**.
+- **Mis deseos:** tus deseos, cada uno con su **✕**. Abajo, la fila de agregar
+  (`+ Anotar deseo`) y después las pestañas. El **✕ abre el detalle** del deseo
+  (editar, activar y borrar en una vista), no borra de una: preguntar antes de
+  borrar con un `✕` que no avisa sería una trampa.
+- **Mis pedidos:** pestañas **"Los que yo compré"** / **"Los que me compraron"**,
+  cada lista en su propio recuadro. En la de los que compraste, el botón es un ✓
+  verde para **marcar entregado**.
+
+**Las pestañas de abajo** se marcan solas con `marcarNav()`: la de la vista
+actual queda `.activo`. Por eso hay dos juegos de botones (`navDeseos`/`navDeseos2`,
+etc.), porque cada vista lleva el suyo debajo de su recuadro.
+
+**"Volver" es contextual**, como en `Guiadas/`: del detalle → a Mis deseos; de las
+dos vistas → a la Tienda; **solo desde la Tienda se sale al submenú Retos**
 (`../index.html#retos`). Con `pushState` + `popstate` para el botón atrás.
 
 **Antes de escribir una pantalla hay que abrir la que se va a copiar.** La regla
@@ -1559,11 +1586,13 @@ regresa al submenú. En las otras dos vistas solo vuelve al catálogo.
 carpetas ("Retos" → "Retos/") pero rompía con un archivo suelto
 ("Retos/centro.html/" no existe). Ahora, si la ruta ya trae `.html`, se usa tal cual.
 
-**Las vistas** (un solo archivo, no páginas separadas): **Catálogo** (recuadro con
-scroll, más recientes primero) · **Mis deseos** (la lista secreta) · **Mis pedidos**
-(dos pestañas: "Los que yo compré" / "Los que me compraron"). El "Volver" de arriba a
-la derecha es **contextual**: en el catálogo sale a Retos, en las otras dos vuelve al
-catálogo. El botón atrás del celular también.
+**Las vistas** (un solo archivo, no páginas separadas): **Tienda** (recuadro con
+scroll, más recientes primero) · **Mis deseos** · **Mis pedidos** (dos pestañas).
+
+**Nota de método:** esta pantalla recibió el **tercer** intento de diseño, y las
+dos primeras fallaron por no copiar la pantalla correcta. Lo que al final funcionó
+fue mirar el **engrane de `Opciones/`**, que es donde están las pestañas y el
+recuadro delimitador. **Ese es el estilo de las listas en esta app.**
 
 **Los dos números** (`ptsActivar` = 500 y `precioCompra` = 100) se editan por
 usuario en la pantalla **Usuarios** (el ⚙️ del inicio), botón 🛒. Si no hay número

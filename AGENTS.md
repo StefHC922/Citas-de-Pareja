@@ -152,6 +152,33 @@ regresa a la pantalla anterior, y solo desde la vista principal sale al menú
 (`../index.html#submenu`). Con `history.pushState` + `popstate` para que el botón
 atrás del celular no se salga de la pantalla.
 
+### El estilo de las LISTAS: el del engrane de `Opciones/`
+
+Cuando la pantalla tenga **listas de cosas** (productos, deseos, opciones,
+pedidos), el molde de las listas **no** es el de `Guiadas/` sino el del **engrane de
+`Opciones/`** (Juegos → Elecciones Peligrosas → ⚙️ arriba a la izquierda). Se copian
+estas clases tal cual, con sus medidas:
+
+| Clase | Qué es | Medida |
+|---|---|---|
+| `.tabs` / `.tab` / `.tab.activo` | Pestañas: dos botones en la misma línea | `.tab{flex:1; padding:12px; border-radius:12px; border:1px solid var(--card-border); background:var(--card); color:var(--fg-muted); font-family:'Chakra Petch'; font-weight:600; font-size:.9rem}` — `.activo` es el degradado coral→turquesa con `color:var(--bg)` |
+| **`.tablaBox`** | **El recuadro que delimita la lista** | `width:100%; max-height:48dvh; overflow-y:auto; border:1px solid var(--card-border); border-radius:12px; background:var(--bg-2); padding:8px` |
+| `.fila` + `.celda` + `.x` | Cada renglón | `.fila{display:flex; gap:8px; align-items:center; margin-bottom:6px}` · `.celda{flex:1; min-width:0; border:1px solid var(--card-border); background:var(--card); border-radius:10px; padding:10px; font-size:.85rem}` · `.x{background:none; border:none; color:var(--rojo); cursor:pointer; font-size:1rem; padding:6px 10px}` |
+| `.filaAdd` | Fila de agregar: input + **+** | `display:flex; gap:8px` · input `flex:1; border-radius:12px; background:var(--bg); padding:12px` · botón con el degradado, `padding:12px 16px` |
+| `.buscar` | El buscador | `width:100%; border-radius:12px; background:var(--card); padding:13px 14px; font-size:.95rem` |
+
+**El esqueleto de una vista con lista** es siempre este, en este orden:
+
+```
+h1  +  p.desc
+[ .tablaBox con los renglones ]      ← el recuadro delimita
+[ .filaAdd  o  .btnPri ]             ← opcional
+[ .tabs con las otras vistas ]       ← abajo del recuadro, en la misma línea
+```
+
+**El ✕ no borra de una:** abre el detalle para **editar, activar y borrar**, y ahí
+sí se pregunta con `confirmar()`. Un ✕ que borra sin avisar es una trampa.
+
 ### Molde B — el de `Citas/`, `Retos/` y `Opciones/`
 
 Una sola vista, con `#app` + `#encabezado` (saludo con degradado + fecha) +
