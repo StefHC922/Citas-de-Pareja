@@ -423,11 +423,19 @@ function pintar(){
 }
 
 async function llamarAI(textoUsuario){
-  const contenidos = hist.slice(-10).map(m=>({
+  // El mensaje actual YA está en `hist` (se guarda antes de llamar), así que aquí
+  // se saca de la historia. Antes no se sacaba y se mandaba DOS VECES seguidas:
+  // el modelo recibía "user: mándale un reto..." y debajo otra vez lo mismo
+  // (lo reportó Fredy, oct-2026).
+  const previos = hist.slice(0, -1).slice(-10).map(m=>({
     role: m.rol === "yo" ? "user" : "model",
     parts: [{ text: m.texto }]
   }));
-  contenidos.push({ role: "user", parts: [{ text: textoUsuario + "\n\n(Me llamo " + yo.nombre + ". Háblame neutro: no asumas nada de mí por mi nombre.)" }] });
+  // El "(Me llamo...)" ya NO va pegado a cada mensaje: se acumulaba en todos los
+  // turnos de la conversación y el modelo terminaba contestándole a ese texto.
+  // La regla de no suponer el género por el nombre ya está en la instrucción
+  // (REGLA DE ORO), así que alcanza con eso.
+  const contenidos = previos.concat([{ role: "user", parts: [{ text: textoUsuario }] }]);
   const cuerpo = {
     system_instruction: { parts: [{ text: PERSONA }] },
     contents: contenidos,
