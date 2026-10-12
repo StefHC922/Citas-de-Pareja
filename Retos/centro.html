@@ -94,6 +94,15 @@
     font-size:1rem; padding:6px 10px; }
   .ok{ flex:0 0 auto; background:none; border:none; color:var(--verde); cursor:pointer;
     font-size:1rem; padding:6px 10px; }
+  .celda .titulo{ font-weight:600; }
+  /* En la TIENDA el nombre del producto va en coral. */
+  .fila.producto .celda .titulo{ color:var(--coral); }
+  /* Boton chico (Comprar / Recibi) pegado a la derecha de un renglon. */
+  .btnMini{ flex:0 0 auto; border:none; border-radius:10px; cursor:pointer; padding:10px 12px;
+    font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:.82rem; color:var(--bg);
+    background:linear-gradient(90deg, var(--coral), var(--teal)); }
+  .btnMini:active{ transform:scale(.97); }
+  .btnMini.verde{ background:var(--verde); color:#06281a; }
   .tag{ font-size:.7rem; font-family:'Chakra Petch',sans-serif; border-radius:8px; padding:2px 8px;
     text-transform:uppercase; letter-spacing:.12em; margin-top:6px; display:inline-block; }
   .tag.vendido{ color:var(--teal); border:1px solid var(--teal); }
@@ -108,6 +117,12 @@
   .filaAdd button{ border:none; border-radius:12px; cursor:pointer; padding:12px 16px;
     font-family:'Chakra Petch',sans-serif; font-weight:700; color:var(--bg);
     background:linear-gradient(90deg, var(--coral), var(--teal)); }
+  /* Alta de un deseo: nombre + descripcion, los DOS obligatorios. */
+  .alta{ display:flex; flex-direction:column; gap:8px; width:100%; }
+  .alta input, .alta textarea{ width:100%; border-radius:12px; border:1px solid var(--card-border);
+    background:var(--bg); color:var(--fg); padding:12px; font-size:.9rem; font-family:'Inter',sans-serif; }
+  .alta textarea{ min-height:56px; }
+  .alta .btnPri{ margin-bottom:0; }
   /* Copia invisible de esa misma fila en las vistas que NO la tienen. Ocupa el
      mismo espacio (mismo input, mismo boton) pero no se ve, y sirve para que los
      botones de navegacion de abajo caigan EXACTAMENTE en el mismo lugar en las
@@ -119,6 +134,16 @@
   #msg{ min-height:20px; font-size:.85rem; color:var(--rojo); margin:6px 0; text-align:center; }
   textarea{ width:100%; min-height:90px; resize:vertical; border-radius:12px; border:1px solid var(--card-border);
     background:var(--bg); color:var(--fg); padding:12px; font-size:.9rem; font-family:'Inter',sans-serif; }
+
+  /* ---- ventana emergente de un deseo (activar / borrar) ---- */
+  .modal{ position:fixed; inset:0; background:rgba(0,0,0,.62); display:none;
+    align-items:center; justify-content:center; padding:20px; z-index:100; }
+  .modal.ver{ display:flex; }
+  .modalCaja{ width:100%; max-width:360px; background:var(--card); border:1px solid var(--card-border);
+    border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:10px; }
+  .modalNombre{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.15rem; color:var(--coral); }
+  .modalTexto{ font-size:.88rem; color:var(--fg); white-space:pre-wrap; }
+  .modalPrecio{ font-size:.8rem; color:var(--fg-muted); }
 </style>
 </head>
 <body>
@@ -134,9 +159,10 @@
   <div class="tablaBox vacia" id="cajaCatalogo">
     <div class="vacio" id="vacioCatalogo">Todavía no hay nada a la venta.<br>Activa un deseo desde “Mis deseos”.</div>
   </div>
-  <div class="filaAdd filaHueco">
-    <input type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <button type="button" tabindex="-1" aria-hidden="true">+</button>
+  <div class="alta filaHueco" aria-hidden="true">
+    <input type="text" tabindex="-1" autocomplete="off">
+    <textarea tabindex="-1"></textarea>
+    <button type="button" tabindex="-1" class="btnPri" disabled>Agregar deseo</button>
   </div>
   <div class="tabs" style="margin-top:12px;">
     <button class="tab tabnav" id="navDeseos">Mis deseos</button>
@@ -151,9 +177,10 @@
   <div class="tablaBox vacia" id="cajaDeseos">
     <div class="vacio" id="vacioDeseos">Todavía no has anotado ningún deseo.</div>
   </div>
-  <div class="filaAdd" style="margin-top:12px;">
-    <input id="inpDeseo" placeholder="Anotar deseo" maxlength="60">
-    <button id="btnAdd">+</button>
+  <div class="alta" style="margin-top:12px;">
+    <input id="inpDeseo" placeholder="Nombre del deseo" maxlength="60">
+    <textarea id="inpDeseoDesc" placeholder="Descripción: ¿qué quieres que pase?" maxlength="400"></textarea>
+    <button id="btnAdd" class="btnPri" disabled>Agregar deseo</button>
   </div>
   <div class="tabs" style="margin-top:12px;">
     <button class="tab tabnav" id="navTienda">Tienda</button>
@@ -175,9 +202,10 @@
   <div class="tablaBox vacia" id="cajaRecibidos" style="margin-top:12px;display:none;">
     <div class="vacio" id="vacioRecibidos">No te han comprado ningún deseo.</div>
   </div>
-  <div class="filaAdd filaHueco">
-    <input type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <button type="button" tabindex="-1" aria-hidden="true">+</button>
+  <div class="alta filaHueco" aria-hidden="true">
+    <input type="text" tabindex="-1" autocomplete="off">
+    <textarea tabindex="-1"></textarea>
+    <button type="button" tabindex="-1" class="btnPri" disabled>Agregar deseo</button>
   </div>
   <div class="tabs" style="margin-top:12px;">
     <button class="tab tabnav" id="navTienda2">Tienda</button>
@@ -185,19 +213,16 @@
   </div>
 </div>
 
-<!-- ================= EDITAR / BORRAR UN DESEO ================= -->
-<div class="vista" id="vistaDetalle">
-  <h1 id="detTitulo">Deseo</h1>
-  <p class="desc" id="detDesc"></p>
-  <div class="celda" style="width:100%;">
-    <div id="detTexto"></div>
-    <textarea id="detEdit" style="margin-top:10px;" placeholder="Describe el deseo…" maxlength="400"></textarea>
+<!-- ================= VENTANA EMERGENTE DE UN DESEO ================= -->
+<div class="modal" id="modalDeseo">
+  <div class="modalCaja">
+    <div class="modalNombre" id="mdNombre">Deseo</div>
+    <div class="modalTexto" id="mdTexto"></div>
+    <div class="modalPrecio" id="mdPrecio"></div>
+    <button class="btnPri" id="mdActivar">Activar</button>
+    <button class="btnSec" id="mdBorrar" style="color:var(--rojo);">Borrar deseo</button>
+    <button class="btnSec" id="mdCerrar">Cancelar</button>
   </div>
-  <div id="detPrecio" class="detalle" style="font-size:.8rem;color:var(--fg-muted);margin-top:10px;"></div>
-  <div id="msg"></div>
-  <button class="btnPri" id="btnGuardarDet">Guardar cambios</button>
-  <button class="btnSec" id="btnActivar">Activar</button>
-  <button class="btnSec" id="btnBorrar" style="color:var(--rojo);">Borrar deseo</button>
 </div>
 
 <script type="module">
@@ -228,7 +253,7 @@ const ACT_POR_DEFECTO = 500;
 const PRECIO_POR_DEFECTO = 100;
 
 const CLAVE_LOCAL = "appPareja_quienSoy";
-let yo = null, pareja = null, usuarios = [];
+let yo = null, pareja = null, usuarios = [], miUsuario = null;
 let balance = 0;
 let deseos = [], compras = [];
 let abiertoId = null;
@@ -249,8 +274,8 @@ function numConfig(valor, porDefecto){
   const n = parseInt(valor, 10);
   return (isFinite(n) && n > 0) ? n : porDefecto;
 }
-function miActivar(){ return numConfig(yo && yo.ptsActivar, ACT_POR_DEFECTO); }
-function miPrecio(){ return numConfig(yo && yo.precioCompra, PRECIO_POR_DEFECTO); }
+function miActivar(){ return numConfig((miUsuario && miUsuario.ptsActivar) || (yo && yo.ptsActivar), ACT_POR_DEFECTO); }
+function miPrecio(){ return numConfig((miUsuario && miUsuario.precioCompra) || (yo && yo.precioCompra), PRECIO_POR_DEFECTO); }
 const el = (id)=> document.getElementById(id);
 
 // ---------- navegación (patrón de Guiadas/: una .vista a la vez) ----------
@@ -277,7 +302,6 @@ function marcarNav(){
 document.getElementById("lnkInicio").addEventListener("click", (e)=>{
   const v = document.querySelector(".vista.ver");
   const id = v ? v.id : "";
-  if(id === "vistaDetalle"){ e.preventDefault(); ver("vistaDeseos"); return; }
   if(id === "vistaDeseos" || id === "vistaPedidos"){ e.preventDefault(); ver("vistaCatalogo", false); return; }
 });
 window.addEventListener("popstate", (e)=> ver((e.state && e.state.v) || "vistaCatalogo", false));
@@ -297,6 +321,7 @@ function fila(texto, detalle, tagTexto, tagClase){
   const c = document.createElement("div");
   c.className = "celda";
   const t = document.createElement("div");
+  t.className = "titulo";
   t.textContent = texto || "";
   c.appendChild(t);
   if(detalle){
@@ -354,8 +379,9 @@ function pintarCatalogo(){
   const enVenta = deseos.filter(d=> d.enVenta).sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
   const filas = enVenta.map(d=>{
     const f = fila(d.nombre, d.descripcion, miPrecio() + " pts", "vendido");
+    f.classList.add("producto");           // el titulo se pinta en coral
     const b = document.createElement("button");
-    b.className = "ok"; b.textContent = "Comprar";
+    b.className = "btnMini"; b.textContent = "Comprar";
     // NACE OCULTO: sin saldo no se compra.
     b.style.display = (balance >= miPrecio()) ? "block" : "none";
     b.onclick = ()=> comprar(d.id);
@@ -366,8 +392,8 @@ function pintarCatalogo(){
 }
 
 // ---------- mis deseos ----------
-// Tocar el deseo (la pastilla) abre el detalle para editarlo o ACTIVARLO; la ✕
-// roja borra directo (siempre con confirmacion). Antes la ✕ abria el detalle.
+// Tocar el deseo (la pastilla) abre la VENTANA EMERGENTE para activarlo; la ✕
+// roja borra directo (siempre con confirmacion).
 function pintarDeseos(){
   const mios = deseos.slice().sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
   const filas = mios.map(d=>{
@@ -376,7 +402,7 @@ function pintarDeseos(){
       d.enVenta ? "vendido" : "secreto");
     const c = f.querySelector(".celda");
     c.style.cursor = "pointer";
-    c.onclick = ()=> abrirDetalle(d.id);
+    c.onclick = ()=> abrirModal(d.id);
     const b = document.createElement("button");
     b.className = "x"; b.textContent = "✕";
     b.setAttribute("aria-label", "Borrar " + d.nombre);
@@ -399,10 +425,11 @@ function pintarPedidos(){
       "Se lo pediste a " + ((c.vendedor && c.vendedor.nombre) || "—"),
       (c.estado === "entregado") ? "Entregado" : "Pendiente",
       (c.estado === "entregado") ? "entregado" : "pendiente");
+    // El boton de "lo recibi" va a la DERECHA del pedido, bien visible.
     if(c.estado !== "entregado"){
       const b = document.createElement("button");
-      b.className = "ok"; b.textContent = "✓";
-      b.setAttribute("aria-label", "Marcar entregado");
+      b.className = "btnMini verde"; b.textContent = "Recibí ✓";
+      b.setAttribute("aria-label", "Marcar como recibido");
       b.onclick = ()=> marcarEntregado(c.id);
       f.appendChild(b);
     }
@@ -440,40 +467,31 @@ function ajustarAlturaPedidos(){
 el("tabComprados").onclick = ()=> pestana("comprados");
 el("tabRecibidos").onclick = ()=> pestana("recibidos");
 
-// ---------- detalle de un deseo (editar / activar / borrar) ----------
-function abrirDetalle(id){
+// ---------- ventana emergente de un deseo (activar / borrar) ----------
+function abrirModal(id){
   const d = deseos.find(x=> x.id === id);
   if(!d) return;
   abiertoId = id;
-  el("detTitulo").textContent = d.nombre || "Deseo";
-  el("detDesc").textContent = d.enVenta
-    ? "Está a la venta en la tienda de " + (pareja ? pareja.nombre : "tu pareja") + "."
-    : "Solo lo ves tú hasta que lo actives.";
-  el("detTexto").textContent = d.descripcion || "(sin descripción)";
-  el("detEdit").value = d.descripcion || "";
-  el("detPrecio").textContent = d.enVenta
-    ? ("Precio: " + miPrecio() + " pts (el de tu configuración)")
-    : ("Activar cuesta " + miActivar() + " pts. Se paga una sola vez.");
-  el("msg").textContent = "";
-  const bAct = el("btnActivar");
-  bAct.style.display = (!d.enVenta && balance >= miActivar()) ? "block" : "none";
-  bAct.textContent = "Activar · " + miActivar() + " pts";
-  el("btnGuardarDet").textContent = "Guardar cambios";
-  ver("vistaDetalle");
+  el("mdNombre").textContent = d.nombre || "Deseo";
+  el("mdTexto").textContent = d.descripcion || "(sin descripción)";
+  pintarBotonesModal(d);
+  el("modalDeseo").classList.add("ver");
 }
-el("btnGuardarDet").onclick = async ()=>{
-  if(!abiertoId) return;
-  const desc = el("detEdit").value.trim().slice(0, 400);
-  try{
-    await updateDoc(doc(db, "deseos", abiertoId), { descripcion: desc });
-    abrirIdVolver();
-  }catch(e){ el("msg").textContent = "No se pudo guardar. Revisa tu conexión."; }
-};
-function abrirIdVolver(){
+function pintarBotonesModal(d){
+  el("mdPrecio").textContent = d.enVenta
+    ? ("En venta · " + miPrecio() + " pts · tus puntos: " + balance)
+    : ("Activar cuesta " + miActivar() + " pts (se paga una sola vez) · tus puntos: " + balance);
+  const b = el("mdActivar");
+  b.style.display = (!d.enVenta && balance >= miActivar()) ? "block" : "none";
+  b.textContent = "Activar · " + miActivar() + " pts";
+}
+function cerrarModal(){
+  el("modalDeseo").classList.remove("ver");
   abiertoId = null;
-  ver("vistaDeseos", false);
 }
-el("btnActivar").onclick = async ()=>{
+el("mdCerrar").onclick = cerrarModal;
+el("modalDeseo").addEventListener("click", (e)=>{ if(e.target === el("modalDeseo")) cerrarModal(); });
+el("mdActivar").onclick = async ()=>{
   if(!abiertoId) return;
   const id = abiertoId;
   const ok = await confirmar({
@@ -492,13 +510,13 @@ el("btnActivar").onclick = async ()=>{
       t.update(doc(db, "deseos", id), { enVenta: true, activadoEn: serverTimestamp() });
     });
     avisarTelegram("✨ " + yo.nombre + " activó un deseo para su tienda.", APP_URL + "Retos/centro.html");
-    abrirIdVolver();
+    cerrarModal();
   }catch(e){
     if(e && e.message === "saldo") aviso("No tienes puntos suficientes.");
     else aviso("No se pudo activar. Revisa tu conexión.");
   }
 };
-// Borra un deseo (lo use la ✕ de la lista y el boton del detalle). Siempre
+// Borra un deseo (lo usan la ✕ de la lista y el boton de la ventana). Siempre
 // pregunta con confirmar(): un ✕ que borra sin avisar es una trampa.
 async function borrarDeseo(id){
   const d = deseos.find(x=> x.id === id);
@@ -518,24 +536,32 @@ async function borrarDeseo(id){
     return true;
   }catch(e){ aviso("No se pudo borrar. Revisa tu conexión."); return false; }
 }
-el("btnBorrar").onclick = async ()=>{
+el("mdBorrar").onclick = async ()=>{
   if(!abiertoId) return;
-  if(await borrarDeseo(abiertoId)) abrirIdVolver();
+  if(await borrarDeseo(abiertoId)) cerrarModal();
 };
 
-// ---------- anotar un deseo ----------
+// ---------- anotar un deseo (nombre + descripcion, los DOS obligatorios) ----------
+function actualizarBtnAdd(){
+  const listo = !!(el("inpDeseo").value.trim() && el("inpDeseoDesc").value.trim());
+  el("btnAdd").disabled = !listo;
+}
+["inpDeseo", "inpDeseoDesc"].forEach(id=> el(id).addEventListener("input", actualizarBtnAdd));
+actualizarBtnAdd();
 el("btnAdd").onclick = async ()=>{
-  const inp = el("inpDeseo");
-  const nombre = inp.value.trim().slice(0, 60);
-  if(!nombre) return;
+  const nombre = el("inpDeseo").value.trim().slice(0, 60);
+  const descripcion = el("inpDeseoDesc").value.trim().slice(0, 400);
+  if(!nombre || !descripcion) return;
   try{
     await addDoc(deseosRef, {
-      nombre, descripcion: "",
+      nombre, descripcion,
       duenio: { id: yo.id, nombre: yo.nombre },
       enVenta: false,
       creadoEn: serverTimestamp()
     });
-    inp.value = "";
+    el("inpDeseo").value = "";
+    el("inpDeseoDesc").value = "";
+    actualizarBtnAdd();
   }catch(e){ aviso("No se pudo anotar. Revisa tu conexión."); }
 };
 
@@ -603,15 +629,11 @@ function escuchar(){
     const mi = snap.docs.find(d=> d.id === yo.id);
     balance = mi ? (mi.data().balance || 0) : 0;
     pintarTodo();
-    // Si el detalle esta abierto, refresca su boton "Activar": puede que el
-    // saldo haya llegado despues de abrir y antes se quedaba oculto.
-    if(abiertoId && el("vistaDetalle").classList.contains("ver")){
+    // Si la ventana emergente esta abierta, refresca su boton "Activar": puede
+    // que el saldo haya llegado despues de abrirla y antes se quedaba oculto.
+    if(abiertoId && el("modalDeseo").classList.contains("ver")){
       const d = deseos.find(x=> x.id === abiertoId);
-      if(d){
-        const bAct = el("btnActivar");
-        bAct.style.display = (!d.enVenta && balance >= miActivar()) ? "block" : "none";
-        bAct.textContent = "Activar · " + miActivar() + " pts";
-      }
+      if(d) pintarBotonesModal(d);
     }
   });
 }
@@ -630,6 +652,7 @@ async function iniciar(){
   // hubiera numero guardado, `miActivar()`/`miPrecio()` caen a 500 y 100.
   const yoFresh = (usuarios || []).find(u=> u && u.id === yo.id);
   if(yoFresh){
+    miUsuario = yoFresh;
     if(yoFresh.ptsActivar != null) yo.ptsActivar = yoFresh.ptsActivar;
     if(yoFresh.precioCompra != null) yo.precioCompra = yoFresh.precioCompra;
   }

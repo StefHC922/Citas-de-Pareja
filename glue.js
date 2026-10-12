@@ -6,7 +6,7 @@
 //  pantalla sin hacer nada.
 //
 //      import { glueSiEstaQuieto, glueOlvidado } from "./glue.js";
-//      glueSiEstaQuieto(30);       // a los 30 segundos quieto, cae el chorro
+//      glueSiEstaQuieto(15);       // a los 15 segundos quieto, cae el chorro
 //
 //  Que hace, exacto:
 //   - Cuenta los segundos SIN INTERACTUAR. Cualquier toque, scroll o tecla lo
@@ -93,7 +93,7 @@ function makeDrop(x, delay, tx, ty){
   drops.push({
     x, y: y0, vy: vy0,
     vx: (tx - x) / Math.max(0.12, Math.abs(vy0) / GRAV),
-    r: rnd(16, 30),
+    r: rnd(8, 15),
     w: rnd(0, Math.PI * 2),
     t: -delay,
     tx, ty,
@@ -309,8 +309,9 @@ function bucle(now){
   ctx.clearRect(0, 0, W, H);
 
   // ritmo del chorro: una gota menos por tanda si el celular va lento.
+  // La mitad de seguido que antes (oct-2026): sale un chorro cada .56-1.2 s.
   temporizadorGlue += dt;
-  if(temporizadorGlue > rnd(0.28, 0.6)){
+  if(temporizadorGlue > rnd(0.56, 1.2)){
     temporizadorGlue = 0;
     pour(calidad >= 1 ? 2 : 1);
   }
@@ -327,7 +328,7 @@ function bucle(now){
 
     // rastro: chorro continuo de gotas que deja la gota principal
     if(Math.random() < 0.85){
-      d.trail.push({ x: d.x + rnd(-5, 5), y: d.y + rnd(-6, 18), r: rnd(3, 8) });
+      d.trail.push({ x: d.x + rnd(-5, 5), y: d.y + rnd(-6, 18), r: rnd(1.5, 4) });
       if(d.trail.length > 48) d.trail.shift();
     }
 

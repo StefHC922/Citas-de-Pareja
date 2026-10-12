@@ -1544,6 +1544,8 @@ Peligrosas → ⚙️).** Se copiaron sus clases tal cual:
 | `.tablaBox` | **El recuadro que delimita la lista**: `max-height:48dvh; overflow-y:auto; border-radius:12px; background:var(--bg-2)` |
 | `.fila` + `.celda` + `.x` | Cada renglón: la pastilla con el texto a la izquierda y la ✕ (roja) a la derecha |
 | `.filaAdd` | La fila de agregar: input + botón **+** |
+| `.alta` | La cajita de alta de un deseo: **nombre + descripción** + botón "Agregar deseo" |
+| `.btnMini` | Botón chico pegado a la derecha de un renglón (**Comprar**, **Recibí ✓**) |
 | `.tag` | El chipito de estado ("Secreto", "En venta", "Pendiente", "Entregado") |
 
 **Cómo quedó el Centro (3 vistas, las tres con el mismo esqueleto):**
@@ -1551,16 +1553,25 @@ Peligrosas → ⚙️).** Se copiaron sus clases tal cual:
 ```
 h1  +  p.desc
 [ recuadro .tablaBox con los datos ]      ← SIEMPRE dibujado, con altura fija
-[ .filaAdd (solo en deseos)  o  .btnPri ]
+[ .alta (solo en deseos)  o  .btnPri ]
 [ .tabs con las otras dos vistas ]       ← abajo del recuadro, misma línea
 ```
 
-- **Tienda:** los deseos que activaste, cada uno con su botón **Comprar**.
-- **Mis deseos:** tus deseos, cada uno con su **✕** que abre el detalle (editar,
-  activar y borrar). Abajo la fila `.filaAdd` para **anotar un deseo**.
+- **Tienda:** los deseos que activaste. El **nombre del producto va en coral** y
+  cada uno trae su botón **Comprar** (un botón de verdad, a la derecha).
+- **Mis deseos:** tus deseos. **Tocar el deseo abre una ventana emergente** con
+  solo **Activar** (y abajo **Borrar deseo**); la **✕** roja borra directo (con
+  confirmación). Para **anotar uno nuevo** hay que llenar **nombre y descripción**
+  (los dos obligatorios; el botón "Agregar deseo" nace apagado hasta que estén).
 - **Mis pedidos:** pestañas **"Los que yo compré"** / **"Los que me compraron"**,
-  cada lista en su propio recuadro. En la de los que compraste, el botón es un ✓
-  verde para **marcar entregado**.
+  cada lista en su propio recuadro. En la de los que compraste, a la **derecha**
+  hay un botón verde **"Recibí ✓"** para **marcar entregado**.
+
+**Cambios de interfaz del Centro (oct-2026):** el detalle con "Guardar cambios"
+se quitó; la descripción ahora se pide al dar de alta (no se edita después), y al
+tocar un deseo sale la ventana emergente. Los números de activar/precio los lee
+**frescos** de `config/ajustes` (no de la copia local de la identidad), así que lo
+que cambies en ⚙️ Usuarios → 🛒 se ve sin recargar.
 
 **El recuadro NUNCA se oculta y tiene altura FIJA** (`height:48dvh`, no solo
 `max-height`), y el texto de "vacío" va **centrado DENTRO** de él, no debajo. Esto
@@ -1686,23 +1697,27 @@ tiempo perdido fue por no leer dos archivos que ya tenían la respuesta.
 ### Chorro de pegamento si te quedas quieto (`glue.js`, oct-2026)
 
 **Modulo en la raiz**, igual que `fuegos.js`. Si alguien entra al submenú
-**Experiencias en Pareja** y se queda **30 segundos sin tocar nada**, cae un chorro
+**Experiencias en Pareja** y se queda **15 segundos sin tocar nada**, cae un chorro
 de pegamento encima de la pantalla y se va llenando de charcos. **Al primer toque
 se apaga al instante** y no queda rastro.
 
 ```js
 import { glueSiEstaQuieto, glueOlvidado } from "./glue.js";
-glueSiEstaQuieto(30);   // abre la espera; en cerrarExp() va glueOlvidado()
+glueSiEstaQuieto(15);   // abre la espera; en cerrarExp() va glueOlvidado()
 ```
+
+**Ajuste (oct-2026):** la espera bajo a **15 segundos**, y los chorros ahora
+salen **a la mitad de seguido** (uno cada .56–1.2 s) y **a la mitad de grosor**
+(la gota mide la mitad), para que el efecto sea mas suave.
 
 **El comportamiento exacto (decidido por Fredy, oct-2026):**
 
 | Que | Como |
 |---|---|
-| Cuando cae | A los **30 segundos sin interactuar**. Cualquier toque, scroll o tecla **reinicia** la cuenta |
+| Cuando cae | A los **15 segundos sin interactuar**. Cualquier toque, scroll o tecla **reinicia** la cuenta |
 | Ciclo | El chorro **se mantiene solo en bucle**, todo el tiempo que haga falta |
 | Cuando se para | **Al primer toque**, en cualquier parte. Se borra el lienzo y ya |
-| Si vuelve a pasar | Si se queda quieto otros 30 segundos, **vuelve a caer**. La espera se rearma sola en cada toque |
+| Si vuelve a pasar | Si se queda quieto otros 15 segundos, **vuelve a caer**. La espera se rearma sola en cada toque |
 | Cuándo se para solo | Si se cambia de pestaña (`visibilitychange`): no gasta batería |
 
 **Lo importante para que no rompa nada:**

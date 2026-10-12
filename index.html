@@ -1004,9 +1004,9 @@ function abrirExp(){
   document.getElementById("vistaExp").style.display = "block";
   document.getElementById("gearBtn").style.display = "none";
   iconoMenu("exp");
-  // Chorro de pegamento: a los 30 segundos sin tocar nada cae, y se apaga solo
+  // Chorro de pegamento: a los 15 segundos sin tocar nada cae, y se apaga solo
   // con el primer toque. Aqui se queda escuchando (oct-2026).
-  try{ glueSiEstaQuieto(30); }catch(e){}
+  try{ glueSiEstaQuieto(15); }catch(e){}
 }
 function cerrarExp(){
   glueOlvidado();
