@@ -48,6 +48,7 @@
   .btnRojo{ background:var(--rojo); color:#2b0410; }
   .btnVerde{ background:var(--verde); color:#06281a; }
   .btnPri:disabled, .btnSec:disabled{ opacity:.4; }
+  .apagado{ opacity:.4; }
 
   /* ---- pestañas: el patrón de Opciones/ (engrane) ---- */
   .tabs{ display:flex; gap:8px; width:100%; }
@@ -111,13 +112,6 @@
   .tag.pendiente{ color:var(--amarillo); border:1px solid var(--amarillo); }
   .tag.entregado{ color:var(--verde); border:1px solid var(--verde); }
 
-  /* ---- fila de agregar: input + "+" ---- */
-  .filaAdd{ display:flex; gap:8px; width:100%; }
-  .filaAdd input{ flex:1; min-width:0; border-radius:12px; border:1px solid var(--card-border);
-    background:var(--bg); color:var(--fg); padding:12px; font-size:.9rem; font-family:'Inter',sans-serif; }
-  .filaAdd button{ border:none; border-radius:12px; cursor:pointer; padding:12px 16px;
-    font-family:'Chakra Petch',sans-serif; font-weight:700; color:var(--bg);
-    background:linear-gradient(90deg, var(--coral), var(--teal)); }
   /* Alta de un deseo: nombre + descripcion, los DOS obligatorios. */
   .alta{ display:flex; flex-direction:column; gap:8px; width:100%; }
   .alta input, .alta textarea{ width:100%; border-radius:12px; border:1px solid var(--card-border);
@@ -126,11 +120,6 @@
   .alta .btnPri{ margin-bottom:0; }
   /* Aviso rojo entre la descripcion y el boton, mientras faltan campos. */
   .altaAviso{ color:var(--rojo); font-size:.8rem; }
-  /* Copia invisible de esa misma fila en las vistas que NO la tienen. Ocupa el
-     mismo espacio (mismo input, mismo boton) pero no se ve, y sirve para que los
-     botones de navegacion de abajo caigan EXACTAMENTE en el mismo lugar en las
-     tres vistas (decision de Fredy, oct-2026). */
-  .filaHueco{ visibility:hidden; margin-top:12px; }
 
   .vacio{ color:var(--fg-muted); font-size:.85rem; text-align:center; padding:16px; }
   .tablaBox .vacio{ padding:0; }
@@ -162,12 +151,6 @@
   <div class="tablaBox vacia" id="cajaCatalogo">
     <div class="vacio" id="vacioCatalogo">Todavía no hay nada a la venta.<br>Activa un deseo desde “Mis deseos”.</div>
   </div>
-  <div class="alta filaHueco" aria-hidden="true">
-    <input type="text" tabindex="-1" autocomplete="off">
-    <textarea tabindex="-1"></textarea>
-    <div class="altaAviso">Completa el nombre y Descripcion</div>
-    <button type="button" tabindex="-1" class="btnPri" disabled>Agregar deseo</button>
-  </div>
   <div class="tabs" style="margin-top:12px;">
     <button class="tab tabnav" id="navDeseos">Mis deseos</button>
     <button class="tab tabnav" id="navPedidos">Mis pedidos</button>
@@ -185,7 +168,7 @@
     <input id="inpDeseo" placeholder="Nombre del deseo" maxlength="60">
     <textarea id="inpDeseoDesc" placeholder="Descripción: ¿qué quieres que pase?" maxlength="400"></textarea>
     <div class="altaAviso" id="altaAviso">Completa el nombre y Descripcion</div>
-    <button id="btnAdd" class="btnPri" disabled>Agregar deseo</button>
+    <button id="btnAdd" class="btnPri apagado">Agregar deseo</button>
   </div>
   <div class="tabs" style="margin-top:12px;">
     <button class="tab tabnav" id="navTienda">Tienda</button>
@@ -206,12 +189,6 @@
   </div>
   <div class="tablaBox vacia" id="cajaRecibidos" style="margin-top:12px;display:none;">
     <div class="vacio" id="vacioRecibidos">No te han comprado ningún deseo.</div>
-  </div>
-  <div class="alta filaHueco" aria-hidden="true">
-    <input type="text" tabindex="-1" autocomplete="off">
-    <textarea tabindex="-1"></textarea>
-    <div class="altaAviso">Completa el nombre y Descripcion</div>
-    <button type="button" tabindex="-1" class="btnPri" disabled>Agregar deseo</button>
   </div>
   <div class="tabs" style="margin-top:12px;">
     <button class="tab tabnav" id="navTienda2">Tienda</button>
@@ -551,19 +528,25 @@ el("mdBorrar").onclick = async ()=>{
 };
 
 // ---------- anotar un deseo (nombre + descripcion, los DOS obligatorios) ----------
+function camposListos(){
+  return !!(el("inpDeseo").value.trim() && el("inpDeseoDesc").value.trim());
+}
 function actualizarBtnAdd(){
-  const listo = !!(el("inpDeseo").value.trim() && el("inpDeseoDesc").value.trim());
-  el("btnAdd").disabled = !listo;
-  // El aviso rojo se oculta al llenar los dos campos. Se deja el hueco (visibility)
-  // para que el boton no brinque y las tres vistas sigan alineadas.
-  el("altaAviso").style.visibility = listo ? "hidden" : "";
+  // El boton NO se deshabilita (un boton deshabilitado no deja detectar el toque):
+  // se ve apagado con la clase `apagado` y, al tocarlo sin campos, sale el aviso.
+  el("btnAdd").classList.toggle("apagado", !camposListos());
+  if(camposListos()) el("altaAviso").style.visibility = "hidden";
 }
 ["inpDeseo", "inpDeseoDesc"].forEach(id=> el(id).addEventListener("input", actualizarBtnAdd));
+el("altaAviso").style.visibility = "hidden";   // arranca oculto; solo sale al tocar
 actualizarBtnAdd();
 el("btnAdd").onclick = async ()=>{
+  if(!camposListos()){
+    el("altaAviso").style.visibility = "visible";
+    return;
+  }
   const nombre = el("inpDeseo").value.trim().slice(0, 60);
   const descripcion = el("inpDeseoDesc").value.trim().slice(0, 400);
-  if(!nombre || !descripcion) return;
   try{
     await addDoc(deseosRef, {
       nombre, descripcion,
@@ -573,6 +556,7 @@ el("btnAdd").onclick = async ()=>{
     });
     el("inpDeseo").value = "";
     el("inpDeseoDesc").value = "";
+    el("altaAviso").style.visibility = "hidden";
     actualizarBtnAdd();
   }catch(e){ aviso("No se pudo anotar. Revisa tu conexión."); }
 };

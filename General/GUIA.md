@@ -1543,7 +1543,6 @@ Peligrosas → ⚙️).** Se copiaron sus clases tal cual:
 | `.tabs` / `.tab` / `.tab.activo` | Las pestañas: dos botones en la misma línea, el activo con el degradado |
 | `.tablaBox` | **El recuadro que delimita la lista**: `max-height:48dvh; overflow-y:auto; border-radius:12px; background:var(--bg-2)` |
 | `.fila` + `.celda` + `.x` | Cada renglón: la pastilla con el texto a la izquierda y la ✕ (roja) a la derecha |
-| `.filaAdd` | La fila de agregar: input + botón **+** |
 | `.alta` | La cajita de alta de un deseo: **nombre + descripción** + botón "Agregar deseo" |
 | `.btnMini` | Botón chico pegado a la derecha de un renglón (**Comprar**, **Recibí ✓**) |
 | `.tag` | El chipito de estado ("Secreto", "En venta", "Pendiente", "Entregado") |
@@ -1553,16 +1552,17 @@ Peligrosas → ⚙️).** Se copiaron sus clases tal cual:
 ```
 h1  +  p.desc
 [ recuadro .tablaBox con los datos ]      ← SIEMPRE dibujado, con altura fija
-[ .alta (solo en deseos)  o  .btnPri ]
-[ .tabs con las otras dos vistas ]       ← abajo del recuadro, misma línea
+[ .alta (solo en deseos) ]
+[ .tabs con las otras dos vistas ]       ← pegados a su recuadro (ya no se alinean entre vistas)
 ```
 
 - **Tienda:** los deseos que activaste. El **nombre del producto va en coral** y
   cada uno trae su botón **Comprar** (un botón de verdad, a la derecha).
 - **Mis deseos:** tus deseos. **Tocar el deseo abre una ventana emergente** con
   solo **Activar** (y abajo **Borrar deseo**); la **✕** roja borra directo (con
-  confirmación). Para **anotar uno nuevo** hay que llenar **nombre y descripción**
-  (los dos obligatorios; el botón "Agregar deseo" nace apagado hasta que estén).
+  confirmación). Para **anotar uno nuevo** hay que llenar **nombre y descripción**;
+  el botón **"Agregar deseo"** se ve **apagado** mientras falten campos y, **al
+  tocarlo así**, sale el aviso rojo *"Completa el nombre y Descripcion"*.
 - **Mis pedidos:** pestañas **"Los que yo compré"** / **"Los que me compraron"**,
   cada lista en su propio recuadro. En la de los que compraste, a la **derecha**
   hay un botón verde **"Recibí ✓"** para **marcar entregado**.
@@ -1575,10 +1575,14 @@ que cambies en ⚙️ Usuarios → 🛒 se ve sin recargar.
 
 - El botón **Comprar** / **Recibí ✓** (`.btnMini`) va `align-self:stretch`: queda
   del **mismo alto** que el producto/pedido.
-- En "Mis deseos", mientras falten nombre o descripción, sale un aviso rojo
-  **"Completa el nombre y Descripcion"** entre la descripción y el botón; se
-  oculta al llenar los dos (con `visibility:hidden`, dejando el hueco para que
-  nada brinque y las tres vistas sigan alineadas).
+- En "Mis deseos", el aviso rojo **"Completa el nombre y Descripcion"** solo sale
+  **al tocar "Agregar deseo" con campos faltantes**. El botón **no** se deshabilita
+  (un botón deshabilitado no deja detectar el toque): se ve apagado con la clase
+  `.apagado`. El aviso se esconde al completar nombre y descripción.
+- **Se quitaron las copias invisibles (`.filaHueco`).** La alineación de los
+  botones de abajo entre las tres vistas era **solo del diseño inicial** (pedido
+  de Fredy, oct-2026). Ahora los botones de **Tienda** y **Mis pedidos** van
+  **pegados a su recuadro**, sin reservar el hueco del alta de deseos.
 - **Bug corregido (oct-2026):** `pestana()` ponía `display:"flex"` en el recuadro
   de pedidos. Cuando había renglones, eso volvía el recuadro una **fila
   horizontal** y los pedidos salían encimados al centro. Ahora se quita el
@@ -1596,13 +1600,13 @@ de vacío. **Cada recuadro lleva su propio texto de vacío adentro**, así que e
 "Mis pedidos" nunca salen los dos textos a la vez: el de "no te han comprado" solo
 aparece en su pestaña.
 
-**Los botones de abajo caen en el MISMO lugar en las tres vistas.** Para lograrlo:
-- Las vistas que **no** tienen la fila de agregar (Tienda, Mis pedidos) llevan una
-  **copia invisible** de esa misma fila: `<div class="filaAdd filaHueco">` con un
-  input y un botón sin id. Con `visibility:hidden` ocupa el mismo espacio exacto
-  (mismo input, mismo botón) pero no se ve.
-- "Mis pedidos" además tiene **una pestaña ARRIBA** que las otras no, así que a su
-  recuadro se le **descuesta el alto real de esa pestaña**:
+**Los botones de abajo van pegados a su recuadro.** Antes se alineaban entre las
+tres vistas con copias invisibles (`.filaHueco`), pero eso era **solo del diseño
+inicial**: al crecer el alta de deseos, empujaba muy abajo los de Tienda y Mis
+pedidos. **Ya no** (oct-2026): cada vista pone sus botones justo debajo de su
+recuadro.
+- "Mis pedidos" sí conserva que tiene **una pestaña ARRIBA** que las otras no, así
+  que a su recuadro se le **descuesta el alto real de esa pestaña**:
   `ajustarAlturaPedidos()` mide `tabsPedidos.offsetHeight` y pone
   `height: calc(48dvh - Npx)`. Se mide de verdad, no se estima a ojo, y se vuelve
   a medir al cambiar de tamaño de pantalla.
