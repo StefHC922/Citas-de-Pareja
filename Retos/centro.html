@@ -56,14 +56,27 @@
     font-family:'Chakra Petch',sans-serif; font-weight:600; font-size:.9rem; cursor:pointer; }
   .tab:active{ transform:scale(.97); }
   .tab.activo{ background:linear-gradient(90deg, var(--coral), var(--teal)); color:var(--bg); border-color:transparent; }
+  /* Las de ABAJO (las que cambian de vista) no son pestañas: son botones de
+     navegación, y se ven como los botones de la app (con el degradado). Como
+     el h1 de arriba ya dice en qué vista estás, no hace falta distinguirlas;
+     igual se les deja un aro para el que está en esa vista (decisión de Fredy,
+     oct-2026). */
+  .tabnav{ background:linear-gradient(90deg, var(--coral), var(--teal)); color:var(--bg);
+    border-color:transparent; font-weight:700; }
+  .tabnav.activo{ box-shadow:0 0 0 2px var(--teal); }
 
   .buscar{ width:100%; border-radius:12px; border:1px solid var(--card-border);
     background:var(--card); color:var(--fg); padding:13px 14px; font-size:.95rem;
     font-family:'Inter',sans-serif; margin-bottom:14px; }
 
   /* ---- recuadro que delimita la lista ---- */
-  .tablaBox{ width:100%; max-height:48dvh; overflow-y:auto; border:1px solid var(--card-border);
+  /* Altura FIJA (no solo maxima) y siempre dibujado, aunque este vacio: asi los
+     botones de abajo quedan siempre en el mismo lugar y no se mueven cada vez
+     que anades algo (decision de Fredy, oct-2026). */
+  .tablaBox{ width:100%; height:48dvh; overflow-y:auto; border:1px solid var(--card-border);
     border-radius:12px; background:var(--bg-2); padding:8px; }
+  /* Vacio: el texto va centrado DENTRO del recuadro. */
+  .tablaBox.vacia{ display:flex; flex-direction:column; justify-content:center; }
   .fila{ display:flex; gap:8px; align-items:center; margin-bottom:6px; }
   .fila:last-child{ margin-bottom:0; }
   /* La fila: el texto a la izquierda (como una pastilla) y la acción a la derecha. */
@@ -91,6 +104,7 @@
     background:linear-gradient(90deg, var(--coral), var(--teal)); }
 
   .vacio{ color:var(--fg-muted); font-size:.85rem; text-align:center; padding:16px; }
+  .tablaBox .vacio{ padding:0; }
   #msg{ min-height:20px; font-size:.85rem; color:var(--rojo); margin:6px 0; text-align:center; }
   textarea{ width:100%; min-height:90px; resize:vertical; border-radius:12px; border:1px solid var(--card-border);
     background:var(--bg); color:var(--fg); padding:12px; font-size:.9rem; font-family:'Inter',sans-serif; }
@@ -105,28 +119,30 @@
 <!-- ================= TIENDA (entrada) ================= -->
 <div class="vista ver" id="vistaCatalogo">
   <h1>Tienda de <span id="nombrePareja">tu pareja</span></h1>
-  <p class="desc" id="descCatalogo">Lo que tienes que entregarle.</p>
-  <div class="tablaBox" id="cajaCatalogo"></div>
-  <div class="vacio" id="vacioCatalogo">Todavía no hay nada a la venta.<br>Activa un deseo desde “Mis deseos”.</div>
+  <p class="desc" id="descCatalogo">Catálogo</p>
+  <div class="tablaBox vacia" id="cajaCatalogo">
+    <div class="vacio" id="vacioCatalogo">Todavía no hay nada a la venta.<br>Activa un deseo desde “Mis deseos”.</div>
+  </div>
   <div class="tabs" style="margin-top:14px;">
-    <button class="tab" id="navDeseos">Mis deseos</button>
-    <button class="tab" id="navPedidos">Mis pedidos</button>
+    <button class="tab tabnav" id="navDeseos">Mis deseos</button>
+    <button class="tab tabnav" id="navPedidos">Mis pedidos</button>
   </div>
 </div>
 
 <!-- ================= MIS DESEOS ================= -->
 <div class="vista" id="vistaDeseos">
   <h1>Mi lista de deseos</h1>
-  <p class="desc">Esto solo lo ves tú. Actívalo para ponerlo a la venta en su tienda.</p>
-  <div class="tablaBox" id="cajaDeseos"></div>
-  <div class="vacio" id="vacioDeseos">Todavía no has anotado ningún deseo.</div>
+  <p class="desc">Anota tus deseos más secretos que quieres hacer realidad</p>
+  <div class="tablaBox vacia" id="cajaDeseos">
+    <div class="vacio" id="vacioDeseos">Todavía no has anotado ningún deseo.</div>
+  </div>
   <div class="filaAdd" style="margin-top:12px;">
     <input id="inpDeseo" placeholder="Anotar deseo" maxlength="60">
     <button id="btnAdd">+</button>
   </div>
   <div class="tabs" style="margin-top:12px;">
-    <button class="tab" id="navTienda">Tienda</button>
-    <button class="tab" id="navPedidos2">Mis pedidos</button>
+    <button class="tab tabnav" id="navTienda">Tienda</button>
+    <button class="tab tabnav" id="navPedidos2">Mis pedidos</button>
   </div>
 </div>
 
@@ -138,13 +154,15 @@
     <button class="tab activo" id="tabComprados">Los que yo compré</button>
     <button class="tab" id="tabRecibidos">Los que me compraron</button>
   </div>
-  <div class="tablaBox" id="cajaComprados" style="margin-top:12px;"></div>
-  <div class="vacio" id="vacioComprados">No has comprado ningún deseo.</div>
-  <div class="tablaBox" id="cajaRecibidos" style="margin-top:12px;display:none;"></div>
-  <div class="vacio" id="vacioRecibidos" style="display:none;">No te han comprado ningún deseo.</div>
+  <div class="tablaBox vacia" id="cajaComprados" style="margin-top:12px;">
+    <div class="vacio" id="vacioComprados">No has comprado ningún deseo.</div>
+  </div>
+  <div class="tablaBox vacia" id="cajaRecibidos" style="margin-top:12px;display:none;">
+    <div class="vacio" id="vacioRecibidos">No te han comprado ningún deseo.</div>
+  </div>
   <div class="tabs" style="margin-top:14px;">
-    <button class="tab" id="navTienda2">Tienda</button>
-    <button class="tab" id="navDeseos2">Mis deseos</button>
+    <button class="tab tabnav" id="navTienda2">Tienda</button>
+    <button class="tab tabnav" id="navDeseos2">Mis deseos</button>
   </div>
 </div>
 
@@ -274,14 +292,27 @@ function fila(texto, detalle, tagTexto, tagClase){
   return f;
 }
 
+// ---------- helpers ----------
+// El recuadro NUNCA se oculta: si esta vacio se le pone la clase `vacia` (que
+// centra el texto) y se esconde el texto de "vacio" mientras esta con datos.
+// Asi el recuadro siempre ocupa lo mismo y los botones de abajo nunca se mueven.
+function pintaCaja(idCaja, idVacio, filas){
+  const caja = el(idCaja);
+  caja.innerHTML = "";
+  if(!filas.length){
+    caja.classList.add("vacia");
+    caja.appendChild(el(idVacio));
+    el(idVacio).style.display = "block";
+    return;
+  }
+  caja.classList.remove("vacia");
+  filas.forEach(f=> caja.appendChild(f));
+}
+
 // ---------- tienda ----------
 function pintarCatalogo(){
-  const caja = el("cajaCatalogo");
-  caja.innerHTML = "";
   const enVenta = deseos.filter(d=> d.enVenta).sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
-  el("vacioCatalogo").style.display = enVenta.length ? "none" : "block";
-  caja.style.display = enVenta.length ? "block" : "none";
-  enVenta.forEach(d=>{
+  const filas = enVenta.map(d=>{
     const f = fila(d.nombre, d.descripcion, miPrecio() + " pts", "vendido");
     const b = document.createElement("button");
     b.className = "ok"; b.textContent = "Comprar";
@@ -289,18 +320,15 @@ function pintarCatalogo(){
     b.style.display = (balance >= miPrecio()) ? "block" : "none";
     b.onclick = ()=> comprar(d.id);
     f.appendChild(b);
-    caja.appendChild(f);
+    return f;
   });
+  pintaCaja("cajaCatalogo", "vacioCatalogo", filas);
 }
 
 // ---------- mis deseos ----------
 function pintarDeseos(){
-  const caja = el("cajaDeseos");
-  caja.innerHTML = "";
   const mios = deseos.slice().sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
-  el("vacioDeseos").style.display = mios.length ? "none" : "block";
-  caja.style.display = mios.length ? "block" : "none";
-  mios.forEach(d=>{
+  const filas = mios.map(d=>{
     const f = fila(d.nombre, d.descripcion,
       d.enVenta ? ("En venta · " + miPrecio() + " pts") : "Secreto",
       d.enVenta ? "vendido" : "secreto");
@@ -309,8 +337,9 @@ function pintarDeseos(){
     b.setAttribute("aria-label", "Editar o borrar " + d.nombre);
     b.onclick = ()=> abrirDetalle(d.id);
     f.appendChild(b);
-    caja.appendChild(f);
+    return f;
   });
+  pintaCaja("cajaDeseos", "vacioDeseos", filas);
 }
 
 // ---------- mis pedidos ----------
@@ -320,11 +349,7 @@ function pintarPedidos(){
   const recibidos = compras.filter(c=> c.vendedor && c.vendedor.id === yo.id)
                       .sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
 
-  const cc = el("cajaComprados");
-  cc.innerHTML = "";
-  el("vacioComprados").style.display = mios.length ? "none" : "block";
-  cc.style.display = mios.length ? "block" : "none";
-  mios.forEach(c=>{
+  const filasMios = mios.map(c=>{
     const f = fila(c.nombreDeseo,
       "Se lo pediste a " + ((c.vendedor && c.vendedor.nombre) || "—"),
       (c.estado === "entregado") ? "Entregado" : "Pendiente",
@@ -336,29 +361,25 @@ function pintarPedidos(){
       b.onclick = ()=> marcarEntregado(c.id);
       f.appendChild(b);
     }
-    cc.appendChild(f);
+    return f;
   });
+  pintaCaja("cajaComprados", "vacioComprados", filasMios);
 
-  const cr = el("cajaRecibidos");
-  cr.innerHTML = "";
-  el("vacioRecibidos").style.display = recibidos.length ? "none" : "block";
-  cr.style.display = recibidos.length ? "block" : "none";
-  recibidos.forEach(c=>{
-    cr.appendChild(fila(c.nombreDeseo,
-      ((c.comprador && c.comprador.nombre) || "—") + " te lo compró. Tú lo entregas.",
-      (c.estado === "entregado") ? "Entregado" : "Te toca entregarlo",
-      (c.estado === "entregado") ? "entregado" : "pendiente"));
-  });
+  const filasRecibidos = recibidos.map(c=> fila(c.nombreDeseo,
+    ((c.comprador && c.comprador.nombre) || "—") + " te lo compró. Tú lo entregas.",
+    (c.estado === "entregado") ? "Entregado" : "Te toca entregarlo",
+    (c.estado === "entregado") ? "entregado" : "pendiente"));
+  pintaCaja("cajaRecibidos", "vacioRecibidos", filasRecibidos);
 }
 function pintarTodo(){ pintarCatalogo(); pintarDeseos(); pintarPedidos(); }
+// Solo se ve el recuadro de la pestaña activa; el otro se oculta. Cada uno lleva
+// su propio texto de vacio DENTRO, asi que nunca salen los dos a la vez.
 function pestana(cual){
   const esA = (cual === "comprados");
   el("tabComprados").classList.toggle("activo", esA);
   el("tabRecibidos").classList.toggle("activo", !esA);
-  el("cajaComprados").style.display = esA ? "block" : "none";
-  el("vacioComprados").style.display = esA ? "block" : "none";
-  el("cajaRecibidos").style.display = esA ? "none" : "block";
-  el("vacioRecibidos").style.display = esA ? "none" : "block";
+  el("cajaComprados").style.display = esA ? "flex" : "none";
+  el("cajaRecibidos").style.display = esA ? "none" : "flex";
 }
 el("tabComprados").onclick = ()=> pestana("comprados");
 el("tabRecibidos").onclick = ()=> pestana("recibidos");
@@ -535,9 +556,6 @@ async function iniciar(){
   pareja = usuarios.find(u=> u && u.id && u.id !== yo.id && !u.invitado)
           || usuarios.find(u=> u && u.id && u.id !== yo.id) || null;
   el("nombrePareja").textContent = pareja ? pareja.nombre : "tu pareja";
-  el("descCatalogo").textContent = pareja
-    ? ("Lo que " + pareja.nombre + " tiene que entregarte.")
-    : "Registra a tu pareja para usar el Centro.";
   ver("vistaCatalogo", false);
   marcarNav();
   pestana("comprados");

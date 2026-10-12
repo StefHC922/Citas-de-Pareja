@@ -1549,19 +1549,32 @@ Peligrosas → ⚙️).** Se copiaron sus clases tal cual:
 **Cómo quedó el Centro (3 vistas, las tres con el mismo esqueleto):**
 
 ```
-h1 + p.desc
-[ recuadro .tablaBox con los datos ]
-[ .tabs con las otras dos vistas ]   ← abajo del recuadro, en la misma línea
+h1  +  p.desc
+[ recuadro .tablaBox con los datos ]      ← SIEMPRE dibujado, con altura fija
+[ .filaAdd (solo en deseos)  o  .btnPri ]
+[ .tabs con las otras dos vistas ]       ← abajo del recuadro, misma línea
 ```
 
 - **Tienda:** los deseos que activaste, cada uno con su botón **Comprar**.
-- **Mis deseos:** tus deseos, cada uno con su **✕**. Abajo, la fila de agregar
-  (`+ Anotar deseo`) y después las pestañas. El **✕ abre el detalle** del deseo
-  (editar, activar y borrar en una vista), no borra de una: preguntar antes de
-  borrar con un `✕` que no avisa sería una trampa.
+- **Mis deseos:** tus deseos, cada uno con su **✕** que abre el detalle (editar,
+  activar y borrar). Abajo la fila `.filaAdd` para **anotar un deseo**.
 - **Mis pedidos:** pestañas **"Los que yo compré"** / **"Los que me compraron"**,
   cada lista en su propio recuadro. En la de los que compraste, el botón es un ✓
   verde para **marcar entregado**.
+
+**El recuadro NUNCA se oculta y tiene altura FIJA** (`height:48dvh`, no solo
+`max-height`), y el texto de "vacío" va **centrado DENTRO** de él, no debajo. Esto
+es por pedido de Fredy (oct-2026): así **los botones de abajo quedan siempre en el
+mismo lugar** y no se mueven cada vez que añades o borras algo.
+
+Se hace con dos clases: `.tablaBox.vacia` (centra el texto) y una función
+`pintaCaja(idCaja, idVacio, filas)` que mete los renglones o, si no hay, el texto
+de vacío. **Cada recuadro lleva su propio texto de vacío adentro**, así que en
+"Mis pedidos" nunca salen los dos textos a la vez: el de "no te han comprado" solo
+aparece en su pestaña.
+
+**Texto de las vistas:** la Tienda dice **"Catálogo"**, y Mis deseos dice **"Anota
+tus deseos más secretos que quieres hacer realidad"**.
 
 **Las pestañas de abajo** se marcan solas con `marcarNav()`: la de la vista
 actual queda `.activo`. Por eso hay dos juegos de botones (`navDeseos`/`navDeseos2`,
