@@ -76,7 +76,13 @@
   .tablaBox{ width:100%; height:48dvh; overflow-y:auto; border:1px solid var(--card-border);
     border-radius:12px; background:var(--bg-2); padding:8px; }
   /* Vacio: el texto va centrado DENTRO del recuadro. */
-  .tablaBox.vacia{ display:flex; flex-direction:column; justify-content:center; }
+  .tablaBox.vacia{ display:flex; flex-direction:column; }
+  .tablaBox.vacia .vacio{ margin:auto; }
+  /* Renglon de puntos, arriba dentro del recuadro (Mis deseos y Tienda). */
+  .saldo{ display:flex; align-items:baseline; gap:6px; margin:0 2px 8px;
+    font-family:'Chakra Petch',sans-serif; font-size:.72rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--fg-muted); }
+  .saldo b{ color:var(--teal); font-size:1rem; letter-spacing:0; }
   .fila{ display:flex; gap:8px; align-items:center; margin-bottom:6px; }
   .fila:last-child{ margin-bottom:0; }
   /* La fila: el texto a la izquierda (como una pastilla) y la acción a la derecha. */
@@ -320,9 +326,20 @@ const VACIO_REC = document.getElementById("vacioRecibidos");
 // El recuadro NUNCA se oculta: si esta vacio se le pone la clase `vacia` (que
 // centra el texto) y se mete el texto de "vacio". Asi el recuadro siempre ocupa
 // lo mismo y los botones de abajo nunca se mueven.
-function pintaCaja(idCaja, nodoVacio, filas){
+// `conSaldo` pone arriba, dentro del recuadro, cuantos puntos tienes.
+function nodoSaldo(){
+  const s = document.createElement("div");
+  s.className = "saldo";
+  s.textContent = "Tus puntos:";
+  const b = document.createElement("b");
+  b.textContent = String(balance);
+  s.appendChild(b);
+  return s;
+}
+function pintaCaja(idCaja, nodoVacio, filas, conSaldo){
   const caja = el(idCaja);
   caja.innerHTML = "";
+  if(conSaldo) caja.appendChild(nodoSaldo());
   if(!filas.length){
     caja.classList.add("vacia");
     caja.appendChild(nodoVacio);
@@ -345,24 +362,29 @@ function pintarCatalogo(){
     f.appendChild(b);
     return f;
   });
-  pintaCaja("cajaCatalogo", VACIO_CAT, filas);
+  pintaCaja("cajaCatalogo", VACIO_CAT, filas, true);
 }
 
 // ---------- mis deseos ----------
+// Tocar el deseo (la pastilla) abre el detalle para editarlo o ACTIVARLO; la ✕
+// roja borra directo (siempre con confirmacion). Antes la ✕ abria el detalle.
 function pintarDeseos(){
   const mios = deseos.slice().sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
   const filas = mios.map(d=>{
     const f = fila(d.nombre, d.descripcion,
       d.enVenta ? ("En venta · " + miPrecio() + " pts") : "Secreto",
       d.enVenta ? "vendido" : "secreto");
+    const c = f.querySelector(".celda");
+    c.style.cursor = "pointer";
+    c.onclick = ()=> abrirDetalle(d.id);
     const b = document.createElement("button");
     b.className = "x"; b.textContent = "✕";
-    b.setAttribute("aria-label", "Editar o borrar " + d.nombre);
-    b.onclick = ()=> abrirDetalle(d.id);
+    b.setAttribute("aria-label", "Borrar " + d.nombre);
+    b.onclick = (e)=>{ e.stopPropagation(); borrarDeseo(d.id); };
     f.appendChild(b);
     return f;
   });
-  pintaCaja("cajaDeseos", VACIO_DES, filas);
+  pintaCaja("cajaDeseos", VACIO_DES, filas, true);
 }
 
 // ---------- mis pedidos ----------
@@ -476,10 +498,11 @@ el("btnActivar").onclick = async ()=>{
     else aviso("No se pudo activar. Revisa tu conexión.");
   }
 };
-el("btnBorrar").onclick = async ()=>{
-  if(!abiertoId) return;
-  const d = deseos.find(x=> x.id === abiertoId);
-  if(!d) return;
+// Borra un deseo (lo use la ✕ de la lista y el boton del detalle). Siempre
+// pregunta con confirmar(): un ✕ que borra sin avisar es una trampa.
+async function borrarDeseo(id){
+  const d = deseos.find(x=> x.id === id);
+  if(!d) return false;
   const ok = await confirmar({
     aviso: true,
     titulo: "¿Borrar este deseo?",
@@ -488,12 +511,16 @@ el("btnBorrar").onclick = async ()=>{
       : "No se puede deshacer.",
     ok: "Borrar"
   });
-  if(!ok) return;
+  if(!ok) return false;
   try{
-    await deleteDoc(doc(db, "deseos", abiertoId));
+    await deleteDoc(doc(db, "deseos", id));
     avisarTelegram("🗑 " + yo.nombre + " borró un deseo.", APP_URL + "Retos/centro.html");
-    abrirIdVolver();
-  }catch(e){ aviso("No se pudo borrar. Revisa tu conexión."); }
+    return true;
+  }catch(e){ aviso("No se pudo borrar. Revisa tu conexión."); return false; }
+}
+el("btnBorrar").onclick = async ()=>{
+  if(!abiertoId) return;
+  if(await borrarDeseo(abiertoId)) abrirIdVolver();
 };
 
 // ---------- anotar un deseo ----------
@@ -576,6 +603,16 @@ function escuchar(){
     const mi = snap.docs.find(d=> d.id === yo.id);
     balance = mi ? (mi.data().balance || 0) : 0;
     pintarTodo();
+    // Si el detalle esta abierto, refresca su boton "Activar": puede que el
+    // saldo haya llegado despues de abrir y antes se quedaba oculto.
+    if(abiertoId && el("vistaDetalle").classList.contains("ver")){
+      const d = deseos.find(x=> x.id === abiertoId);
+      if(d){
+        const bAct = el("btnActivar");
+        bAct.style.display = (!d.enVenta && balance >= miActivar()) ? "block" : "none";
+        bAct.textContent = "Activar · " + miActivar() + " pts";
+      }
+    }
   });
 }
 
@@ -587,6 +624,15 @@ async function iniciar(){
     return;
   }
   usuarios = await cargarUsuarios(db, getDoc, doc, []);
+  // Los dos numeros del Centro (activar y precio) viven en config/ajustes, NO en
+  // la copia local de la identidad. Se traen del usuario fresco para que lo que
+  // cambies en el menu Usuarios (⚙️ -> carrito 🛒) se vea de inmediato. Si no
+  // hubiera numero guardado, `miActivar()`/`miPrecio()` caen a 500 y 100.
+  const yoFresh = (usuarios || []).find(u=> u && u.id === yo.id);
+  if(yoFresh){
+    if(yoFresh.ptsActivar != null) yo.ptsActivar = yoFresh.ptsActivar;
+    if(yoFresh.precioCompra != null) yo.precioCompra = yoFresh.precioCompra;
+  }
   pareja = usuarios.find(u=> u && u.id && u.id !== yo.id && !u.invitado)
           || usuarios.find(u=> u && u.id && u.id !== yo.id) || null;
   el("nombrePareja").textContent = pareja ? pareja.nombre : "tu pareja";
