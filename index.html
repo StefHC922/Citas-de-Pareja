@@ -436,6 +436,10 @@ import {
 // Lógica de licencias compartida con el resto de la app (ver acceso.js).
 import { miProyecto, appTaq, leerLicencias, graciasDisponibles, escucharCatalogo } from "./acceso.js";
 import { confirmar } from "./confirmar.js";
+// Chorro de pegamento: cae en el submenú de Experiencias si alguien se queda
+// mirando la pantalla sin hacer nada. Va en su propio modulo (y no metido en el
+// codigo del submenú) para que, si algo falla, la pantalla siga igual.
+import { glueSiEstaQuieto, glueOlvidado } from "./glue.js";
 // Modo invitado: la regla de "cuándo eres invitado de verdad" vive aquí.
 import {
   CLAVE_BACKUP, CLAVE_LOCAL, hayRespaldo, soyInvitado, quedasteMedioCamino,
@@ -1000,8 +1004,12 @@ function abrirExp(){
   document.getElementById("vistaExp").style.display = "block";
   document.getElementById("gearBtn").style.display = "none";
   iconoMenu("exp");
+  // Chorro de pegamento: a los 10 segundos sin tocar nada cae, y se apaga solo
+  // con el primer toque. Aqui se queda escuchando (oct-2026).
+  try{ glueSiEstaQuieto(10); }catch(e){}
 }
 function cerrarExp(){
+  glueOlvidado();
   document.getElementById("vistaExp").style.display = "none";
   document.getElementById("vistaMenu").style.display = "block";
   document.getElementById("gearBtn").style.display = "";

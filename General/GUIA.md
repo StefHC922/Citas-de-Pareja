@@ -1683,6 +1683,47 @@ medidas exactas de cada uno, y los 4 chequeos que hay que correr antes de decir
 sin abrir primero la que había que copiar, y se copió la equivocada. Todo el
 tiempo perdido fue por no leer dos archivos que ya tenían la respuesta.
 
+### Chorro de pegamento si te quedas quieto (`glue.js`, oct-2026)
+
+**Modulo en la raiz**, igual que `fuegos.js`. Si alguien entra al submenú
+**Experiencias en Pareja** y se queda **10 segundos sin tocar nada**, cae un chorro
+de pegamento encima de la pantalla y se va llenando de charcos. **Al primer toque
+se apaga al instante** y no queda rastro.
+
+```js
+import { glueSiEstaQuieto, glueOlvidado } from "./glue.js";
+glueSiEstaQuieto(10);   // abre la espera; en cerrarExp() va glueOlvidado()
+```
+
+**El comportamiento exacto (decidido por Fredy, oct-2026):**
+
+| Que | Como |
+|---|---|
+| Cuando cae | A los **10 segundos sin interactuar**. Cualquier toque, scroll o tecla **reinicia** la cuenta |
+| Ciclo | El chorro **se mantiene solo en bucle**, todo el tiempo que haga falta |
+| Cuando se para | **Al primer toque**, en cualquier parte. Se borra el lienzo y ya |
+| Si vuelve a pasar | Si se queda quieto otros 10 segundos, **vuelve a caer**. La espera se rearma sola en cada toque |
+| Cuándo se para solo | Si se cambia de pestaña (`visibilitychange`): no gasta batería |
+
+**Lo importante para que no rompa nada:**
+
+- **El lienzo va con `pointer-events:none`**: NUNCA tapa un botón. Se puede seguir
+  usando la pagina con normalidad mientras corre; el toque apaga el chorro **y**
+  hace lo que tenía que hacer.
+- Va en **su propio módulo**, no metido en el codigo del submenú. Si algo falla,
+  la pantalla sigue exactamente igual.
+- Los charcos tienen **tope de 55** (`MAX_BLOBS`) y los viejos se reemplazan: por
+  eso puede correr horas sin acumularse.
+- Se respeta `localStorage["glue_mute"] = "1"` para apagarlo sin quitar nada mas.
+- **Solo está en Experiencias por ahora.** Para ponerlo en otra pantalla: llamar
+  `glueSiEstaQuieto(N)` al abrirla y `glueOlvidado()` al cerrarla.
+
+Viene de `Documents\Default Project\glue-splat.html` (la copia de trabajo). Se
+quitaron el fondo, el texto y los controles de prueba; solo se quedó el chorro.
+
+**Verificado:** sintaxis OK en `glue.js` e `index.html`; `glue.js` quedó registrado
+en `herramientas/sintaxis/extract.py`. **Falta la prueba en vivo.**
+
 ### Una cita no se agenda en el pasado (oct-2026)
 
 En `Citas/`, al agendar solo se comprobaba que el campo de fecha **no estuviera
