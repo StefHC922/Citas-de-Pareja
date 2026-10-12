@@ -97,8 +97,9 @@
   .celda .titulo{ font-weight:600; }
   /* En la TIENDA el nombre del producto va en coral. */
   .fila.producto .celda .titulo{ color:var(--coral); }
-  /* Boton chico (Comprar / Recibi) pegado a la derecha de un renglon. */
-  .btnMini{ flex:0 0 auto; border:none; border-radius:10px; cursor:pointer; padding:10px 12px;
+  /* Boton chico (Comprar / Recibi) pegado a la derecha de un renglon.
+     `align-self:stretch` lo estira al MISMO alto del producto/pedido. */
+  .btnMini{ flex:0 0 auto; align-self:stretch; border:none; border-radius:10px; cursor:pointer; padding:10px 12px;
     font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:.82rem; color:var(--bg);
     background:linear-gradient(90deg, var(--coral), var(--teal)); }
   .btnMini:active{ transform:scale(.97); }
@@ -123,6 +124,8 @@
     background:var(--bg); color:var(--fg); padding:12px; font-size:.9rem; font-family:'Inter',sans-serif; }
   .alta textarea{ min-height:56px; }
   .alta .btnPri{ margin-bottom:0; }
+  /* Aviso rojo entre la descripcion y el boton, mientras faltan campos. */
+  .altaAviso{ color:var(--rojo); font-size:.8rem; }
   /* Copia invisible de esa misma fila en las vistas que NO la tienen. Ocupa el
      mismo espacio (mismo input, mismo boton) pero no se ve, y sirve para que los
      botones de navegacion de abajo caigan EXACTAMENTE en el mismo lugar en las
@@ -162,6 +165,7 @@
   <div class="alta filaHueco" aria-hidden="true">
     <input type="text" tabindex="-1" autocomplete="off">
     <textarea tabindex="-1"></textarea>
+    <div class="altaAviso">Completa el nombre y Descripcion</div>
     <button type="button" tabindex="-1" class="btnPri" disabled>Agregar deseo</button>
   </div>
   <div class="tabs" style="margin-top:12px;">
@@ -180,6 +184,7 @@
   <div class="alta" style="margin-top:12px;">
     <input id="inpDeseo" placeholder="Nombre del deseo" maxlength="60">
     <textarea id="inpDeseoDesc" placeholder="Descripción: ¿qué quieres que pase?" maxlength="400"></textarea>
+    <div class="altaAviso" id="altaAviso">Completa el nombre y Descripcion</div>
     <button id="btnAdd" class="btnPri" disabled>Agregar deseo</button>
   </div>
   <div class="tabs" style="margin-top:12px;">
@@ -205,6 +210,7 @@
   <div class="alta filaHueco" aria-hidden="true">
     <input type="text" tabindex="-1" autocomplete="off">
     <textarea tabindex="-1"></textarea>
+    <div class="altaAviso">Completa el nombre y Descripcion</div>
     <button type="button" tabindex="-1" class="btnPri" disabled>Agregar deseo</button>
   </div>
   <div class="tabs" style="margin-top:12px;">
@@ -450,8 +456,11 @@ function pestana(cual){
   const esA = (cual === "comprados");
   el("tabComprados").classList.toggle("activo", esA);
   el("tabRecibidos").classList.toggle("activo", !esA);
-  el("cajaComprados").style.display = esA ? "flex" : "none";
-  el("cajaRecibidos").style.display = esA ? "none" : "flex";
+  // OJO: NO se pone display:"flex" (eso volvia el recuadro una fila horizontal y
+  // los pedidos salian encimados al centro). Se quita el display en linea para
+  // que mande el CSS (.tablaBox = bloque; .tablaBox.vacia = columna centrada).
+  el("cajaComprados").style.display = esA ? "" : "none";
+  el("cajaRecibidos").style.display = esA ? "none" : "";
 }
 // Mis pedidos tiene UNA PESTANA ARRIBA (los que yo compré / los que me
 // compraron) que las otras dos vistas no tienen. Para que los botones de abajo
@@ -545,6 +554,9 @@ el("mdBorrar").onclick = async ()=>{
 function actualizarBtnAdd(){
   const listo = !!(el("inpDeseo").value.trim() && el("inpDeseoDesc").value.trim());
   el("btnAdd").disabled = !listo;
+  // El aviso rojo se oculta al llenar los dos campos. Se deja el hueco (visibility)
+  // para que el boton no brinque y las tres vistas sigan alineadas.
+  el("altaAviso").style.visibility = listo ? "hidden" : "";
 }
 ["inpDeseo", "inpDeseoDesc"].forEach(id=> el(id).addEventListener("input", actualizarBtnAdd));
 actualizarBtnAdd();

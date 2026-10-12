@@ -1573,6 +1573,18 @@ tocar un deseo sale la ventana emergente. Los números de activar/precio los lee
 **frescos** de `config/ajustes` (no de la copia local de la identidad), así que lo
 que cambies en ⚙️ Usuarios → 🛒 se ve sin recargar.
 
+- El botón **Comprar** / **Recibí ✓** (`.btnMini`) va `align-self:stretch`: queda
+  del **mismo alto** que el producto/pedido.
+- En "Mis deseos", mientras falten nombre o descripción, sale un aviso rojo
+  **"Completa el nombre y Descripcion"** entre la descripción y el botón; se
+  oculta al llenar los dos (con `visibility:hidden`, dejando el hueco para que
+  nada brinque y las tres vistas sigan alineadas).
+- **Bug corregido (oct-2026):** `pestana()` ponía `display:"flex"` en el recuadro
+  de pedidos. Cuando había renglones, eso volvía el recuadro una **fila
+  horizontal** y los pedidos salían encimados al centro. Ahora se quita el
+  `display` en línea y manda el CSS (`.tablaBox` = bloque; `.tablaBox.vacia` =
+  columna centrada).
+
 **El recuadro NUNCA se oculta y tiene altura FIJA** (`height:48dvh`, no solo
 `max-height`), y el texto de "vacío" va **centrado DENTRO** de él, no debajo. Esto
 es por pedido de Fredy (oct-2026): así **los botones de abajo quedan siempre en el
@@ -1707,8 +1719,10 @@ glueSiEstaQuieto(15);   // abre la espera; en cerrarExp() va glueOlvidado()
 ```
 
 **Ajuste (oct-2026):** la espera bajo a **15 segundos**, y los chorros ahora
-salen **a la mitad de seguido** (uno cada .56–1.2 s) y **a la mitad de grosor**
-(la gota mide la mitad), para que el efecto sea mas suave.
+salen **a la mitad de seguido** (uno cada .56–1.2 s) y **mas delgados** que antes:
+la gota se quedo a la **mitad entre lo original (16–30) y la version delgada
+(8–15)**, o sea **12–22**. El ajuste siguiente puede mover ese rango, es una
+sola linea en `makeDrop` (la gota) y en el `trail` (las gotitas del rastro).
 
 **El comportamiento exacto (decidido por Fredy, oct-2026):**
 

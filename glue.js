@@ -93,7 +93,7 @@ function makeDrop(x, delay, tx, ty){
   drops.push({
     x, y: y0, vy: vy0,
     vx: (tx - x) / Math.max(0.12, Math.abs(vy0) / GRAV),
-    r: rnd(8, 15),
+    r: rnd(12, 22),
     w: rnd(0, Math.PI * 2),
     t: -delay,
     tx, ty,
@@ -328,7 +328,7 @@ function bucle(now){
 
     // rastro: chorro continuo de gotas que deja la gota principal
     if(Math.random() < 0.85){
-      d.trail.push({ x: d.x + rnd(-5, 5), y: d.y + rnd(-6, 18), r: rnd(1.5, 4) });
+      d.trail.push({ x: d.x + rnd(-5, 5), y: d.y + rnd(-6, 18), r: rnd(2.5, 6) });
       if(d.trail.length > 48) d.trail.shift();
     }
 
