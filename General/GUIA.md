@@ -1552,7 +1552,7 @@ Peligrosas → ⚙️).** Se copiaron sus clases tal cual:
 ```
 h1  +  p.desc
 [ recuadro .tablaBox con los datos ]      ← SIEMPRE dibujado, con altura fija
-[ .alta (solo en deseos) ]
+[ .btnPri "Agregar deseo" (solo en deseos) ]
 [ .tabs con las otras dos vistas ]       ← pegados a su recuadro (ya no se alinean entre vistas)
 ```
 
@@ -1560,12 +1560,14 @@ h1  +  p.desc
   cada uno trae su botón **Comprar** (un botón de verdad, a la derecha).
 - **Mis deseos:** tus deseos. **Tocar el deseo abre una ventana emergente** con
   solo **Activar** (y abajo **Borrar deseo**); la **✕** roja borra directo (con
-  confirmación). Para **anotar uno nuevo** hay que llenar **nombre y descripción**;
-  el botón **"Agregar deseo"** se ve **apagado** mientras falten campos y, **al
-  tocarlo así**, sale el aviso rojo *"Completa el nombre y Descripcion"*.
+  confirmación). Para **anotar uno nuevo** hay un botón **"Agregar deseo"** debajo
+  del recuadro que abre **otra ventana** (nombre + descripción + Agregar); dentro,
+  el botón se ve **apagado** mientras falten campos y, **al tocarlo así**, sale el
+  aviso rojo *"Completa el nombre y Descripcion"*.
 - **Mis pedidos:** pestañas **"Los que yo compré"** / **"Los que me compraron"**,
   cada lista en su propio recuadro. En la de los que compraste, a la **derecha**
-  hay un botón verde **"Recibí ✓"** para **marcar entregado**.
+  hay un botón verde **"Recibí ✓"** para **marcar entregado**. **Cada pedido trae
+  su ✕ roja** (en las dos pestañas) para **borrarlo**, con confirmación.
 
 **Cambios de interfaz del Centro (oct-2026):** el detalle con "Guardar cambios"
 se quitó; la descripción ahora se pide al dar de alta (no se edita después), y al
@@ -1575,6 +1577,11 @@ que cambies en ⚙️ Usuarios → 🛒 se ve sin recargar.
 
 - El botón **Comprar** / **Recibí ✓** (`.btnMini`) va `align-self:stretch`: queda
   del **mismo alto** que el producto/pedido.
+- **El alta de deseo es una ventana** (`#modalAdd`), que abre el botón **"Agregar
+  deseo"** debajo del recuadro: así la pantalla de Mis deseos no se llena de
+  campos (pedido de Fredy, oct-2026).
+- **Cada pedido trae su ✕ roja** (`.x`) para **borrarlo**, en las dos pestañas de
+  "Mis pedidos", con la misma confirmación de borrar un deseo.
 - En "Mis deseos", el aviso rojo **"Completa el nombre y Descripcion"** solo sale
   **al tocar "Agregar deseo" con campos faltantes**. El botón **no** se deshabilita
   (un botón deshabilitado no deja detectar el toque): se ve apagado con la clase

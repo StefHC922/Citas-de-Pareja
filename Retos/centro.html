@@ -164,12 +164,7 @@
   <div class="tablaBox vacia" id="cajaDeseos">
     <div class="vacio" id="vacioDeseos">Todavía no has anotado ningún deseo.</div>
   </div>
-  <div class="alta" style="margin-top:12px;">
-    <input id="inpDeseo" placeholder="Nombre del deseo" maxlength="60">
-    <textarea id="inpDeseoDesc" placeholder="Descripción: ¿qué quieres que pase?" maxlength="400"></textarea>
-    <div class="altaAviso" id="altaAviso">Completa el nombre y Descripcion</div>
-    <button id="btnAdd" class="btnPri apagado">Agregar deseo</button>
-  </div>
+  <button class="btnPri" id="btnAbrirAdd" style="margin-top:12px;">Agregar deseo</button>
   <div class="tabs" style="margin-top:12px;">
     <button class="tab tabnav" id="navTienda">Tienda</button>
     <button class="tab tabnav" id="navPedidos2">Mis pedidos</button>
@@ -205,6 +200,20 @@
     <button class="btnPri" id="mdActivar">Activar</button>
     <button class="btnSec" id="mdBorrar" style="color:var(--rojo);">Borrar deseo</button>
     <button class="btnSec" id="mdCerrar">Cancelar</button>
+  </div>
+</div>
+
+<!-- ================= VENTANA PARA AGREGAR UN DESEO ================= -->
+<div class="modal" id="modalAdd">
+  <div class="modalCaja">
+    <div class="modalNombre">Nuevo deseo</div>
+    <div class="alta">
+      <input id="inpDeseo" placeholder="Nombre del deseo" maxlength="60">
+      <textarea id="inpDeseoDesc" placeholder="Descripción: ¿qué quieres que pase?" maxlength="400"></textarea>
+      <div class="altaAviso" id="altaAviso">Completa el nombre y Descripcion</div>
+      <button class="btnPri apagado" id="btnAdd">Agregar deseo</button>
+    </div>
+    <button class="btnSec" id="mdAddCerrar">Cancelar</button>
   </div>
 </div>
 
@@ -416,14 +425,19 @@ function pintarPedidos(){
       b.onclick = ()=> marcarEntregado(c.id);
       f.appendChild(b);
     }
+    f.appendChild(botonBorrarPedido(c.id));
     return f;
   });
   pintaCaja("cajaComprados", VACIO_COM, filasMios);
 
-  const filasRecibidos = recibidos.map(c=> fila(c.nombreDeseo,
-    ((c.comprador && c.comprador.nombre) || "—") + " te lo compró. Tú lo entregas.",
-    (c.estado === "entregado") ? "Entregado" : "Te toca entregarlo",
-    (c.estado === "entregado") ? "entregado" : "pendiente"));
+  const filasRecibidos = recibidos.map(c=>{
+    const f = fila(c.nombreDeseo,
+      ((c.comprador && c.comprador.nombre) || "—") + " te lo compró. Tú lo entregas.",
+      (c.estado === "entregado") ? "Entregado" : "Te toca entregarlo",
+      (c.estado === "entregado") ? "entregado" : "pendiente");
+    f.appendChild(botonBorrarPedido(c.id));
+    return f;
+  });
   pintaCaja("cajaRecibidos", VACIO_REC, filasRecibidos);
 }
 function pintarTodo(){ pintarCatalogo(); pintarDeseos(); pintarPedidos(); }
@@ -527,7 +541,31 @@ el("mdBorrar").onclick = async ()=>{
   if(await borrarDeseo(abiertoId)) cerrarModal();
 };
 
-// ---------- anotar un deseo (nombre + descripcion, los DOS obligatorios) ----------
+// ---------- borrar un pedido (la ✕ roja de "Mis pedidos") ----------
+function botonBorrarPedido(id){
+  const x = document.createElement("button");
+  x.className = "x"; x.textContent = "✕";
+  x.setAttribute("aria-label", "Borrar pedido");
+  x.onclick = ()=> borrarCompra(id);
+  return x;
+}
+async function borrarCompra(id){
+  const c = compras.find(x=> x.id === id);
+  if(!c) return false;
+  const ok = await confirmar({
+    aviso: true,
+    titulo: "¿Borrar este pedido?",
+    texto: "Se quita de tu lista y de la de tu pareja. No se puede deshacer.",
+    ok: "Borrar"
+  });
+  if(!ok) return false;
+  try{
+    await deleteDoc(doc(db, "comprasDeseos", id));
+    return true;
+  }catch(e){ aviso("No se pudo borrar. Revisa tu conexión."); return false; }
+}
+
+// ---------- anotar un deseo (ventana con nombre + descripcion) ----------
 function camposListos(){
   return !!(el("inpDeseo").value.trim() && el("inpDeseoDesc").value.trim());
 }
@@ -537,9 +575,21 @@ function actualizarBtnAdd(){
   el("btnAdd").classList.toggle("apagado", !camposListos());
   if(camposListos()) el("altaAviso").style.visibility = "hidden";
 }
+function abrirAddModal(){
+  el("inpDeseo").value = "";
+  el("inpDeseoDesc").value = "";
+  el("altaAviso").style.visibility = "hidden";
+  actualizarBtnAdd();
+  el("modalAdd").classList.add("ver");
+  try{ el("inpDeseo").focus(); }catch(e){}
+}
+function cerrarAddModal(){ el("modalAdd").classList.remove("ver"); }
 ["inpDeseo", "inpDeseoDesc"].forEach(id=> el(id).addEventListener("input", actualizarBtnAdd));
 el("altaAviso").style.visibility = "hidden";   // arranca oculto; solo sale al tocar
 actualizarBtnAdd();
+el("btnAbrirAdd").onclick = abrirAddModal;
+el("mdAddCerrar").onclick = cerrarAddModal;
+el("modalAdd").addEventListener("click", (e)=>{ if(e.target === el("modalAdd")) cerrarAddModal(); });
 el("btnAdd").onclick = async ()=>{
   if(!camposListos()){
     el("altaAviso").style.visibility = "visible";
@@ -554,10 +604,7 @@ el("btnAdd").onclick = async ()=>{
       enVenta: false,
       creadoEn: serverTimestamp()
     });
-    el("inpDeseo").value = "";
-    el("inpDeseoDesc").value = "";
-    el("altaAviso").style.visibility = "hidden";
-    actualizarBtnAdd();
+    cerrarAddModal();
   }catch(e){ aviso("No se pudo anotar. Revisa tu conexión."); }
 };
 
