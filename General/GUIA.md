@@ -1771,6 +1771,42 @@ instrucción vive en `Documents\Default Project\instruccion-IA.txt` y se mete co
 `Temp\opencode\aplicar_persona.py` (ver más abajo). **No se toca ahora** (decisión
 de Fredy, oct-2026).
 
+### Cerrado (oct-2026): la IA ya no suelta retos sola, y castigo/recompensa bien escritos
+
+**1. Por qué ofrecía retos sin que se los pidieran.** El texto se contradecía
+solo, y **ganaba la versión equivocada**:
+
+| | |
+|---|---|
+| **Arriba:** *"Tu misión: conversar… **y proponer RETOS picarones**"* | le decía que es parte de su trabajo |
+| **Abajo:** *"JAMÁS ofrezcas retos por tu cuenta"* | le decía que nunca lo haga |
+
+Los modelos **leen más fuerte lo que está al principio**, y "tu misión" suena a
+instrucción principal. Entonces ganaba la de arriba: por eso soltaba retos
+(aclarado). **El arreglo:** la regla de "nunca ofrezcas" **subió ARRIBA del todo**,
+justo antes de la misión, y la misión cambió a *"los retos picarones son una
+habilidad tuya… pero solo la usas si te los piden"*. Así la capacidad se queda,
+pero la contradicción desaparece.
+
+**Ojo: NO se quitó de la misión.** Si se quitara entera, ella leería "tu misión
+es conversar" y más abajo tiene **diez párrafos** de manual de retos: podría
+darlos más planos justo cuando sí los piden. Con la condición se corrige la
+conducta sin apagarle la habilidad.
+
+**2. El castigo y la recompensa mal redactados.** Salían **tal cual los escribía la IA**, y a
+veces mezclaban **quién manda el reto con quién lo tiene que cumplir**. El
+ejemplo que reportó Fredy: *"Si se le olvida o lo ignora, te debe el capricho
+más pesado que se le ocurra pedirte mañana"* — inventa una deuda y además da a
+entender que el que "debe" es el otro.
+
+**El arreglo (en el texto, no en el código):** castigo y recompensa se escriben
+**siempre desde el mismo punto de vista**, el de quien tiene que cumplir, y
+prohibido el "te debe / le debes / me debe". Además tienen que ir **del mismo
+tono del reto**.
+
+**Ojo, esto solo cambiaba el texto que manda la IA.** Los retos **ya guardados**
+en la base conservan el castigo malo que les tocó; no se reescriben solas.
+
 ### El nombre de la IA en el campo de escritura (oct-2026)
 
 El campo del chat tenía el texto fijo *"Escríbele a Chispa..."*, aunque el nombre
