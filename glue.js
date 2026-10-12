@@ -12,8 +12,8 @@
 //   - Cuenta los segundos SIN INTERACTUAR. Cualquier toque, scroll o tecla lo
 //     reinicia, asi que si la persona esta usando la pantalla, no pasa nada.
 //   - Cuando se cumplen los segundos, prende el chorro.
-//   - El chorro se mantiene SOLO en bucle (los charcos viejos se van
-//     reemplazando, asi que puede correr horas sin acumularse).
+//   - El chorro se mantiene SOLO en bucle, y ADEMAS escurre agua desde arriba
+//     por toda la pantalla.
 //   - El PRIMER toque lo apaga al instante y borra el lienzo: no queda rastro.
 //
 //  Notas de seguridad (esto es lo importante):
@@ -21,6 +21,11 @@
 //     seguir usando la pagina con normalidad mientras corre.
 //   - Al apagar, se quitan el lienzo, el bucle y los escuchas. Si algo falla,
 //     la pagina sigue igual: por eso va aparte y no se mete en el juego.
+//   - **Todo tiene tope**: 70 charcos (los viejos se desvanecen, no se borran de
+//     golpe), 16 escurridos de agua y 34 puntos de estela. Ademas hay un
+//     REDUCTOR AUTOMATICO: si el telefono baja de velocidad, el modulo se
+//     achica solo (menos agua, menos charcos) y se vuelve a agrandar cuando se
+//     recupera. Por eso puede correr todo el rato sin trabar el celular.
 //   - Si la persona se cambia de pestana, se apaga sola (no gasta bateria).
 //   - Se respeta la opcion "glue_mute" del almacenamiento local, que lo apaga
 //     sin quitar nada mas de la pantalla.
@@ -29,8 +34,18 @@
 const Z = 50;              // encima del contenido, DEBAJO de los modales (60)
 const CLAVE_MUTE = "glue_mute";
 
-const MAX_BLOBS = 55;      // tope de charcos: por eso el ciclo es infinito
+// Tope de charcos "vivos". Los que se pasan de aqui NO se borran de golpe: se
+// ponen a desvanecerse y desaparecen solos, que es lo que pedia Fredy (oct-2026).
+// El tope sigue existiendo porque SIN el los charcos se acumulan sin limite y el
+// celular se pone lento (y al final el navegador se cae).
+const MAX_BLOBS = 70;
+const DESVANECER = 1.2;         // segundos que tarda un charco viejo en irse
 const GRAV = 2000;
+
+// Reglas del agua que escurre desde arriba. Los topes son la red de seguridad:
+// aun en el peor caso el telefono tiene que aguantar.
+const MAX_ESCURRIDOS = 16;      // nunca mas de este many a la vez
+const MAX_PUNTOS = 34;           // puntos de estela por escurrido (memoria)
 
 let lienzo = null;
 let ctx = null;
@@ -40,10 +55,18 @@ let rafId = 0;
 let activo = false;
 let temporizador = 0;
 let temporizadorGlue = 0;
+let temporizadorAgua = 0;
 let escuchando = false;
 
-const drops = [];
+let drops = [];
 const blobs = [];
+const escurridos = [];
+
+// Red de seguridad del rendimiento: si el celu empieza a ir lento, se baja sola
+// la cantidad de agua y de chorro. Se vuelve a subir cuando vuelve la velocidad.
+// `calidad` va de 0 a 1 y multiplica topes, no cambia el dibujo.
+let calidad = 1;
+let acumCuadros = 0, acumTiempo = 0;
 
 const rnd  = (a, b)=> a + Math.random() * (b - a);
 const clamp = (v, a, b)=> v < a ? a : v > b ? b : v;
@@ -117,6 +140,7 @@ function makeBlob(x, y, r){
     ly: rnd(-0.6, -0.25),
     squash: rnd(0.42, 0.6),      // se aplasta al chocar
     life: 0, grow: 0, fadeIn: 0,
+    muerte: 0, muriendo: false,   // se desvanece cuando se sobra de topes
     settle: rnd(0.35, 0.55),
     yOff: 0,
     verts,
@@ -127,7 +151,19 @@ function makeBlob(x, y, r){
       r: r * rnd(0.14, 0.42)
     }))
   });
-  if(blobs.length > MAX_BLOBS) blobs.shift();
+  // Cuando se pasa del tope NO se borra de golpe: el mas viejo se empieza a
+  // desvanecer y se va solo. Solo si se junta demasiado (peor caso) se borra de
+  // golpe el mas viejo de los que ya se estaban desvaneciendo, para no dejar que
+  // la lista crezca sin freno.
+  while(blobs.length > MAX_BLOBS){
+    const vivo = blobs.find(b=> !b.muriendo);
+    if(!vivo) break;
+    vivo.muriendo = true;
+  }
+  if(blobs.length > MAX_BLOBS * 1.5){
+    const viejo = blobs.find(b=> b.muriendo);
+    if(viejo) blobs.splice(blobs.indexOf(viejo), 1);
+  }
 }
 
 function blobPath(b, cx = b.x, cy = b.y + b.yOff){
@@ -249,7 +285,8 @@ function cacheSprite(b){
 
 function drawBlob(b){
   ctx.save();
-  ctx.globalAlpha = b.fadeIn;
+  // fadeIn es la entrada; muerte es la salida de los que se sobran.
+  ctx.globalAlpha = b.fadeIn * (1 - b.muerte);
   if(!b.sprite && b.grow >= 1.05) b.sprite = cacheSprite(b);
   if(b.sprite){
     const s = b.sprite.size;
@@ -260,15 +297,89 @@ function drawBlob(b){
   ctx.restore();
 }
 
+// ---------- agua que escurre desde arriba ----------
+// Un escurrido es una columna de agua que baja desde el borde superior dejando
+// una estela. No deja charco al llegar abajo (si no, llenaria la pantalla de
+// golpe y se acabaria el tope solo): solo se va desvaneciendo al final.
+function nuevoEscurrido(){
+  escurridos.push({
+    x: rnd(-8, W + 8),
+    y: -20,
+    ancho: rnd(3, 9),
+    vel: rnd(240, 620),
+    puntos: []
+  });
+}
+function drawEscurrido(e){
+  ctx.save();
+  // la estela: puntos que se van afinando hacia arriba
+  for(let i = e.puntos.length - 1; i >= 0; i--){
+    const p = e.puntos[i];
+    const t = (i + 1) / e.puntos.length;      // 1 = cabeza, 0 = cola
+    ctx.globalAlpha = 0.55 * t * t;
+    ctx.fillStyle = "#dfe7ea";
+    ctx.beginPath();
+    ctx.ellipse(e.x + Math.sin(i * 0.35) * 2.5, p.y, p.r * (0.35 + 0.65 * t), p.r * 2.1, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // la gota de la cabeza, con su brillo
+  ctx.globalAlpha = 0.8;
+  ctx.fillStyle = "#f2f7f8";
+  ctx.beginPath();
+  ctx.ellipse(e.x + Math.sin(e.puntos.length * 0.35) * 2.5, e.y, e.ancho * 0.9, e.ancho * 1.9, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 0.7;
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.ellipse(e.x - e.ancho * 0.3 + Math.sin(e.puntos.length * 0.35) * 2.5, e.y - e.ancho * 0.5, e.ancho * 0.3, e.ancho * 0.55, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+// ---------- red de seguridad del rendimiento ----------
+// Si el telefono no da mas, se baja la calidad sola (menos agua, menos chorro) y
+// se vuelve a subir cuando se recupera. Asi el chorro puede correr todo el rato
+// sin que la pantalla se vuelva arrastrada.
+function medirRendimiento(dt){
+  acumCuadros++; acumTiempo += dt;
+  if(acumCuadros < 45) return;
+  const prom = acumTiempo / acumCuadros;
+  let nueva = calidad;
+  if(prom > 0.028) nueva = 0.4;        // ~35 fps o menos: bajamos fuerte
+  else if(prom > 0.021) nueva = 0.7;   // ~47 fps o menos: bajamos un poco
+  else nueva = 1;                      // va bien: calidad completa
+  if(nueva !== calidad) calidad = nueva;
+  acumCuadros = 0; acumTiempo = 0;
+}
+const topeEscurridos = ()=> Math.max(4, Math.round(MAX_ESCURRIDOS * calidad));
+
 // ---------- bucle ----------
 function cuadro(now){
   const dt = Math.min((now - anterior) / 1000, 0.033);
   anterior = now;
   ctx.clearRect(0, 0, W, H);
+  medirRendimiento(dt);
 
-  // ritmo del chorro (esto es lo que lo hace ciclico)
+  // ritmo del chorro (esto es lo que lo hace ciclico). Con el celu lento sale
+  // una gota menos por tanda.
   temporizadorGlue += dt;
-  if(temporizadorGlue > rnd(0.28, 0.6)){ temporizadorGlue = 0; pour(2); }
+  if(temporizadorGlue > rnd(0.28, 0.6)){ temporizadorGlue = 0; pour(calidad >= 1 ? 2 : 1); }
+
+  // ritmo del agua que escurre desde arriba
+  temporizadorAgua += dt;
+  if(temporizadorAgua > rnd(0.4, 1.2)){
+    temporizadorAgua = 0;
+    if(escurridos.length < topeEscurridos()) nuevoEscurrido();
+  }
+  const maxPuntos = Math.round(MAX_PUNTOS * calidad);
+  for(let i = escurridos.length - 1; i >= 0; i--){
+    const e = escurridos[i];
+    e.y += e.vel * dt;
+    e.puntos.unshift({ y: e.y, r: e.ancho });
+    if(e.puntos.length > maxPuntos) e.puntos.pop();
+    // se va al llegar abajo (con un desvanecido corto, no de golpe)
+    if(e.y > H + 30) escurridos.splice(i, 1);
+  }
 
   for(let i = drops.length - 1; i >= 0; i--){
     const d = drops[i];
@@ -311,8 +422,16 @@ function cuadro(now){
     b.grow = Math.min(b.grow + dt * 1.6, 2);
     b.fadeIn = Math.min(1, b.fadeIn + dt * 5);
     b.yOff += (b.settle * 40 - b.yOff) * Math.min(1, dt * 2.2);
+    if(b.muriendo) b.muerte = Math.min(1, b.muerte + dt / DESVANECER);
+  }
+  // los que ya se desvanecieron por completo, fuera de la lista
+  for(let i = blobs.length - 1; i >= 0; i--){
+    if(blobs[i].muerte >= 1) blobs.splice(i, 1);
   }
   for(const b of blobs) drawBlob(b);
+
+  // el agua va ENCIMA de los charcos ya pegados
+  for(const e of escurridos) drawEscurrido(e);
 
   rafId = requestAnimationFrame(cuadro);
 }
@@ -326,7 +445,11 @@ export function encenderGlue(){
     armarLienzo();
     drops.length = 0;
     blobs.length = 0;
+    escurridos.length = 0;
     temporizadorGlue = 0;
+    temporizadorAgua = 0;
+    calidad = 1;
+    acumCuadros = 0; acumTiempo = 0;
     anterior = performance.now();
     activo = true;
     window.addEventListener("resize", ajustar);
@@ -345,6 +468,7 @@ export function apagarGlue(){
   activo = false;
   drops.length = 0;
   blobs.length = 0;
+  escurridos.length = 0;
   try{ window.removeEventListener("resize", ajustar); }catch(e){}
   if(lienzo && lienzo.parentNode) lienzo.parentNode.removeChild(lienzo);
   lienzo = null;

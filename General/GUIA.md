@@ -1712,11 +1712,45 @@ glueSiEstaQuieto(10);   // abre la espera; en cerrarExp() va glueOlvidado()
   hace lo que tenía que hacer.
 - Va en **su propio módulo**, no metido en el codigo del submenú. Si algo falla,
   la pantalla sigue exactamente igual.
-- Los charcos tienen **tope de 55** (`MAX_BLOBS`) y los viejos se reemplazan: por
-  eso puede correr horas sin acumularse.
+- Si se cambia de pestaña, **se apaga sola** (`visibilitychange`): no gasta batería.
 - Se respeta `localStorage["glue_mute"] = "1"` para apagarlo sin quitar nada mas.
 - **Solo está en Experiencias por ahora.** Para ponerlo en otra pantalla: llamar
   `glueSiEstaQuieto(N)` al abrirla y `glueOlvidado()` al cerrarla.
+
+### Los topes del chorro, y por qué los charcos se desvanecen (oct-2026)
+
+**Lo que preguntó Fredy:** por qué se veían charcos que **desaparecían de golpe**.
+
+**Era el tope del archivo de trabajo:** `MAX_BLOBS = 55` con `blobs.shift()`, o
+sea, al llegar el charco 56 **se echaba el más antiguo**. El tope hace falta (sin él
+los charcos se acumulan sin límite y el celular se vuelve lento), pero **desaparecer
+de golpe se veía raro**.
+
+**Lo que quedó:**
+
+| Que | Decisión |
+|---|---|
+| Tope de charcos | **70** |
+| Los que se sobran | **NO se borran de golpe**: el más viejo se pone a **desvanecerse** en 1.2 s (`muerte` + `muriendo`) y se va solo |
+| Peor caso | Si aun así se juntan más de 70×1.5, se borra de golpe el más viejo de los que ya se desvanecían, para que la lista no crezca sin freno |
+
+**Y se agregó el agua que escurre desde arriba:** columnas de agua que bajan por
+toda la pantalla dejando estela, **encima** de los charcos. **No dejan charco al
+llegar abajo** (si no, la pantalla se llenaría de golpe y el tope se acabaría
+solo): se van al llegar al borde.
+
+**Todo lleva tope, y hay un reductor automático:**
+
+| Tope | Valor |
+|---|---|
+| Charcos | 70 (los viejos desvanecen) |
+| Escurridos de agua a la vez | 16 |
+| Puntos de estela por escurrido | 34 |
+| **`medirRendimiento()`** | Cada 45 cuadros mide el tiempo promedio. Si baja de ~35 fps la calidad cae a 0.4; de ~47 fps a 0.7; si va bien, 1 |
+
+La calidad multiplica **topes**, no cambia el dibujo: el chorro nunca desaparece,
+solo hay menos agua y sale una gota menos por tanda. **Por eso puede correr todo el
+rato sin arrastrar la pantalla.**
 
 Viene de `Documents\Default Project\glue-splat.html` (la copia de trabajo). Se
 quitaron el fondo, el texto y los controles de prueba; solo se quedó el chorro.
