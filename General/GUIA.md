@@ -1695,12 +1695,6 @@ import { glueSiEstaQuieto, glueOlvidado } from "./glue.js";
 glueSiEstaQuieto(30);   // abre la espera; en cerrarExp() va glueOlvidado()
 ```
 
-**Se quitó el OLEAJE (oct-2026).** El chorro tenia ademas unas "olas" de agua que
-bajaban por el tercio de arriba; se estaban retirando y **se terminaron de
-quitar**: el modulo ahora es **solo el chorro y los charcos**. La espera tambien
-paso de 10 a **30 segundos**. Todo lo que sigue sobre el oleaje es registro
-historico: ya no existe en `glue.js`.
-
 **El comportamiento exacto (decidido por Fredy, oct-2026):**
 
 | Que | Como |
@@ -1727,7 +1721,7 @@ historico: ya no existe en `glue.js`.
 
 **Lo que preguntó Fredy:** por qué se veían charcos que **desaparecían de golpe**.
 
-**Era el tope del archivo de trabajo:** `MAX_BLOBS = 55` con `blobs.shift()`, o
+**Era el tope viejo:** `MAX_BLOBS = 55` con `blobs.shift()`, o
 sea, al llegar el charco 56 **se echaba el más antiguo**. El tope hace falta (sin él
 los charcos se acumulan sin límite y el celular se vuelve lento), pero **desaparecer
 de golpe se veía raro**.
@@ -1740,69 +1734,16 @@ de golpe se veía raro**.
 | Los que se sobran | **NO se borran de golpe**: el más viejo se pone a **desvanecerse** en 1.2 s (`muerte` + `muriendo`) y se va solo |
 | Peor caso | Si aun así se juntan más de 70×1.5, se borra de golpe el más viejo de los que ya se desvanecían, para que la lista no crezca sin freno |
 
-**Y se agregó el OLEAJE (no "escurridos").** Ojo: **el archivo de trabajo
-`glue-splat.html` se actualizó a media noche** y trae una cosa que la primera
-versión **no tenía**: un **mar de agua que baja desde arriba**, con el frente
-ondulado. La primera vez se inventaron "escurridos" (gotas finas cayendo de
-arriba) y **no era eso** (decisión de Fredy, oct-2026).
-
-**El oleaje es esto:**
-- Una lámina de agua que baja **muy despacio** desde el borde superior.
-- El frente es una suma de **tres senos** (`frenteY`), así que ondula de verdad.
-- Trae **cuerpo** (degradado azulado transparente), **tres crestas** de luz, la
-  **espuma** en el borde del frente y **brillos** que se mueven con el oleaje.
-- Se dibuja con `globalCompositeOperation = "lighter"` (aditivo).
-- **Va DEBAJO del pegamento** (`drawOlas()` se llama antes que el chorro): el
-  agua primero, el chorro encima.
-
-**El agua solo ocupa el TERCIO DE ARRIBA, y nunca se ve el espacio vacío.**
-Pedido de Fredy (oct-2026). Antes las olas bajaban por toda la pantalla y se
-apagaban entre el 10% y el 85%: se veía el oleaje subir, bajar y morir, y cuando
-no había ola se notaba el vacío. **Se resolvió con tres cosas a la vez:**
-
-| Que | Valor | Por qué |
-|---|---|---|
-| La banda | La ola nace en `-2%` y **muere en el 30%** de la altura (`BANDA_F0 = 0.02`, `BANDA_F1 = 0.30`) | El agua nunca pasa del tercio de arriba, así que **no hay espacio que se vea vacío** |
-| Velocidad | `v = rnd(38, 70)` px/s (antes 16–28) | En una banda corta baja más rápido: se ve el movimiento y no dura medio minuto |
-| Ritmo | Una ola cada **1.1–2 s** (antes 4–7 s) | **Siempre hay 2 o 3 superpuestas**: una va saliendo mientras entran otras |
-| Entrada | `o.a` sube en ~0.6 s (antes 1.25 s) | No se queda invisible al entrar |
-| Ondas | `amp = rnd(H*0.015, H*0.035)` (antes hasta `H*0.075`) | Ondas más chicas, propias de una banda tan angosta |
-| Tope | 3 olas (2 si el celu va lento) | Si ya hay el tope **no se lanza otra**: la que baja termina su desvanecido sola. **Nunca se borra de golpe** |
-
-**Un bug que se vio en el celular (corregido oct-2026):** el oleaje **solo se
-asomaba arriba y se desaparecía de golpe**. La causa era el reductor automático:
-cuando el celular va lento la calidad baja y `topeOlas()` pasaba a **1 sola ola**;
-como sale una ola cada 4–7 s pero cada una tarda ~20–30 s en irse, **cada ola nueva
-echaba a la anterior con `shift()`**, sin desvanecer. Se veía un pedacito de agua
-asomarse y morir.
-
-**El arreglo (dos cosas):**
-1. **Ya no se borra ninguna ola de golpe.** Cuando ya hay suficientes, **no se lanza
-   otra**: la que está bajando termina su desvanecido sola. El único `splice` que
-   queda es cuando la ola **ya se apagó del todo** (`fade <= 0.003`).
-2. **El tope bajo pasó de 1 a 2 olas**, y los umbrales del reductor se relajaron
-   (baja a 0.4 recién por debajo de ~32 fps, y a 0.7 por debajo de ~40 fps, en vez
-   de 35 y 47). Antes saltaba a calidad baja demasiado rápido.
-
 **Los topes y la red de seguridad:**
 
 | Tope | Valor |
 |---|---|
 | Charcos | 70 (los viejos desvanecen) |
-| Olas a la vez | **3**, y **2** si el celular va lento |
 | **`medirRendimiento()`** | Cada 60 cuadros mide el tiempo promedio. Si baja de ~32 fps la calidad cae a 0.4; de ~40 fps a 0.7; si va bien, 1 |
 
 La calidad multiplica **topes**, no cambia el dibujo: el chorro nunca desaparece,
-solo hay menos olas y sale una gota menos por tanda. **Por eso puede correr todo el
-rato sin arrastrar la pantalla.**
-
-**El frente ondulado se dibuja en pasos de 10 px** (`PASO_FRENTE`), no de pixel en
-pixel: en un celular de 400 px son ~40 puntos por linea, y con 3 olas + 3 crestas se
-mantiene barato.
-
-Viene de `Documents\Default Project\glue-splat.html` (copia de trabajo, **borrada
-oct-2026** junto con el oleaje). De ahi se quitaron el fondo, el texto y los
-controles de prueba.
+solo sale una gota menos por tanda cuando el celular va lento. **Por eso puede correr
+todo el rato sin arrastrar la pantalla.**
 
 **Verificado:** sintaxis OK en `glue.js` e `index.html`; `glue.js` quedó registrado
 en `herramientas/sintaxis/extract.py`. **Falta la prueba en vivo.**
