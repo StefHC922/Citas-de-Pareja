@@ -45,7 +45,7 @@ const GRAV = 2000;
 // Reglas del agua que baja desde arriba (el "oleaje"). Los topes son la red de
 // seguridad: aun en el peor caso el telefono tiene que aguantar.
 const MAX_OLAS = 3;            // nunca mas de este many a la vez
-const MAX_OLAS_BAJO = 1;       // con el celu lento, solo una
+const MAX_OLAS_BAJO = 2;       // con el celu lento, solo dos
 const PASO_FRENTE = 10;        // px entre puntos del frente ondulado
 
 let lienzo = null;
@@ -312,11 +312,16 @@ function spawnOla(){
     a: 0,
     fade: 1
   });
-  while(olas.length > topeOlas()) olas.shift();
 }
 function updateOlas(dt){
   temporizadorAgua += dt;
-  if(temporizadorAgua > rnd(4, 7)){ temporizadorAgua = 0; spawnOla(); }
+  if(temporizadorAgua > rnd(4, 7)){
+    temporizadorAgua = 0;
+    // Si ya hay suficientes, NO se lanza otra: la ola que esta bajando se deja
+    // terminar su desvanecido sola. Antes se echaba la vieja de golpe y el
+    // oleaje solo se veía asomarse arriba y desaparecer (bug, oct-2026).
+    if(olas.length < topeOlas()) spawnOla();
+  }
   // solo baja y se va apagando muy lento hasta desaparecer
   const f0 = H * 0.10, f1 = H * 0.85;
   for(let i = olas.length - 1; i >= 0; i--){
@@ -398,11 +403,11 @@ function drawOlas(){
 // sin que la pantalla se vuelva arrastrada.
 function medirRendimiento(dt){
   acumCuadros++; acumTiempo += dt;
-  if(acumCuadros < 45) return;
+  if(acumCuadros < 60) return;
   const prom = acumTiempo / acumCuadros;
   let nueva = calidad;
-  if(prom > 0.028) nueva = 0.4;        // ~35 fps o menos: bajamos fuerte
-  else if(prom > 0.021) nueva = 0.7;   // ~47 fps o menos: bajamos un poco
+  if(prom > 0.031) nueva = 0.4;        // ~32 fps o menos: bajamos fuerte
+  else if(prom > 0.025) nueva = 0.7;   // ~40 fps o menos: bajamos un poco
   else nueva = 1;                      // va bien: calidad completa
   if(nueva !== calidad) calidad = nueva;
   acumCuadros = 0; acumTiempo = 0;

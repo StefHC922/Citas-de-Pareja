@@ -1751,13 +1751,28 @@ arriba) y **no era eso** (decisión de Fredy, oct-2026).
 - **Va DEBAJO del pegamento** (`drawOlas()` se llama antes que el chorro): el
   agua primero, el chorro encima.
 
+**Un bug que se vio en el celular (corregido oct-2026):** el oleaje **solo se
+asomaba arriba y se desaparecía de golpe**. La causa era el reductor automático:
+cuando el celular va lento la calidad baja y `topeOlas()` pasaba a **1 sola ola**;
+como sale una ola cada 4–7 s pero cada una tarda ~20–30 s en irse, **cada ola nueva
+echaba a la anterior con `shift()`**, sin desvanecer. Se veía un pedacito de agua
+asomarse y morir.
+
+**El arreglo (dos cosas):**
+1. **Ya no se borra ninguna ola de golpe.** Cuando ya hay suficientes, **no se lanza
+   otra**: la que está bajando termina su desvanecido sola. El único `splice` que
+   queda es cuando la ola **ya se apagó del todo** (`fade <= 0.003`).
+2. **El tope bajo pasó de 1 a 2 olas**, y los umbrales del reductor se relajaron
+   (baja a 0.4 recién por debajo de ~32 fps, y a 0.7 por debajo de ~40 fps, en vez
+   de 35 y 47). Antes saltaba a calidad baja demasiado rápido.
+
 **Los topes y la red de seguridad:**
 
 | Tope | Valor |
 |---|---|
 | Charcos | 70 (los viejos desvanecen) |
-| Olas a la vez | **3**, y solo **1** si el celular va lento |
-| **`medirRendimiento()`** | Cada 45 cuadros mide el tiempo promedio. Si baja de ~35 fps la calidad cae a 0.4; de ~47 fps a 0.7; si va bien, 1 |
+| Olas a la vez | **3**, y **2** si el celular va lento |
+| **`medirRendimiento()`** | Cada 60 cuadros mide el tiempo promedio. Si baja de ~32 fps la calidad cae a 0.4; de ~40 fps a 0.7; si va bien, 1 |
 
 La calidad multiplica **topes**, no cambia el dibujo: el chorro nunca desaparece,
 solo hay menos olas y sale una gota menos por tanda. **Por eso puede correr todo el
