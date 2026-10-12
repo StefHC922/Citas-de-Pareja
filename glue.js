@@ -297,15 +297,27 @@ function drawBlob(b){
   ctx.restore();
 }
 
-// ---------- Oleaje: el mar que baja desde arriba ----------
+// ---------- Oleaje: el agua que baja desde arriba ----------
 // Viene del archivo de trabajo (glue-splat.html). Cada ola es una lamina de agua
-// que baja muy despacio desde el borde superior, con el frente ondulado, crestas
-// y espuma. Se dibuja DEBAJO del pegamento: el agua primero, el chorro encima.
+// que baja con el frente ondulado, crestas y espuma. Se dibuja DEBAJO del
+// pegamento: el agua primero, el chorro encima.
+//
+// El agua SOLO ocupa el TERCIO DE ARRIBA de la pantalla (decision de Fredy,
+// oct-2026): asi queda como una superficie en la parte de arriba y NO se ve el
+// "vacio" cuando una ola se apaga. Se logra con tres cosas a la vez:
+//   1) la ola nace ya casi dentro de la pantalla y baja mas rapido,
+//   2) se apaga SOLO entre el 2% y el 30% de la altura (ahi se va del todo),
+//   3) salen olas mucho mas seguido y se saltan si ya hay el tope. Asi siempre
+//      hay 2 o 3 superpuestas: una va saliendo mientras entran las otras.
+const BANDA_F0 = 0.02;   // sigue totalmente opaca
+const BANDA_F1 = 0.30;   // ya del todo apagada: termina aqui
+const RITMO_OLA = 1.1;   // cada quantito sale otra
+
 function spawnOla(){
   olas.push({
-    y: -H * 0.05,                      // arranca justo arriba, ya casi visible
-    v: rnd(16, 28),                     // baja despacio
-    amp: rnd(H * 0.03, H * 0.075),      // ondas mas marcadas
+    y: -H * 0.02,                      // apenas por encima: entra enseguida
+    v: rnd(38, 70),                     // baja mas rapido (la banda es corta)
+    amp: rnd(H * 0.015, H * 0.035),     // ondas mas chicas, propias de una banda
     k: rnd(0.004, 0.010),               // longitud de onda corta: mas ondulado
     ph: rnd(0, 6.28),
     sp: rnd(0.5, 1.1),
@@ -315,22 +327,22 @@ function spawnOla(){
 }
 function updateOlas(dt){
   temporizadorAgua += dt;
-  if(temporizadorAgua > rnd(4, 7)){
+  if(temporizadorAgua > rnd(RITMO_OLA, RITMO_OLA * 1.8)){
     temporizadorAgua = 0;
     // Si ya hay suficientes, NO se lanza otra: la ola que esta bajando se deja
     // terminar su desvanecido sola. Antes se echaba la vieja de golpe y el
     // oleaje solo se veía asomarse arriba y desaparecer (bug, oct-2026).
     if(olas.length < topeOlas()) spawnOla();
   }
-  // solo baja y se va apagando muy lento hasta desaparecer
-  const f0 = H * 0.10, f1 = H * 0.85;
+  // Se apaga DENTRO de la banda de arriba y ahi se va del todo.
+  const f0 = H * BANDA_F0, f1 = H * BANDA_F1;
   for(let i = olas.length - 1; i >= 0; i--){
     const o = olas[i];
     o.y += o.v * dt;
     o.ph += o.sp * dt;
-    o.a = Math.min(1, o.a + dt * 0.8);
+    o.a = Math.min(1, o.a + dt * 1.6);       // se ve rapido al entrar
     o.fade = 1 - clamp((o.y - f0) / (f1 - f0), 0, 1);
-    if(o.fade <= 0.003 || o.y > H) olas.splice(i, 1);
+    if(o.fade <= 0.003 || o.y > f1) olas.splice(i, 1);
   }
 }
 // El frente: tres senos sumados, para que la ola ondule de verdad.

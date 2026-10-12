@@ -1746,10 +1746,22 @@ arriba) y **no era eso** (decisión de Fredy, oct-2026).
 - Trae **cuerpo** (degradado azulado transparente), **tres crestas** de luz, la
   **espuma** en el borde del frente y **brillos** que se mueven con el oleaje.
 - Se dibuja con `globalCompositeOperation = "lighter"` (aditivo).
-- Aparece **una ola cada 4–7 s**, y cada una se apaga despacio entre el 10% y el
-  85% de la altura, hasta desaparecer sola.
 - **Va DEBAJO del pegamento** (`drawOlas()` se llama antes que el chorro): el
   agua primero, el chorro encima.
+
+**El agua solo ocupa el TERCIO DE ARRIBA, y nunca se ve el espacio vacío.**
+Pedido de Fredy (oct-2026). Antes las olas bajaban por toda la pantalla y se
+apagaban entre el 10% y el 85%: se veía el oleaje subir, bajar y morir, y cuando
+no había ola se notaba el vacío. **Se resolvió con tres cosas a la vez:**
+
+| Que | Valor | Por qué |
+|---|---|---|
+| La banda | La ola nace en `-2%` y **muere en el 30%** de la altura (`BANDA_F0 = 0.02`, `BANDA_F1 = 0.30`) | El agua nunca pasa del tercio de arriba, así que **no hay espacio que se vea vacío** |
+| Velocidad | `v = rnd(38, 70)` px/s (antes 16–28) | En una banda corta baja más rápido: se ve el movimiento y no dura medio minuto |
+| Ritmo | Una ola cada **1.1–2 s** (antes 4–7 s) | **Siempre hay 2 o 3 superpuestas**: una va saliendo mientras entran otras |
+| Entrada | `o.a` sube en ~0.6 s (antes 1.25 s) | No se queda invisible al entrar |
+| Ondas | `amp = rnd(H*0.015, H*0.035)` (antes hasta `H*0.075`) | Ondas más chicas, propias de una banda tan angosta |
+| Tope | 3 olas (2 si el celu va lento) | Si ya hay el tope **no se lanza otra**: la que baja termina su desvanecido sola. **Nunca se borra de golpe** |
 
 **Un bug que se vio en el celular (corregido oct-2026):** el oleaje **solo se
 asomaba arriba y se desaparecía de golpe**. La causa era el reductor automático:
