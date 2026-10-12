@@ -1305,7 +1305,7 @@ despues**. **Regla: si cambias un `alert()` por `aviso()`, el `return` (o el
 |---|---|
 | `Opciones/`, `Encuentros/` | Saltar turno |
 | `Diablitos/` | Volver a los originales |
-| Inicio ⚙️ Usuarios | Salir de modo invitado · eliminar a alguien |
+| Inicio ⚙️ Usuarios | ~~Salir de modo invitado~~ · ~~eliminar a alguien~~ |
 | `Citas/`, `Citas/accesorios.html` | Eliminar cita · eliminar accesorio |
 | `Acompanante/` | Eliminar la conversacion |
 | `Retos/` | Rechazar · retirar · eliminar · dar un punto · cobrar · aplicar castigo |
@@ -1514,7 +1514,7 @@ solo de su saldo. Los puntos son los mismos de `puntosUsuarios` que dan los reto
 |---|---|
 | **`Retos/centro.html`** | **(nuevo)** La pantalla completa: 3 vistas, lectura en vivo, activar/comprar/borrar/entregar, navegación |
 | `Retos/index.html` | La tarjeta de entrada (`#linkCentro`) + `miPareja()` + `pintarCentro()` |
-| `index.html` | El botón **🎁** por usuario en Usuarios y el overlay de los 2 números (`ptsActivar`, `precioCompra`) |
+| `index.html` | El botón **🛒** por usuario en Usuarios y el overlay de los 2 números (`ptsActivar`, `precioCompra`) |
 | `herramientas/sintaxis/extract.py` | Se registró `Retos/centro.html` para que pase la revisión |
 
 **Las vistas** (un solo archivo, no páginas separadas): **Catálogo** (recuadro con
@@ -1524,8 +1524,20 @@ la derecha es **contextual**: en el catálogo sale a Retos, en las otras dos vue
 catálogo. El botón atrás del celular también.
 
 **Los dos números** (`ptsActivar` = 500 y `precioCompra` = 100) se editan por
-usuario en la pantalla **Usuarios** (el ⚙️ del inicio), botón 🎁. Si no hay número
+usuario en la pantalla **Usuarios** (el ⚙️ del inicio), botón 🛒. Si no hay número
 guardado, el Centro usa 500 y 100.
+
+**Se quitó el tachón de eliminar usuario** de esa misma pantalla (decisión de Fredy,
+oct-2026): borrar a alguien dejaba datos colgados en varias colecciones y rompía la
+app. De paso el tachón solo salía en las filas de los **demás**, así que las filas
+quedaban de distinto tamaño y los iconos de la derecha no alineaban. Ahora **todas**
+las filas traen nombre + carrito y quedan iguales. El 🛒 fue en vez de un 🎁 porque
+el regalo se leía como "un regalito" y el carrito da más pista de que ahí está la
+tienda.
+
+**Ojo, si algún día hay que quitar a alguien:** ya **no** se puede desde Usuarios.
+Habría que hacerlo editando `config/ajustes` en la consola, y **revisar antes** sus
+deseos, compras y retos, porque quedan huérfanos.
 
 **Dos cosas honestas:**
 

@@ -1065,42 +1065,20 @@ async function pintarInvUsuarios(){
       location.reload();
     };
     fila.appendChild(b);
-    // Boton de los dos numeros de puntos del Centro de Adquisiciones.
+    // Boton de los dos numeros de puntos del Centro de Adquisiciones. Es un
+    // carrito porque abre justo la "tienda": da mas pista que un regalo, que se
+    // leia como "un regalito". TAMBIEN se quito el tachon de eliminar usuario
+    // (decisión de Fredy, oct-2026): borrar a alguien dejaba datos colgados en
+    // varias colecciones y rompía la app. Ademas, con el tachon las filas
+    // quedaban de distinto tamaño (solo la de los demás lo traía) y los iconos
+    // de la derecha no alineaban. Ahora TODAS las filas traen nombre + carrito.
     const g = document.createElement("button");
     g.type = "button";
-    g.textContent = "🎁";
-    g.setAttribute("aria-label", "Puntos de " + u.nombre);
-    g.style.cssText = "background:none;border:none;font-size:1.05rem;cursor:pointer;padding:8px;";
+    g.textContent = "🛒";
+    g.setAttribute("aria-label", "Tienda de " + u.nombre);
+    g.style.cssText = "background:var(--card);border:1px solid var(--card-border);border-radius:12px;color:var(--fg);font-size:1.05rem;cursor:pointer;padding:12px;min-width:46px;";
     g.onclick = ()=> abrirPuntos(u);
     fila.appendChild(g);
-    if(!(yo && yo.id === u.id)){
-      const x = document.createElement("button");
-      x.type = "button";
-      x.textContent = "✕";
-      x.setAttribute("aria-label", "Eliminar " + u.nombre);
-      x.style.cssText = "background:none;border:none;color:var(--rojo);font-size:1.1rem;cursor:pointer;padding:8px;";
-      x.onclick = async ()=>{
-        const confirmado = await confirmar({
-          aviso: true,
-          titulo: "¿Eliminar a " + u.nombre + " de la app?",
-          texto: "No se puede deshacer.",
-          ok: "Eliminar"
-        });
-        if(!confirmado) return;
-        try{
-          const ref = doc(db, "config", "ajustes");
-          const snap = await getDoc(ref);
-          const arr = (snap.exists() && Array.isArray(snap.data().usuarios)) ? snap.data().usuarios : [];
-          await setDoc(ref, { usuarios: arr.filter(v=>v.id !== u.id), actualizadoEn: serverTimestamp() }, { merge: true });
-        }catch(e){}
-        try{
-          const loc = JSON.parse(localStorage.getItem("pareja_usuarios") || "[]");
-          localStorage.setItem("pareja_usuarios", JSON.stringify(loc.filter(v=>v.id !== u.id)));
-        }catch(e){}
-        pintarInvUsuarios();
-      };
-      fila.appendChild(x);
-    }
     box.appendChild(fila);
   });
 }
@@ -1112,7 +1090,7 @@ async function pintarInvUsuarios(){
 let usuarioPts = null;
 function abrirPuntos(u){
   usuarioPts = u;
-  document.getElementById("invPtsTitulo").textContent = "Puntos de " + u.nombre;
+  document.getElementById("invPtsTitulo").textContent = "Tienda de " + u.nombre;
   document.getElementById("invPtsActivar").value = parseInt(u.ptsActivar, 10) > 0 ? u.ptsActivar : 500;
   document.getElementById("invPtsPrecio").value = parseInt(u.precioCompra, 10) > 0 ? u.precioCompra : 100;
   document.getElementById("invPtsMsg").textContent = "";

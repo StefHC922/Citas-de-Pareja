@@ -285,7 +285,7 @@
     <div id="listaRetos"></div>
     <div id="vacioMsg" style="display:none;">Todavía no hay retos.</div>
 
-    <div class="seccionTitulo">Adquisiciones</div>
+    <div class="seccionTitulo" id="tituloAdquisiciones" style="display:none;">Adquisiciones</div>
     <a href="centro.html" id="linkCentro" style="display:none;">
       <div class="cNom" id="centroNom">Centro de Adquisiciones</div>
       <div class="cSub">Tu lista de deseos y la tienda de tu pareja</div>
@@ -678,10 +678,14 @@ function miPareja(){
       || null;
 }
 function pintarCentro(){
-  const link = document.getElementById("linkCentro");
-  const nom  = document.getElementById("centroNom");
+  const link  = document.getElementById("linkCentro");
+  const nom   = document.getElementById("centroNom");
+  const titulo = document.getElementById("tituloAdquisiciones");
   const p = miPareja();
-  link.style.display = p ? "block" : "none";
+  // El titulo y la tarjeta van juntos: si no hay pareja, no sale ninguno de los
+  // dos (si no queda un "Adquisiciones" colgado sin nada debajo).
+  link.style.display   = p ? "block" : "none";
+  titulo.style.display = p ? "block" : "none";
   if(p) nom.textContent = "Centro de Adquisiciones de " + p.nombre;
 }
 
@@ -1219,6 +1223,11 @@ async function finalizarRetosVencidos(){
 function renderRetos(){
   listaRetosEl.innerHTML = "";
 
+  // La tarjeta del Centro se pinta SIEMPRE, incluso sin retos. Antes estaba al
+  // final de esta función y el `return` de "no hay retos" se la saltaba, asi que
+  // con la lista vacia la tarjeta nunca aparecia (bug, oct-2026).
+  pintarCentro();
+
   if(retos.length === 0){
     vacioMsgEl.style.display = "block";
     return;
@@ -1391,7 +1400,6 @@ function renderRetos(){
   });
 
   renderBalances();
-  pintarCentro();
   intentarResaltar();
 }
 
