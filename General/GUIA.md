@@ -1475,6 +1475,75 @@ Ese camino casi no se disparaba (al llegar a la meta el reto ya pasa a
 **No se tocaron** los retos de la IA (ya daban bien el valor entero) ni la
 penalización de los retos **no cumplidos** (esa resta es a propósito).
 
+### Centro de Adquisiciones Personal (nuevo, oct-2026)
+
+Cada persona tiene un **Centro de Adquisiciones**: su lista secreta de deseos y la
+tienda donde su pareja puede "comprar" lo que esa persona quiere que cumpla. Se
+entra desde **`Retos/`**, con una tarjeta que dice **"Centro de Adquisiciones de
+[nombre]"** (el nombre de quien **no** eres tú).
+
+**Cómo funciona (tú = el que paga en los dos pasos):**
+
+1. Anotas un deseo en tu lista secreta (nombre + descripción).
+2. Pulsas **Activar**: se te descuentan **500** pts y el deseo aparece en la tienda
+   de tu pareja. Los 500 se cobran **una sola vez**; el deseo se queda en tu lista
+   marcado "En venta".
+3. En la tienda de tu pareja lo **compras** por el **precio** (**100** pts), las
+   veces que quieras. Cada compra es **un pedido que tu pareja tiene que entregar**.
+4. Cuando te lo da, **tú** (el que compró) marcas **"Entregado"**.
+
+Los dos pagos los hace **la misma persona**, con **sus** puntos: cada quien gasta
+solo de su saldo. Los puntos son los mismos de `puntosUsuarios` que dan los retos.
+
+**Decisiones (no sobrescribir sin preguntar):**
+
+| Decisión | Detalle |
+|---|---|
+| Precio **por usuario**, no por deseo | Los 100 son **un número tuyo** para todos tus deseos. Si cambias el número, se le cambia a todos, ya vendidos incluidos |
+| Botón bloqueado sin saldo | No se compra "a debt": si no llegas al precio, el botón ni aparece. En retos sí se puede quedar negativo |
+| Borrar un deseo | Sí se puede desde ahorita, y **no devuelve** los 500 |
+| Desactivar un deseo | **No contemplado.** Queda pendiente decidir |
+| Al entregar no hay puntos | Quien entrega no gana nada: el pago ya fue al comprar |
+| Quién marca "Entregado" | **El que compró** (el cliente), no quien entrega |
+| Aviso | La compra avisa por **Telegram**, como los retos |
+| Colecciones | `deseos` (los deseos) y `comprasDeseos` (las compras) |
+
+**Archivos:**
+
+| Archivo | Qué lleva |
+|---|---|
+| **`Retos/centro.html`** | **(nuevo)** La pantalla completa: 3 vistas, lectura en vivo, activar/comprar/borrar/entregar, navegación |
+| `Retos/index.html` | La tarjeta de entrada (`#linkCentro`) + `miPareja()` + `pintarCentro()` |
+| `index.html` | El botón **🎁** por usuario en Usuarios y el overlay de los 2 números (`ptsActivar`, `precioCompra`) |
+| `herramientas/sintaxis/extract.py` | Se registró `Retos/centro.html` para que pase la revisión |
+
+**Las vistas** (un solo archivo, no páginas separadas): **Catálogo** (recuadro con
+scroll, más recientes primero) · **Mis deseos** (la lista secreta) · **Mis pedidos**
+(dos pestañas: "Los que yo compré" / "Los que me compraron"). El "Volver" de arriba a
+la derecha es **contextual**: en el catálogo sale a Retos, en las otras dos vuelve al
+catálogo. El botón atrás del celular también.
+
+**Los dos números** (`ptsActivar` = 500 y `precioCompra` = 100) se editan por
+usuario en la pantalla **Usuarios** (el ⚙️ del inicio), botón 🎁. Si no hay número
+guardado, el Centro usa 500 y 100.
+
+**Dos cosas honestas:**
+
+1. **La lista NO es secreta de verdad.** El ✅ se aplicó: solo el dueño la ve en la
+   interfaz. Pero la base de la pareja tiene las reglas abiertas a propósito (ver
+   más abajo "La base de cada PAREJA"), así que técnicamente alguien con la
+   configuración de la base podría leerla. Secreto real llega con el **rediseño con
+   login**, que va después.
+2. **El precio sale de tu configuración, no del deseo.** Por eso, si un día quieres
+   que un deseo viejo conserve su precio, hay que guardarlo dentro del deseo.
+
+**Los puntos se descuentan con `runTransaction`**, que relee el saldo dentro de la
+transacción: dos celulares apretando "Comprar" al mismo tiempo no pueden gastar dos
+veces lo que no hay (el bug B3 de `Modelo-Datos.md`, pero aquí sí prevenido).
+**Verificado:** sintaxis OK en los 3 archivos; `<div>` cuadrados (32/32), sin ids
+repetidos y sin ids de JS inexistentes en `centro.html`. **Falta la prueba en
+vivo** (Fredy, en Pages y con los dos celulares).
+
 ### Una cita no se agenda en el pasado (oct-2026)
 
 En `Citas/`, al agendar solo se comprobaba que el campo de fecha **no estuviera

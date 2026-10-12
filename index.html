@@ -287,6 +287,27 @@
       <button class="btnPri" id="invAgregar" style="width:auto;margin-bottom:0;padding:14px 18px;">＋</button>
     </div>
   </div>
+
+  <!-- ============ OVERLAY: los dos numeros de puntos de un usuario ============ -->
+  <!-- Son los del Centro de Adquisiciones (Retos/centro.html): con cuantos puntos
+       activa uno sus deseos, y el precio para que se los compren. Se guardan en el
+       mismo objeto del usuario dentro de config/ajustes, junto a nombre/admin. -->
+  <div id="invOverlayPts" style="display:none;position:fixed;inset:0;background:rgba(9,7,15,.8);z-index:70;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:var(--bg-2);border:1px solid var(--card-border);border-radius:20px;padding:22px;width:100%;max-width:380px;">
+      <h2 id="invPtsTitulo" style="font-size:1.1rem;margin-bottom:14px;font-family:'Chakra Petch',sans-serif;">Puntos</h2>
+      <label for="invPtsActivar" style="display:block;font-size:.82rem;color:var(--fg-muted);margin-bottom:6px;">Puntos para activar un deseo</label>
+      <input type="number" id="invPtsActivar" min="1" step="1" value="500" style="margin-bottom:6px;">
+      <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:14px;">Lo que se descuenta al poner un deseo a la venta.</div>
+      <label for="invPtsPrecio" style="display:block;font-size:.82rem;color:var(--fg-muted);margin-bottom:6px;">Precio para comprar un deseo</label>
+      <input type="number" id="invPtsPrecio" min="1" step="1" value="100">
+      <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:4px;">Lo que se paga cada vez que alguien compra uno de sus deseos.</div>
+      <p id="invPtsMsg" style="font-size:.82rem;color:var(--rojo);min-height:18px;margin:10px 0;"></p>
+      <div style="display:flex;gap:10px;">
+        <button class="btnPri" id="invPtsCancelar" style="flex:1;background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Cancelar</button>
+        <button class="btnPri" id="invPtsGuardar" style="flex:1;">Guardar</button>
+      </div>
+    </div>
+  </div>
   <div id="invVistaTg" style="display:none;width:100%;text-align:left;">
     <button id="invBackTg" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">‹ Atrás</button>
     <h1 style="font-size:1.4rem;text-align:center;">Telegram 📲</h1>
@@ -1044,6 +1065,14 @@ async function pintarInvUsuarios(){
       location.reload();
     };
     fila.appendChild(b);
+    // Boton de los dos numeros de puntos del Centro de Adquisiciones.
+    const g = document.createElement("button");
+    g.type = "button";
+    g.textContent = "🎁";
+    g.setAttribute("aria-label", "Puntos de " + u.nombre);
+    g.style.cssText = "background:none;border:none;font-size:1.05rem;cursor:pointer;padding:8px;";
+    g.onclick = ()=> abrirPuntos(u);
+    fila.appendChild(g);
     if(!(yo && yo.id === u.id)){
       const x = document.createElement("button");
       x.type = "button";
@@ -1075,6 +1104,57 @@ async function pintarInvUsuarios(){
     box.appendChild(fila);
   });
 }
+
+// ====== LOS DOS NUMEROS DE PUNTOS DEL CENTRO DE ADQUISICIONES ======
+// Van en el mismo objeto del usuario dentro de `config/ajustes`, junto a
+// nombre/admin. Si no hay numero guardado, el Centro usa 500 y 100.
+// Los lee `Retos/centro.html` (`miActivar()` y `miPrecio()`).
+let usuarioPts = null;
+function abrirPuntos(u){
+  usuarioPts = u;
+  document.getElementById("invPtsTitulo").textContent = "Puntos de " + u.nombre;
+  document.getElementById("invPtsActivar").value = parseInt(u.ptsActivar, 10) > 0 ? u.ptsActivar : 500;
+  document.getElementById("invPtsPrecio").value = parseInt(u.precioCompra, 10) > 0 ? u.precioCompra : 100;
+  document.getElementById("invPtsMsg").textContent = "";
+  document.getElementById("invOverlayPts").style.display = "flex";
+}
+function cerrarPuntos(){
+  document.getElementById("invOverlayPts").style.display = "none";
+  usuarioPts = null;
+}
+document.getElementById("invPtsCancelar").onclick = cerrarPuntos;
+document.getElementById("invPtsGuardar").onclick = async ()=>{
+  if(!usuarioPts) return;
+  const activar  = parseInt(document.getElementById("invPtsActivar").value, 10);
+  const precio   = parseInt(document.getElementById("invPtsPrecio").value, 10);
+  if(!(activar > 0)){ document.getElementById("invPtsMsg").textContent = "El de activar tiene que ser más de 0."; return; }
+  if(!(precio > 0)){ document.getElementById("invPtsMsg").textContent = "El precio tiene que ser más de 0."; return; }
+  const db = dbActual();
+  if(!db){ document.getElementById("invPtsMsg").textContent = "No hay base de datos."; return; }
+  try{
+    const ref = doc(db, "config", "ajustes");
+    const snap = await getDoc(ref);
+    const arr = (snap.exists() && Array.isArray(snap.data().usuarios)) ? snap.data().usuarios.slice() : [];
+    const i = arr.findIndex(v=> v.id === usuarioPts.id);
+    if(i < 0) return;
+    arr[i] = Object.assign({}, arr[i], { ptsActivar: activar, precioCompra: precio });
+    await setDoc(ref, { usuarios: arr, actualizadoEn: serverTimestamp() }, { merge: true });
+    guardarUsuariosLocal(arr);
+    // Si editas los numeros del usuario con el que estas, tu copia local tambien
+    // se actualiza: si no, el Centro leeria los viejos hasta recargar.
+    try{
+      const yoLoc = JSON.parse(localStorage.getItem(CLAVE_LOCAL) || "null");
+      if(yoLoc && yoLoc.id === usuarioPts.id){
+        yoLoc.ptsActivar = activar; yoLoc.precioCompra = precio;
+        localStorage.setItem(CLAVE_LOCAL, JSON.stringify(yoLoc));
+      }
+    }catch(e){}
+    cerrarPuntos();
+    pintarInvUsuarios();
+  }catch(e){
+    document.getElementById("invPtsMsg").textContent = "No se pudo guardar. Revisa tu conexión.";
+  }
+};
 document.getElementById("invAgregar").onclick = async ()=>{
   const inp = document.getElementById("invNuevo");
   const nombre = inp.value.trim();

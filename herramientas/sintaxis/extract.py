@@ -15,6 +15,7 @@ targets = [
     ("Acompanante/index.html", "acompanante"),
     ("Chat/index.html", "chat"),
     ("Retos/index.html", "retos"),
+    ("Retos/centro.html", "centro"),
 ]
 
 pat = re.compile(r'<script([^>]*)>(.*?)</script>', re.S | re.I)

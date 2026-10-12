@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Centro de Adquisiciones</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg: #120e1c;
+    --bg-2: #1a1428;
+    --card: #201933;
+    --card-border: #322a4a;
+    --fg: #f4f1fb;
+    --fg-muted: #a599c7;
+    --coral: #ff6a5c;
+    --teal: #2fd9c7;
+    --amarillo: #f4c94c;
+    --rojo: #ff5c7a;
+    --verde: #6dffa0;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body{
+    margin:0; padding:0; min-height:100%; width:100%;
+    color:var(--fg);
+    font-family:'Inter', system-ui, sans-serif;
+    background:
+      radial-gradient(circle at 15% 0%, var(--bg-2), transparent 55%),
+      radial-gradient(circle at 100% 30%, #1c1330, transparent 45%),
+      var(--bg);
+  }
+  h1,h2{ font-family:'Chakra Petch', sans-serif; font-weight:700; margin:0; }
+  button{
+    font-family:'Chakra Petch', sans-serif; font-weight:700; letter-spacing:.04em;
+    cursor:pointer; border:none; border-radius:16px;
+    transition: transform .15s ease, opacity .2s ease;
+  }
+  button:active{ transform:scale(.97); }
+  button:disabled{ opacity:.4; cursor:default; }
+  input, textarea{
+    font-family:'Inter', sans-serif;
+    border-radius:12px; border:1px solid var(--card-border);
+    background:var(--card); color:var(--fg);
+    padding:12px; font-size:1rem; width:100%;
+  }
+  textarea{ resize:vertical; min-height:70px; }
+
+  /* ---------- encabezado ---------- */
+  #encabezado{
+    padding:20px 20px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border-bottom:1px solid var(--card-border);
+  }
+  #encabezado .saludo{ font-size:1.2rem; }
+  #encabezado .saludo.grande{ font-size:1.4rem; font-family:'Chakra Petch',sans-serif; font-weight:700; }
+  #encabezado .saludo span{
+    background:linear-gradient(90deg, var(--coral), var(--teal));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  #btnVolver{
+    background:none; color:var(--fg-muted); font-size:.75rem;
+    text-decoration:underline; padding:4px; font-weight:500; font-family:'Inter',sans-serif;
+  }
+
+  #contenido{ padding:20px; max-width:560px; width:100%; margin:0 auto; padding-bottom:40px; }
+  .seccionTitulo{
+    font-family:'Chakra Petch',sans-serif; font-size:.8rem;
+    letter-spacing:.25em; text-transform:uppercase;
+    color:var(--fg-muted); margin:20px 0 10px;
+  }
+
+  /* ---------- recuadro con scroll (catálogo) ---------- */
+  #cajaCatalogo{
+    background:var(--card); border:1px solid var(--card-border); border-radius:16px;
+    max-height:360px; overflow-y:auto; padding:12px;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .prod{
+    background:var(--bg-2); border:1px solid var(--card-border); border-radius:14px;
+    padding:12px 14px; display:flex; flex-direction:column; gap:6px;
+  }
+  .prod .pNom{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.02rem; }
+  .prod .pDesc{ color:var(--fg-muted); font-size:.85rem; white-space:pre-wrap; }
+  .prod .pPie{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .prod .pPrecio{ font-family:'Chakra Petch',sans-serif; font-size:.9rem; color:var(--teal); }
+  .prod button{ padding:10px 14px; font-size:.82rem; border-radius:12px; }
+
+  /* ---------- enlaces tipo "Volver" del menú ---------- */
+  #enlacesAbajo{ display:flex; justify-content:center; gap:26px; margin-top:18px; }
+  #enlacesAbajo a{
+    color:var(--fg-muted); font-size:.78rem; text-decoration:underline;
+    padding:6px; font-family:'Inter',sans-serif;
+  }
+
+  /* ---------- tarjetas de deseo (lista secreta) ---------- */
+  .deseo{
+    background:var(--card); border:1px solid var(--card-border); border-radius:16px;
+    padding:16px; margin-bottom:12px;
+  }
+  .deseo.enVenta{ border-color:var(--teal); }
+  .deseo .dNom{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.05rem; }
+  .deseo .dDesc{ color:var(--fg-muted); font-size:.88rem; margin-top:6px; white-space:pre-wrap; }
+  .deseo .dEstado{ font-size:.72rem; margin-top:8px; display:inline-block; padding:3px 9px; border-radius:20px; }
+  .deseo .dEstado.vendido{ background:rgba(47,217,199,.15); color:var(--teal); }
+  .deseo .dEstado.secreto{ background:rgba(244,201,76,.15); color:var(--amarillo); }
+  .deseo .dAcciones{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .deseo .dAcciones button{ padding:10px 14px; font-size:.82rem; border-radius:12px; flex:1; min-width:110px; }
+
+  /* ---------- pestañas de pedidos ---------- */
+  #pestanas{ display:flex; gap:8px; margin-bottom:14px; }
+  #pestanas button{
+    flex:1; padding:12px; font-size:.85rem; border-radius:12px;
+    background:var(--card); border:1px solid var(--card-border); color:var(--fg-muted);
+  }
+  #pestanas button.on{
+    border-color:var(--teal); color:var(--teal);
+    background:var(--bg-2);
+  }
+  .pedido{
+    background:var(--card); border:1px solid var(--card-border); border-radius:16px;
+    padding:16px; margin-bottom:12px;
+  }
+  .pedido.pendiente{ border-color:var(--amarillo); }
+  .pedido.entregado{ opacity:.6; }
+  .pedido .peNom{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.02rem; }
+  .pedido .peDesc{ color:var(--fg-muted); font-size:.86rem; margin-top:6px; white-space:pre-wrap; }
+  .pedido .peQuien{ font-size:.78rem; color:var(--fg-muted); margin-top:8px; }
+  .pedido .peEstado{ font-size:.72rem; margin-top:8px; display:inline-block; padding:3px 9px; border-radius:20px; }
+  .pedido .peEstado.pendiente{ background:rgba(244,201,76,.15); color:var(--amarillo); }
+  .pedido .peEstado.entregado{ background:rgba(109,255,160,.15); color:var(--verde); }
+  .pedido button{ margin-top:12px; padding:12px 16px; font-size:.85rem; width:100%; }
+
+  /* ---------- botones comunes ---------- */
+  .btnPrincipal{ color:var(--bg); background:linear-gradient(90deg, var(--coral), var(--teal)); }
+  .btnOscuro{ background:var(--bg-2); color:var(--fg); border:1px solid var(--card-border); }
+  .btnRojo{ background:var(--rojo); color:#2b0410; }
+  .btnVerde{ background:var(--verde); color:#06281a; }
+
+  /* ---------- overlay: nuevo deseo ---------- */
+  #overlay{
+    display:none; position:fixed; inset:0; background:rgba(9,7,15,.75);
+    align-items:flex-end; justify-content:center; z-index:60;
+    backdrop-filter: blur(2px);
+  }
+  #formCard{
+    background:var(--bg); border:1px solid var(--card-border);
+    border-radius:22px 22px 0 0; padding:24px; width:100%; max-width:560px;
+    max-height:90dvh; overflow-y:auto;
+  }
+  #formCard h2{ font-size:1.2rem; margin-bottom:16px; }
+  .campo{ margin-bottom:16px; }
+  .campo label{ display:block; font-size:.85rem; color:var(--fg-muted); margin-bottom:6px; }
+  .campo .hint{ font-size:.75rem; color:var(--fg-muted); margin-top:4px; }
+  #formMsg{ color:var(--rojo); font-size:.85rem; min-height:18px; margin-bottom:10px; }
+  #formBotones{ display:flex; gap:10px; margin-top:6px; }
+  #formBotones button{ flex:1; padding:16px; }
+  #btnCancelarForm{ background:var(--card); color:var(--fg); border:1px solid var(--card-border); }
+
+  #vacio{ color:var(--fg-muted); text-align:center; font-size:.88rem; padding:26px 10px; }
+
+  /* ---------- botón flotante: nuevo deseo ---------- */
+  #btnNuevoDeseo{
+    position:fixed; bottom:24px; left:20px; right:20px;
+    padding:18px; font-size:1.05rem;
+    color:var(--bg); background:linear-gradient(90deg, var(--coral), var(--teal));
+    max-width:560px; margin:0 auto;
+  }
+</style>
+</head>
+<body>
+
+<div id="encabezado">
+  <div>
+    <div class="saludo grande">Centro de <span id="nombrePareja">…</span></div>
+    <div id="subAqui" style="font-size:.82rem;color:var(--fg-muted);margin-top:2px;">Tienda de tu pareja</div>
+  </div>
+  <div class="derecha">
+    <a href="#" id="btnVolver">← Volver</a>
+  </div>
+</div>
+
+<!-- ================= VISTA: CATÁLOGO (entrada) ================= -->
+<div id="vistaCatalogo">
+  <div id="contenido">
+    <div class="seccionTitulo">En venta</div>
+    <div id="cajaCatalogo"></div>
+    <div id="vacioCatalogo" class="vacio" style="display:none;">
+      Todavía no hay nada a la venta. Activa un deseo desde “Mis deseos”.
+    </div>
+
+    <div id="enlacesAbajo">
+      <a href="#" id="linkDeseos">Mis deseos</a>
+      <a href="#" id="linkPedidos">Mis pedidos</a>
+    </div>
+  </div>
+</div>
+
+<!-- ================= VISTA: MIS DESEOS ================= -->
+<div id="vistaDeseos" style="display:none;">
+  <div id="contenidoDeseos">
+    <div class="seccionTitulo">Mi lista secreta</div>
+    <div id="listaDeseos"></div>
+    <div id="vacioDeseos" class="vacio" style="display:none;">
+      Todavía no has anotado ningún deseo.
+    </div>
+  </div>
+  <button id="btnNuevoDeseo">+ Anotar deseo</button>
+</div>
+
+<!-- ================= VISTA: MIS PEDIDOS ================= -->
+<div id="vistaPedidos" style="display:none;">
+  <div id="contenidoPedidos">
+    <div class="seccionTitulo">Pedidos</div>
+    <div id="pestanas">
+      <button type="button" id="tabComprados" class="on">Los que yo compré</button>
+      <button type="button" id="tabRecibidos">Los que me compraron</button>
+    </div>
+    <div id="listaComprados"></div>
+    <div id="vacioComprados" class="vacio" style="display:none;">No has comprado ningún deseo.</div>
+    <div id="listaRecibidos" style="display:none;"></div>
+    <div id="vacioRecibidos" class="vacio" style="display:none;">No te han comprado ningún deseo.</div>
+  </div>
+</div>
+
+<!-- ================= OVERLAY: nuevo / editar deseo ================= -->
+<div id="overlay">
+  <div id="formCard">
+    <h2 id="formTitulo">Anotar deseo</h2>
+    <div class="campo">
+      <label for="fNombre">El deseo</label>
+      <input id="fNombre" type="text" placeholder="Ej: Una cena a la luz de las velas" maxlength="60">
+    </div>
+    <div class="campo">
+      <label for="fDesc">Qué es exactamente (para ti, es secreto)</label>
+      <textarea id="fDesc" placeholder="Lo que quieres que haga o que te entregue…" maxlength="400"></textarea>
+      <div class="hint">Esto solo lo ves tú hasta que actives el deseo.</div>
+    </div>
+    <div id="formMsg"></div>
+    <div id="formBotones">
+      <button id="btnCancelarForm">Cancelar</button>
+      <button id="btnGuardarForm" class="btnPrincipal">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
+  onSnapshot, serverTimestamp, increment, runTransaction, getDoc, getDocs
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+import firebaseConfigBase from "../firebase-config.js";
+import { resolverFirebase, resolverTelegram, baseUrl, cargarUsuarios } from "../config.js";
+import { confirmar, aviso } from "../confirmar.js";
+
+const firebaseConfig = resolverFirebase(firebaseConfigBase);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const deseosRef = collection(db, "deseos");
+const comprasRef = collection(db, "comprasDeseos");
+const puntosUsuariosRef = collection(db, "puntosUsuarios");
+
+const _tg = resolverTelegram();
+const TELEGRAM_BOT_TOKEN = _tg.token;
+const TELEGRAM_CHAT_ID = _tg.chat;
+const APP_URL = baseUrl();
+
+// Valores de fábrica: se usan si el usuario no tiene numeros guardados.
+const ACT_POR_DEFECTO = 500;
+const PRECIO_POR_DEFECTO = 100;
+
+const CLAVE_LOCAL = "appPareja_quienSoy";
+let yo = null;
+let pareja = null;
+let usuarios = [];
+let balance = 0;
+let deseos = [];       // SOLO los mios (deseos/{id} donde duenio = yo)
+let compras = [];      // todas las compras que me tocan (comprador o vendedor)
+let vista = "catalogo";
+let pestaña = "comprados";
+let editandoId = null;
+
+function esc(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+function truncar(s, n){ s = String(s||""); return s.length > n ? s.slice(0, n-1) + "…" : s; }
+async function avisarTelegram(texto, url){
+  if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.indexOf("PON_AQUI") === 0) return;
+  if(!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID.indexOf("PON_AQUI") === 0) return;
+  try{
+    const cuerpo = { chat_id: TELEGRAM_CHAT_ID, text: texto };
+    if(url) cuerpo.reply_markup = { inline_keyboard: [[{ text: "Abrir 👀", url: url }]] };
+    await fetch("https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cuerpo)
+    }).then(x=>x.json());
+  }catch(e){}
+}
+function numConfig(valor, porDefecto){
+  const n = parseInt(valor, 10);
+  return (isFinite(n) && n > 0) ? n : porDefecto;
+}
+function miActivar(){ return numConfig(yo && yo.ptsActivar, ACT_POR_DEFECTO); }
+function miPrecio(){ return numConfig(yo && yo.precioCompra, PRECIO_POR_DEFECTO); }
+
+const el = (id)=> document.getElementById(id);
+const vistaCatalogoEl = el("vistaCatalogo");
+const vistaDeseosEl   = el("vistaDeseos");
+const vistaPedidosEl  = el("vistaPedidos");
+
+// ---------- navegación ----------
+function irA(cual){
+  vista = cual;
+  vistaCatalogoEl.style.display = (cual === "catalogo") ? "block" : "none";
+  vistaDeseosEl.style.display   = (cual === "deseos")   ? "block" : "none";
+  vistaPedidosEl.style.display  = (cual === "pedidos")  ? "block" : "none";
+  el("btnNuevoDeseo").style.display = (cual === "deseos") ? "block" : "none";
+  window.scrollTo(0, 0);
+}
+function ver(which){
+  if(vista === which) return;
+  irA(which);
+  if(window.history && history.pushState){
+    try{ history.pushState({centro: which}, "", "#" + which); }catch(e){}
+  }
+}
+el("btnVolver").onclick = (ev)=>{
+  ev.preventDefault();
+  if(vista === "catalogo"){ location.href = "index.html"; return; }
+  ver("catalogo");
+};
+el("linkDeseos").onclick  = (e)=>{ e.preventDefault(); ver("deseos"); };
+el("linkPedidos").onclick = (e)=>{ e.preventDefault(); ver("pedidos"); };
+window.addEventListener("popstate", ()=>{ vista = "__externo__"; irA("catalogo"); });
+
+// ---------- catálogo ----------
+function pintarCatalogo(){
+  const caja = el("cajaCatalogo");
+  caja.innerHTML = "";
+  // Solo los deseos ACTIVADOS por mi (los que estan en la tienda de mi pareja).
+  const enVenta = deseos.filter(d=> d.enVenta).sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
+  el("vacioCatalogo").style.display = enVenta.length ? "none" : "block";
+  el("cajaCatalogo").style.display = enVenta.length ? "flex" : "none";
+  enVenta.forEach(d=>{
+    const card = document.createElement("div");
+    card.className = "prod";
+    const nom = document.createElement("div");
+    nom.className = "pNom"; nom.textContent = d.nombre || "";
+    card.appendChild(nom);
+    if(d.descripcion){
+      const des = document.createElement("div");
+      des.className = "pDesc"; des.textContent = d.descripcion || "";
+      card.appendChild(des);
+    }
+    const pie = document.createElement("div");
+    pie.className = "pPie";
+    const precio = document.createElement("div");
+    precio.className = "pPrecio"; precio.textContent = miPrecio() + " pts";
+    pie.appendChild(precio);
+    const b = document.createElement("button");
+    b.className = "btnPrincipal";
+    b.textContent = "Comprar";
+    // NACE OCULTO: si no hay saldo no se compra (regla de la casa).
+    b.style.display = (balance >= miPrecio()) ? "block" : "none";
+    b.onclick = ()=> comprar(d.id);
+    pie.appendChild(b);
+    card.appendChild(pie);
+    caja.appendChild(card);
+  });
+}
+
+// ---------- lista de deseos ----------
+function pintarDeseos(){
+  const lista = el("listaDeseos");
+  lista.innerHTML = "";
+  const mios = deseos.slice().sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
+  el("vacioDeseos").style.display = mios.length ? "none" : "block";
+  mios.forEach(d=>{
+    const card = document.createElement("div");
+    card.className = "deseo" + (d.enVenta ? " enVenta" : "");
+    const nom = document.createElement("div");
+    nom.className = "dNom"; nom.textContent = d.nombre || "";
+    card.appendChild(nom);
+    if(d.descripcion){
+      const des = document.createElement("div");
+      des.className = "dDesc"; des.textContent = d.descripcion || "";
+      card.appendChild(des);
+    }
+    const est = document.createElement("div");
+    est.className = "dEstado " + (d.enVenta ? "vendido" : "secreto");
+    est.textContent = d.enVenta ? ("En venta · " + miPrecio() + " pts") : "Secreto";
+    card.appendChild(est);
+
+    const acc = document.createElement("div");
+    acc.className = "dAcciones";
+    if(!d.enVenta){
+      const bAct = document.createElement("button");
+      bAct.className = "btnPrincipal";
+      bAct.textContent = "Activar · " + miActivar() + " pts";
+      bAct.style.display = (balance >= miActivar()) ? "block" : "none";
+      bAct.onclick = ()=> activar(d.id);
+      acc.appendChild(bAct);
+    }
+    const bEdit = document.createElement("button");
+    bEdit.className = "btnOscuro"; bEdit.textContent = "Editar";
+    bEdit.onclick = ()=> abrirFormulario(d);
+    acc.appendChild(bEdit);
+    const bDel = document.createElement("button");
+    bDel.className = "btnRojo"; bDel.textContent = "Borrar";
+    bDel.onclick = ()=> borrarDeseo(d);
+    acc.appendChild(bDel);
+
+    card.appendChild(acc);
+    lista.appendChild(card);
+  });
+}
+
+// ---------- pedidos ----------
+function pintarPedidos(){
+  const mios = compras.filter(c=> c.comprador && c.comprador.id === yo.id)
+                      .sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
+  const recibidos = compras.filter(c=> c.vendedor && c.vendedor.id === yo.id)
+                      .sort((a,b)=> (b.creadoEn||0) - (a.creadoEn||0));
+
+  const lc = el("listaComprados");
+  lc.innerHTML = "";
+  el("vacioComprados").style.display = mios.length ? "none" : "block";
+  mios.forEach(c=>{
+    const card = document.createElement("div");
+    card.className = "pedido " + (c.estado || "pendiente");
+    const nom = document.createElement("div");
+    nom.className = "peNom"; nom.textContent = c.nombreDeseo || "";
+    card.appendChild(nom);
+    if(c.descripcion){
+      const des = document.createElement("div");
+      des.className = "peDesc"; des.textContent = c.descripcion || "";
+      card.appendChild(des);
+    }
+    const quien = document.createElement("div");
+    quien.className = "peQuien"; quien.textContent = "Se lo pediste a " + ((c.vendedor&&c.vendedor.nombre)||"—");
+    card.appendChild(quien);
+    const est = document.createElement("div");
+    est.className = "peEstado " + (c.estado || "pendiente");
+    est.textContent = (c.estado === "entregado") ? "Entregado" : "Pendiente";
+    card.appendChild(est);
+    if(c.estado !== "entregado"){
+      const b = document.createElement("button");
+      b.className = "btnVerde"; b.textContent = "Marcar entregado";
+      b.onclick = ()=> marcarEntregado(c.id);
+      card.appendChild(b);
+    }
+    lc.appendChild(card);
+  });
+
+  const lr = el("listaRecibidos");
+  lr.innerHTML = "";
+  el("vacioRecibidos").style.display = recibidos.length ? "none" : "block";
+  recibidos.forEach(c=>{
+    const card = document.createElement("div");
+    card.className = "pedido " + (c.estado || "pendiente");
+    const nom = document.createElement("div");
+    nom.className = "peNom"; nom.textContent = c.nombreDeseo || "";
+    card.appendChild(nom);
+    if(c.descripcion){
+      const des = document.createElement("div");
+      des.className = "peDesc"; des.textContent = c.descripcion || "";
+      card.appendChild(des);
+    }
+    const quien = document.createElement("div");
+    quien.className = "peQuien"; quien.textContent = ((c.comprador&&c.comprador.nombre)||"—") + " te lo compró. Tú lo entregas.";
+    card.appendChild(quien);
+    const est = document.createElement("div");
+    est.className = "peEstado " + (c.estado || "pendiente");
+    est.textContent = (c.estado === "entregado") ? "Entregado" : "Te toca entregarlo";
+    card.appendChild(est);
+    lr.appendChild(card);
+  });
+}
+function mostrarPestana(cual){
+  pestaña = cual;
+  const esC = (cual === "comprados");
+  el("tabComprados").classList.toggle("on", esC);
+  el("tabRecibidos").classList.toggle("on", !esC);
+  el("listaComprados").style.display = esC ? "block" : "none";
+  el("vacioComprados").style.display = esC ? "block" : "none";
+  el("listaRecibidos").style.display = esC ? "none" : "block";
+  el("vacioRecibidos").style.display = esC ? "none" : "block";
+}
+el("tabComprados").onclick = ()=> mostrarPestana("comprados");
+el("tabRecibidos").onclick = ()=> mostrarPestana("recibidos");
+
+function pintarTodo(){
+  pintarCatalogo();
+  pintarDeseos();
+  pintarPedidos();
+  if(vista === "pedidos") mostrarPestana(pestaña);
+}
+
+// ---------- acciones: activating / comprar / borrar / entregar ----------
+async function activar(id){
+  const d = deseos.find(x=> x.id === id);
+  if(!d || d.enVenta) return;
+  const ok = await confirmar({
+    titulo: "¿Activar este deseo?",
+    texto: "Se descuentan " + miActivar() + " pts y aparece en la tienda de " + (pareja ? pareja.nombre : "tu pareja") + ".",
+    ok: "Activar"
+  });
+  if(!ok) return;
+  try{
+    await runTransaction(db, async (t)=>{
+      const refSaldo = doc(db, "puntosUsuarios", yo.id);
+      const s = await t.get(refSaldo);
+      const actual = (s.exists() ? (s.data().balance || 0) : 0);
+      if(actual < miActivar()) throw new Error("saldo");
+      t.update(refSaldo, { balance: increment(-miActivar()) });
+      t.update(doc(db, "deseos", id), { enVenta: true, activadoEn: serverTimestamp() });
+    });
+    avisarTelegram("✨ " + yo.nombre + " activó un deseo para su tienda.", APP_URL + "Retos/centro.html");
+  }catch(e){
+    if(e && e.message === "saldo") aviso("No tienes puntos suficientes.");
+    else aviso("No se pudo activar. Revisa tu conexión.");
+  }
+}
+
+async function comprar(id){
+  const d = deseos.find(x=> x.id === id);
+  if(!d || !d.enVenta) return;
+  const ok = await confirmar({
+    titulo: "¿Comprar este deseo?",
+    texto: "Se descuentan " + miPrecio() + " pts y " + (pareja ? pareja.nombre : "tu pareja") + " tiene que entregártelo.",
+    ok: "Comprar"
+  });
+  if(!ok) return;
+  try{
+    const refCompra = doc(collection(db, "comprasDeseos"));
+    await runTransaction(db, async (t)=>{
+      const refSaldo = doc(db, "puntosUsuarios", yo.id);
+      const s = await t.get(refSaldo);
+      const actual = (s.exists() ? (s.data().balance || 0) : 0);
+      if(actual < miPrecio()) throw new Error("saldo");
+      t.update(refSaldo, { balance: increment(-miPrecio()) });
+      t.set(refCompra, {
+        deseoId: id,
+        nombreDeseo: d.nombre || "",
+        descripcion: d.descripcion || "",
+        precio: miPrecio(),
+        comprador: { id: yo.id, nombre: yo.nombre },
+        vendedor: pareja ? { id: pareja.id, nombre: pareja.nombre } : null,
+        estado: "pendiente",
+        creadoEn: serverTimestamp(),
+        entregadoEn: null
+      });
+    });
+    avisarTelegram("🛍 " + yo.nombre + " compró un deseo: " + (d.nombre||"") + ". ¡A entregar!", APP_URL + "Retos/centro.html");
+  }catch(e){
+    if(e && e.message === "saldo") aviso("No tienes puntos suficientes.");
+    else aviso("No se pudo comprar. Revisa tu conexión.");
+  }
+}
+
+async function marcarEntregado(id){
+  const ok = await confirmar({
+    titulo: "¿Marcar como entregado?",
+    texto: "Ya recibiste lo que pediste.",
+    ok: "Entregado"
+  });
+  if(!ok) return;
+  try{
+    await updateDoc(doc(db, "comprasDeseos", id), { estado: "entregado", entregadoEn: serverTimestamp() });
+  }catch(e){ aviso("No se pudo marcar. Revisa tu conexión."); }
+}
+
+async function borrarDeseo(d){
+  const ok = await confirmar({
+    aviso: true,
+    titulo: "¿Borrar este deseo?",
+    texto: d.enVenta
+      ? "Está a la venta en la tienda de " + (pareja ? pareja.nombre : "tu pareja") + ". Se quita de ahí y no se devuelven los puntos."
+      : "No se puede deshacer.",
+    ok: "Borrar"
+  });
+  if(!ok) return;
+  try{
+    await deleteDoc(doc(db, "deseos", d.id));
+    avisarTelegram("🗑 " + yo.nombre + " borró un deseo.", APP_URL + "Retos/centro.html");
+  }catch(e){ aviso("No se pudo borrar. Revisa tu conexión."); }
+}
+
+// ---------- overlay: anotar / editar deseo ----------
+function abrirFormulario(d){
+  editandoId = d ? d.id : null;
+  el("formTitulo").textContent = d ? "Editar deseo" : "Anotar deseo";
+  el("fNombre").value = d ? (d.nombre||"") : "";
+  el("fDesc").value   = d ? (d.descripcion||"") : "";
+  el("formMsg").textContent = "";
+  el("overlay").style.display = "flex";
+  el("fNombre").focus();
+}
+function cerrarFormulario(){
+  el("overlay").style.display = "none";
+  editandoId = null;
+}
+el("btnNuevoDeseo").onclick = ()=> abrirFormulario(null);
+el("btnCancelarForm").onclick = cerrarFormulario;
+el("btnGuardarForm").onclick = async ()=>{
+  const nombre = el("fNombre").value.trim().slice(0, 60);
+  const desc   = el("fDesc").value.trim().slice(0, 400);
+  if(!nombre){ el("formMsg").textContent = "Escribe el deseo."; return; }
+  try{
+    if(editandoId){
+      await updateDoc(doc(db, "deseos", editandoId), { nombre, descripcion: desc });
+    }else{
+      await addDoc(deseosRef, {
+        nombre, descripcion: desc,
+        duenio: { id: yo.id, nombre: yo.nombre },
+        enVenta: false,
+        creadoEn: serverTimestamp()
+      });
+    }
+    cerrarFormulario();
+  }catch(e){ el("formMsg").textContent = "No se pudo guardar. Revisa tu conexión."; }
+};
+
+// ---------- lecturas en vivo ----------
+function escuchar(){
+  // Solo mis deseos (se listen todos y se filtran por duenio).
+  onSnapshot(deseosRef, (snap)=>{
+    deseos = snap.docs
+      .map(d=>({ id: d.id, ...d.data() }))
+      .filter(d=> d.duenio && d.duenio.id === yo.id);
+    pintarTodo();
+  });
+  // Compras: me tocan las que YO compre y las que me compraron.
+  onSnapshot(comprasRef, (snap)=>{
+    compras = snap.docs
+      .map(d=>({ id: d.id, ...d.data() }))
+      .filter(c=> (c.comprador && c.comprador.id === yo.id) || (c.vendedor && c.vendedor.id === yo.id));
+    pintarTodo();
+  });
+  // Mi saldo.
+  onSnapshot(puntosUsuariosRef, (snap)=>{
+    const mi = snap.docs.find(d=> d.id === yo.id);
+    balance = mi ? (mi.data().balance || 0) : 0;
+    pintarTodo();
+  });
+}
+
+// ---------- arranque ----------
+async function iniciar(){
+  try{ yo = JSON.parse(localStorage.getItem(CLAVE_LOCAL) || "null"); }catch(e){}
+  if(!yo || !yo.id){
+    document.body.innerHTML = '<div style="padding:40px 24px;text-align:center;color:var(--fg-muted);">Elige tu usuario en el <a href="../index.html" style="color:var(--teal);">inicio</a> para usar el Centro.</div>';
+    return;
+  }
+  usuarios = await cargarUsuarios(db, getDoc, doc, []);
+  pareja = usuarios.find(u=> u && u.id && u.id !== yo.id && !u.invitado)
+          || usuarios.find(u=> u && u.id && u.id !== yo.id) || null;
+  el("nombrePareja").textContent = pareja ? pareja.nombre : "tu pareja";
+  if(pareja) el("subAqui").textContent = "Lo que " + pareja.nombre + " tiene que entregarte";
+
+  // Si entro por hash (#deseos / #pedidos), abro esa vista de una vez.
+  const h = (location.hash || "").replace("#","");
+  irA((h === "deseos" || h === "pedidos") ? h : "catalogo");
+
+  mostrarPestana("comprados");
+  if(!pareja){
+    aviso("Registra a tu pareja para usar el Centro.");
+  }
+  escuchar();
+}
+iniciar();
+
+</script>
+
+</body>
+</html>
