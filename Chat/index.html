@@ -11,7 +11,7 @@
 <style>
   :root{
     --bg:#120e1c; --bg-2:#1a1428; --card:#201933; --card-border:#322a4a;
-    --fg:#f4f1fb; --fg-muted:#a599c7; --coral:#ff6a5c; --teal:#2fd9c7;
+    --fg:#f4f1fb; --fg-muted:#a599c7; --coral:#ff6a5c; --teal:#2fd9c7; --verde:#6dffa0;
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ margin:0; padding:0; min-height:100%; width:100%; color:var(--fg);
@@ -25,6 +25,14 @@
     background:linear-gradient(90deg, var(--coral), var(--teal));
     -webkit-background-clip:text; background-clip:text; color:transparent; }
   #btnVolver{ background:none; color:var(--fg-muted); font-size:.75rem; text-decoration:underline; padding:4px; font-family:'Inter',sans-serif; }
+  /* Los dos botones de la derecha. "Volver" se queda en la esquina, como en
+     toda la app (regla de la casa); "Invitar" queda a su izquierda. */
+  .filaDer{ display:flex; align-items:center; gap:14px; }
+  #btnInvitar{ background:var(--verde); color:#06281a; border:none; border-radius:12px;
+    padding:8px 12px; cursor:pointer; font-family:'Chakra Petch',sans-serif;
+    font-weight:700; font-size:.78rem; white-space:nowrap; }
+  #btnInvitar:active{ transform:scale(.97); }
+  #btnInvitar:disabled{ opacity:.5; cursor:default; }
   #presencia{ font-size:.8rem; color:var(--fg-muted); margin-top:4px; }
   #presencia .on{ color:var(--teal); }
   #lista{ flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:10px; }
@@ -51,7 +59,10 @@
 <div id="encabezado">
   <div class="fila">
     <h1>Chat 💬</h1>
-    <a href="../index.html#com" id="btnVolver">← Volver</a>
+    <span class="filaDer">
+      <button id="btnInvitar" type="button">Invitar 🔔</button>
+      <a href="../index.html#com" id="btnVolver">← Volver</a>
+    </span>
   </div>
   <div id="presencia">…</div>
 </div>
@@ -72,7 +83,8 @@ import {
   onSnapshot, query, orderBy, limit, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, cargarUsuarios } from "../config.js";
+import { resolverFirebase, cargarUsuarios, resolverTelegram, baseUrl } from "../config.js";
+import { vigilarInvitaciones } from "../pestana.js";
 
 const CLAVE_LOCAL = "appPareja_quienSoy";
 const listaEl = document.getElementById("lista");
@@ -182,6 +194,75 @@ async function enviar(){
 }
 btnEnviar.onclick = enviar;
 textoEl.addEventListener("keydown", (e)=>{ if(e.key === "Enter") enviar(); });
+
+// ====== invitar ======
+// Lo mismo que ya hacen Citas/ y Retos/: el aviso sale por Telegram CON un
+// botón "Abrir 👀" que lleva a la página. Y ADEMAS se escribe en la base de la
+// pareja, que es lo que enciende la campana en la pestaña del otro (ver
+// ../pestana.js). El Telegram es para cuando tiene la app cerrada; la base es
+// para cuando la tiene abierta en otra pestaña.
+const _tg = resolverTelegram();
+const TELEGRAM_BOT_TOKEN = _tg.token;
+const TELEGRAM_CHAT_ID = _tg.chat;
+const APP_URL = baseUrl();
+const REF_INVITO = doc(db, "invitosChat", "actual");
+const btnInvitar = document.getElementById("btnInvitar");
+
+async function avisarTelegram(texto, url){
+  if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.indexOf("PON_AQUI") === 0) return;
+  if(!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID.indexOf("PON_AQUI") === 0) return;
+  try{
+    const cuerpo = { chat_id: TELEGRAM_CHAT_ID, text: texto };
+    if(url) cuerpo.reply_markup = { inline_keyboard: [[{ text: "Abrir 👀", url: url }]] };
+    const r = await fetch("https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cuerpo)
+    }).then(x=>x.json());
+    // Un token/chat ID malo responde 200 con ok:false: hay que leerlo, o el
+    // aviso se pierde sin que nadie sepa por que.
+    if(r && r.ok === false) throw new Error(r.description || "Telegram rechazo el aviso");
+  }catch(e){
+    try{ localStorage.setItem("pareja_tg_error", String((e && e.message) || e)); }catch(x){}
+  }
+}
+
+// El boton de "Volver" es el que se apaga mientras se manda, para que un doble
+// toque no mande dos mensajes: un Telegram enviado no se borra.
+let inviting = false;
+btnInvitar.onclick = async ()=>{
+  if(inviting) return;
+  inviting = true;
+  btnInvitar.disabled = true;
+  const textoAntes = btnInvitar.textContent;
+  btnInvitar.textContent = "Mandando…";
+  try{
+    const pareja = (nombres||[]).find(u => u && u.id && u.id !== yo.id && !u.invitado)
+                || (nombres||[]).find(u => u && u.id && u.id !== yo.id);
+    // Primero la base: eso es lo que prende la campana. `para` va con el OTRO
+    // id, y por eso quien manda NO ve la campana de su propia invitación.
+    await setDoc(REF_INVITO, {
+      de: yo.id,
+      deNombre: yo.nombre,
+      para: pareja ? pareja.id : "",
+      creadoEn: serverTimestamp(),
+      visto: false
+    });
+    await avisarTelegram("💬 " + yo.nombre + " te está esperando en el Chat", APP_URL + "Chat/");
+    btnInvitar.textContent = "✓ Enviada";
+    setTimeout(()=>{ btnInvitar.textContent = textoAntes; }, 2000);
+  }catch(e){
+    btnInvitar.textContent = textoAntes;
+    try{ localStorage.setItem("pareja_tg_error", String((e && e.message) || e)); }catch(x){}
+  }
+  inviting = false;
+  btnInvitar.disabled = false;
+};
+
+// La campana de la pestaña. Se enciende sola con lo que escriba el otro.
+// `esChat` porque AQUI es donde la campana se apaga al entrar: en el resto de
+// pantallas, entrar a la pestaña saca un cartelito en vez de apagarla.
+vigilarInvitaciones(db, { esChat:true });
 </script>
 
 </body>

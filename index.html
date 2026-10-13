@@ -440,6 +440,11 @@ import { confirmar } from "./confirmar.js";
 // mirando la pantalla sin hacer nada. Va en su propio modulo (y no metido en el
 // codigo del submenú) para que, si algo falla, la pantalla siga igual.
 import { glueSiEstaQuieto, glueOlvidado } from "./glue.js";
+// Campana en la pestaña: si alguien te invitó al Chat, el ícono de la pestaña
+// se cambia por una campana aunque estés viendo otra cosa. OJO: esto solo
+// funciona en Chrome de computadora; en el celular los navegadores no dejan
+// cambiar el ícono de la pestaña.
+import { vigilarInvitaciones } from "./pestana.js";
 // Modo invitado: la regla de "cuándo eres invitado de verdad" vive aquí.
 import {
   CLAVE_BACKUP, CLAVE_LOCAL, hayRespaldo, soyInvitado, quedasteMedioCamino,
@@ -526,6 +531,11 @@ function mostrarMenu(nombre){
   }
   abrirSegunHash(h);
   renderPacks();
+  // La campana de la pestaña. Va aqui y no al arrancar porque es justo cuando
+  // ya se sabe que hay base valida; si no hay, `vigilarInvitaciones` no hace
+  // nada y el menu sigue igual. Va en su propio modulo: si algo falla, aqui no
+  // se rompe nada (mismo criterio que glue.js).
+  try{ vigilarInvitaciones(dbActual()); }catch(e){}
 }
 
 // Botón "atrás" / "adelante" del navegador. Ahora los submenús SÍ son pasos del

@@ -2534,6 +2534,100 @@ la izquierda.
 `renderPacksDeVerdad()` no lo toca. Un submenú con tarjetas escritas a mano no
 puede depender del catálogo para que su botón aparezca.
 
+### Invitar al Chat, y la campana en la pestaña del navegador (nuevo, oct-2026)
+
+**Lo que pidió Fredy:** un botón **"Invitar"** en verde en Chat que mande un
+aviso a la pareja, y que la otra computadora **se entere aunque la pestaña esté
+en segundo plano**.
+
+**Por qué el ícono de la pestaña y no un aviso dentro de la página.** Una pestaña
+escondida **no se ve**: una pancarta se dibuja detrás y no se nota hasta que
+cambias a esa pestaña. El ícono de la pestaña es lo único que se ve **siempre**,
+esté o no a la vista. Por eso el camino elegido es ese y no un aviso en pantalla.
+
+**Las dos mitades, y por qué hacen falta las dos:**
+
+| | Para qué |
+|---|---|
+| **Telegram** | Le avisa aunque tenga la app **cerrada** |
+| **La base** (`invitosChat/actual`) | Le enciende la 🔔 en la pestaña si tiene la app **abierta en otra pestaña** |
+
+Si se mandara solo el Telegram, la app no tendría nada que saber y la campana no
+podría existir.
+
+**Lo que quedó:**
+
+| Pieza | Qué hace |
+|---|---|
+| `#btnInvitar` (verde, junto a "← Volver") | Escribe la invitación y manda el Telegram. **Sin preguntar** (decisión de Fredy): manda directo |
+| Mensaje | `💬 {nombre} te está esperando en el Chat` |
+| Botón del Telegram | `Abrir 👀` → la dirección de `Chat/` |
+| `pestana.js` (nuevo, en la raíz) | `vigilarInvitaciones(db, {esChat})`: escucha `invitosChat/actual` y maneja la campana |
+| `index.html` y `Chat/index.html` | Lo llaman; `Chat/` es el que pasa `esChat:true` |
+
+**El hueco que había, y cómo quedó (decisión de Fredy, oct-2026).**
+
+La campana se apagaba cuando **cualquier** pestaña pasaba a verse. El problema:
+**ver la pestaña no es ver la invitación.** Si ella tenía la app en segundo plano
+en el **menú**, la campana se apagaba al entrar y lo que aparecía era el menú: la
+invitación quedaba marcada como vista y **no volvía a salir nunca**.
+
+Se corrigió con dos cosas a la vez:
+
+| | Qué hace |
+|---|---|
+| **La campana se apaga SOLO en Chat** | En el menú o en cualquier otra pantalla, entrar **no** la apaga. Sigue ahí hasta que abra el Chat de verdad |
+| **El cartelito** | Al entrar a una pestaña que **no** es Chat, sale un aviso: *"Te invitaron al Chat — Ve a Comunicaciones → Chat"*. Sin él, una campana prendida no significaba nada |
+
+**El cartelito NO salta al abrir la app** (primera vez que la pestaña se ve): ahí
+la campana ni siquiera ha tenido tiempo de prenderse. Solo sale cuando **vuelve**
+a una pestaña que ya tenía abierta.
+
+**Vigencia de 30 minutos.** Si nadie abre el Chat, la invitación **se ignora**
+después de 30 minutos, para que la campana no salga cada vez que se abra la app
+con algo pendiente eternamente. Sin fecha legible la campana **no** se prende:
+mejor no inventar una invitación vieja que sí se vaya sola.
+
+**OJO: los 30 minutos necesitan un reloj, no solo la comparación.** El
+`onSnapshot` solo dispara cuando el documento **cambia**, y si nadie manda otra
+invitación no vuelve a disparar: comparando nada más, la campana se quedaba
+prendida pasada la hora. Por eso hay un `setTimeout` (`programarVigencia()`) que
+apaga la campana solo cuando se acaba el tiempo. **Ese reloj no escribe nada en
+la base**: marcar `visto:true` sería mentir, porque nadie la llegó a ver.
+
+**El cerrojo `yaVigilado`.** `mostrarMenu()` del menú puede llamar
+`vigilarInvitaciones()` dos veces (si se cambia de usuario). Sin el cerrojo se
+registraba el `visibilitychange` dos veces y el cartelito se abría encimado dos
+veces (`confirmar.js` cierra el anterior, pero el efecto era raro).
+
+**Detalle de Chat:** si abres el Chat con la pestaña ya a la vista, **no** hay
+ningún `visibilitychange` que dispare nada, así que la campana se quedaría
+prendida en la propia pantalla del chat. Por eso `pintar()` revisa eso aparte.
+
+**El ícono se cambia con un `<link rel="icon">` nuevo**, dibujado en un canvas.
+Lleva `data-campana="1"` y **solo se borra ese**: si la página ya traía su propio
+ícono (`index.html` trae `icon-192.png`), ese nunca se toca y vuelve a ser el de
+la pestaña al quitar la campana.
+
+**Lo que NO hace, y está dicho en `pestana.js` para que no se prometa:**
+
+- **Solo en Chrome/Edge de computadora.** En Android y iPhone los navegadores no
+  permiten cambiar el ícono de la pestaña. No hay forma.
+- **No avisa con la app cerrada.** Haría falta un *service worker* y claves de
+  push, que este repo **no tiene** (y Fredy dijo que no le interesa).
+- **Solo está en `index.html` y `Chat/`.** En las demás pantallas no se prende.
+  Agregarlo es **una línea por pantalla** (el import y la llamada).
+
+**El botón "Invitar" quedó a la IZQUIERDA de "← Volver"**, no a la derecha como
+se pidió, para que **"Volver" siga en la esquina**: es regla de la casa (ver
+"Botones de volver y de esquina"). Si se prefiere al revés, se invierte el orden
+dentro de `.filaDer` y ya.
+
+**OJO con `confirmar.js`:** `abrir()` cierra el cartelito anterior como "no". Si
+ella tiene el menú y el Chat abiertos en dos pestañas, el cartelito solo le sale
+en la **última** que abra. La campana sí le sale en las dos. No rompe nada, pero
+no es "siempre".
+
 ### Dónde va cada "Volver"
 
 **Todos a la derecha.** Antes estaban repartidos:
