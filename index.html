@@ -532,6 +532,22 @@ function mostrarMenu(nombre){
   renderPacks();
 }
 
+window.addEventListener("hashchange", ()=>{
+  if(location.hash === "#juegos") abrirJuegos();
+  else if(location.hash === "#experiencias") abrirExp();
+  else if(location.hash === "#retos" || location.hash === "#extras") abrirRetos();
+  else if(location.hash === "#com") abrirCom();
+  else{
+    document.getElementById("vistaMenu").style.display = "block";
+    document.getElementById("vistaExp").style.display = "none";
+    document.getElementById("vistaJuegos").style.display = "none";
+    document.getElementById("vistaRetos").style.display = "none";
+    document.getElementById("vistaCom").style.display = "none";
+    iconoMenu("menu");
+  }
+  renderPacks();
+});
+
 // Icono dibujado de Diablitos: diablito malo con risita maligna.
   // Se mide en "em" para que crezca y se encoja con el tamano de letra del
   // menu, igual que un emoji. Para cambiarlo: editar estas rutas y ya.
