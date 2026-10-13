@@ -399,7 +399,6 @@ h1{
   </div>
 
   <div class="pantalla" id="pantallaCfg" style="display:none">
-    <button id="cerrarCfg" class="volver">‹ Volver</button>
     <div class="col">
       <p class="kicker">Diablitos</p>
       <h2 class="tituloCfg">Mensajes</h2>
@@ -1260,7 +1259,7 @@ function arrancar(){
   }catch(e){}
 }
 
-document.getElementById("volverSala").addEventListener("click", ()=>{ location.href = "../index.html#juegos"; });
+document.getElementById("volverSala").addEventListener("click", ()=>{ cerrarCfg(); });
 
 btnIr.addEventListener("click", ()=>{
   if(!destino) return;
