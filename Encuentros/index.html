@@ -912,7 +912,7 @@ window.addEventListener("popstate", (e)=>{
     try{ history.go(1); }catch(e){ reponiendo = false; }
     return;
   }
-  entrar();
+  ver("vistaLista", false);
 });
 try{ history.replaceState({ v: "vistaLista" }, ""); }catch(e){}
 document.getElementById("btnEsperaRefrescar").onclick = ()=>{ entrar(); };

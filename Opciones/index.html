@@ -1431,7 +1431,7 @@ window.addEventListener("popstate", ()=>{
   if(reponiendo){ reponiendo = false; return; }
   const enJuego = jugando && document.getElementById("vistaPlayer").classList.contains("ver");
   if(enJuego){ reponiendo = true; try{ history.go(1); }catch(e){ reponiendo = false; } return; }
-  entrar();
+  ver("vistaInicio", false);
 });
 try{ history.replaceState({ v: "vistaInicio" }, ""); }catch(e){}
 document.getElementById("lnkInicio").addEventListener("click", (e)=>{

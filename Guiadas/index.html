@@ -539,18 +539,7 @@ function ver(id, guardar){
   window.scrollTo(0, 0);
 }
 window.addEventListener("popstate", (e)=>{
-  const v = (e.state && e.state.v) || "vistaLista";
-  const act = e.state && e.state.act;
-  if(v === "vistaEditar" && act){
-    abrirEditor(act, false);
-  }else if(v === "vistaConfig"){
-    pintarLista("listaActsCfg", "editar");
-    ver("vistaConfig", false);
-  }else if(v === "vistaPlayer"){
-    entrar();
-  }else{
-    entrar();
-  }
+  ver("vistaLista", false);
 });
 try{ history.replaceState({ v: "vistaLista", act: null }, ""); }catch(e){}
 document.getElementById("btnCfg").onclick = ()=>{
