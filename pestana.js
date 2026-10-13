@@ -19,8 +19,13 @@
 //     colgada para siempre si nadie abre el Chat.
 //   - La campana se apaga SOLO en Chat, y solo con la pestaña a la vista: entrar
 //     al menu NO la apaga, porque ver la pestaña no es ver la invitación.
-//   - En cualquier otra pantalla, al entrar a la pestaña sale un cartelito que
-//     explica qué es. Sin el cartelito la campana prendida no significaba nada.
+//   - El cartelito sale cuando la invitación se hace visible, y visible quiere
+//     decir las dos cosas: que la página está a la vista AHORA, o que la
+//     invitación acaba de llegar con la página ya a la vista. Antes solo se
+//     decía en el segundo caso y con una barrera que tapaba el primero: la
+//     campana salía y al entrar a la pestaña no pasaba nada (lo reportó Fredy).
+//   - Con la invitación entrando, suena un bip. Chrome solo lo deja si el
+//     usuario ya tocó esa página alguna vez; si nunca la tocó, no hay bip.
 //
 //  Lo que NO hace, y conviene saberlo antes de prometerlo:
 //   - SOLO en computadora con Chrome o Edge. En el celular los navegadores no
@@ -49,7 +54,9 @@ let linkCampana = null;
 let refInv = null;
 let hayPendiente = false;
 let esChat = false;
-let yaHuboTransicion = false;
+// El cartelito se dice UNA vez por invitación. Sin esto, cada vez que volvieras
+// a la pestaña saltaría otra vez, y sería fastidioso.
+let cartelitoYaSalio = false;
 // Cerrojo: `mostrarMenu()` del menú puede llamar esto dos veces (si se cambia
 // de usuario), y sin esto se registraría el `visibilitychange` dos veces y el
 // cartelito se abriría encimado dos veces.
@@ -132,16 +139,26 @@ function programarVigencia(creadoEn){
 }
 
 function pintar(mia, creadoEn){
+  const antes = hayPendiente;
   hayPendiente = !!mia;
   if(hayPendiente){
     ponerCampana();
     programarVigencia(creadoEn);
+    // Si la invitación llega con la pestaña YA a la vista, se dice ahí mismo:
+    // no hay nada que esperar a que vuelva. Antes solo se decía al cambiar de
+    // pestaña, y con una barrera que lo tapaba la PRIMERA vez (bug que reportó
+    // Fredy: la campana salía, pero al entrar a la pestaña no pasaba nada).
+    avisarInvitacion();
     // Si la pestaña que se está viendo ES el Chat, la invitación ya se está
     // viendo: no tiene sentido dejar la campana en la propia pantalla del chat.
     // Esto también cubre abrir Chat con la pestaña ya a la vista, donde no hay
     // ningún `visibilitychange` que dispare nada.
     if(esChat && !document.hidden) marcarVista();
+    // El bip solo cuando la invitación ACABABA de aparecer, no en cada aviso
+    // que llegue de la base (si no, sonaría repetido).
+    if(!antes) bipInvitacion();
   }else{
+    cartelitoYaSalio = false;
     quitarCampana();
     try{ clearTimeout(relojVigencia); }catch(e){}
   }
@@ -158,10 +175,51 @@ async function marcarVista(){
 }
 
 function avisarInvitacion(){
+  // Se dice solo si: hay algo pendiente, la pestaña se PUEDE ver (si está
+  // escondida el cartelito no serviría de nada: para eso está la campana), no
+  // es el Chat (ahí ya la está viendo) y no se dijo antes en esta invitación.
+  if(!hayPendiente || document.hidden || esChat || cartelitoYaSalio) return;
+  cartelitoYaSalio = true;
   aviso({
     titulo: "Te invitaron al Chat",
     texto: "Ve a Comunicaciones → Chat para platicar."
   });
+}
+
+// ---------- el bip ----------
+// Chrome NO deja sonar nada si el usuario nunca ha tocado esa página: el
+// contexto de audio arranca "suspendido" y solo se abre con un toque previo.
+// Por eso se intenta abrir con el PRIMER toque, tecla o rueda de la página.
+// Si nunca hubo ninguno, no hay bip: es el navegador, no un error.
+let ctxSonido = null;
+function abrirSonido(){
+  try{
+    if(ctxSonido) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    ctxSonido = new AC();
+    if(ctxSonido.state === "suspended") ctxSonido.resume();
+  }catch(e){ ctxSonido = null; }
+}
+["pointerdown", "keydown", "wheel", "touchstart"].forEach(ev=>{
+  window.addEventListener(ev, abrirSonido, { once:true, passive:true });
+});
+
+// Mismo sonido que usan Citas/ y Retos/, y con el MISMO silencio que los fuegos
+// artificiales (`fuegos_mute`): si ese botón está apagado, aquí tampoco suena.
+function bipInvitacion(){
+  try{ if(localStorage.getItem("fuegos_mute") === "1") return; }catch(e){}
+  try{
+    if(!ctxSonido || ctxSonido.state !== "running") return;
+    const t = ctxSonido.currentTime;
+    const o = ctxSonido.createOscillator(), g = ctxSonido.createGain();
+    o.connect(g); g.connect(ctxSonido.destination);
+    o.type = "sine"; o.frequency.value = 880;
+    g.gain.setValueAtTime(0.001, t);
+    g.gain.linearRampToValueAtTime(0.18, t + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    o.start(t); o.stop(t + 0.5);
+  }catch(e){}
 }
 
 /**
@@ -186,13 +244,7 @@ export function vigilarInvitaciones(db, opciones){
   }catch(e){}
   document.addEventListener("visibilitychange", ()=>{
     if(document.hidden) return;
-    // En la PRIMERA vez que la pestaña se ve no se avisa: si abres la app con
-    // una invitación pendiente, el cartelito saltando de entrada avienta.
-    // El cartelito es para cuando VOLVES a una pestaña que ya tenías abierta.
-    const avisar = yaHuboTransicion;
-    yaHuboTransicion = true;
-    if(!hayPendiente) return;
-    if(esChat) marcarVista();
-    else if(avisar) avisarInvitacion();
+    if(esChat && hayPendiente) marcarVista();
+    else avisarInvitacion();
   });
 }

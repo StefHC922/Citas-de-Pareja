@@ -2579,9 +2579,57 @@ Se corrigió con dos cosas a la vez:
 | **La campana se apaga SOLO en Chat** | En el menú o en cualquier otra pantalla, entrar **no** la apaga. Sigue ahí hasta que abra el Chat de verdad |
 | **El cartelito** | Al entrar a una pestaña que **no** es Chat, sale un aviso: *"Te invitaron al Chat — Ve a Comunicaciones → Chat"*. Sin él, una campana prendida no significaba nada |
 
-**El cartelito NO salta al abrir la app** (primera vez que la pestaña se ve): ahí
-la campana ni siquiera ha tenido tiempo de prenderse. Solo sale cuando **vuelve**
-a una pestaña que ya tenía abierta.
+### 🐞 El cartelito no salía — bug reportado por Fredy (corregido oct-2026)
+
+**Lo que pasó:** la campana sí se prendía, pero al entrar a la pestaña **no salía
+el cartelito**. Fredy lo probó 3 veces y las 3 fue la primera vez que entraba a esa
+pestaña.
+
+**La causa:** había puesto una barrera, `yaHuboTransicion`, para que el cartelito
+**no** saltara al abrir la app (un cartelito de entrada se avienta). El problema es
+que esa barrera tapaba **precisamente el caso bueno**: si la invitación llega con
+la pestaña en segundo plano y el usuario entra a ella **por primera vez**, no se
+decía nada. La barrera no distinguía "abrir la app" de "volver a una pestaña que ya
+tenías abierta", y son cosas distintas.
+
+**El arreglo:** quitar la barrera y cambiar la regla a algo que sí distingue las
+dos. El cartelito sale cuando la invitación **se vuelve visible**, y visible son
+las dos cosas:
+
+| Cuándo | Qué pasa |
+|---|---|
+| Llega la invitación **con la pestaña ya a la vista** | Cartelito ahí mismo, sin esperar a nada |
+| La pestaña **pasa a verse** y hay algo pendiente | Cartelito |
+| La pestaña está escondida | **No hay cartelito**: no se vería. Para eso está la campana |
+| Es el Chat | No hay cartelito: ahí ya la está viendo, y se marca como vista |
+| Ya se dijo en esta invitación | No se repite (`cartelitoYaSalio`) |
+
+**El cartelito se dice UNA vez por invitación.** Al apretar "Entendido" **no** se
+marca como vista: la campana sigue prendida hasta que abra el Chat. Es a propósito;
+si se marcara al leer el cartelito, volvería el hueco que se estaba tapando.
+
+**Regla que queda:** **antes de poner una barrera "solo la primera vez", pregúntate
+si el caso que tapa es el caso que se quiere tapar.** Aquí las dos cosas se
+parecían y no lo eran.
+
+### El bip de la invitación (oct-2026)
+
+**Fredy lo pidió a prueba:** "lo probamos y si no gusta se le quita". Es el mismo
+sonido y la misma forma que `bip()` de `Citas/` y `Retos/` (un oscilador, no un
+archivo de audio), y respeta **el mismo silencio** que los fuegos artificiales
+(`fuegos_mute`): si ese botón está apagado, aquí tampoco suena.
+
+**Lo que hay que saber antes de probarlo:** Chrome **no deja sonar nada** si el
+usuario nunca ha tocado esa página. El contexto de audio arranca *suspended* y solo
+se abre con un toque previo. Por eso `abrirSonido()` se engancha al primer
+`pointerdown`/`keydown`/`wheel`/`touchstart`. **Si la pestaña se abrió y nadie la
+tocó nunca, no hay bip.** Es el navegador, no un error.
+
+Además: suena en **todas** las pestañas de la app que estén pendientes, y si esa
+pestaña está silenciada en Chrome no se oye.
+
+**Suena una sola vez**: `pintar()` compara si la invitación *acaba* de pasar de
+"nada" a "pendiente". Sin eso, cada aviso de la base lo volvería a tocar.
 
 **Vigencia de 30 minutos.** Si nadie abre el Chat, la invitación **se ignora**
 después de 30 minutos, para que la campana no salga cada vez que se abra la app
