@@ -75,6 +75,36 @@
     font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1rem; color:var(--bg);
     background:linear-gradient(90deg, var(--coral), var(--teal)); }
   #escribiendo{ font-size:.8rem; color:var(--fg-muted); padding:0 20px 6px; display:none; }
+  /* ---------- caja de ajustes (engrane) ----------
+     Antes el panel se abria DENTRO del encabezado y empujaba el chat hacia abajo:
+     se "~distorsionaba" toda la pantalla (reportado por Fredy, oct-2026).
+     Ahora es una caja flotante en el centro, con la misma pinta que las de
+     confirmar.js. Se copia ese patron a proposito: es el que ya conoce la app.
+     OJO: los nombres llevan prefijo "acCfg" y NO "cf" porque confirmar.js mete sus
+     propias reglas al vuelo y aqui se invadirian. */
+  #modalCfg{ position:fixed; inset:0; z-index:95; background:rgba(0,0,0,.6);
+    display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+  .acCfgCaja{ width:100%; max-width:380px; text-align:center;
+    background:var(--card); border:1px solid var(--teal); border-radius:16px; padding:22px 20px; }
+  .acCfgTitulo{ width:fit-content; margin:0 auto; font-family:'Chakra Petch',sans-serif;
+    font-weight:700; font-size:1.1rem; line-height:1.4;
+    background:linear-gradient(90deg, var(--coral), var(--teal));
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .acCfgTexto{ font-size:.85rem; line-height:1.5; margin-top:8px; color:var(--fg-muted); }
+  .acCfgLabel{ display:block; text-align:left; font-size:.75rem; color:var(--fg-muted); margin:16px 0 6px; }
+  .acCfgCaja input{ width:100%; border-radius:12px; border:1px solid var(--card-border);
+    background:var(--bg); color:var(--fg); padding:12px; font-size:.95rem; font-family:'Inter',sans-serif; }
+  .acCfgOk{ width:100%; margin-top:16px; padding:16px; margin-bottom:10px; border:none;
+    border-radius:16px; cursor:pointer; font-family:'Chakra Petch',sans-serif;
+    font-weight:700; font-size:1.05rem; color:var(--bg);
+    background:linear-gradient(90deg, var(--coral), var(--teal)); }
+  .acCfgPeligro{ width:100%; margin-top:10px; padding:12px; cursor:pointer;
+    border:1px solid var(--card-border); border-radius:14px;
+    background:var(--bg-2); color:var(--rojo);
+    font-family:'Inter',sans-serif; font-size:.9rem; }
+  .acCfgNo{ width:100%; padding:12px; background:none; border:none; cursor:pointer;
+    font-family:inherit; font-size:.9rem; text-decoration:underline; color:var(--fg-muted); }
+  .acCfgOk:active, .acCfgPeligro:active, .acCfgNo:active{ transform:scale(.97); }
 </style>
 </head>
 <body>
@@ -86,11 +116,6 @@
     <a href="../index.html#com" id="btnVolver">← Volver</a></span>
   </div>
   <div id="sub">Tu acompañante pícara: conversa, ideas y retos 😏</div>
-  <div id="panelCfgAI" style="display:none;margin-top:10px;">
-    <input id="nombreAINuevo" type="text" maxlength="20" placeholder="Nombre (ej. Aitana)" style="width:100%;border-radius:12px;border:1px solid var(--card-border);background:var(--card);color:var(--fg);padding:12px;font-size:.9rem;" autocomplete="off">
-    <button id="btnGuardaNombre" class="btnReto" style="margin-top:8px;">Guardar nombre</button>
-    <button id="btnVaciarChat" class="btnReto" style="margin-top:8px;background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Vaciar chat</button>
-  </div>
 </div>
 
 <div id="pantLlave">
@@ -121,6 +146,20 @@
 
 <div id="aviso" style="display:none;">Elige tu usuario en el <a href="../index.html">inicio</a> para usar a Chispa.</div>
 
+<!-- Caja de ajustes del engrane. NACE OCULTA en el HTML (regla de la casa: si un
+     bloque tiene que estar tapado, se nace tapado, no se tapa al pintarlo). -->
+<div id="modalCfg">
+  <div class="acCfgCaja">
+    <div class="acCfgTitulo">Ajustes</div>
+    <div class="acCfgTexto">El nombre es como te aparece en el chat y como se llama a sí misma.</div>
+    <label class="acCfgLabel" for="nombreAINuevo">Nombre de la acompañante</label>
+    <input id="nombreAINuevo" type="text" maxlength="20" placeholder="Nombre (ej. Aitana)" autocomplete="off">
+    <button id="btnGuardaNombre" class="acCfgOk" type="button">Aceptar</button>
+    <button id="btnVaciarChat" class="acCfgPeligro" type="button">Vaciar chat</button>
+    <button id="btnCierraCfg" class="acCfgNo" type="button">Cancelar</button>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
@@ -141,14 +180,42 @@ document.getElementById("nombreAI").textContent = NOMBRE_AI;
 // fábrica: si se renombra a "Chispa", que diga "Escríbele a Chispa...".
 // (El nombre se guarda y se recarga la pagina, asi que basta con ponerlo aqui.)
 document.getElementById("texto").placeholder = "Escríbele a " + NOMBRE_AI + "...";
-document.getElementById("btnCfgAI").onclick = ()=>{
-  const p = document.getElementById("panelCfgAI");
-  p.style.display = p.style.display === "none" ? "block" : "none";
+// ---------- ajustes (el engrane de arriba a la derecha) ----------
+// Antes el panel se abria DENTRO del encabezado, y al abrirse empujaba el chat
+// hacia abajo: se "~distorsionaba" toda la pantalla. Ahora es una caja flotante
+// en el centro y el chat de atras no se mueve (decisión de Fredy, oct-2026).
+// La recarga al guardar el nombre se CONSERVA a propósito: así el nombre se
+// vuelve a leer desde el almacenamiento y queda igual en toda la pantalla.
+let cfgAbierto = false;
+const modalCfg = document.getElementById("modalCfg");
+function abrirCfg(){
+  cfgAbierto = true;
   document.getElementById("nombreAINuevo").value = NOMBRE_AI;
-};
+  modalCfg.style.display = "flex";
+  // Se guarda un paso para que el boton atras del celular cierre la caja en vez
+  // de sacar de la pantalla. Es el mismo truco del menu y de las vistas de los
+  // juegos: un paso guardado que se puede deshacer.
+  try{ history.pushState({ cfg:1 }, ""); }catch(e){}
+}
+function cerrarCfg(){
+  if(!cfgAbierto) return;
+  cfgAbierto = false;
+  modalCfg.style.display = "none";
+  try{ history.back(); }catch(e){}
+}
+document.getElementById("btnCfgAI").onclick = abrirCfg;
+document.getElementById("btnCierraCfg").onclick = cerrarCfg;
+// Si el boton atras se aprieta con la caja abierta, se cierra la caja. Solo
+// cuando el paso guardado es el nuestro: `cerrarCfg` ya apago la bandera antes
+// de deshacer, asi que aqui no hace nada y el chat sigue donde estaba.
+window.addEventListener("popstate", ()=>{
+  if(!cfgAbierto) return;
+  cfgAbierto = false;
+  modalCfg.style.display = "none";
+});
 document.getElementById("btnGuardaNombre").onclick = ()=>{
   const v = document.getElementById("nombreAINuevo").value.trim().slice(0, 20);
-  if(!v) return;
+  if(!v){ aviso("El nombre no puede quedar vacío."); return; }
   try{ localStorage.setItem(CLAVE_NOM, v); }catch(e){}
   location.reload();
 };
@@ -161,7 +228,7 @@ document.getElementById("btnVaciarChat").onclick = async ()=>{
   if(!confirmado) return;
   hist = [];
   guardarHist(); pintar();
-  document.getElementById("panelCfgAI").style.display = "none";
+  cerrarCfg();
 };
 
 async function listaModelos(){

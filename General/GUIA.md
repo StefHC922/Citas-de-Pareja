@@ -2178,6 +2178,55 @@ se puede cambiar en la esquina superior derecha (`pareja_ai_nombre` en
 `NOMBRE_AI` al arrancar. **Como guardar el nombre recarga la página, con ponerlo
 una vez al inicio basta.**
 
+### Los ajustes de Acompañante: de panel en el encabezado a caja flotante (oct-2026)
+
+**Lo que reportó Fredy:** al apretar el engrane de arriba a la derecha, el panel
+"**distorsionaba toda la pantalla**".
+
+**La causa:** `#panelCfgAI` estaba **dentro de `#encabezado`**. Al abrirse, ese
+`<div>` ocupaba lugar y **empujaba el chat hacia abajo**: no era un efecto visual,
+era que el contenido de verdad se recorría. Por eso "se destorsionaba".
+
+**Lo que quedó:** una caja flotante en el centro (`#modalCfg`), con la misma pinta
+que las de `confirmar.js`, y el chat de atrás **no se mueve ni un píxel**.
+
+| | Antes | Ahora |
+|---|---|---|
+| Dónde vive | Dentro de `#encabezado` | Capa fija sobre toda la pantalla (`z-index:95`) |
+| Botón de guardar | "Guardar nombre" | **"Aceptar"** (el degradado grande, como toda la app) |
+| Salida sin guardar | **No había** | **"Cancelar"** |
+| Vaciar chat | En el mismo panel | Sigue en la caja, **pregunta primero** y cierra |
+| Botón atrás del celular | Sacaba de la pantalla | **Cierra la caja** |
+
+**Reglas que se siguieron:**
+
+- **La caja y sus botones NACEN ocultos en el HTML** (`#modalCfg` sin `display`
+  en línea y el CSS pone `display:none`; el JS lo cambia a `flex`). Si naciera a
+  la vista, habría un instante en que se ve antes de tiempo.
+- **Las clases llevan prefijo `acCfg`, NO `cf`.** `confirmar.js` mete sus propias
+  reglas al vuelo (`ponerEstilo()`), y usar los mismos nombres las invadiría.
+- **Sin `alert()` ni `confirm()`:** el nombre vacío sale con `aviso()` y el borrado
+  sigue con `confirmar()`.
+- El botón atrás usa el patrón del menú y de las vistas de los juegos:
+  `abrirCfg()` guarda un paso (`pushState`), `cerrarCfg()` lo deshace
+  (`history.back()`) y el `popstate` cierra la caja si se aprieta atrás con ella
+  abierta. La bandera `cfgAbierto` evita que el `popstate` de `cerrarCfg()` la
+  cierre dos veces.
+
+**LA RECARGA AL GUARDAR EL NOMBRE SE CONSERVA (decisión de Fredy, oct-2026).** Se
+propuso quitarla para que "Aceptar" no parpadeara, y Fredy la quiere. La razón de
+que exista: `NOMBRE_AI` se lee **una sola vez** al arrancar y va metido dentro de
+`PERSONA`, que es lo que se le manda a la IA en cada llamada. Sin recargar, el
+nombre se guardaría pero la instrucción seguiría con el viejo. **Con la recarga,
+el nombre se vuelve a leer del almacenamiento y queda igual en toda la pantalla,
+incluida la instrucción.** Quien quiera quitarlo después, tiene que actualizar
+`NOMBRE_AI`, el placeholder, el encabezado y `PERSONA` a mano.
+
+**Lo que NO cambió:** los mensajes viejos siguen guardando el texto que escribió
+la IA ("Hola, soy Aitana"), así que ese texto conserva el nombre viejo. Lo que sí
+se actualiza, igual que antes, es la etiqueta de quién habló. No es una regresión
+de este cambio.
+
 ### El tono de la IA (oct-2026)
 
 El `PERSONA` de `Acompanante/` tenía prohibido el tema sexual: si se lo pedían,
