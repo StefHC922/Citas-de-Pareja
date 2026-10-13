@@ -1114,13 +1114,15 @@ cambiarPestana(SEC_ACTIVA);
   }
 
   function cerrarCfg(){
-elCfg.style.display = 'none';
+    elCfg.style.display = 'none';
       if(!esInvitado && hayAlmacen) elEngrane.style.display = 'block';
       FRASES = leerLista(CLAVE_MSG) || FRASES_FABRICA.slice();
     AVISOS = leerLista(CLAVE_AVISO) || AVISOS_FABRICA.slice();
     if(pausaCfg) correr();
     pausaCfg = false;
   }
+  window.cerrarCfg = cerrarCfg;
+  window.elCfg = elCfg;
 
   function escribiendo(e){
     var t = e.target;
@@ -1258,7 +1260,10 @@ function arrancar(){
   }catch(e){}
 }
 
-document.getElementById("volverSala").addEventListener("click", ()=>{ cerrarCfg(); });
+document.getElementById("volverSala").addEventListener("click", ()=>{
+  if(window.elCfg && window.elCfg.style.display !== "none") cerrarCfg();
+  else location.href = "../index.html#juegos";
+});
 
 btnIr.addEventListener("click", ()=>{
   if(!destino) return;

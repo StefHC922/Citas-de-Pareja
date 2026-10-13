@@ -2772,3 +2772,31 @@ las Partes 1 a 4 de este archivo**, sin recortes.
 - `Fase-1.md` -> Parte 1
 - `Encuentros-y-Modo-Invitado.md` -> Parte 2
 - `Modulo-Accesos.md` -> Partes 3 y 4
+
+## Parte 7 - Navegación con el botón atrás del navegador (oct-2026)
+
+Se corrigieron las pantallas para que el botón atrás del navegador navegue de verdad entre vistas en vez de reiniciar la pantalla o quedarse congelada.
+
+### Pantallas corregidas
+
+| Pantalla | Antes | Después |
+|---|---|---|
+| `Encuentros/index.html:915` | `popstate` siempre llamaba `entrar()` | Navega a `ver("vistaLista", false)` |
+| `Guiadas/index.html:542` | `popstate` siempre llamaba `entrar()` | Navega a `ver("vistaLista", false)` |
+| `Opciones/index.html:1434` | `popstate` siempre llamaba `entrar()` | Navega a `ver("vistaInicio", false)` |
+| `index.html` | No tenía `hashchange` | Agregado listener que cambia de subpantalla según el hash |
+| `Diablitos/index.html` | Dos botones "Volver" en la config | Se eliminó el izquierdo; el derecho (`volverSala`) ahora cierra la config con `cerrarCfg()` |
+
+### Qué se mantiene igual
+
+- Los botones de esquina ("‹ Volver" y engrane) no se tocaron.
+- El bloqueo del atrás durante una partida en curso se mantiene (Encuentros y Opciones).
+- Diablitos no tiene manejo de historial — el atrás sale de la pantalla como antes.
+
+### Lección aprendida
+
+Al eliminar un botón del HTML, buscar referencias por su ID en el JavaScript. Un `getElementById` que apunta a un elemento inexistente rompe el script completo (pantalla en blanco o juego que no arranca).
+
+**Otro error de octubre 2026:** el bloque de la sala de espera es `type="module"` y el juego está en un `<script>` normal con alcance cerrado. Para que el módulo llame `cerrarCfg()`, hubo que exponerla con `window.cerrarCfg = cerrarCfg`. Sin eso, el botón "Volver" de la configuración no hacía nada.
+
+**Y otro más:** el `volverSala` es visible en el juego también, no solo en la config. El handler verifica si `elCfg` está abierto: si sí, lo cierra; si no, navega al submenu (`../index.html#juegos`).
