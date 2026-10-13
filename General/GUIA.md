@@ -2550,6 +2550,64 @@ se enciende siempre.
 `btnRetos`) y que el de Retos traiga su tarjeta. Antes las pruebas pasaban
 iguales con el menú roto: nadie miraba esos botones.
 
+### El botón "atrás" del navegador y los submenús (corregido oct-2026)
+
+**Lo que reportaba Fredy:** al usar el botón de regresar del navegador, las
+pantallas se comportaban de una forma muy rara. Pasaba sobre todo en Retos, pero
+el defecto era de **los cuatro submenús** (Experiencias, Juegos, Retos,
+Comunicaciones), porque es el mismo código.
+
+**La causa era una sola, y era de fondo:** los submenús **no eran pasos del
+historial**. `abrirRetos()` etc. solo encendían y apagaban un `display`, sin
+`pushState` ni tocar la dirección. El navegador no tenía idea de que ahí había
+habido un avance. Y el `#retos` de la barra de direcciones se usaba **solo para
+abrir un submenú al entrar**, nunca para registrar la navegación ni para saber de
+dónde venías.
+
+**Los cinco síntomas concretos:**
+
+| # | Qué pasaba | Por qué |
+|---|---|---|
+| 1 | El botón atrás dentro de un submenú no hacía nada (o sacaba de la app) | No había entrada en el historial que deshacer |
+| 2 | Volver de Retos al menú y luego regresar de otra pantalla **reabría el submenú solo** | `cerrarRetos()` no borraba el `#retos` de la dirección |
+| 3 | Atrás desde `index.html#retos` devolvía a la pantalla anterior de verdad (el Centro de Adquisiciones), no al menú | El "Volver" de la app y el del navegador contaban historias distintas |
+| 4 | Al llegar con atrás al menú, **⚙️ y 🛒 desaparecían** | El `hashchange` mostraba el menú pero no devolvía los dos botones que los submenús apagan (`index.html:1051-1054`); solo lo hacía `mostrarMenu()`, al que nunca llamaba |
+| 5 | En `Retos/centro.html`, de la Tienda con atrás salías en **Deseos** | `navTienda` llamaba `ver("vistaCatalogo", false)` y ese `false` **no guardaba el paso** |
+
+**Lo que quedó (decidido por Fredy):** un submenú abierto **es** un paso real del
+historial, guardado con `pushState` y deshecho con `history.back()` — el mismo
+patrón que ya usaban `Encuentros/`, `Guiadas/` y el propio `centro.html`. Así el
+botón atrás del celular y el "‹ Volver" hacen **lo mismo**, y el botón "adelante"
+también sirve.
+
+| Pieza | Qué hace |
+|---|---|
+| `verMenu()` | El menú principal + sus dos botones de la esquina. **Nueva**: la necesitaban tres caminos (`mostrarMenu`, el "‹ Volver" y el `popstate`) y por eso el 4 se rompía |
+| `hashActual()` | Lee el `#` normalizado (`#extras` → `retos`) |
+| `abrirSegunHash(h)` | Abre el submenú que diga el `#`, o el menú si no dice ninguno |
+| `abrirSub(h)` | El botón del submenú: `pushState({sub:id}, "", "#"+id)` y lo muestra |
+| `cerrarSub()` | El "‹ Volver": `history.back()`. Si el paso **no** es nuestro (se llegó por el "Volver" de un juego o por la dirección escrita a mano), quita el `#` a mano en vez de saltar de vuelta a la partida |
+| `popstate` | Nuevo. Obedece al historial en vez de adivinar por el `#` |
+
+**El detalle del paso "fijo".** Al entrar por un enlace (`../index.html#retos`
+desde `Retos/index.html`) esa entrada **no la guardamos nosotros**. Por eso
+`mostrarMenu()` la marca con `{sub:h, fijo:true}`: así el "‹ Volver" del submenú
+**cierra aquí** y no devuelve al usuario a la partida de donde vino. Sin esa
+distinción, el "Volver" de un juego y el "‹ Volver" del submenú se peleaban por el
+mismo paso.
+
+**Y en `Retos/centro.html`:** `navTienda` ya guarda su paso (`ver("vistaCatalogo")`
+sin el `false`), y al salir por el enlace "← Volver" se hace
+`replaceState` con la vista que se está viendo. Sin eso, al volver con atrás se
+entraba a una vista que ya se había cerrado.
+
+**Regla que queda:** **una pantalla que se apaga y enciende sin cambiar la
+dirección es invisible para el historial.** Si el botón atrás del celular tiene que
+hacer algo, hay que guardar el paso (`pushState`) — y si la pantalla llega por un
+enlace, hay que distinguir ese paso de los que se guardaron a mano (`fijo`).
+Lo mismo aplica a `Opciones/index.html:1426`, que tiene la misma forma y **no se
+tocó** (esta ronda era solo Retos).
+
 ### El flujo de "Cambiar usuario" (y lo que se aprendió)
 
 **Cómo quedó:**

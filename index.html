@@ -512,39 +512,33 @@ function mostrarMenu(nombre){
     const f = new Date().toLocaleDateString("es-MX", { weekday:"long", day:"numeric", month:"long" });
     document.getElementById("heroFecha").textContent = f.charAt(0).toUpperCase() + f.slice(1);
   }catch(e){}
-  document.getElementById("menuBtn").style.display = "";
-  document.getElementById("gearBtn").style.display = "";
-  iconoMenu("menu");
-  document.getElementById("vistaMenu").style.display = "block";
-  document.getElementById("vistaExp").style.display = "none";
-  document.getElementById("vistaJuegos").style.display = "none";
-  document.getElementById("vistaRetos").style.display = "none";
-  document.getElementById("vistaCom").style.display = "none";
+  verMenu();
   asistenteEl.style.display = "none";
   pantallaEl.style.display = "none";
   menuEl.style.display = "flex";
-  // Si se llegó con #juegos o #experiencias (botón "Volver" de un juego), se
-  // abre directo esa subpantalla en vez del menú principal.
-  if(location.hash === "#juegos") abrirJuegos();
-  else if(location.hash === "#experiencias") abrirExp();
-  else if(location.hash === "#retos" || location.hash === "#extras") abrirRetos();
-  else if(location.hash === "#com") abrirCom();
+  // Si se llegó con #juegos o #retos (el botón "Volver" de un juego, o una
+  // dirección guardada), se abre directo esa subpantalla en vez del menú.
+  const h = hashActual();
+  if(h !== "" && !(history.state && history.state.sub)){
+    // Ese paso NO lo guardamos nosotros: se marca "fijo" para que el "‹ Volver"
+    // del submenú lo cierre aquí, en vez de devolver a la partida de donde vino.
+    try{ history.replaceState({ sub:h, fijo:true }, "", "#" + h); }catch(e){}
+  }
+  abrirSegunHash(h);
   renderPacks();
 }
 
+// Botón "atrás" / "adelante" del navegador. Ahora los submenús SÍ son pasos del
+// historial (ver abrirSub), así que aquí no se adivina nada: se obedece lo que
+// diga el historial. Antes solo se miraba el "#", y por eso el botón atrás se
+// saltaba el submenú y luego lo reabría solo (oct-2026).
+window.addEventListener("popstate", (e)=>{
+  if(e.state && e.state.sub) abrirSegunHash(e.state.sub);
+  else verMenu();
+  renderPacks();
+});
 window.addEventListener("hashchange", ()=>{
-  if(location.hash === "#juegos") abrirJuegos();
-  else if(location.hash === "#experiencias") abrirExp();
-  else if(location.hash === "#retos" || location.hash === "#extras") abrirRetos();
-  else if(location.hash === "#com") abrirCom();
-  else{
-    document.getElementById("vistaMenu").style.display = "block";
-    document.getElementById("vistaExp").style.display = "none";
-    document.getElementById("vistaJuegos").style.display = "none";
-    document.getElementById("vistaRetos").style.display = "none";
-    document.getElementById("vistaCom").style.display = "none";
-    iconoMenu("menu");
-  }
+  abrirSegunHash(hashActual());
   renderPacks();
 });
 
@@ -1015,6 +1009,61 @@ async function iniciarScan(){
 // ---------- submenús ----------
 // Son funciones (y no onclick en línea) porque también se llaman al arrancar
 // cuando se llega con #juegos o #experiencias desde el botón "Volver" de un juego.
+//
+// Un submenú abierto es un PASO REAL del historial: se guarda con pushState y se
+// deshace con history.back(), igual que las vistas de Encuentros/ y Guiadas/.
+// Antes no se guardaba nada, y por eso el botón "atrás" del celular se saltaba
+// el submenú entero y, al volver, lo reabría solo aunque ya se hubiera cerrado.
+
+// El menú principal, con sus dos botones de la esquina ⚙️ y 🛒. Vive en una
+// función propia porque hay tres caminos que lo necesitan: mostrarMenu(), el
+// "‹ Volver" del submenú y el botón "atrás" del navegador.
+function verMenu(){
+  try{ glueOlvidado(); }catch(e){}
+  document.getElementById("vistaMenu").style.display = "block";
+  document.getElementById("vistaExp").style.display = "none";
+  document.getElementById("vistaJuegos").style.display = "none";
+  document.getElementById("vistaRetos").style.display = "none";
+  document.getElementById("vistaCom").style.display = "none";
+  // Los botones de la esquina son del MENÚ. Antes solo los devolvía
+  // mostrarMenu(), así que al llegar con el botón "atrás" se quedaban apagados.
+  document.getElementById("gearBtn").style.display = "";
+  document.getElementById("menuBtn").style.display = "";
+  iconoMenu("menu");
+}
+// El "#" que hay en la barra de direcciones, ya normalizado ("#extras" es el
+// nombre viejo de Retos y se acepta igual, por si algo viejo lo trae).
+function hashActual(){
+  const h = (location.hash || "").replace(/^#/, "");
+  return (h === "extras") ? "retos" : h;
+}
+function abrirSegunHash(h){
+  if(h === "juegos") abrirJuegos();
+  else if(h === "experiencias") abrirExp();
+  else if(h === "retos") abrirRetos();
+  else if(h === "com") abrirCom();
+  else verMenu();
+}
+// El botón del submenú: guarda el paso y lo muestra.
+function abrirSub(h){
+  const id = (h || "").replace(/^#/, "");
+  if(!id) return;
+  try{ history.pushState({ sub:id }, "", "#" + id); }catch(e){}
+  abrirSegunHash(id);
+  renderPacks();
+}
+// El "‹ Volver" del submenú: deshace el paso que guardamos nosotros. Si se llegó
+// por un enlace (el "Volver" de un juego, o la dirección escrita a mano) ese paso
+// no es nuestro, así que se quita el "#" a mano para quedarse en el menú y no
+// saltar de vuelta a la partida.
+function cerrarSub(){
+  if(history.state && history.state.sub && !history.state.fijo){
+    try{ history.back(); return; }catch(e){}
+  }
+  verMenu();
+  try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+  renderPacks();
+}
 function abrirExp(){
   document.getElementById("vistaMenu").style.display = "none";
   document.getElementById("vistaExp").style.display = "block";
@@ -1026,10 +1075,7 @@ function abrirExp(){
 }
 function cerrarExp(){
   glueOlvidado();
-  document.getElementById("vistaExp").style.display = "none";
-  document.getElementById("vistaMenu").style.display = "block";
-  document.getElementById("gearBtn").style.display = "";
-  iconoMenu("menu");
+  cerrarSub();
 }
 // En Juegos solo vive el "‹ Volver": el carrito y el engrane son del menú
 // principal, así que se esconden los dos.
@@ -1040,10 +1086,7 @@ function abrirJuegos(){
   document.getElementById("menuBtn").style.display = "none";
 }
 function cerrarJuegos(){
-  document.getElementById("vistaJuegos").style.display = "none";
-  document.getElementById("vistaMenu").style.display = "block";
-  document.getElementById("gearBtn").style.display = "";
-  document.getElementById("menuBtn").style.display = "";
+  cerrarSub();
 }
 function abrirRetos(){
   document.getElementById("vistaMenu").style.display = "none";
@@ -1054,16 +1097,13 @@ function abrirRetos(){
   document.getElementById("menuBtn").style.display = "none";
 }
 function cerrarRetos(){
-  document.getElementById("vistaRetos").style.display = "none";
-  document.getElementById("vistaMenu").style.display = "block";
-  document.getElementById("gearBtn").style.display = "";
-  document.getElementById("menuBtn").style.display = "";
+  cerrarSub();
 }
-document.getElementById("btnExp").onclick = abrirExp;
+document.getElementById("btnExp").onclick = ()=> abrirSub("#experiencias");
 document.getElementById("btnExpVolver").onclick = cerrarExp;
-document.getElementById("btnJuegos").onclick = abrirJuegos;
+document.getElementById("btnJuegos").onclick = ()=> abrirSub("#juegos");
 document.getElementById("btnJuegosVolver").onclick = cerrarJuegos;
-document.getElementById("btnRetos").onclick = abrirRetos;
+document.getElementById("btnRetos").onclick = ()=> abrirSub("#retos");
 document.getElementById("btnRetosVolver").onclick = cerrarRetos;
 // Comunicaciones. Nace SIEMPRE visible: este submenú tiene tarjetas
 // escritas a mano, así que no puede depender del catálogo para mostrarse
@@ -1075,12 +1115,9 @@ function abrirCom(){
   document.getElementById("menuBtn").style.display = "none";
 }
 function cerrarCom(){
-  document.getElementById("vistaCom").style.display = "none";
-  document.getElementById("vistaMenu").style.display = "block";
-  document.getElementById("gearBtn").style.display = "";
-  document.getElementById("menuBtn").style.display = "";
+  cerrarSub();
 }
-document.getElementById("btnCom").onclick = abrirCom;
+document.getElementById("btnCom").onclick = ()=> abrirSub("#com");
 document.getElementById("btnComVolver").onclick = cerrarCom;
 // ---------- modo invitado ----------
 // Las reglas viven en ./invitado.js. Aquí solo se ajustan las pantallas.

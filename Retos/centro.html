@@ -295,6 +295,10 @@ document.getElementById("lnkInicio").addEventListener("click", (e)=>{
   const v = document.querySelector(".vista.ver");
   const id = v ? v.id : "";
   if(id === "vistaDeseos" || id === "vistaPedidos"){ e.preventDefault(); ver("vistaCatalogo", false); return; }
+  // Al salir de la página, el paso del historial queda apuntando a la vista que
+  // se está viendo. Antes se quedaba en la anterior, y al volver con "atrás" se
+  // entraba a una vista que ya se había cerrado (oct-2026).
+  try{ history.replaceState({ v:id || "vistaCatalogo" }, ""); }catch(e){}
 });
 window.addEventListener("popstate", (e)=> ver((e.state && e.state.v) || "vistaCatalogo", false));
 try{ history.replaceState({ v: "vistaCatalogo" }, ""); }catch(e){}
@@ -303,8 +307,10 @@ el("navDeseos").onclick  = ()=> ver("vistaDeseos");
 el("navDeseos2").onclick = ()=> ver("vistaDeseos");
 el("navPedidos").onclick  = ()=> ver("vistaPedidos");
 el("navPedidos2").onclick = ()=> ver("vistaPedidos");
-el("navTienda").onclick   = ()=> ver("vistaCatalogo", false);
-el("navTienda2").onclick  = ()=> ver("vistaCatalogo", false);
+// La Tienda TAMBIÉN guarda su paso: con `false` no lo guardaba, y entonces al
+// volver desde la Tienda con "atrás" aparecía Deseos en vez de la Tienda.
+el("navTienda").onclick   = ()=> ver("vistaCatalogo");
+el("navTienda2").onclick  = ()=> ver("vistaCatalogo");
 
 // ---------- helpers de fila ----------
 function fila(texto, detalle, tagTexto, tagClase){
