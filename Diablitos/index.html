@@ -1236,7 +1236,14 @@ function pintar(mias){
     esperando.textContent = "La partida está en pausa…";
     return;
   }
-  const v = unibles[0];
+  // Si hay varias partidas vivas se muestra UNA: la MAS RECIENTE que se pueda
+  // entrar (decision de Fredy, oct-2026). Antes ganaba la primera del listado, y
+  // esa sale por orden alfabetico del nombre interno, asi que siempre se veía la
+  // misma. Ahora gana la ultima que se publico (o la que se reanudo). Ojo: si
+  // la mas reciente esta en pausa NO gana — si no, el invitado se queda sin
+  // poder entrar a ninguna.
+  unibles.sort((a,b)=> cuando(a) - cuando(b));
+  const v = unibles[unibles.length - 1];
   destino = v.ruta || "";
   panel.style.display = "block";
   esperando.style.display = "none";
@@ -1244,6 +1251,17 @@ function pintar(mias){
   document.getElementById("salaIcono").textContent = v.icono || "🎲";
   document.getElementById("salaTitulo").textContent = v.titulo || "Hay una partida";
   document.getElementById("salaQuien").textContent = (v.hostNombre || "Tu anfitrión") + " te está esperando";
+}
+
+// Cuando se toco esta invitacion por ultima vez (publicarla, pausarla o
+// reanudarla). Se ordena por esto para que gane la mas reciente.
+function cuando(v){
+  try{
+    const t = v.actualizadaEn;
+    if(t && t.toDate) return t.toDate().getTime();
+    if(typeof t === "number") return t;
+  }catch(e){}
+  return 0;
 }
 
 function arrancar(){

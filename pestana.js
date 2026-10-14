@@ -4,9 +4,10 @@
 //  Cuando alguien te invita al Chat, el ícono de la pestaña -la imagen chiquita
 //  de arriba, junto a la dirección- se cambia por una campana 🔔.
 //
-//      import { vigilarInvitaciones } from "./pestana.js";
+//      import { vigilarInvitaciones, vigilarRetos } from "./pestana.js";
 //      vigilarInvitaciones(db);                  // en el menu y pantallas
 //      vigilarInvitaciones(db, { esChat:true });  // en Chat/
+//      vigilarRetos(db);                         // los retos de la IA (oct-2026)
 //
 //  Para qué sirve: para enterarte SIN abrir la pestaña. Si la tienes en segundo
 //  plano el ícono se ve igual, y eso es justo lo que un aviso dentro de la
@@ -47,21 +48,32 @@ const CLAVE_LOCAL = "appPareja_quienSoy";
 // Pasados estos minutos, la invitación se deja de mirar. Fredy lo pidió en 30.
 const MINUTOS_VIGENCIA = 30;
 
+// Qué se puede vigilar. Cada tipo tiene su propio documento y su propio cartelito.
+// El de los retos se agregó en oct-2026: cuando la IA (o la pareja) te manda un
+// reto, suena lo mismo que cuando te invitan al Chat.
+const TIPOS = {
+  chat: {
+    coleccion: "invitosChat",
+    titulo: "Te invitaron al Chat",
+    texto: "Ve a Comunicaciones → Chat para platicar."
+  },
+  retos: {
+    coleccion: "invitosRetos",
+    titulo: "Hay un reto nuevo",
+    texto: "Ve a Retos para verlo."
+  }
+};
+
+// Un "canal" por tipo vigilado. Antes esto eran variables sueltas (refInv,
+// hayPendiente, esChat...), que solo permitian UN documento: para agregar los
+// retos habria que haberlas duplicado todas con otros nombres.
+const canales = {};
+
 // El <link> que puso la campana. Se guarda aparte para poder quitar SOLO ese:
 // si la página ya traía su propio ícono (el menú trae icon-192.png), ese nunca
 // se toca y vuelve a ser el de la pestaña en cuanto quitamos la campana.
 let linkCampana = null;
-let refInv = null;
-let hayPendiente = false;
-let esChat = false;
-// El cartelito se dice UNA vez por invitación. Sin esto, cada vez que volvieras
-// a la pestaña saltaría otra vez, y sería fastidioso.
-let cartelitoYaSalio = false;
-// Cerrojo: `mostrarMenu()` del menú puede llamar esto dos veces (si se cambia
-// de usuario), y sin esto se registraría el `visibilitychange` dos veces y el
-// cartelito se abriría encimado dos veces.
-let yaVigilado = false;
-let relojVigencia = 0;
+let ctxSonido = null;
 
 function leerYo(){
   try{ return JSON.parse(localStorage.getItem(CLAVE_LOCAL)); }catch(e){ return null; }
@@ -111,6 +123,13 @@ function quitarCampana(){
 
 // ---------- la invitación ----------
 
+// La campana es UNA sola, pero puede haber varios canales con algo pendiente: si
+// hay uno pendiente se prende, y solo se apaga cuando NO queda ninguno.
+function algunoPendiente(){
+  for(const k in canales){ if(canales[k].pendiente) return true; }
+  return false;
+}
+
 // Sin fecha legible NO se prende la campana. El documento lo escribe el botón
 // "Invitar" y siempre lleva `creadoEn`, así que una fecha que no se lee es algo
 // roto: mejor no inventar una invitación vieja que sí se vaya sola.
@@ -128,62 +147,68 @@ function msRestantes(creadoEn){
 // campana se quedaría prendida pasada la hora. Por eso se pone un reloj que
 // apaga la campana solo cuando se acaba el tiempo, sin escribir nada en la base
 // (marcar `visto` sería mentir: nadie la vio).
-function programarVigencia(creadoEn){
-  try{ clearTimeout(relojVigencia); }catch(e){}
+function programarVigencia(canal, creadoEn){
+  try{ clearTimeout(canal.reloj); }catch(e){}
   const queda = msRestantes(creadoEn);
   if(queda <= 0) return;
-  relojVigencia = setTimeout(()=>{
-    quitarCampana();
-    hayPendiente = false;
+  canal.reloj = setTimeout(()=>{
+    canal.pendiente = false;
+    ponerQuitarCampana();
   }, queda + 500);
 }
 
-function pintar(mia, creadoEn){
-  const antes = hayPendiente;
-  hayPendiente = !!mia;
-  if(hayPendiente){
+// La campana se apaga solo cuando ningun canal tiene ya nada pendiente.
+function ponerQuitarCampana(){
+  if(algunoPendiente()) ponerCampana();
+  else quitarCampana();
+}
+
+function pintar(canal, mia, creadoEn){
+  const antes = canal.pendiente;
+  canal.pendiente = !!mia;
+  if(canal.pendiente){
     ponerCampana();
-    programarVigencia(creadoEn);
+    programarVigencia(canal, creadoEn);
     // Si la invitación llega con la pestaña YA a la vista, se dice ahí mismo:
     // no hay nada que esperar a que vuelva. Antes solo se decía al cambiar de
     // pestaña, y con una barrera que lo tapaba la PRIMERA vez (bug que reportó
     // Fredy: la campana salía, pero al entrar a la pestaña no pasaba nada).
-    avisarInvitacion();
-    // Si la pestaña que se está viendo ES el Chat, la invitación ya se está
-    // viendo: no tiene sentido dejar la campana en la propia pantalla del chat.
-    // Esto también cubre abrir Chat con la pestaña ya a la vista, donde no hay
+    avisarInvitacion(canal);
+    // Si la pestaña que se está viendo ES esa pantalla (el Chat, o Retos), lo
+    // que se está viendo ya ES la invitación: no tiene sentido dejar la campana
+    // ahí. También cubre abrirla con la pestaña ya a la vista, donde no hay
     // ningún `visibilitychange` que dispare nada.
-    if(esChat && !document.hidden) marcarVista();
+    if(canal.esEsta && !document.hidden) marcarVista(canal);
     // El bip solo cuando la invitación ACABABA de aparecer, no en cada aviso
     // que llegue de la base (si no, sonaría repetido).
     if(!antes) bipInvitacion();
   }else{
-    cartelitoYaSalio = false;
-    quitarCampana();
-    try{ clearTimeout(relojVigencia); }catch(e){}
+    canal.cartelitoYaSalio = false;
+    try{ clearTimeout(canal.reloj); }catch(e){}
+    ponerQuitarCampana();
   }
 }
 
-// Dar por vista una invitación: se apaga la campana y se escribe `visto` en la
-// base, para que el otro dispositivo tampoco la espere.
-async function marcarVista(){
-  quitarCampana();
-  hayPendiente = false;
-  try{ clearTimeout(relojVigencia); }catch(e){}
-  if(!refInv) return;
-  try{ await updateDoc(refInv, { visto:true, vistoEn:serverTimestamp() }); }catch(e){}
+// Dar por vista una invitación: se apaga la campana (si no queda nada pendiente
+// en ningun otro canal) y se escribe `visto` en la base, para que el otro
+// dispositivo tampoco la espere.
+async function marcarVista(canal){
+  canal.pendiente = false;
+  try{ clearTimeout(canal.reloj); }catch(e){}
+  ponerQuitarCampana();
+  if(!canal.ref) return;
+  try{ await updateDoc(canal.ref, { visto:true, vistoEn:serverTimestamp() }); }catch(e){}
 }
 
-function avisarInvitacion(){
+function avisarInvitacion(canal){
   // Se dice solo si: hay algo pendiente, la pestaña se PUEDE ver (si está
-  // escondida el cartelito no serviría de nada: para eso está la campana), no
-  // es el Chat (ahí ya la está viendo) y no se dijo antes en esta invitación.
-  if(!hayPendiente || document.hidden || esChat || cartelitoYaSalio) return;
-  cartelitoYaSalio = true;
-  aviso({
-    titulo: "Te invitaron al Chat",
-    texto: "Ve a Comunicaciones → Chat para platicar."
-  });
+  // escondida el cartelito no serviría de nada: para eso está la campana), la
+  // pantalla NO es esta misma (ahí ya lo está viendo) y no se dijo antes en esta
+  // invitación.
+  if(!canal.pendiente || document.hidden || canal.esEsta || canal.cartelitoYaSalio) return;
+  canal.cartelitoYaSalio = true;
+  const t = TIPOS[canal.tipo] || TIPOS.chat;
+  aviso({ titulo: t.titulo, texto: t.texto });
 }
 
 // ---------- el bip ----------
@@ -191,7 +216,6 @@ function avisarInvitacion(){
 // contexto de audio arranca "suspendido" y solo se abre con un toque previo.
 // Por eso se intenta abrir con el PRIMER toque, tecla o rueda de la página.
 // Si nunca hubo ninguno, no hay bip: es el navegador, no un error.
-let ctxSonido = null;
 function abrirSonido(){
   try{
     if(ctxSonido) return;
@@ -223,28 +247,48 @@ function bipInvitacion(){
 }
 
 /**
- * Empieza a vigilar las invitaciones al Chat.
+ * Empieza a vigilar un tipo de invitación (Chat, Retos...). Se puede llamar una
+ * vez por tipo: cada uno tiene su documento, su cartelito y su reloj.
  * @param db        la base de la pareja (la misma que ya tiene la pantalla)
- * @param opciones  `{ esChat:true }` si esta pantalla ES el Chat. Solo ahí se
- *                  apaga la campana al entrar; en el resto sale el cartelito.
+ * @param opciones  `{ esEsta:true }` si ESTA pantalla es la que avisa (el Chat
+ *                  con el chat, `Retos/` con los retos). Solo ahí se apaga la
+ *                  campana al entrar; en el resto sale el cartelito.
+ *
+ * Las llamadas viejas siguen sirviendo: `vigilarInvitaciones(db)` vigila el
+ * Chat, y `vigilarInvitaciones(db, {esChat:true})` marca que la pantalla es el
+ * Chat. Para los retos: `vigilarInvitaciones(db, {tipo:"retos"})`.
  */
 export function vigilarInvitaciones(db, opciones){
-  if(yaVigilado) return;
+  const o = opciones || {};
+  const tipo = o.tipo || "chat";
+  if(!TIPOS[tipo]) return;
   const yo = leerYo();
   if(!yo || !db) return;
-  yaVigilado = true;
-  esChat = !!(opciones && opciones.esChat);
+  // Cerrojo por tipo: `mostrarMenu()` del menú puede llamar esto dos veces (si
+  // se cambia de usuario), y sin esto se registraría el `visibilitychange` dos
+  // veces y el cartelito se abriría encimado dos veces.
+  if(canales[tipo]) return;
+  const canal = canales[tipo] = {
+    tipo, ref:null, pendiente:false, esEsta:false,
+    cartelitoYaSalio:false, reloj:0
+  };
+  canal.esEsta = !!(o.esEsta ?? (tipo === "chat" ? o.esChat : o.esRetos));
   try{
-    refInv = doc(db, "invitosChat", "actual");
-    onSnapshot(refInv, (snap)=>{
+    canal.ref = doc(db, TIPOS[tipo].coleccion, "actual");
+    onSnapshot(canal.ref, (snap)=>{
       const d = snap.exists() ? snap.data() : null;
       const mia = !!(d && d.para === yo.id && !d.visto && msRestantes(d.creadoEn) > 0);
-      pintar(mia, d && d.creadoEn);
+      pintar(canal, mia, d && d.creadoEn);
     }, ()=>{});
   }catch(e){}
   document.addEventListener("visibilitychange", ()=>{
     if(document.hidden) return;
-    if(esChat && hayPendiente) marcarVista();
-    else avisarInvitacion();
+    if(canal.esEsta && canal.pendiente) marcarVista(canal);
+    else avisarInvitacion(canal);
   });
+}
+
+/** Atajo para los retos: `vigilarRetos(db)` / `vigilarRetos(db, {esEsta:true})`. */
+export function vigilarRetos(db, opciones){
+  return vigilarInvitaciones(db, Object.assign({}, opciones || {}, { tipo:"retos" }));
 }

@@ -6,6 +6,37 @@
 
 ---
 
+## ACTUALIZACION (oct-2026) — leer antes que el resto
+
+Este analisis se hizo con un recorrido del codigo. **Cuatro cosas ya no
+coinciden** y hay que tenerlas presentes:
+
+| # | Que paso |
+|---|---|
+| **B2 ya no aplica** | El borrado de un reto **ya cobrado** no descuenta de mas: `eliminarReto()` solo revierte puntos si el reto sigue `"enCurso"`, y al llegar a la meta pasa a `"cobrada"`. El fallo que se describe aqui era de la logica **anterior** (la que liquidaba con `delta = 1 - meta`), que ya se cambio en oct-2026. **Se puede borrar de la lista de fallas** |
+| **B3 sigue, pero cambio de efecto** | Ya no es "doble penalizacion": la liquidacion antigua (`delta = 1 - meta`) tambien cambio. Hoy `marcarCumplida()` **no descuenta nada**, asi que el riesgo real es **doble premio** (+2 en vez de +1) y el aviso de Telegram duplicado |
+| **Faltan 3 rutas en el inventario** | La seccion 1 se quedo corta: no incluye **`deseos`** ni **`comprasDeseos`** (el Centro de Adquisiciones) ni **`invitosChat/actual`** (la campana del Chat). El conteo real es **14 colecciones + 8 documentos sueltos**, no "17 + 3" |
+| **Los numeros de linea ya no coinciden** | `eliminarReto` esta en `Retos/index.html:1034` (no 935) y `marcarCumplida` en la 1060 (no 951). Sirven para orientarse, no para buscar. En `index.html`, `volverSiInvitadoSinPartida` esta en la 948 |
+
+**B1 quedo ARREGLADO** (oct-2026): la ruta mal escrita se corrigio y ya se
+documento en `GUIA.md`, *El invitado vuelve solo al abrir la app*.
+
+**B4 quedo ARREGLADO** (oct-2026), y de paso se encontro **un problema mas grave
+que no estaba en esta lista**: el registro por QR era un leer-calcular-guardar
+sin transaccion, asi que **dos personas registrandose al mismo tiempo se
+borraban entre ellas** (la segunda escritura reemplazaba la lista entera).
+Ahora va dentro de una transaccion, el identificador lleva hora y azar, y si la
+ficha **todavia existe** (el invitado escanea, espera y vuelve a escanear sin
+haber jugado) se reusa en vez de duplicar. Ojo: **si ya juego y lo expulsaron,
+su ficha se borro de la lista**, asi que la siguiente vez es una ficha nueva en
+0. Ver `GUIA.md`, *Registrarse por QR otra vez*.
+
+**B3 sigue sin tocarse**, pero es de **riesgo bajo**: el boton "Cumplida +1"
+solo lo ve quien propuso el reto, asi que el doble toque simultaneo requiere que
+el mismo apriete desde dos lugares a la vez.
+
+---
+
 ## 0. Alcance: que se pudo leer y que no
 
 **No se pudo entrar a la consola de Firebase.** El unico servidor MCP de este

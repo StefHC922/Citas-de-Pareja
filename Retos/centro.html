@@ -197,7 +197,7 @@
     <div class="modalNombre" id="mdNombre">Deseo</div>
     <div class="modalTexto" id="mdTexto"></div>
     <div class="modalPrecio" id="mdPrecio"></div>
-    <button class="btnPri" id="mdActivar">Activar</button>
+    <button class="btnPri" id="mdActivar" style="display:none">Activar</button>
     <button class="btnSec" id="mdBorrar" style="color:var(--rojo);">Borrar deseo</button>
     <button class="btnSec" id="mdCerrar">Cancelar</button>
   </div>
@@ -401,11 +401,15 @@ function pintarDeseos(){
     const c = f.querySelector(".celda");
     c.style.cursor = "pointer";
     c.onclick = ()=> abrirModal(d.id);
-    const b = document.createElement("button");
-    b.className = "x"; b.textContent = "✕";
-    b.setAttribute("aria-label", "Borrar " + d.nombre);
-    b.onclick = (e)=>{ e.stopPropagation(); borrarDeseo(d.id); };
-    f.appendChild(b);
+    // La ✕ NO se dibuja si ya esta en la tienda: ahi no se puede borrar y un
+    // boton que no hace nada es una trampa. La fila ya dice "En venta".
+    if(!d.enVenta){
+      const b = document.createElement("button");
+      b.className = "x"; b.textContent = "✕";
+      b.setAttribute("aria-label", "Borrar " + d.nombre);
+      b.onclick = (e)=>{ e.stopPropagation(); borrarDeseo(d.id); };
+      f.appendChild(b);
+    }
     return f;
   });
   pintaCaja("cajaDeseos", VACIO_DES, filas, true);
@@ -485,11 +489,12 @@ function abrirModal(id){
 }
 function pintarBotonesModal(d){
   el("mdPrecio").textContent = d.enVenta
-    ? ("En venta · " + miPrecio() + " pts · tus puntos: " + balance)
+    ? ("En venta · " + miPrecio() + " pts · tus puntos: " + balance + " · aquí no se puede borrar")
     : ("Activar cuesta " + miActivar() + " pts (se paga una sola vez) · tus puntos: " + balance);
   const b = el("mdActivar");
   b.style.display = (!d.enVenta && balance >= miActivar()) ? "block" : "none";
   b.textContent = "Activar · " + miActivar() + " pts";
+  el("mdBorrar").style.display = d.enVenta ? "none" : "block";
 }
 function cerrarModal(){
   el("modalDeseo").classList.remove("ver");
@@ -524,15 +529,21 @@ el("mdActivar").onclick = async ()=>{
 };
 // Borra un deseo (lo usan la ✕ de la lista y el boton de la ventana). Siempre
 // pregunta con confirmar(): un ✕ que borra sin avisar es una trampa.
+// Un deseo YA en la tienda no se borra aqui (decision de Fredy, oct-2026): si
+// esta a la venta, la ✕ ni se dibuja y el boton de la ventana tampoco sale, asi
+// que esta linea es solo la red de seguridad. No hay forma de quitarlo de la
+// tienda, y por eso los puntos de activacion no se devuelven nunca.
 async function borrarDeseo(id){
   const d = deseos.find(x=> x.id === id);
   if(!d) return false;
+  if(d.enVenta){
+    aviso("Ya está en la tienda de " + (pareja ? pareja.nombre : "tu pareja") + ". Aquí no se puede borrar.");
+    return false;
+  }
   const ok = await confirmar({
     aviso: true,
     titulo: "¿Borrar este deseo?",
-    texto: d.enVenta
-      ? "Está a la venta en la tienda de " + (pareja ? pareja.nombre : "tu pareja") + ". Se quita de ahí y no se devuelven los puntos."
-      : "No se puede deshacer.",
+    texto: "No se puede deshacer.",
     ok: "Borrar"
   });
   if(!ok) return false;

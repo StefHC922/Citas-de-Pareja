@@ -369,6 +369,7 @@ import {
 import firebaseConfigBase from "../firebase-config.js";
 import { resolverFirebase, resolverTelegram, baseUrl, cargarUsuarios, finDeUltimoDia } from "../config.js";
 import { confirmar, aviso } from "../confirmar.js";
+import { vigilarRetos } from "../pestana.js";
 const firebaseConfig = resolverFirebase(firebaseConfigBase);
 
 const app = initializeApp(firebaseConfig);
@@ -1249,7 +1250,7 @@ function renderRetos(){
       if(c.ia){
         html += '<div class="nota warn">Vale ' + esc(meta) + ' pts para quien lo tiene que hacer. Tienes 48 horas desde que se mandó. Si se cumple, se los lleva enteros; si no, esa persona pierde la mitad y tú te quedas con la diferencia.</div>';
       }else{
-        html += '<div class="nota warn">Si al vencer alcanzas los ' + esc(meta) + ' puntos, se entrega la recompensa (' + esc(c.recompensa || "por definir") + ') y se descuentan ' + esc(c.puntosMeta) + ' pts. Si no, se descuentan ' + esc(c.penalizacionPuntos) + ' pts.</div>';
+        html += '<div class="nota warn">Si al vencer alcanzas los ' + esc(meta) + ' puntos, se entrega la recompensa (' + esc(c.recompensa || "por definir") + '). Si no, se descuentan ' + esc(c.penalizacionPuntos) + ' pts.</div>';
       }
     }
 
@@ -1475,6 +1476,10 @@ function escucharBalances(){
 
   escucharBalances();
   escucharRetos();
+  // La campana de la pestaña (pestana.js): AQUI es donde se apaga el aviso de un
+  // reto nuevo, igual que el Chat apaga el suyo al abrirse. Mismo criterio que
+  // index.html: si algo falla, esta pantalla sigue igual.
+  try{ vigilarRetos(db, { esEsta:true }); }catch(e){}
 })();
 
 </script>

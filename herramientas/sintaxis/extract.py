@@ -16,6 +16,7 @@ targets = [
     ("Chat/index.html", "chat"),
     ("Retos/index.html", "retos"),
     ("Retos/centro.html", "centro"),
+    ("Diablitos/index.html", "diablitos"),
 ]
 
 pat = re.compile(r'<script([^>]*)>(.*?)</script>', re.S | re.I)
@@ -40,7 +41,8 @@ for rel, tag in targets:
         print("OK  %-22s %-10s %-24s %d bytes" % (rel, kind, name, len(body.encode("utf-8"))))
 
 # archivos .js sueltos
-for f in ("acceso.js", "taquilla.js", "config.js", "firebase-config.js", "glue.js", "pestana.js"):
+for f in ("acceso.js", "taquilla.js", "config.js", "firebase-config.js", "glue.js",
+          "pestana.js", "invitado.js", "confirmar.js"):
     p = os.path.join(REPO, f)
     if os.path.exists(p):
         src = io.open(p, encoding="utf-8-sig").read()

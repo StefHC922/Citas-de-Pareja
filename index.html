@@ -426,7 +426,7 @@
 
 <script type="module">
 import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, query, where, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, query, where, limit, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "./firebase-config.js";
 import { verificarCodigo, verificarFirma } from "./taquilla.js";
 import {
@@ -444,7 +444,7 @@ import { glueSiEstaQuieto, glueOlvidado } from "./glue.js";
 // se cambia por una campana aunque estés viendo otra cosa. OJO: esto solo
 // funciona en Chrome de computadora; en el celular los navegadores no dejan
 // cambiar el ícono de la pestaña.
-import { vigilarInvitaciones } from "./pestana.js";
+import { vigilarInvitaciones, vigilarRetos } from "./pestana.js";
 // Modo invitado: la regla de "cuándo eres invitado de verdad" vive aquí.
 import {
   CLAVE_BACKUP, CLAVE_LOCAL, hayRespaldo, soyInvitado, quedasteMedioCamino,
@@ -535,7 +535,13 @@ function mostrarMenu(nombre){
   // ya se sabe que hay base valida; si no hay, `vigilarInvitaciones` no hace
   // nada y el menu sigue igual. Va en su propio modulo: si algo falla, aqui no
   // se rompe nada (mismo criterio que glue.js).
-  try{ vigilarInvitaciones(dbActual()); }catch(e){}
+  // Se vigilan LOS DOS: el chat y los retos de la IA (oct-2026). Son dos
+  // documentos distintos pero comparten campana y bip: si hay algo pendiente de
+  // cualquiera de los dos, queda prendida.
+  try{
+    vigilarInvitaciones(dbActual());
+    vigilarRetos(dbActual());
+  }catch(e){}
 }
 
 // Botón "atrás" / "adelante" del navegador. Ahora los submenús SÍ son pasos del
@@ -950,7 +956,7 @@ async function volverSiInvitadoSinPartida(db){
     if(!soyInvitado()) return false;
     let leido = false, hayPartida = false;
     try{
-      const sd = await conTiempo(getDoc(doc(db, "sesionEncuentros/actual")), 8000);
+      const sd = await conTiempo(getDoc(doc(db, "sesionEncuentros", "actual")), 8000);
       const d = sd.exists() ? sd.data() : null;
       hayPartida = !!(d && d.activa && Array.isArray(d.cabezas) && d.cabezas.some(c=>c.id === miIdInvitado()));
       leido = true;
@@ -1582,6 +1588,11 @@ document.getElementById("invConQuien").onchange = ()=>{
   const txt = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : "";
   document.getElementById("invVista").textContent = txt ? ("Entrarás como invitado de " + txt + ".") : "";
 };
+// Comparar nombres sin que estorben las mayusculas ni los acentos: "Jose" y
+// "José" son la misma persona.
+function normalizaNombre(s){
+  return String(s || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
 document.getElementById("invConfirmar").onclick = async (e)=>{
   const nombre = document.getElementById("invNombre").value.trim();
   const sel = document.getElementById("invConQuien");
@@ -1592,14 +1603,38 @@ document.getElementById("invConfirmar").onclick = async (e)=>{
   const btn = e.target;
   btn.disabled = true;
   try{
-    const ref = doc(dbInvitado, "config", "ajustes");
-    const snap = await conTiempo(getDoc(ref), 10000);
-    const arr = (snap.exists() && Array.isArray(snap.data().usuarios)) ? snap.data().usuarios.slice() : [];
-    let n = 1;
-    arr.forEach(u=>{ const m = /^u(\d+)$/.exec(u.id || ""); if(m) n = Math.max(n, parseInt(m[1], 10) + 1); });
-    const yo = { id: "u" + n, nombre, admin: false, invitado: true, conQuien: conQuien || null };
-    arr.push(yo);
-    await conTiempo(setDoc(ref, { usuarios: arr, actualizadoEn: serverTimestamp() }, { merge: true }), 10000);
+    const claveNombre = normalizaNombre(nombre);
+    let yo = null, arr = [];
+    // Todo el leer-calcular-guardar va DENTRO de la transaccion: si dos personas
+    // se registran a la vez, la segunda vuelve a leer la lista ya actualizada y
+    // las dos quedan. Antes se pisaban entre ellas.
+    await conTiempo(runTransaction(dbInvitado, async (t)=>{
+      const ref = doc(dbInvitado, "config", "ajustes");
+      const snap = await t.get(ref);
+      const lista = (snap.exists() && Array.isArray(snap.data().usuarios)) ? snap.data().usuarios.slice() : [];
+      // Si esa persona SIGUE en la lista, se vuelve a entrar CON SU MISMA ficha
+      // en vez de crear otra: pasa cuando escanea, se queda esperando y vuelve
+      // a escanear sin haber jugado. OJO: al terminar el juego el invitado se
+      // expulsa y su ficha se borra de la lista del anfitrion, asi que si ya
+      // juego la proxima vez es una ficha nueva y empieza en 0. Solo reutiliza
+      // una ficha de invitado de ESE anfitrion, y solo si hay una sola con ese
+      // nombre: si hubiera dos, no se adivina cual y se crea una nueva.
+      const yaEsta = lista.filter(u => u && u.invitado === true
+        && (u.conQuien || null) === (conQuien || null)
+        && normalizaNombre(u.nombre || "") === claveNombre);
+      if(yaEsta.length === 1){
+        yo = yaEsta[0];
+      }else{
+        // El id lleva hora y azar, como el que crea el engrane: dos registros en
+        // el mismo instante no pueden salir con el mismo nombre interno.
+        yo = { id: "u" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+               nombre, admin: false, invitado: true, conQuien: conQuien || null };
+        lista.push(yo);
+        t.set(ref, { usuarios: lista, actualizadoEn: serverTimestamp() }, { merge: true });
+      }
+      arr = lista;
+    }), 10000);
+    if(!yo) throw new Error("no se armo el registro");
     guardarUsuariosLocal(arr);
     localStorage.setItem(CLAVE_LOCAL, JSON.stringify(yo));
     invMsg("");

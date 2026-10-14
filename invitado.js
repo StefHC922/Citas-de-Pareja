@@ -100,11 +100,17 @@ export async function salirDeInvitado(db){
     try{ yo = JSON.parse(localStorage.getItem(CLAVE_LOCAL) || "null"); }catch(e){}
     const base = db || dbInvitado();
     if(base && yo && yo.invitado){
-      const ref = doc(base, "config", "ajustes");
-      const snap = await conTiempo(getDoc(ref), 10000);
-      const arr = (snap.exists() && Array.isArray(snap.data().usuarios)) ? snap.data().usuarios : [];
-      await conTiempo(setDoc(ref, { usuarios: arr.filter(v=>!v || v.id !== yo.id), actualizadoEn: serverTimestamp() }, { merge: true }), 10000);
-      quitado = true;
+const ref = doc(base, "config", "ajustes");
+    const snap = await conTiempo(getDoc(ref), 10000);
+    const arr = (snap.exists() && Array.isArray(snap.data().usuarios)) ? snap.data().usuarios : [];
+    await conTiempo(setDoc(ref, { usuarios: arr.filter(v=>!v || v.id !== yo.id), actualizadoEn: serverTimestamp() }, { merge: true }), 10000);
+    // El saldo se pone en cero, NO se borra el documento (decision de Fredy,
+    // oct-2026). Antes se quedaba guardado con el saldo que traia y nadie lo
+    // volvia a leer jamas: al registrarse de nuevo el invitado trae otro id,
+    // asi que ese saldo ya no le servia a nadie. Ponerlo en cero evita que se
+    // junte basura.
+    try{ await conTiempo(setDoc(doc(base, "puntosUsuarios", yo.id), { balance: 0 }, { merge: true }), 10000); }catch(e){}
+    quitado = true;
     }
   }catch(e){}
   const ok = restaurar();

@@ -11,31 +11,81 @@ Sin leerlo se repiten errores ya resueltos y se rehacen cambios a medias.
 Ese fallo ya ocurrio una vez: un trabajo completo se descarto porque nadie
 tenia el contexto a la mano.
 
+### Los documentos, y cuando se lee cada uno
+
+| Documento | Que es | Cuando se lee |
+|---|---|---|
+| `AGENTS.md` | Como trabajar en este repo | **Siempre**, es lo primero |
+| `General/GUIA.md` | **Lo que es cierto HOY** y aplica a toda la app | Cuando la tarea toca codigo |
+| `General/Centro-Adquisiciones.md` | El Centro: deseos, tienda y pedidos | Solo si la tarea toca `Retos/centro.html` |
+| `General/IA-Acompanante.md` | `Acompanante/`: el tono de la IA, los ajustes y los retos que propone | Solo si la tarea toca `Acompanante/` o los retos de la IA |
+| `General/Campana-Pestana.md` | `pestana.js`: campana, bip y cartelito (Chat y Retos) | Solo si la tarea toca los avisos de la campana |
+| `General/Pegamento-y-Citas.md` | El pegamento, la agenda de `Citas/` y las pantallas de Actividades y Accesorios | Solo si la tarea toca esas pantallas |
+| `General/Modelo-Datos.md` | Como esta guardada la base y como normalizarla | Antes de migrar datos |
+| `General/HISTORIA.md` | **El por que**: relato con fecha de cada arreglo | **Solo** en los casos de abajo |
+
+**Los cuatro del medio se partieron del `GUIA.md` el oct-2026** (pasó de 2,274
+a 1,417 líneas). Son **detalle de una sola pantalla o un solo modulo**: se leen
+enteros o no se leen, y estorban al leer lo de todos los dias. **Si la tarea no
+los toca, no se abren** — y su regla general esta resumida en `GUIA.md`.
+
+**`General/HISTORIA.md` es un diario, NO son instrucciones vigentes.** Antes
+estaba todo junto en `GUIA.md` (3,000 lineas) y el problema no era el tamano:
+era que mas de la mitad era relato con fecha, y se leia como si mandara. Si algo
+de `HISTORIA.md` contradice a `GUIA.md`, **manda `GUIA.md`**.
+
+**Léelo SOLO si la tarea toca alguno de estos:**
+
+- Modo invitado, copia de seguridad, salir de la invitacion.
+- Sala de espera (`Diablitos/`), invitaciones de los juegos.
+- Avisos de fin de partida, pausa, "Saltar turno", el anfitrion.
+- `acceso.js`, licencias, catalogo, el limite de 30 solicitudes.
+- Retos de la IA de `Acompanante/`, `Retos/`, `Retos/centro.html`.
+- `Citas/` y el centro de Adquisiciones.
+
+**NO lo necesitas para:** estilos, agregar o quitar un boton, el menu y sus
+submenus, el Chat, la campana de la pestana, `confirmar.js`, `fuegos.js`,
+`glue.js`, el Asistente, o las reglas de Firebase (esas estan arriba de
+`GUIA.md`, en la parte que dice "Estado de las reglas").
+
+**Criterio honesto:** si tienes duda de si algo aplica, **no lo leas**. Casi todo
+el trabajo diario cae en la lista de "NO lo necesitas", y `GUIA.md` tiene
+1,417 lineas (se leen enteras).
+
 ## Como trabajar en este repo
 
 - Todo el codigo es **HTML estatico con JavaScript adentro**. No hay build, no
   hay npm, no hay framework. Se edita el archivo y ya.
 - Los modulos compartidos viven **en la raiz** (`acceso.js`, `invitado.js`,
-  `config.js`, `firebase-config.js`, `taquilla.js`, `fuegos.js`, `confirmar.js`) y
-  se importan por ruta relativa al **modulo**, no al archivo que lo importa.
+  `config.js`, `firebase-config.js`, `taquilla.js`, `fuegos.js`, `confirmar.js`,
+  `pestana.js`) y se importan por ruta relativa al **modulo**, no al archivo que
+  lo importa.
 - **Reglas de Firestore:** no estan en el repo. Viven en la consola de Firebase.
   Cualquier tarea sobre permisos es manual y hay que decirlo.
 - **No hay `git` disponible en el entorno de trabajo.** Para revisar cambios se
   leen los archivos directamente; Fredy es quien sube con GitHub Desktop.
 - **Verificación por sintaxis (rápida, sin navegador).** Es el único chequeo
-  automático que queda: `herramientas/sintaxis/`. Saca los `<script>` de los HTML
-  y revisa que llaves, paréntesis y corchetes cuadren. **No** usa Chrome ni toca
-  Firebase. El orden es: extraer, luego revisar.
+  automático que queda: `herramientas/sintaxis/`. El orden es: extraer, luego
+  revisar.
 
   ```powershell
   cd herramientas\sintaxis
-  python extract.py
-  python jscheck.py <archivo.js>
+  python revisar.py
   ```
 
-  `extract.py` deja los scripts sueltos en `Temp\opencode\extracted`. Ojo:
-  `jscheck.py` marca como error las llaves que estén DENTRO de una expresión
-  regular; el navegador real es la autoridad.
+  `revisar.py` hace las dos cosas y revisa **todo** el repo. Sale con `1` si algo
+  falla.
+
+  **OJO, error que ya se cometió (oct-2026):** `jscheck.py` **no** saca los
+  `<script>` de los HTML. Si se le pasa un `.html` a mano, cuenta también las
+  llaves del CSS y da "OK" **por casualidad**. Hay que pasarle el `.js` que
+  dejó `extract.py`, que vive en `Temp\opencode\extracted`. Por eso conviene
+  `revisar.py` y nunca llamar a `jscheck.py` con un `.html`.
+
+  `extract.py` no revisa solo lo que este en su lista: `Diablitos/index.html`,
+  `invitado.js` y `confirmar.js` se agregaron en oct-2026 porque **no estaban**
+  y por eso nadie los revisaba. Si agregas una pantalla o un modulo nuevo,
+  **registralo en `extract.py`**, o queda sin revisar para siempre.
 
 - **No hay arnés con Chrome.** Se retiró en oct-2026: era lento y poco fiable
   (Chrome sin ventana devolvía volcados vacíos). **La verificación de verdad es
@@ -75,6 +125,11 @@ probarla no justifica el rato perdido.
    no deba.
 6. Documentar en `General/GUIA.md` lo que se decida o se descubra. Ese archivo
    es la unica memoria del proyecto.
+6b. **Pero `GUIA.md` tiene que poder leerse de arriba a abajo.** Si lo que vas a
+   escribir empieza con "antes se hacía X" o lleva una fecha de hace meses, **va
+   a `General/HISTORIA.md`**, no ahi. `GUIA.md` es lo que rige hoy;
+   `HISTORIA.md` es el por que. Si se mezclan, `GUIA.md` se vuelve ilegible y
+   este repo pierde su memoria otra vez (oct-2026).
 
 ## Estándares de tamaño (no inventar otros)
 
@@ -350,16 +405,24 @@ Ver `General/GUIA.md`, seccion del autorizador.
 
 ## Riesgo conocido (importante, NO urgente)
 
-- Las reglas de `solicitudes` estan **abiertas** (`solicitudes: if true`). Fredy lo
-  sabe y lo tiene aceptado: se resolvera con el **rediseño de arquitectura**.
-  **No lo trates como una urgencia ni intentes cerrarlas por tu cuenta.**
-- `Autorizar/index.html` con el login de Google ya esta escrito, **falta subirlo**.
+- **Las reglas de `solicitudes` SI estan cerradas** (6-oct-2026, revisadas por
+  Fredy y probadas: pedir, aprobar, revocar y el Panel). Lo unico que sigue
+  abierto es `allow read`, **a proposito**: el menu y los juegos leen esa
+  coleccion sin sesion y sin internet, y cerrarla rompe el modo sin conexion.
+  El texto vigente esta en `General/reglas-firebase-taquilla.txt`.
+  **No lo trates como una urgencia ni intentes cerrarlo por tu cuenta.**
+- **`Autorizar/index.html` ya esta subido** y su login de Google funciona:
+  Fredy probo pedir, aprobar y revocar el 6-oct-2026 y todo respondio normal.
+- **Si las compras dejan de funcionar, la causa mas probable es la lista de los
+  7 campos** de `create` en las reglas. Lo dice la seccion 3 del archivo de
+  reglas, con la forma de comprobarlo.
 
-**Unica regla dura:** nunca cerrar esas reglas antes de que `Autorizar/` tenga el
-login subido. Sin login, cerrar las reglas rompe Aprobar/Revocar **en silencio**
-(el boton parece funcionar y no cambia nada).
+**Lo que si esta pendiente** es el **permiso de `borrar` en `solicitudes`**: hoy
+solo lo tiene el publicador, y el rediseno de la cola lo necesita. Cambiar
+reglas es **siempre manual, en la consola**, y hay que probar las 4 cosas de la
+seccion 5 de `reglas-firebase-taquilla.txt`.
 
-Ver `General/GUIA.md`, Parte 4.
+Ver `General/GUIA.md`, sección "`Autorizar/`: aprobar y revocar licencias".
 
 ## La base de cada PAREJA: reglas ABIERTAS a proposito
 
