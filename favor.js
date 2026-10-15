@@ -269,9 +269,34 @@ export function montarFavor(db, intentos){
       console.error("Favor Express: no se pudo leer el saldo", e);
     }
 
+    // Un favor a la vez con la misma persona, hasta que TERMINE.
+    //
+    // No basta con bloquear los que no se han aceptado: el aviso vive en UN solo
+    // hueco por quien lo manda (`invitosFavor/{miId}`). Con dos favores vivos, un
+    // aviso pisa al otro: si el favor A esta en curso y pido el B, el aviso de "te
+    // pide B" lo PISA el de "recibiste A" cuando marco recibido, y el B se queda
+    // sin avisar (lo pregunto Fredy, oct-2026). Con uno solo a la vez no hay con
+    // quien pisarse. Se deja pedir otro cuando el anterior llego a un final.
+    try{
+      const mias = await getDocs(query(collection(db, "favoresExpress"), where("de.id", "==", yo.id)));
+      let vivo = false;
+      mias.forEach(ds=>{
+        const d = ds.data();
+        if(!d || !d.para || d.para.id !== pareja.id) return;
+        // Final = ya no va a generar mas avisos.
+        if(["cumplido","cobrado","perdonado","cancelado","rechazado"].indexOf(d.estado) < 0) vivo = true;
+      });
+      if(vivo){
+        msgEl.textContent = "Ya tienen un favor en curso. Termínenlo antes de pedir otro.";
+        return;
+      }
+    }catch(e){
+      console.error("Favor Express: no se pudo revisar si ya hay uno vivo", e);
+    }
+
     btnMandar.disabled = true;
     try{
-      await addDoc(collection(db, "favoresExpress"), {
+      const nuevo = await addDoc(collection(db, "favoresExpress"), {
         de: { id: yo.id, nombre: yo.nombre },
         para: { id: pareja.id, nombre: pareja.nombre },
         texto: texto,
@@ -294,6 +319,10 @@ export function montarFavor(db, intentos){
       // primero y quien lo mando nunca se entera (le paso con `invitosRetos`).
       try{
         await setDoc(doc(db, "invitosFavor", yo.id), {
+          // `favorId` para que al oprimir "Entendido" abra ESTE favor. Faltaba en
+          // el aviso de cuando se PIDE (solo lo puse en los de responder y cerrar),
+          // asi que al aceptar el aviso no abria nada (oct-2026).
+          favorId: nuevo.id,
           para: pareja.id,
           de: yo.id,
           deNombre: yo.nombre,
@@ -364,16 +393,20 @@ function esReciente(f){
 export function abrirVentanaFavor(id){
   const yo = Yo();
   if(!yo || !id) return false;
-  cola = []; colaPropia = [];
-  // Primero lo que le toca responder; si no, cualquier otro estado.
   const f = todosLosFavores[id];
-  if(f){
-    if(leTocaResponder(f.d, yo.id)) mostrarRespuesta(f);
-    else mostrarPropio(f);
-    return true;
-  }
   // No esta en la cola (todavia no ha llegado el snapshot): se avisa y ya.
-  aviso("Ese favor todavía no se ha cargado.");
+  if(!f){ aviso("Ese favor todavía no se ha cargado."); return false; }
+  // Mismo criterio que `abrirFavorPendiente`: solo se abre la ventana de accion
+  // de un favor que TODAVIA esta vivo. Antes, tocar un favor ya cumplido en el
+  // Centro abria la ventana de "Esperando a X" encima de algo terminado
+  // (lo reporto Fredy probando, oct-2026).
+  cola = []; colaPropia = [];
+  if(ESTADOS_VIVOS.indexOf(f.d.estado) >= 0 && leTocaResponder(f.d, yo.id)){
+    mostrarRespuesta(f); return true;
+  }
+  if(f.d.de && f.d.de.id === yo.id && ["enCurso","vencido"].indexOf(f.d.estado) >= 0){
+    mostrarPropio(f); return true;
+  }
   return false;
 }
 
@@ -591,6 +624,10 @@ function marcarAvisoVisto(db, yo){
 function mostrarRespuesta(f){
   const yo = Yo();
   const d = f.d;
+  // Defensa: si el favor ya no esta vivo (cumplido, cobrado, rechazado...), esta
+  // ventana no tiene nada que hacer. Sin esto caia al ultimo `else` y mostraba
+  // "confirmo el precio" sobre un favor terminado (lo reporto Fredy, oct-2026).
+  if(ESTADOS_VIVOS.indexOf(d.estado) < 0) return;
   const otro = (d.para.id === yo.id) ? d.de : d.para;
   const c = laCapaRespuesta();
   const $ = (id)=> c.querySelector("#" + id);
@@ -737,7 +774,7 @@ async function responder(db, f, accion, nuevoPrecio){
       cambios.respondidoEn = serverTimestamp();
     }
     await setDoc(doc(db, "favoresExpress", f.id), cambios, { merge: true });
-    await avisarAlOtro(db, yo, otro, d, sig);
+    await avisarAlOtro(db, yo, otro, d, sig, f.id);
     return true;
   }catch(e){
     console.error("Favor Express: no se pudo responder", e);
@@ -745,10 +782,14 @@ async function responder(db, f, accion, nuevoPrecio){
   }
 }
 
-async function avisarAlOtro(db, yo, otro, d, sig){
+async function avisarAlOtro(db, yo, otro, d, sig, favorId){
   const texto = textoParaElOtro(d, sig, yo.nombre);
   try{
     await setDoc(doc(db, "invitosFavor", yo.id), {
+      // `favorId` dice DE QUE favor habla este aviso. Sin esto, al oprimir
+      // "Entendido" habia que adivinar entre todos los favores y salia uno viejo
+      // de pruebas a medias (lo reporto Fredy probando, oct-2026).
+      favorId: favorId || null,
       para: otro.id,
       de: yo.id,
       deNombre: yo.nombre,
@@ -931,29 +972,34 @@ function encolarPropios(snap, yo){
   return accionables;
 }
 
-// Lo que se llama cuando el usuario ya le dio "Entendido" al aviso de la
-// campana: se abre la ventana del favor que le toca. Y solo ese favor: si hay
-// mas de uno pendiente, el resto se abre desde Centro -> Favores.
-export function abrirFavorPendiente(){
+// Lo que se llama cuando el usuario ya le dio "Entendido" al aviso de la campana.
+//
+// OJO: abre SOLO el favor del que hablaba el aviso (`favorId`), y solo si de
+// verdad falta algo que hacer. Antes se buscaba "el mas reciente entre todos" y
+// si quedaba un favor viejo a medias de las pruebas, se abria ESE: salia una
+// ventana que no tenia que ver con el mensaje ("Esposo confirmo el precio"
+// cuando el favor ya estaba cumplido). Lo reporto Fredy probando, oct-2026.
+//
+// Si no hay nada que hacer con ese favor (ya se cumplio, se cobro, etc.), NO se
+// abre nada: el aviso solo era para enterarte.
+export function abrirFavorPendiente(favorId){
   const yo = Yo();
   if(!yo || !yo.id) return false;
+  const f = favorId ? todosLosFavores[favorId] : null;
+  if(!f || !f.d) return false;
   cola = []; colaPropia = [];
-  let elegido = null;
-  Object.keys(todosLosFavores).forEach(id=>{
-    const f = todosLosFavores[id];
-    if(!f || !f.d) return;
-    if(leTocaResponder(f.d, yo.id)){
-      if(!elegido || (cuandoMil(f) > cuandoMil(elegido))) elegido = f;
-      return;
-    }
-    if(f.d.de && f.d.de.id === yo.id && ["enCurso","vencido"].indexOf(f.d.estado) >= 0){
-      if(!elegido || (cuandoMil(f) > cuandoMil(elegido))) elegido = f;
-    }
-  });
-  if(!elegido) return false;
-  if(leTocaResponder(elegido.d, yo.id)) mostrarRespuesta(elegido);
-  else mostrarPropio(elegido);
-  return true;
+  // `leTocaResponder` NO revisa el estado: para cualquier estado que no sea
+  // "contra" contesta que le toca a `para`. Por eso hay que filtrar aqui que el
+  // favor siga VIVO. Sin este filtro, un favor ya CUMPLIDO pasaba como "te toca
+  // responder" y salia la ventana "confirmo el precio" encima de un favor ya
+  // terminado (lo reporto Fredy probando, oct-2026).
+  if(ESTADOS_VIVOS.indexOf(f.d.estado) >= 0 && leTocaResponder(f.d, yo.id)){
+    mostrarRespuesta(f); return true;
+  }
+  if(f.d.de && f.d.de.id === yo.id && ["enCurso","vencido"].indexOf(f.d.estado) >= 0){
+    mostrarPropio(f); return true;
+  }
+  return false;
 }
 
 // ============================================================================
@@ -1092,6 +1138,7 @@ async function cerrarFavor(db, f, estado, extra){
     if(texto){
       try{
         await setDoc(doc(db, "invitosFavor", yo.id), {
+          favorId: f.id,
           para: otro.id, de: yo.id, deNombre: yo.nombre,
           titulo: "Cerraron tu favor", aviso: texto,
           creadoEn: serverTimestamp(), visto: false

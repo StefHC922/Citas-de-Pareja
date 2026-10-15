@@ -187,6 +187,9 @@ function pintar(canal, mia, creadoEn, d){
   // algo nuevo", a veces es que te contestaron o que te rechazaron el favor.
   canal.tituloDoc = (d && d.titulo) || "";
   canal.avisoDoc = (d && d.aviso) || "";
+  // De que favor habla este aviso (solo los favores lo traen). Se guarda para
+  // poder abrir EXACTAMENTE ese y no adivinar (oct-2026).
+  canal.favorId = (d && d.favorId) || "";
   // La "firma" del cartelito es el MENSAJE, no el canal. Antes `cartelitoYaSalio`
   // solo se reiniciaba cuando el canal dejaba de estar pendiente: si llegaba un
   // aviso NUEVO encima del anterior, el cartelito ya no volvia a salir y el
@@ -260,7 +263,7 @@ function avisarInvitacion(canal){
     // Ya lo vio: la campana se apaga. Si no, el mismo cartelito volvia a salir en
     // cada pantalla que se abriera.
     try{ marcarVista(canal); }catch(e){}
-    try{ if(canal.alTerminar) canal.alTerminar(); }catch(e){}
+    try{ if(canal.alTerminar) canal.alTerminar(canal.favorId); }catch(e){}
   });
 }
 
