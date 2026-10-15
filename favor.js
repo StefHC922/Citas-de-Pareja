@@ -1,24 +1,24 @@
-﻿// ============================================================================
-//  Favores Express â€” botÃ³n flotante y ventana de pedir  (oct-2026)
+// ============================================================================
+//  Favores Express — botón flotante y ventana de pedir  (oct-2026)
 // ----------------------------------------------------------------------------
-//  Un favor se pide SIN entrar a buscarlo: hay un botÃ³n flotante que estÃ¡ en
-//  todas las pantallas. Lo abre una ventana: escribes QUÃ‰ favor quieres y se
-//  manda con el precio del ðŸ›’.
+//  Un favor se pide SIN entrar a buscarlo: hay un botón flotante que está en
+//  todas las pantallas. Lo abre una ventana: escribes QUÉ favor quieres y se
+//  manda con el precio del 🛒.
 //
-//      import { montarFavor } from "./favor.js";        // en la raÃ­z
+//      import { montarFavor } from "./favor.js";        // en la raíz
 //      import { montarFavor } from "../favor.js";       // en una carpeta
 //      montarFavor(dbActual());
 //
-//  FASE 1 (esto es lo que hay ahora): el botÃ³n, la ventana de PEDIR, y que el
-//  aviso llegue. Aceptar / contra-ofertar / pagar todavÃ­a NO: es la fase 2.
+//  FASE 1 (esto es lo que hay ahora): el botón, la ventana de PEDIR, y que el
+//  aviso llegue. Aceptar / contra-ofertar / pagar todavía NO: es la fase 2.
 //
-//  El modelo (decisiones de Fredy, oct-2026 â€” ver General/Plan-Favores-Express.md):
-//   - El precio lo pone el ðŸ›’ de QUIEN PIDE, y no se puede cambiar al pedir.
-//   - Quien va a CUMPLIR sÃ­ puede ajustarlo: para arriba, o hasta 0 si lo regala.
+//  El modelo (decisiones de Fredy, oct-2026 — ver General/Plan-Favores-Express.md):
+//   - El precio lo pone el 🛒 de QUIEN PIDE, y no se puede cambiar al pedir.
+//   - Quien va a CUMPLIR sí puede ajustarlo: para arriba, o hasta 0 si lo regala.
 //     (Eso es la fase 2.)
-//   - El saldo nunca queda negativo: tope cero. Y el botÃ³n SIEMPRE aparece, solo
-//     que avisa que no alcanza. OJO: es al revÃ©s que en el Centro de
-//     Adquisiciones, donde el botÃ³n "Comprar" ni aparece sin saldo.
+//   - El saldo nunca queda negativo: tope cero. Y el botón SIEMPRE aparece, solo
+//     que avisa que no alcanza. OJO: es al revés que en el Centro de
+//     Adquisiciones, donde el botón "Comprar" ni aparece sin saldo.
 // ============================================================================
 
 import {
@@ -31,25 +31,25 @@ import { soyInvitado, CLAVE_LOCAL, dbActual } from "./invitado.js";
 import { baseUrl } from "./config.js";
 
 // Si no hay numero guardado, este. OJO: aqui el 0 SI es valido (ella puede
-// regalar el favor), asi que no se comprueba "> 0" como en el ðŸ›’ de los deseos.
+// regalar el favor), asi que no se comprueba "> 0" como en el 🛒 de los deseos.
 const FAVOR_POR_DEFECTO = 15;
 
-// Minutos para cumplir, y quÃ© porcentaje del precio es el castigo si no se
-// cumple. Los dos salen del ðŸ›’ de QUIEN PIDE (son su exigencia) y se congelan
-// al crear el favor: cambiar el ðŸ›’ despues NO cambia lo que ya esta pactado.
+// Minutos para cumplir, y qué porcentaje del precio es el castigo si no se
+// cumple. Los dos salen del 🛒 de QUIEN PIDE (son su exigencia) y se congelan
+// al crear el favor: cambiar el 🛒 despues NO cambia lo que ya esta pactado.
 //
-// El castigo SIEMPRE se cobra a mano: al vencerse, quien pidiÃ³ decide si lo cobra
-// o lo deja pasar. Nunca se descuenta solo (decisiÃ³n de Fredy, oct-2026: que el
+// El castigo SIEMPRE se cobra a mano: al vencerse, quien pidió decide si lo cobra
+// o lo deja pasar. Nunca se descuenta solo (decisión de Fredy, oct-2026: que el
 // castigo no espante de aceptar favores).
 const PCT_CASTIGO_POR_DEFECTO = 50;
 const MINUTOS_POR_DEFECTO = 10;
 
-// CuÃ¡nto tiempo hay para cumplirlo una vez que se acepta. La FASE 3 lo saca de
-// aquÃ­ y lo hace configurable en el ðŸ›’ (decisiÃ³n de Fredy, oct-2026). Por ahora
-// es fijo: cambiarlo es cambiar este nÃºmero.
+// Cuánto tiempo hay para cumplirlo una vez que se acepta. La FASE 3 lo saca de
+// aquí y lo hace configurable en el 🛒 (decisión de Fredy, oct-2026). Por ahora
+// es fijo: cambiarlo es cambiar este número.
 
-// Los estados en los que todavÃ­a se puede responder algo. En cuanto el favor
-// pasa de aquÃ­, la ventana se deja de abrir.
+// Los estados en los que todavía se puede responder algo. En cuanto el favor
+// pasa de aquí, la ventana se deja de abrir.
 const ESTADOS_VIVOS = ["pedido", "contra", "esperando"];
 
 // Un aviso puede llegar mientras haya un cartelito de `confirmar.js` en
@@ -188,7 +188,7 @@ export function montarFavor(db, intentos){
 
   async function preparar(){
     // El precio y la pareja se leen FRESCOS de `config/ajustes`, no de la copia
-    // local de la identidad: asi lo que cambies en âš™ï¸ â†’ ðŸ›’ se ve sin recargar.
+    // local de la identidad: asi lo que cambies en ⚙️ → 🛒 se ve sin recargar.
     // Mismo criterio que el Centro de Adquisiciones.
     try{
       const snap = await getDoc(doc(db, "config", "ajustes"));
@@ -310,7 +310,7 @@ export function abrirVentanaFavor(id){
 }
 
 // ============================================================================
-//  FASE 2 â€” la ventana de RESPONDER: aceptar / cobrar otro precio / rechazar
+//  FASE 2 — la ventana de RESPONDER: aceptar / cobrar otro precio / rechazar
 // ----------------------------------------------------------------------------
 //  Se escucha `favoresExpress` entera y se filtra en el cliente: la coleccion es
 //  de dos personas, no vale la pena una consulta con `where`.
@@ -341,8 +341,8 @@ function siguiente(){
   mostrarRespuesta(f);
 }
 
-// QUIÃ‰N le toca responder, que NO es siempre el mismo. Ojo, aquÃ­ estuvo un bug
-// (oct-2026): la ventana se abrÃ­a solo a quien va dirigido el favor, o sea solo
+// QUIÉN le toca responder, que NO es siempre el mismo. Ojo, aquí estuvo un bug
+// (oct-2026): la ventana se abría solo a quien va dirigido el favor, o sea solo
 // a quien cumple. Pero cuando hay contra-oferta el que tiene que contestar es el
 // que PIDIO el favor, y ese paso se quedaba colgado sin que nadie lo viera.
 //
@@ -424,23 +424,23 @@ function mostrarRespuesta(f){
     // Soy quien tiene que cumplirlo.
     $("vrTitulo").textContent = otro.nombre + " te pide un favor";
     $("vrPrecio").textContent = "Precio: " + cents(d.precio) + ". Lo paga " + d.de.nombre
-      + ". Puedes cobrar mÃ¡s, o dejarlo en 0. Al aceptar te da " + minutosDe(d) + " minutos.";
+      + ". Puedes cobrar más, o dejarlo en 0. Al aceptar te da " + minutosDe(d) + " minutos.";
     btnOtroBtn.style.display = "block";
   }else if(d.estado === "contra"){
-    // Soy quien pidiÃ³ el favor: me contestan con otro precio. (Este paso casi se
+    // Soy quien pidió el favor: me contestan con otro precio. (Este paso casi se
     // pierde en el bug de `leTocaResponder`.)
     $("vrTitulo").textContent = otro.nombre + " te contesta";
     $("vrPrecio").textContent = "Quiere cobrar " + cents(d.precio) + " por: " + (d.texto || "")
       + ". Si aceptas, falta que confirme.";
     btnOtroBtn.style.display = "none";
   }else{
-    // Soy quien cumple y me confirman el precio. Ahora sÃ­ arranca el reloj.
-    $("vrTitulo").textContent = d.de.nombre + " confirmÃ³ el precio";
+    // Soy quien cumple y me confirman el precio. Ahora sí arranca el reloj.
+    $("vrTitulo").textContent = d.de.nombre + " confirmó el precio";
     $("vrPrecio").textContent = cents(d.precio) + " por: " + (d.texto || "")
       + ". Al aceptar te quedan " + minutosDe(d) + " minutos.";
     btnOtroBtn.style.display = "none";
   }
-  btnAceptar.textContent = "Aceptar Â· " + cents(d.precio);
+  btnAceptar.textContent = "Aceptar · " + cents(d.precio);
   btnRechazar.style.display = "block";
 
   const cerrar = ()=>{
@@ -464,7 +464,7 @@ function mostrarRespuesta(f){
   btnOtroBtn.onclick = ()=>{ cajaOtro.style.display = "block"; };
   $("vrMandarOtro").onclick = async ()=>{
     const n = parseInt($("vrPrecioFinal").value, 10);
-    if(!isFinite(n) || n < 0){ msg.textContent = "El precio tiene que ser 0 o mÃ¡s."; return; }
+    if(!isFinite(n) || n < 0){ msg.textContent = "El precio tiene que ser 0 o más."; return; }
     await responder(db, f, "contra", n);
     cerrar();
   };
@@ -500,13 +500,13 @@ function siguienteEstado(d, accion, nuevoPrecio){
   if(accion === "rechazar") return { estado:"rechazado" };
   if(d.estado === "pedido"){
     if(accion === "contra") return { estado:"contra", precio: nuevoPrecio };
-    return { estado:"enCurso" };               // aceptÃ³ directo: arranca el reloj
+    return { estado:"enCurso" };               // aceptó directo: arranca el reloj
   }
   if(d.estado === "contra"){
-    if(accion === "contra") return null;       // no se puede volver a contra: se acabÃ³
-    return { estado:"esperando" };            // quien pidiÃ³ aceptÃ³ el precio nuevo
+    if(accion === "contra") return null;       // no se puede volver a contra: se acabó
+    return { estado:"esperando" };            // quien pidió aceptó el precio nuevo
   }
-  // estaba en "esperando": ya no hay a quiÃ©n responderle. Se acepta y arranca.
+  // estaba en "esperando": ya no hay a quién responderle. Se acepta y arranca.
   return { estado:"enCurso" };
 }
 
@@ -560,8 +560,8 @@ async function avisarAlOtro(db, yo, otro, d, sig){
       deNombre: yo.nombre,
       titulo: sig.estado === "rechazado" ? "No aceptaron tu favor"
            : sig.estado === "enCurso" ? "Aceptaron tu favor"
-           : sig.estado === "vencido" ? "No te cumpliÃ³ a tiempo"
-           : sig.estado === "cobrado" ? "Se cobrÃ³ el castigo"
+           : sig.estado === "vencido" ? "No te cumplió a tiempo"
+           : sig.estado === "cobrado" ? "Se cobró el castigo"
            : sig.estado === "perdonado" ? "Lo dejaste pasar"
            : sig.estado === "cancelado" ? "Cancelaste el favor"
            : sig.estado === "cumplido" ? "Favor cumplido"
@@ -575,11 +575,11 @@ async function avisarAlOtro(db, yo, otro, d, sig){
 }
 
 // ============================================================================
-//  FASE 3 (parte 2) â€” la ventana de MI favor: cancelar, cobrar, perdonar
+//  FASE 3 (parte 2) — la ventana de MI favor: cancelar, cobrar, perdonar
 // ----------------------------------------------------------------------------
 //  Se abre solo para quien PIDIO el favor, y solo en los estados donde hay algo
 //  que hacer. En `contra` y `esperando`, si es mi turno, la ventanita de
-//  responder trae su propio "Cancelar": asÃ­ nunca se abren dos encimadas.
+//  responder trae su propio "Cancelar": así nunca se abren dos encimadas.
 // ============================================================================
 
 let colaPropia = [];
@@ -615,7 +615,7 @@ function laCapaPropia(){
 }
 
 function faltaEn(ms){
-  if(!ms || ms <= 0) return "se acabÃ³ el tiempo";
+  if(!ms || ms <= 0) return "se acabó el tiempo";
   const s = Math.ceil(ms / 1000);
   const m = Math.floor(s / 60);
   return m > 0 ? (m + " min " + (s % 60) + " s") : (s + " s");
@@ -697,7 +697,7 @@ function encolarPropios(snap, yo){
 }
 
 // ============================================================================
-//  FASE 3 â€” el reloj, el pago y el castigo
+//  FASE 3 — el reloj, el pago y el castigo
 // ----------------------------------------------------------------------------
 //  - El reloj NO es una alarma: nadie va a estar mirando la app en el minuto
 //    exacto. Se revisa al abrir, y lo que se vencio mientras tanto se liquida.

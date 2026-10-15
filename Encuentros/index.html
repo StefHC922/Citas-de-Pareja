@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<!-- El QR del anfitriÃ³n para registrar invitados sin salir del juego. -->
+<!-- El QR del anfitrión para registrar invitados sin salir del juego. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
@@ -135,19 +135,19 @@
 </head>
 <body>
 
-<a class="back" id="lnkInicio" href="../index.html#experiencias">â† Volver</a>
-<button id="btnCfg" aria-label="Configurar">âš™ï¸</button>
+<a class="back" id="lnkInicio" href="../index.html#experiencias">← Volver</a>
+<button id="btnCfg" aria-label="Configurar">⚙️</button>
 
 <div class="eyebrow">Encuentros Guiados</div>
 
 <!-- ============ BLOQUEO (sin acceso) ============ -->
 <div class="vista" id="vistaBloqueo">
-  <h1>Acceso ðŸ”’</h1>
-  <p class="desc">Encuentros Guiados no estÃ¡ activado en tu menÃº. PÃ­delo en Centro de Adquisiciones y al aprobarse aparece solo.</p>
+  <h1>Acceso 🔒</h1>
+  <p class="desc">Encuentros Guiados no está activado en tu menú. Pídelo en Centro de Adquisiciones y al aprobarse aparece solo.</p>
   <button class="btnPri" id="btnTienda">Ir a Centro de Adquisiciones</button>
-  <button class="btnSec" id="btnRevisar">Ya lo pedÃ­, revisar acceso</button>
-  <button class="btnSec" id="btnTengo">Tengo cÃ³digo</button>
-  <textarea id="licCodigo" style="display:none;width:100%;border-radius:12px;border:1px solid var(--card-border);background:var(--card);color:var(--fg);padding:12px;font-size:.8rem;min-height:90px;" placeholder="Pega tu cÃ³digo aquÃ­"></textarea>
+  <button class="btnSec" id="btnRevisar">Ya lo pedí, revisar acceso</button>
+  <button class="btnSec" id="btnTengo">Tengo código</button>
+  <textarea id="licCodigo" style="display:none;width:100%;border-radius:12px;border:1px solid var(--card-border);background:var(--card);color:var(--fg);padding:12px;font-size:.8rem;min-height:90px;" placeholder="Pega tu código aquí"></textarea>
   <button class="btnPri" id="btnValidar" style="display:none">Validar y entrar</button>
   <div id="licMsg" style="min-height:20px;font-size:.85rem;color:var(--rojo);margin:6px 0;text-align:center;"></div>
 </div>
@@ -155,18 +155,18 @@
 <!-- ============ LISTA (admin elige actividad) ============ -->
 <div class="vista" id="vistaLista">
   <h1 id="tituloLista">Elige actividad</h1>
-  <p class="desc" id="descLista">Se generarÃ¡ una lista para cada quien.</p>
-  <input class="buscar" id="buscarLista" type="text" placeholder="ðŸ” Buscar actividad..." autocomplete="off">
+  <p class="desc" id="descLista">Se generará una lista para cada quien.</p>
+  <input class="buscar" id="buscarLista" type="text" placeholder="🔍 Buscar actividad..." autocomplete="off">
   <div id="cajaActs" style="width:100%;max-height:55dvh;overflow-y:auto;border:1px solid var(--card-border);border-radius:16px;padding:10px;background:var(--bg-2);">
     <div id="listaActs" style="width:100%"></div>
   </div>
-  <button class="btnPri" id="btnMulti" style="margin-top:12px;">Modo MultiActividades ðŸ”—</button>
+  <button class="btnPri" id="btnMulti" style="margin-top:12px;">Modo MultiActividades 🔗</button>
   <div id="filaMultiSel" style="display:none;width:100%;gap:8px;margin-top:12px;">
     <button class="btnPri" id="btnMultiGo" disabled style="flex:1;opacity:.4;margin-bottom:0;">Combinar (0/3)</button>
     <button class="btnSec" id="btnMultiCancel" style="width:auto;padding:12px 16px;text-decoration:none;">Cancelar</button>
   </div>
   <div id="cajaModoJuego" style="width:100%;background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:14px;margin-top:12px;">
-    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;text-align:center;">Â¿CÃ³mo van a Jugar hoy?</div>
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;text-align:center;">¿Cómo van a Jugar hoy?</div>
     <label class="opModo"><input type="radio" name="modoJuego" value="local"> Acciones en un Celular</label>
     <label class="opModo"><input type="radio" name="modoJuego" value="compartido" checked> Cada quien en el suyo</label>
   </div>
@@ -176,7 +176,7 @@
 <div class="vista" id="vistaConfig">
   <h1>Configurar</h1>
   <p class="desc">Elige actividad.</p>
-  <input class="buscar" id="buscarCfg" type="text" placeholder="ðŸ” Buscar actividad..." autocomplete="off">
+  <input class="buscar" id="buscarCfg" type="text" placeholder="🔍 Buscar actividad..." autocomplete="off">
   <div id="listaActsCfg" style="width:100%"></div>
 </div>
 
@@ -190,13 +190,13 @@
     <div class="tomasGrid" id="tomasGridEncEd"></div>
   </div>
   <div id="msg"></div>
-  <button class="btnPri" id="btnJugarEd">Jugar â–¶</button>
+  <button class="btnPri" id="btnJugarEd">Jugar ▶</button>
 </div>
 
 <!-- ============ ESPERA (invitado / pareja) ============ -->
 <div class="vista" id="vistaEspera">
-  <h1>Encuentros ðŸ’«</h1>
-  <p class="desc" id="esperaDesc">Esperando a que el anfitriÃ³n inicie el encuentroâ€¦</p>
+  <h1>Encuentros 💫</h1>
+  <p class="desc" id="esperaDesc">Esperando a que el anfitrión inicie el encuentro…</p>
   <button class="btnSec" id="btnEsperaRefrescar">Volver a revisar</button>
 </div>
 
@@ -206,8 +206,8 @@
   <div id="progreso"></div>
   <div id="nivelTag" hidden></div>
   <div id="actividadAhora"></div>
-  <div id="finMsg" style="display:none">Â¡Gracias por jugar!</div>
-  <button class="btnPri" id="btnSig">Siguiente â†’</button>
+  <div id="finMsg" style="display:none">¡Gracias por jugar!</div>
+  <button class="btnPri" id="btnSig">Siguiente →</button>
 
   <!-- El hueco de arriba esta reservado aunque el boton no se vea. -->
   <div class="filaSaltar">
@@ -224,10 +224,10 @@
     <button class="btnSec" id="btnTerminar" style="display:none">Pausar y Salir</button>
     <button class="btnSec" id="btnQR" style="display:none">QR Invita a Alguien</button>
     <button class="btnSec" id="btnTerminarPartida" style="display:none">Terminar Partida</button>
-    <button class="btnSec" id="btnAgregarInv" style="display:none">âž• Agregar invitado</button>
+    <button class="btnSec" id="btnAgregarInv" style="display:none">➕ Agregar invitado</button>
   </div>
 
-  <!-- QuiÃ©n sigue esperando afuera y quiÃ©n ya estÃ¡ jugando. -->
+  <!-- Quién sigue esperando afuera y quién ya está jugando. -->
   <div id="salaPanel">
     <div class="salaCaja">
       <h4>En la espera <b id="esperaCount">0</b></h4>
@@ -243,9 +243,9 @@
 <!-- ============ CONTINUAR ============ -->
 <div class="modal" id="vistaSeguir">
   <div class="caja">
-    <h1 id="sgTitulo" style="font-size:1.3rem;">Â¿Continuar encuentro anterior?</h1>
+    <h1 id="sgTitulo" style="font-size:1.3rem;">¿Continuar encuentro anterior?</h1>
     <p class="desc" id="sgDesc" style="max-width:none;"></p>
-    <button class="btnPri" id="btnContinuar">Continuar â†’</button>
+    <button class="btnPri" id="btnContinuar">Continuar →</button>
     <button class="btnSec" id="btnNueva">Encuentro nuevo</button>
   </div>
 </div>
@@ -253,7 +253,7 @@
 <!-- ============ GRACIA ============ -->
 <div class="modal" id="modalGracia">
   <div class="caja">
-    <div style="font-size:.95rem;line-height:1.5;">Su acceso venciÃ³ ðŸ¥º pero hoy no les arruinamos su encuentro ðŸ’› les obsequiamos este Ãºltimo acceso</div>
+    <div style="font-size:.95rem;line-height:1.5;">Su acceso venció 🥺 pero hoy no les arruinamos su encuentro 💛 les obsequiamos este último acceso</div>
     <div style="font-size:.75rem;color:var(--fg-muted);margin-top:10px;text-align:right;">Solicite su acceso en<br>Centro de Adquisiciones</div>
     <button class="btnPri" id="btnGraciaOk" style="margin-top:14px;">Aceptar</button>
   </div>
@@ -262,7 +262,7 @@
 <!-- ============ PAUSA (aviso a los demas jugadores) ============ -->
 <div class="modal" id="modalPausa">
   <div class="caja">
-    <div style="font-size:.95rem;line-height:1.5;">El anfitriÃ³n pausÃ³ el encuentro. Cuando lo retome, podrÃ¡s volver a unirte.</div>
+    <div style="font-size:.95rem;line-height:1.5;">El anfitrión pausó el encuentro. Cuando lo retome, podrás volver a unirte.</div>
     <button class="btnPri" id="btnPausaOk" style="margin-top:14px;">Aceptar</button>
   </div>
 </div>
@@ -270,7 +270,7 @@
 <!-- ============ FIN (aviso a los invitados) ============ -->
 <div class="modal" id="modalFin">
   <div class="caja">
-    <div id="finTxt">Â¡Gracias por jugar!</div>
+    <div id="finTxt">¡Gracias por jugar!</div>
     <button class="btnPri" id="btnFinOk" style="margin-top:14px;">Aceptar</button>
   </div>
 </div>
@@ -278,9 +278,9 @@
 <!-- ============ MULTI 2: CONFIRMAR ============ -->
 <div class="modal" id="modalMulti2">
   <div class="caja">
-    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;">Â¿Son estas 3?</div>
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;">¿Son estas 3?</div>
     <div id="multiResumen" style="font-size:.95rem;margin:12px 0;line-height:1.6;"></div>
-    <button class="btnPri" id="btnMulti2Ok" style="margin-bottom:8px;">SÃ­, continuar â†’</button>
+    <button class="btnPri" id="btnMulti2Ok" style="margin-bottom:8px;">Sí, continuar →</button>
     <button class="btnSec" id="btnMulti2Back">Re-elegir</button>
   </div>
 </div>
@@ -288,20 +288,20 @@
 <!-- ============ TOMAS ============ -->
 <div class="modal" id="modalTomas">
   <div class="caja">
-    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;text-align:center;margin-bottom:4px;">Â¿CuÃ¡ntas acciones por nivel?</div>
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;text-align:center;margin-bottom:4px;">¿Cuántas acciones por nivel?</div>
     <p class="desc" id="tomasAviso" style="max-width:none;margin-bottom:12px;"></p>
     <div class="tomasGrid" id="tomasGridEncuentros"></div>
-    <button class="btnPri" id="btnTomasOk" style="margin-top:12px;">Aceptar y jugar â–¶</button>
-    <button class="btnSec" id="btnTomasBack">AtrÃ¡s</button>
+    <button class="btnPri" id="btnTomasOk" style="margin-top:12px;">Aceptar y jugar ▶</button>
+    <button class="btnSec" id="btnTomasBack">Atrás</button>
   </div>
 </div>
 
 <!-- ============ UNIRSE ============ -->
 <div class="modal" id="modalUnir">
   <div class="caja">
-    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.15rem;">Â¿Quieres jugar? Â¿Unirte?</div>
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.15rem;">¿Quieres jugar? ¿Unirte?</div>
     <div id="unirDesc" style="font-size:.9rem;color:var(--fg-muted);margin:10px 0 0;"></div>
-    <button class="btnPri" id="btnUnirme" style="margin-top:16px;">Unirme â†’</button>
+    <button class="btnPri" id="btnUnirme" style="margin-top:16px;">Unirme →</button>
   <button class="btnSec" id="btnUnirNo">Ahora no</button>
   </div>
 </div>
@@ -310,16 +310,16 @@
 <div class="modal" id="modalAgregar">
   <div class="caja">
     <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.3rem;">Agregar invitado</div>
-    <div style="font-size:.82rem;color:var(--fg-muted);margin:8px 0 0;">EntrarÃ¡ cuando le toque en la rotaciÃ³n.</div>
+    <div style="font-size:.82rem;color:var(--fg-muted);margin:8px 0 0;">Entrará cuando le toque en la rotación.</div>
     <div id="listaAgregar" style="margin-top:14px;"></div>
     <button class="btnSec" id="btnAgregarNo">Cancelar</button>
   </div>
 </div>
 
-<!-- ============ CÃ“DIGO QR (para registrar invitados sin salir) ============ -->
+<!-- ============ CÓDIGO QR (para registrar invitados sin salir) ============ -->
 <div class="modal" id="modalQR">
   <div class="caja">
-    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.2rem;">CÃ³digo QR</div>
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.2rem;">Código QR</div>
     <div style="font-size:.82rem;color:var(--fg-muted);margin:8px 0 12px;">Que lo escanee quien quiera entrar como invitado.</div>
     <div id="qrCajaJuego" style="background:#fff;padding:12px;border-radius:14px;display:none;justify-content:center;margin:0 auto 12px;width:fit-content;"></div>
     <div id="qrMsg" style="font-size:.82rem;color:var(--rojo);min-height:18px;"></div>
@@ -333,9 +333,9 @@ import { getFirestore, doc, getDoc, setDoc, collection, getDocs, onSnapshot, que
 import firebaseConfigBase from "../firebase-config.js";
 import { resolverFirebase, cargarUsuarios, asegurarFabrica, unirConFabrica, leerConfigGuardada } from "../config.js";
 import { verificarCodigo, verificarFirma } from "../taquilla.js";
-// LÃ³gica de licencias compartida con el resto de la app (ver acceso.js).
+// Lógica de licencias compartida con el resto de la app (ver acceso.js).
 import { miProyecto, appTaq, leerLicencias, guardarLicencia, quitarLicencia, tengoAcceso, oficialesAprobados, escucharItem } from "../acceso.js";
-// Invitados: este juego solo publica y retira su invitaciÃ³n. No sabe nada de la sala.
+// Invitados: este juego solo publica y retira su invitación. No sabe nada de la sala.
 import { publicarInvitacion, retirarInvitacion, pausarInvitacion } from "../invitado.js";
 // Fuegos de celebracion al acabar el encuentro (igual que Elecciones Peligrosas).
 import { encenderFuegos, apagarFuegos } from "../fuegos.js";
@@ -344,7 +344,7 @@ import { montarFavor } from "../favor.js";
 try{ montarFavor(); }catch(e){}
 
 const NIVELES = [
-  { id: "basico", nombre: "BÃ¡sico" },
+  { id: "basico", nombre: "Básico" },
   { id: "medio", nombre: "Medio" },
   { id: "avanzado", nombre: "Avanzado" },
   { id: "experto", nombre: "Experto" },
@@ -466,7 +466,7 @@ document.getElementById("btnValidar").onclick = async ()=>{
     entrar();
     return;
   }
-  licMsg("CÃ³digo invÃ¡lido o vencido.");
+  licMsg("Código inválido o vencido.");
 };
 function licMsg(t){ document.getElementById("licMsg").textContent = t || ""; }
 
@@ -504,10 +504,10 @@ function pintarSalidas(){
 }
 function nombreAdmin(){
   const a = usuariosLista.find(u=>u.admin);
-  return (a && a.nombre) || "el anfitriÃ³n";
+  return (a && a.nombre) || "el anfitrión";
 }
 
-// ---------- sesiÃ³n ----------
+// ---------- sesión ----------
 function sesionRef(){ return doc(db, "sesionEncuentros", "actual"); }
 let cabezas = [];
 let listas = {};
@@ -517,15 +517,15 @@ let turno = 0;
 let orden = [];
 let jugando = false;
 let modoLocal = false;
-// modoJuego: "local" = todo en un celular (el del anfitriÃ³n);
-//            "compartido" = cada quien en el suyo (sesiÃ³n + invitaciones).
+// modoJuego: "local" = todo en un celular (el del anfitrión);
+//            "compartido" = cada quien en el suyo (sesión + invitaciones).
 // Por defecto "compartido": es el comportamiento de siempre en Encuentros.
 let modoJuego = "compartido";
-// jugandoCompartido: si la partida EN CURSO usa la sesiÃ³n compartida. En local
-// no se escribe sesiÃ³n ni se invita: todo se ve en el celular del anfitriÃ³n.
+// jugandoCompartido: si la partida EN CURSO usa la sesión compartida. En local
+// no se escribe sesión ni se invita: todo se ve en el celular del anfitrión.
 let jugandoCompartido = false;
 // soyHost: mando en la partida EN CURSO (puedo pausar/terminar/saltar). Se pone
-// al iniciar, al reanudar como anfitriÃ³n, o al entrar a una partida que yo iniciÃ©.
+// al iniciar, al reanudar como anfitrión, o al entrar a una partida que yo inicié.
 let soyHost = false;
 let sesionActual = null;
 let sesionUnsub = null;
@@ -614,7 +614,7 @@ async function chequearPendiente(esMulti, actividad){
       const ordenP = Array.isArray(d.orden) ? d.orden : [];
       const cab = (Array.isArray(d.cabezas) ? d.cabezas : []).find(c=>c.id === ordenP[d.turno || 0]);
       const turnoTxt = cab ? " Le tocaba a " + (cab.nombre || "alguien") + "." : "";
-      seguirEncima("Â¿Continuar encuentro anterior?",
+      seguirEncima("¿Continuar encuentro anterior?",
         "Ibas en la ronda " + ((d.ronda || 0) + 1) + " de " + d.largo
         + (acts.length ? " de " + acts.join(" + ") : "") + "." + turnoTxt);
       return true;
@@ -630,13 +630,13 @@ async function iniciarSingle(nombre){
 async function entrar(){
   let ok = false;
   try{ ok = await tengoAcceso(ITEM_ID); }catch(e){ ok = false; }
-  if(!ok && esInvitadoFlag) ok = true; // invitado juega con el acceso del anfitriÃ³n
+  if(!ok && esInvitadoFlag) ok = true; // invitado juega con el acceso del anfitrión
   if(ok){
     modoLocal = (typeof navigator !== "undefined" && navigator.onLine === false);
     // La pareja (no invitado) tambien tiene su pantalla de inicio y puede jugar
     // por su cuenta, como el administrador. El invitado sigue esperando.
     if(!esInvitadoFlag){
-      if(esAdminFlag && modoLocal){ try{ aviso("Sin conexiÃ³n. Se jugarÃ¡ en este celular."); }catch(e){} }
+      if(esAdminFlag && modoLocal){ try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){} }
       pintarLista("listaActs");
       ver("vistaLista", false);
     }else{
@@ -646,7 +646,7 @@ async function entrar(){
     try{ escucharSesion(); }catch(e){}
     return;
   }
-  // cortesÃ­a Ãºnica si venciÃ³
+  // cortesía única si venció
   try{
     const lic = leerLicencias()[ITEM_ID];
     if(lic){
@@ -683,19 +683,19 @@ async function chequearPartidaEspera(){
   const pon = (t)=>{ try{ if(el) el.textContent = t; }catch(e){} };
   try{
     const sd = await getDoc(sesionRef());
-    if(!sd.exists()){ pon("Sin partida en curso. (TÃº: " + yo + ")"); return; }
+    if(!sd.exists()){ pon("Sin partida en curso. (Tú: " + yo + ")"); return; }
     const d = sd.data();
-    if(!d || !d.activa || d.terminada){ pon("Sin partida en curso. (TÃº: " + yo + ")"); return; }
+    if(!d || !d.activa || d.terminada){ pon("Sin partida en curso. (Tú: " + yo + ")"); return; }
     sesionActual = d;
     if(d.hostUid === miId) return;
     if(soyCabeza(d)){
       document.getElementById("unirDesc").textContent = d.reanudada
-        ? ((d.hostNombre || "El anfitriÃ³n") + " retomÃ³ el encuentro. Puedes continuar donde van.")
-        : ((d.hostNombre || "El anfitriÃ³n") + " iniciÃ³ un Encuentro Guiado.");
+        ? ((d.hostNombre || "El anfitrión") + " retomó el encuentro. Puedes continuar donde van.")
+        : ((d.hostNombre || "El anfitrión") + " inició un Encuentro Guiado.");
       abrirModal("modalUnir");
     }else{
       const nombres = (d.cabezas || []).map(c=>c.nombre).join(", ");
-      pon("Hay partida de " + (d.hostNombre || "el anfitriÃ³n") + ", pero no estÃ¡s en la lista. Participantes: " + nombres + ". TÃº: " + yo + ".");
+      pon("Hay partida de " + (d.hostNombre || "el anfitrión") + ", pero no estás en la lista. Participantes: " + nombres + ". Tú: " + yo + ".");
     }
   }catch(e){
     pon("No se pudo revisar la partida. (" + (e && e.message ? e.message : "error") + ")");
@@ -714,7 +714,7 @@ function escucharSesion(){
           sanearSesion(d);
           sesionActual = d;
           finMostrado = false;
-          // Partida en un solo celular: la sesiÃ³n compartida no manda aquÃ­.
+          // Partida en un solo celular: la sesión compartida no manda aquí.
           if(jugando && !jugandoCompartido) return;
           // Si el anfitrion PAUSO, los demas salen. El anfitrion si puede
           // retomar despues (la partida queda pendiente con pausada=true).
@@ -733,12 +733,12 @@ function escucharSesion(){
             // preguntarle dos veces lo mismo (en la sala ya acepto entrar).
             if(entrarDirecto && soyCabeza(d)){ entrarAlJuego(d); return; }
             document.getElementById("unirDesc").textContent = d.reanudada
-              ? ((d.hostNombre || "El anfitriÃ³n") + " retomÃ³ el encuentro. Puedes continuar donde van.")
-              : ((d.hostNombre || "El anfitriÃ³n") + " iniciÃ³ un Encuentro Guiado.");
+              ? ((d.hostNombre || "El anfitrión") + " retomó el encuentro. Puedes continuar donde van.")
+              : ((d.hostNombre || "El anfitrión") + " inició un Encuentro Guiado.");
             document.getElementById("modalUnir").style.display = "flex";
           }
         }else{
-          // Partida en un solo celular: nada de sesiÃ³n compartida la toca.
+          // Partida en un solo celular: nada de sesión compartida la toca.
           if(jugando && !jugandoCompartido) return;
           // Si la partida TERMINO (no pausada, no descartada) se avisa a TODOS
           // los que estaban jugando: al invitado (que al aceptar sale del modo
@@ -750,8 +750,8 @@ function escucharSesion(){
             jugando = false;
             try{
               document.getElementById("finTxt").textContent = d.porAdmin
-                ? "El anfitriÃ³n acabÃ³ la partida."
-                : "Â¡Gracias por jugar!";
+                ? "El anfitrión acabó la partida."
+                : "¡Gracias por jugar!";
             }catch(e){}
             mostrarFin();
           }
@@ -773,7 +773,7 @@ function avanzarLocal(){
       pintarPaso();
       // Acciones en un Celular tambien se celebra: mismo aviso y mismos fuegos
       // que cuando la partida es compartida.
-      try{ document.getElementById("finTxt").textContent = "Â¡Gracias por jugar!"; }catch(e){}
+      try{ document.getElementById("finTxt").textContent = "¡Gracias por jugar!"; }catch(e){}
       mostrarFin();
       return;
     }
@@ -815,14 +815,14 @@ async function avanzarSesion(){
 async function saltarTurno(){
   const d = sesionActual;
   if(!d || !d.activa || d.hostUid !== miId){
-    aviso("Solo el anfitriÃ³n puede saltar un turno.");
+    aviso("Solo el anfitrión puede saltar un turno.");
     return;
   }
   const deQuien = nombreCabeza((d.orden || [])[d.turno || 0]);
   if(d.orden[d.turno || 0] === miId){ pintarPaso(); return; }
   const saltar = await confirmar({
     aviso: true,
-    titulo: "Â¿Saltar el turno de " + deQuien + "?",
+    titulo: "¿Saltar el turno de " + deQuien + "?",
     texto: "Esa persona pierde su turno y el juego sigue con el siguiente.",
     ok: "Saltar turno"
   });
@@ -865,7 +865,7 @@ function anunciarInvitacion(sid, cabezas, hostNombre){
     publicarInvitacion({
       juego: JUEGO_INV,
       titulo: "Encuentros Guiados",
-      icono: "ðŸ’«",
+      icono: "💫",
       ruta: "Encuentros",
       hostUid: miId,
       hostNombre: hostNombre || "",
@@ -894,7 +894,7 @@ function ver(id, guardar){
   document.querySelectorAll(".vista").forEach(v=>v.classList.remove("ver"));
   document.getElementById(id).classList.add("ver");
   // El engrane va arriba a la IZQUIERDA, solo en la pantalla de elegir
-  // actividad. El "â† Volver" (arriba a la derecha) se encarga de regresar.
+  // actividad. El "← Volver" (arriba a la derecha) se encarga de regresar.
   try{ document.getElementById("btnCfg").style.display = (id === "vistaLista") ? "block" : "none"; }catch(e){}
   // Nadie sale de la partida: durante el juego se ocultan las dos salidas
   // automaticas (el enlace al inicio y el boton de lista). Quedan solo
@@ -1010,7 +1010,7 @@ function dibujarLista(boxId, acts, conteos){
       t.textContent = nombre + (c ? "" : " (sin acciones)");
       t.style.flex = "1";
       lab.appendChild(t);
-      if(esOf){ const tag = document.createElement("small"); tag.textContent = "ðŸ…"; lab.appendChild(tag); }
+      if(esOf){ const tag = document.createElement("small"); tag.textContent = "🏅"; lab.appendChild(tag); }
       lab.appendChild(chk);
       lab.onclick = (e)=>{
         if(e.target !== chk && c){
@@ -1027,11 +1027,11 @@ function dibujarLista(boxId, acts, conteos){
     const t = document.createElement("span");
     t.textContent = nombre;
     b.appendChild(t);
-    if(esOf){ const tag = document.createElement("small"); tag.textContent = "ðŸ…"; b.appendChild(tag); }
+    if(esOf){ const tag = document.createElement("small"); tag.textContent = "🏅"; b.appendChild(tag); }
     if(!c){
       b.disabled = true;
       const s = document.createElement("small");
-      s.textContent = "âš™ï¸ configurar en Citas Guiadas";
+      s.textContent = "⚙️ configurar en Citas Guiadas";
       b.appendChild(s);
     }else{
       b.onclick = ()=>{ iniciarSingle(nombre); };
@@ -1066,7 +1066,7 @@ let multiSel = [];
 let multiModo = false;
 function multiRefrescar(){
   document.getElementById("tituloLista").textContent = multiModo ? "Selecciona 3 para combinar" : "Elige actividad";
-  document.getElementById("descLista").textContent = multiModo ? ("Llevas " + multiSel.length + "/3") : "Se generarÃ¡ una lista para cada quien.";
+  document.getElementById("descLista").textContent = multiModo ? ("Llevas " + multiSel.length + "/3") : "Se generará una lista para cada quien.";
   document.getElementById("btnMulti").style.display = multiModo ? "none" : "";
   document.getElementById("filaMultiSel").style.display = multiModo ? "flex" : "none";
   const go = document.getElementById("btnMultiGo");
@@ -1163,9 +1163,9 @@ async function pintarListaCfg(){
     b.appendChild(t);
     const right = document.createElement("span");
     right.style.cssText = "display:flex;align-items:center;gap:6px;flex:0 0 auto;";
-    if(esOf){ const tag = document.createElement("small"); tag.textContent = "ðŸ…"; right.appendChild(tag); }
+    if(esOf){ const tag = document.createElement("small"); tag.textContent = "🏅"; right.appendChild(tag); }
     const s = document.createElement("small");
-    s.textContent = c ? (c + (c === 1 ? " acciÃ³n" : " acciones")) : "sin acciones";
+    s.textContent = c ? (c + (c === 1 ? " acción" : " acciones")) : "sin acciones";
     right.appendChild(s);
     b.appendChild(right);
     b.onclick = ()=>abrirEditor(nombre);
@@ -1200,7 +1200,7 @@ function pintarEditor(){
     const tag = document.createElement("span");
     tag.className = "tag";
     const total = lados.A.length + lados.B.length;
-    tag.textContent = total + (total === 1 ? " acciÃ³n" : " acciones");
+    tag.textContent = total + (total === 1 ? " acción" : " acciones");
     h.appendChild(tag);
     div.appendChild(h);
     ["A", "B"].forEach(lado=>{
@@ -1213,7 +1213,7 @@ function pintarEditor(){
       const fila = document.createElement("div");
       fila.className = "filaAdd";
       const inp = document.createElement("input");
-      inp.placeholder = "Nueva acciÃ³n (" + nv.nombre.toLowerCase() + ")";
+      inp.placeholder = "Nueva acción (" + nv.nombre.toLowerCase() + ")";
       inp.maxLength = 90;
       const btn = document.createElement("button");
       btn.textContent = "+";
@@ -1222,7 +1222,7 @@ function pintarEditor(){
       inp.addEventListener("keydown", (e)=>{ if(e.key === "Enter") agregar(); });
       fila.appendChild(inp); fila.appendChild(btn);
       div.appendChild(fila);
-      // Al reves: la ultima que agregaste queda ARRIBA, pegada al campo. La "âœ•"
+      // Al reves: la ultima que agregaste queda ARRIBA, pegada al campo. La "✕"
       // lleva su propio texto y borra por TEXTO, no por posicion: con un indice,
       // estando la lista al reves, se llevaria otra accion.
       const chips = document.createElement("div");
@@ -1234,7 +1234,7 @@ function pintarEditor(){
         c.className = "chip";
         c.textContent = txt;
         const x = document.createElement("button");
-        x.textContent = "âœ•";
+        x.textContent = "✕";
         x.onclick = ()=>{ quitarItemEd(nv.id, lado, txt); };
         c.appendChild(x);
         chips.appendChild(c);
@@ -1299,9 +1299,9 @@ document.getElementById("btnCfg").onclick = ()=>{
   pintarListaCfg();
   ver("vistaConfig");
 };
-// El "â† Volver" (arriba a la derecha) regresa a la pantalla ANTERIOR de
+// El "← Volver" (arriba a la derecha) regresa a la pantalla ANTERIOR de
 // Encuentros, no al inicio: del editor a la lista de configurar, y de ahi a
-// la lista de actividades. Solo desde la lista de actividades sale al menÃº.
+// la lista de actividades. Solo desde la lista de actividades sale al menú.
 document.getElementById("lnkInicio").addEventListener("click", (e)=>{
   const v = document.querySelector(".vista.ver");
   const id = v ? v.id : "";
@@ -1325,7 +1325,7 @@ function abrirTomas(activities){
   pedidosTomas = activities.slice();
   const g = document.getElementById("tomasGridEncuentros");
   g.innerHTML = "";
-  // Si es UNA actividad, se precargan las tomas guardadas (las del editor âš™ï¸).
+  // Si es UNA actividad, se precargan las tomas guardadas (las del editor ⚙️).
   // En MultiActividades no hay un numero unico, asi que se usan las de fabrica.
   const guardadas = (activities.length === 1) ? tomasGuardadasEd(docDe(activities[0])) : null;
   NIVELES.forEach(nv=>{
@@ -1339,8 +1339,8 @@ function abrirTomas(activities){
     g.appendChild(lab);
   });
   const minLargo = Math.max(2, construirCabezas().length);
-  document.getElementById("tomasAviso").textContent = "MÃ­nimo total " + minLargo + " acciones (2 + invitados).";
-  document.getElementById("btnTomasOk").textContent = "Aceptar y jugar â–¶";
+  document.getElementById("tomasAviso").textContent = "Mínimo total " + minLargo + " acciones (2 + invitados).";
+  document.getElementById("btnTomasOk").textContent = "Aceptar y jugar ▶";
   abrirModal("modalTomas");
 }
 document.getElementById("btnTomasBack").onclick = ()=>{
@@ -1358,7 +1358,7 @@ document.getElementById("btnTomasOk").onclick = async ()=>{
   if(acts.length) await generarYIniciar(acts, tomas);
 };
 
-// ---------- cabezas + generaciÃ³n ----------
+// ---------- cabezas + generación ----------
 function construirCabezas(){
   const adm = usuariosLista.find(u=>u.admin);
   const out = [];
@@ -1422,7 +1422,7 @@ async function generarYIniciar(activities, tomas){
   const largoCalc = NIVELES.reduce((t, nv)=> t + Math.max(0, tomas[nv.id] || 0), 0);
   const minLargo = cabezasIn.length;
   if(largoCalc < minLargo){
-    aviso("El mÃ­nimo de acciones por lista es " + minLargo + " (2 + invitados registrados). SÃºbelo.");
+    aviso("El mínimo de acciones por lista es " + minLargo + " (2 + invitados registrados). Súbelo.");
     return;
   }
   const actsData = [];
@@ -1437,7 +1437,7 @@ async function generarYIniciar(activities, tomas){
   const listasNuevas = generarListas(cabezasIn, actsData, tomas);
   const realLargo = listasNuevas[cabezasIn[0].id] ? listasNuevas[cabezasIn[0].id].length : 0;
   if(!realLargo){
-    aviso("Sin acciones en esas actividades. AlimÃ©ntalas en Citas Guiadas âš™ï¸.");
+    aviso("Sin acciones en esas actividades. Aliméntalas en Citas Guiadas ⚙️.");
     return;
   }
   const lens = cabezasIn.map(c=> (listasNuevas[c.id] || []).length);
@@ -1468,10 +1468,10 @@ async function generarYIniciar(activities, tomas){
   };
   modoLocal = (typeof navigator !== "undefined" && navigator.onLine === false);
   const quiereCompartido = (modoJuego === "compartido");
-  // Compartido solo si de verdad hay internet; sin conexiÃ³n cae a un celular.
+  // Compartido solo si de verdad hay internet; sin conexión cae a un celular.
   const compartido = quiereCompartido && !modoLocal;
   if(quiereCompartido && modoLocal){
-    try{ aviso("Sin conexiÃ³n. Se jugarÃ¡ en este celular."); }catch(e){}
+    try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){}
   }
   jugandoCompartido = compartido;
   cargarEnMemoria(nueva);
@@ -1481,12 +1481,12 @@ async function generarYIniciar(activities, tomas){
   try{ multiRefrescar(); }catch(e){}
   if(compartido){
     try{ await setDoc(sesionRef(), nueva); }
-    catch(e){ try{ aviso("No se pudo iniciar. Revisa conexiÃ³n."); }catch(x){} }
+    catch(e){ try{ aviso("No se pudo iniciar. Revisa conexión."); }catch(x){} }
     // Anunciar la partida para que la sala de espera avise a los invitados.
     anunciarInvitacion(sid, cabezasIn, nueva.hostNombre);
   }else{
-    // Todo en un celular: no hay sesiÃ³n compartida ni invitaciÃ³n. Se cierra
-    // cualquier sesiÃ³n previa para que nadie quede esperando una partida vieja.
+    // Todo en un celular: no hay sesión compartida ni invitación. Se cierra
+    // cualquier sesión previa para que nadie quede esperando una partida vieja.
     try{ await cerrarSesion(); }catch(e){}
   }
   document.getElementById("plTitulo").textContent = "Encuentros Guiados";
@@ -1556,7 +1556,7 @@ function pintarSala(){
     arr.forEach(it=>{
       const s = document.createElement("span");
       s.className = "ficha" + (it.yo ? " yo" : "") + (it.inv ? " inv" : "");
-      s.textContent = it.nombre + (it.yo ? " (tÃº)" : "") + (it.inv ? " Â· invitado" : "");
+      s.textContent = it.nombre + (it.yo ? " (tú)" : "") + (it.inv ? " · invitado" : "");
       destino.appendChild(s);
     });
   };
@@ -1594,28 +1594,28 @@ function pintarPaso(){
   fin.style.display = "none";
   const actualId = orden[turno] || "";
   const soyYo = actualId === miId;
-  // En "Acciones en un Celular" (local) todo se ve en este telÃ©fono, el del
-  // anfitriÃ³n, respetando los turnos: se muestra la acciÃ³n de quien toca y de
-  // quiÃ©n es, no solo la propia.
+  // En "Acciones en un Celular" (local) todo se ve en este teléfono, el del
+  // anfitrión, respetando los turnos: se muestra la acción de quien toca y de
+  // quién es, no solo la propia.
   const unCelular = !jugandoCompartido;
   const miCab = cabezas.find(c=>c.id === miId) || {};
   const cabe = cabezas.find(c=>c.id === actualId) || miCab;
-  prog.textContent = "Ronda " + (ronda + 1) + " de " + total + " Â· Turno " + (turno + 1) + " de " + cabezas.length;
+  prog.textContent = "Ronda " + (ronda + 1) + " de " + total + " · Turno " + (turno + 1) + " de " + cabezas.length;
   if(unCelular || soyYo){
     const item = (listas[actualId] || [])[ronda];
     elAct.textContent = item ? item.texto : "";
     elAct.style.color = (unCelular ? cabe.lado : miCab.lado) === "A" ? "var(--teal)" : "var(--coral)";
     tag.style.display = "";
-    tag.textContent = (unCelular ? ((cabe.nombre || "Alguien") + " Â· ") : "") + (item ? item.nivel : "");
+    tag.textContent = (unCelular ? ((cabe.nombre || "Alguien") + " · ") : "") + (item ? item.nivel : "");
     btnSig.style.display = "";
     btnSig.disabled = false;
     btnSig.style.opacity = "1";
     const ultimo = (ronda + 1 >= total) && (turno + 1 >= cabezas.length);
-    btnSig.textContent = ultimo ? "Terminar ðŸ”¥" : "Siguiente â†’";
+    btnSig.textContent = ultimo ? "Terminar 🔥" : "Siguiente →";
     // Con el turno propio (o en un solo celular) no hay nada que saltar.
     try{ btnSaltar.style.display = "none"; }catch(e){}
   }else{
-    elAct.textContent = "Turno de " + nombreCabeza(actualId) + "â€¦";
+    elAct.textContent = "Turno de " + nombreCabeza(actualId) + "…";
     elAct.style.color = "var(--fg-muted)";
     tag.style.display = "none";
     btnSig.style.display = "";
@@ -1710,13 +1710,13 @@ async function agregarInvitado(id){
     const cabs = (cabezas || []).some(c=> c.id === nuevo.id) ? cabezas : (cabezas || []).concat([nuevo]);
     anunciarInvitacion(sidMostrado, cabs, nombreAdmin());
   }catch(e){
-    try{ aviso("No se pudo agregar. Revisa tu conexiÃ³n."); }catch(x){}
+    try{ aviso("No se pudo agregar. Revisa tu conexión."); }catch(x){}
   }
 }
 document.getElementById("btnAgregarInv").onclick = ()=>{ abrirAgregar(); };
 document.getElementById("btnAgregarNo").onclick = ()=>{ cerrarModal("modalAgregar"); };
 
-// QR del anfitriÃ³n: quien lo escanea se registra como invitado SIN salir del juego.
+// QR del anfitrión: quien lo escanea se registra como invitado SIN salir del juego.
 document.getElementById("btnQR").onclick = ()=>{
   const g = leerConfigGuardada();
   const caja = document.getElementById("qrCajaJuego");
@@ -1725,7 +1725,7 @@ document.getElementById("btnQR").onclick = ()=>{
   caja.innerHTML = "";
   if(!g || !g.firebase){
     caja.style.display = "none";
-    msg.textContent = "No se encontrÃ³ la configuraciÃ³n.";
+    msg.textContent = "No se encontró la configuración.";
     abrirModal("modalQR");
     return;
   }
@@ -1742,7 +1742,7 @@ document.getElementById("btnQRNo").onclick = ()=>{ cerrarModal("modalQR"); };
 
 document.getElementById("btnTerminar").onclick = async ()=>{
   // PAUSA la partida (se puede retomar). Solo el anfitrion.
-  if(!esAnfitrion()){ aviso("Pausar la partida es cosa del anfitriÃ³n."); return; }
+  if(!esAnfitrion()){ aviso("Pausar la partida es cosa del anfitrión."); return; }
   jugando = false;
   if(jugandoCompartido){
     try{ await setDoc(sesionRef(), { pausada: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
@@ -1757,7 +1757,7 @@ document.getElementById("btnTerminar").onclick = async ()=>{
 document.getElementById("btnTerminarPartida").onclick = async ()=>{
   // TERMINA la partida de forma definitiva (no se retoma). Solo el anfitrion.
   // A los invitados les llega el aviso y, al aceptar, salen del modo invitado.
-  if(!esAnfitrion()){ aviso("Terminar la partida es cosa del anfitriÃ³n."); return; }
+  if(!esAnfitrion()){ aviso("Terminar la partida es cosa del anfitrión."); return; }
   jugando = false;
   if(jugandoCompartido){
     try{ await setDoc(sesionRef(), { activa: false, terminada: true, porAdmin: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
@@ -1800,7 +1800,7 @@ document.getElementById("btnContinuar").onclick = async ()=>{
 };
 document.getElementById("btnNueva").onclick = async ()=>{
   seguirFuera();
-  if(!esAnfitrion()){ aviso("Quien inicia o renueva el encuentro es el anfitriÃ³n."); return; }
+  if(!esAnfitrion()){ aviso("Quien inicia o renueva el encuentro es el anfitrión."); return; }
   try{ await cerrarSesion(); }catch(e){}
   jugando = false;
   if(pendienteEsMulti){
@@ -1869,7 +1869,7 @@ document.querySelectorAll('input[name="modoJuego"]').forEach(r=>{
 });
 modoJuego = (document.querySelector('input[name="modoJuego"]:checked') || {}).value || "compartido";
 
-// Respaldo: mientras el acompaÃ±ante/invitado espera, se revisa la partida cada
+// Respaldo: mientras el acompañante/invitado espera, se revisa la partida cada
 // pocos segundos (por si la escucha en vivo se cayo y no aviso).
 setInterval(()=>{
   try{

@@ -1,95 +1,89 @@
 # Plan: Favores Express
 
-> **oct-2026 · EN CONSTRUCCIÓN.** Esto empezó como plan y ya tiene **código**.
-> La parte que **sí** existe va marcada como **FASE 1 (hecha)** abajo. Lo demás
-> sigue siendo idea.
+> **oct-2026 · LAS 5 FASES ESTÁN HECHAS. Falta probarlas en vivo.**
 >
-> **Qué se hace con este archivo:** se va llenando mientras se construye. Cuando
-> la función esté terminada y probada, **se borra** y lo que valga pasa a
-> `GUIA.md`. Es un archivo temporal a propósito.
+> Esto empezó como plan y ya tiene código. Cuando esté probado, **este archivo
+> se borra** y lo que valga pasa a `GUIA.md`.
 
 ## Cómo va la construcción
 
 | Fase | Qué hace | Estado |
 |---|---|---|
-| **1** | El 🛒 con su número, el botón flotante, la ventana de **pedir**, y que el aviso llegue | **HECHA, sin probar en vivo** |
-| **2** | La ventana de responder: **aceptar / cobrar otro precio / rechazar**, con los 4 estados | Pendiente |
-| **3** | El reloj (10 min), el **"Recibí ✓"**, el pago con `runTransaction` y la sanción con tope cero | Pendiente |
-| **4** | El registro: una pestaña más del Centro, con el historial escondido | Pendiente |
-| **5** | El botón flotante en las 13 pantallas | Pendiente |
+| **1** | El 🛒, el botón flotante, la ventana de **pedir**, y que el aviso llegue | **HECHA** |
+| **2** | La ventana de responder: **aceptar / otro precio / rechazar** | **HECHA** |
+| **3** | El reloj, el **"Recibí ✓"**, el pago y el castigo | **HECHA** |
+| **4** | La vista "Favores" en el Centro | **HECHA** |
+| **5** | El botón en las 12 pantallas | **HECHA** |
 
-**Cada fase se puede probar sola**, y si se corta la sesión aquí queda escrito
-qué sigue.
+**Sin probar en vivo.** Lo que hay que checar está al final de este archivo.
 
-## FASE 1 (hecha oct-2026) — lo que existe
+## Lo que quedó construido
 
 | Pieza | Dónde |
 |---|---|
-| **El número del 🛒** | `index.html`, el overlay de puntos: *"Precio de un Favor Express"*. Guarda como **`precioFavor`** en el usuario de `config/ajustes`. **Default 15** |
-| **El módulo** | `favor.js`, en la raíz. Trae el botón flotante + la ventana de pedir |
-| **Conectado en** | **Solo el menú** (`index.html`). Las otras 12 pantallas son la fase 5 |
-| **La colección** | **`favoresExpress`** (un documento por favor) |
-| **El aviso de campana** | **`invitosFavor/{id de quien manda}`** — por persona, no uno solo |
+| **`favor.js`** | El botón flotante, las dos ventanas (pedir / responder), el pago, el castigo y el vencimiento |
+| **`pestana.js`** | Tipo nuevo `"favores"`: la campana y el bip |
+| **`config.js`** | `baseUrl()` **arreglado**: antes quitaba la carpeta solo si era `Citas` o `Retos`, así que desde `Chat/`, `Acompanante/`… los enlaces de Telegram apuntaban a carpetas inexistentes |
+| **`index.html`** | Los **5 números** del 🛒 y el botón en el menú |
+| **`Retos/centro.html`** | La cuarta vista "Favores" |
+| **Las otras 10 pantallas** | Un import y una línea, y nada más |
 
-### El modelo del documento
+### Los 5 números del 🛒
 
-```js
-{
-  de:    { id, nombre },   // QUIEN PIDE
-  para:  { id, nombre },   // a quien se le pide (la pareja)
-  texto: "...",            // el favor, texto libre
-  precioBase: 15,          // del 🛒 de quien pide. NO se puede cambiar al pedir
-  precio: 15,              // el precio vigente (lo mueve quien cumple)
-  estado: "pedido",        // pendiente | contra | esperando | enCurso | cumplido | rechazado | vencido
-  venceEn: null,           // el reloj NO arranca al pedir: arranca al aceptar
-  creadoEn: serverTimestamp()
-}
-```
-
-**Los estados** (para la fase 2):
-
-| Estado | Quién lo ve | Qué falta |
+| Campo | Qué es | Por omisión |
 |---|---|---|
-| `pedido` | Ella | Aceptar / cobrar otro precio / rechazar |
-| `contra` | Él | Aceptar su precio o no |
-| `esperando` | Ella | Confirmar (solo pasa si hubo contra) |
-| `enCurso` | Los dos | El reloj corre |
-| `cumplido` | — | Ya se pagaron los puntos |
-| `rechazado` / `vencido` | — | Se acabó, sin puntos |
+| `ptsActivar` | Puntos para activar un deseo | 500 |
+| `precioCompra` | Precio para comprar un deseo | 100 |
+| **`precioFavor`** | **Precio de un Favor Express** | **15** |
+| **`pctCastigo`** | **% que se cobra si aceptan y no cumplen** | **50** |
+| **`minutosFavor`** | **Minutos para cumplirlo** | **10** |
 
-### El precio: las reglas (decididas por Fredy, oct-2026)
+Los tres últimos son **del que pide** y **se congelan al crear el favor**. Cambiar
+el 🛒 después NO cambia lo que ya está pactado.
+
+### Las colecciones
+
+| Ruta | Qué |
+|---|---|
+| `favoresExpress` | Un documento por favor |
+| `invitosFavor/{id de quien manda}` | El aviso de campana. **Por persona**, no uno solo (si no, los dos se pisan) |
+
+### El botón flotante
+
+Abajo a la derecha, 54 px, circular, **sin degradado** (decisión de Fredy):
+fondo oscuro, borde de la app y el timbre adentro. Sale siempre igual.
+
+**En dónde:** las 12 pantallas de la pareja. **No** en `Panel/`, `Tienda/`,
+`Autorizar/`, `Privacidad/` ni `Terminos/`.
+
+**Dos reglas que se resuelven solas:**
 
 | | |
 |---|---|
-| **Lo pone el 🛒** | Del que pide. Al pedir, el precio sale **escrito y no editable** |
-| **Quien pidió** | **No lo toca.** Solo escribe qué favor quiere |
-| **Quien va a cumplir** | **Sí lo cambia**: para arriba, o hasta **0** si lo regala |
-| **Por qué puede bajar** | *"El beso es gratis, ¿qué voy a cobrar por eso?"* Y no es trampa: solo puede bajarlo quien hace el trabajo, y bajarlo le **perjudica a él** |
-| **El saldo** | Nunca negativo, tope cero. Pero el botón **siempre aparece**: si no alcanza, avisa. **Es al revés que el Centro**, a propósito |
-
-**Por qué NO se puso un campo "cobra extra":** porque la gente no lee. Quien
-fuera, puso 20 pensando que era el precio final. La solución que sí quedó: el
-número solo aparece si ella aprieta **"Otro precio"**, y el campo se llama
-**"Precio final"**. Aceptar a 15 es un botón grande, de un solo toque.
-
-### Lo que falta probar de la fase 1
-
-1. Que el círculosito salga abajo a la derecha en el menú.
-2. Que al abrirlo salga el precio del 🛒.
-3. Que "Mandar" guarde y avise.
-4. **Que el Telegram llegue a la pareja.**
-
-**Si algo falla, casi siempre es el paso 4**, y la causa se ve en ⚙️ → Telegram,
-que muestra el error guardado.
+| **Si eres invitado, no sale** | Y con eso se resuelven la sala de `Diablitos` y todo lo que se abre como invitado, sin hacer una lista |
+| **No hay que buscar dónde prenderlo** | En varias pantallas ni la base ni la identidad están listas al arrancar, así que **el módulo espera medio segundo y reintenta** (hasta 25 veces). En todas las pantallas la llamada es la misma línea: `try{ montarFavor(); }catch(e){}` |
 
 ---
 
-## Qué es
+## Las pruebas que faltan (oct-2026)
 
-Un favor pedido entre los dos, que se cumple **en el momento** y se paga en
-puntos. Piense en el **Centro de Adquisiciones sin la tienda**: en el Centro
-compras algo que ya está en el estante; aquí **pides algo y la otra persona
-decide si lo acepta**.
+1. El botón sale abajo a la derecha en las 12 pantallas.
+2. **Como invitado NO sale** (probar en `Diablitos`).
+3. Al abrirlo: sale el precio del 🛒 y el campo de texto.
+4. Al mandar: **le llega Telegram a ella**.
+5. **El "Abrir 👀" de ese Telegram ahora sí abre `Retos/`** (era el bug que se arregló).
+6. A ella le sale la ventana: **Aceptar / Otro precio / Rechazar**.
+7. Si ella cobra otro precio: me llega a mí, acepto, y **vuelve a ella** a confirmar.
+8. Aceptado: sale la cuenta regresiva y el **"Recibí ✓"** → **los puntos se mueven**.
+9. **Esperarse a que se venzan** → "Cobrar el castigo" o "Dejarlo pasar".
+10. En el Centro: la pestaña **Favores** y el botón **"Ver los ya cerrados"**.
+
+**Si falla el 4 o el 5**, la causa casi siempre se ve sola: ⚙️ → Telegram muestra el
+error que quedó guardado.
+
+---
+
+## Regla relacionada, pendiente para `GUIA.md`
 
 | | Centro de Adquisiciones | Favores Express |
 |---|---|---|

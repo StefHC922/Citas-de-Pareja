@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -51,7 +51,7 @@
     font-weight:700; font-size:1.9rem; margin:0 0 12px; text-align:center;
     /* width:fit-content hace que la caja se ajuste al texto. Sin esto el
        degradado se repartia por todo el ancho de la pantalla y sobre las
-       letras Solo caia una fraccion: se veÃ­a clarito y sin color. */
+       letras Solo caia una fraccion: se veía clarito y sin color. */
     width:fit-content; margin:0 auto 12px;
     background: linear-gradient(90deg, var(--coral), var(--teal));
     -webkit-background-clip:text; background-clip:text; color:transparent;
@@ -106,9 +106,9 @@
     /* Centrado: con textos largos como 'COMUNICACION Y ALGO MAS' se notaba
        que se quedaban pegados a la izquierda (oct-2026). */
     text-align:center; }
-  /* "Volver" de los submenÃºs: siempre en la MISMA esquina (arriba a la derecha),
-     en los tres. Antes este andaba arriba a la izquierda y los otros dos venÃ­an
-     en el flujo de la lista, mÃ¡s abajo. */
+  /* "Volver" de los submenús: siempre en la MISMA esquina (arriba a la derecha),
+     en los tres. Antes este andaba arriba a la izquierda y los otros dos venían
+     en el flujo de la lista, más abajo. */
   .volverSub{ position:fixed; top:max(18px, env(safe-area-inset-top)); right:18px;
     z-index:8; width:auto; margin:0; padding:8px 10px; border-radius:12px;
     font-family:'Chakra Petch',sans-serif; font-size:.85rem; font-weight:600;
@@ -160,48 +160,48 @@
 </head>
 <body>
 
-<a class="menu-btn" id="menuBtn" href="Tienda/" aria-label="Centro de Adquisiciones" style="display:none">ðŸ›’</a>
-<button class="menu-btn" id="gearBtn" type="button" aria-label="Invitados" style="display:none;left:18px;right:auto;text-decoration:none;background:none;border:none;cursor:pointer;">âš™ï¸</button>
+<a class="menu-btn" id="menuBtn" href="Tienda/" aria-label="Centro de Adquisiciones" style="display:none">🛒</a>
+<button class="menu-btn" id="gearBtn" type="button" aria-label="Invitados" style="display:none;left:18px;right:auto;text-decoration:none;background:none;border:none;cursor:pointer;">⚙️</button>
 
 <div class="eyebrow">Complicidad en Pareja</div>
 
 <!-- ================= ASISTENTE (primera vez) ================= -->
 <div id="asistente">
   <div class="paso" id="paso0">
-    <h1>Bienvenidos ðŸ’›</h1>
-    <p class="sub">Â¿CÃ³mo empiezan?</p>
+    <h1>Bienvenidos 💛</h1>
+    <p class="sub">¿Cómo empiezan?</p>
     <div id="avisoConn" style="display:none;color:var(--rojo);font-size:.85rem;text-align:center;margin-bottom:12px;"></div>
-    <button class="btnPri" id="wNueva">Crear mi HabitaciÃ³n ðŸ’›</button>
+    <button class="btnPri" id="wNueva">Crear mi Habitación 💛</button>
     <button class="btnPri" id="wUnirme" style="background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Tengo QR de mi pareja</button>
   </div>
   <div class="paso" id="pasoQR">
-    <h1>Escanea ðŸ“·</h1>
-    <p class="sub">Apunta a su cÃ³digo QR. Pide permiso de cÃ¡mara una vez.</p>
+    <h1>Escanea 📷</h1>
+    <p class="sub">Apunta a su código QR. Pide permiso de cámara una vez.</p>
     <div id="lector"></div>
     <div id="wizMsg2"></div>
     <button class="btnSec" id="wQRCancelar">Cancelar</button>
   </div>
   <div class="paso" id="paso1">
-    <h1>Bienvenidos ðŸ’›</h1>
+    <h1>Bienvenidos 💛</h1>
     <p class="sub">Conectemos tu base de datos (una sola vez).</p>
     <ol>
       <li>Entra a <a href="https://console.firebase.google.com" target="_blank" rel="noopener">console.firebase.google.com</a> con tu Google.</li>
-      <li><b>Agregar proyecto</b> â†’ nombre â†’ sin Analytics â†’ <b>Crear</b>.</li>
-      <li>MenÃº â†’ <b>Firestore Database</b> â†’ <b>Crear base de datos</b> â†’ ProducciÃ³n â†’ Habilitar.</li>
-      <li>PestaÃ±a <b>Reglas</b> â†’ permite lectura y escritura â†’ <b>Publicar</b>.</li>
-      <li>Registra la app web (<b>&lt;/&gt;</b>) y copia el bloque <b>firebaseConfig</b>. PÃ©galo aquÃ­:</li>
+      <li><b>Agregar proyecto</b> → nombre → sin Analytics → <b>Crear</b>.</li>
+      <li>Menú → <b>Firestore Database</b> → <b>Crear base de datos</b> → Producción → Habilitar.</li>
+      <li>Pestaña <b>Reglas</b> → permite lectura y escritura → <b>Publicar</b>.</li>
+      <li>Registra la app web (<b>&lt;/&gt;</b>) y copia el bloque <b>firebaseConfig</b>. Pégalo aquí:</li>
     </ol>
     <textarea id="wFB" placeholder='apiKey: "...", authDomain: "...", ...'></textarea>
     <div id="wizMsg"></div>
-    <button class="btnPri" id="wBtn1">Probar conexiÃ³n y continuar</button>
+    <button class="btnPri" id="wBtn1">Probar conexión y continuar</button>
   </div>
 
   <div class="paso" id="paso2">
-    <h1>Avisos ðŸ“²</h1>
+    <h1>Avisos 📲</h1>
     <p class="sub">Opcional: Telegram avisa cada cita y reto. Si lo omites, la app funciona igual.</p>
-    <p class="sub" style="font-size:.8rem;">Te faltan? DespuÃ©s lo arreglas en âš™ï¸ â†’ Telegram, sin repetir nada.</p>
+    <p class="sub" style="font-size:.8rem;">Te faltan? Después lo arreglas en ⚙️ → Telegram, sin repetir nada.</p>
     <ol>
-      <li>Habla con <b>BotFather</b> â†’ <b>/newbot</b> â†’ te da un <b>token</b>.</li>
+      <li>Habla con <b>BotFather</b> → <b>/newbot</b> → te da un <b>token</b>.</li>
       <li>Crea tu grupo, invita al bot y consigue el <b>chat ID</b>.</li>
     </ol>
     <input type="text" id="wToken" placeholder="Token del bot" autocomplete="off">
@@ -211,80 +211,80 @@
   </div>
 
   <div class="paso" id="paso3">
-    <h1>Â¿QuiÃ©nes son? ðŸ’‘</h1>
-    <p class="sub">Nombres, quiÃ©n administra y, si quieren, invitados (ej. a una cena).</p>
+    <h1>¿Quiénes son? 💑</h1>
+    <p class="sub">Nombres, quién administra y, si quieren, invitados (ej. a una cena).</p>
     <div id="wNombres"></div>
-    <button class="btnSec" id="wMas" type="button">ï¼‹ Agregar invitado</button>
+    <button class="btnSec" id="wMas" type="button">＋ Agregar invitado</button>
     <button class="btnPri" id="wBtn3">Guardar y empezar</button>
   </div>
 </div>
 
 <!-- ================= IDENTIDAD ================= -->
 <div id="pantallaUsuario">
-  <button id="idVolverCambiar" type="button" style="display:none;position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">â€¹ Volver</button>
-  <h1>Â¿QuiÃ©n eres?</h1>
+  <button id="idVolverCambiar" type="button" style="display:none;position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">‹ Volver</button>
+  <h1>¿Quién eres?</h1>
   <p>Selecciona tu usuario para continuar.</p>
   <div id="listaUsuarios" style="width:100%"></div>
 </div>
 
 <!-- ================= INVITADOS ================= -->
 <div id="pantallaInvitado" style="display:none;width:100%;max-width:380px;flex-direction:column;align-items:center;text-align:center;">
-  <button id="invVolverTop" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">â€¹ Volver</button>
-  <h1 id="invTitulo">Invitados ðŸŽŸï¸</h1>
+  <button id="invVolverTop" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">‹ Volver</button>
+  <h1 id="invTitulo">Invitados 🎟️</h1>
   <p id="invEstado" style="color:var(--fg-muted);margin:0 0 18px;">Entra a otra base como invitado o vuelve a la tuya.</p>
   <div id="invCards" style="width:100%;display:flex;flex-direction:column;gap:12px;">
   <button class="card" id="invCardInv" type="button" style="width:100%;text-align:left;cursor:pointer;font-family:inherit;margin:0;">
-    <span class="icon">ðŸ“·</span>
+    <span class="icon">📷</span>
     <span class="label"><div class="title">Invitados</div>
     <div class="subtitle">Entrar, salir y vincular</div></span>
-    <span class="chevron">â€º</span>
+    <span class="chevron">›</span>
   </button>
   <button class="card" id="invCardUsu" type="button" style="width:100%;text-align:left;cursor:pointer;font-family:inherit;margin:0;">
-    <span class="icon">ðŸ‘¥</span>
+    <span class="icon">👥</span>
     <span class="label"><div class="title">Usuarios</div>
     <div class="subtitle">Cambiar, agregar o dar de baja</div></span>
-    <span class="chevron">â€º</span>
+    <span class="chevron">›</span>
   </button>
   <button class="card" id="invCardTg" type="button" style="width:100%;text-align:left;cursor:pointer;font-family:inherit;margin:0;">
-    <span class="icon">ðŸ“²</span>
+    <span class="icon">📲</span>
     <span class="label"><div class="title">Telegram</div>
     <div class="subtitle" id="invTgSub">Avisos al grupo</div></span>
-    <span class="chevron">â€º</span>
+    <span class="chevron">›</span>
   </button>
   </div>
   <div id="invVistaInv" style="display:none;width:100%;flex-direction:column;align-items:center;">
-    <button id="invBackDeInv" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">â€¹ Invitados</button>
-    <h1 style="font-size:1.4rem;">Modo invitado ðŸ“·</h1>
+    <button id="invBackDeInv" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">‹ Invitados</button>
+    <h1 style="font-size:1.4rem;">Modo invitado 📷</h1>
     <div id="lectorInv" style="display:none;width:100%;max-width:340px;"></div>
     <div id="invMsg" style="min-height:20px;font-size:.85rem;color:var(--rojo);margin:4px 0 12px;"></div>
     <div id="invForm" style="display:none;width:100%;">
       <p id="invSolicitando" style="font-family:'Chakra Petch',sans-serif;font-size:1.05rem;font-weight:700;color:var(--teal);text-align:center;margin:0 0 4px;letter-spacing:.04em;">Solicitando Acceso</p>
       <p style="font-size:.78rem;color:var(--fg-muted);text-align:center;margin:0 0 14px;">Completa los dos datos para entrar. Si te sales, se restaura tu base.</p>
       <label for="invNombre" style="display:block;text-align:left;font-size:.85rem;color:var(--fg);margin:0 0 6px;">Escribe tu nombre</label>
-      <input type="text" id="invNombre" placeholder="Ej. TÃ­o Beto" maxlength="30" autocomplete="off" style="font-size:1rem;padding:16px;">
-      <label for="invConQuien" style="display:block;text-align:left;font-size:.85rem;color:var(--fg);margin:4px 0 6px;">Selecciona de quiÃ©n eres invitado (elige uno)</label>
+      <input type="text" id="invNombre" placeholder="Ej. Tío Beto" maxlength="30" autocomplete="off" style="font-size:1rem;padding:16px;">
+      <label for="invConQuien" style="display:block;text-align:left;font-size:.85rem;color:var(--fg);margin:4px 0 6px;">Selecciona de quién eres invitado (elige uno)</label>
       <select id="invConQuien" style="width:100%;border-radius:12px;border:1px solid var(--card-border);background:var(--card);color:var(--fg);padding:16px;font-size:1rem;font-family:'Inter',sans-serif;margin-bottom:6px;"></select>
       <p id="invVista" style="font-size:.85rem;color:var(--teal);min-height:20px;margin:0 0 8px;"></p>
-      <button class="btnPri" id="invConfirmar">Entrar como invitado â†’</button>
+      <button class="btnPri" id="invConfirmar">Entrar como invitado →</button>
     </div>
-    <button class="btnPri" id="invEntrar">Entrar modo invitado ðŸ“·</button>
-    <button class="btnPri" id="invSalir" style="background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Salir modo invitado â†©</button>
+    <button class="btnPri" id="invEntrar">Entrar modo invitado 📷</button>
+    <button class="btnPri" id="invSalir" style="background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Salir modo invitado ↩</button>
     <div id="invVinc" style="width:100%;margin-top:18px;text-align:center;">
-      <h2 style="font-family:'Chakra Petch',sans-serif;font-size:1rem;margin:0 0 4px;">Vincular pareja ðŸ“±</h2>
-      <p style="font-size:.82rem;color:var(--fg-muted);margin:0 0 10px;">MuÃ©stralo en persona: quien lo escanee entra a tu base.</p>
+      <h2 style="font-family:'Chakra Petch',sans-serif;font-size:1rem;margin:0 0 4px;">Vincular pareja 📱</h2>
+      <p style="font-size:.82rem;color:var(--fg-muted);margin:0 0 10px;">Muéstralo en persona: quien lo escanee entra a tu base.</p>
       <div id="qrCajaGear" style="background:#fff;padding:12px;border-radius:14px;display:none;justify-content:center;margin:0 auto 12px;width:fit-content;"></div>
-      <button class="btnPri" id="invQR">Mostrar mi cÃ³digo</button>
+      <button class="btnPri" id="invQR">Mostrar mi código</button>
     </div>
   </div>
   <div id="invVistaUsu" style="display:none;width:100%;text-align:left;">
-    <button id="invBackDeUsu" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">â€¹ Invitados</button>
+    <button id="invBackDeUsu" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">‹ Invitados</button>
     <button id="invCambiarUsu" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));left:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">Cambiar usuario</button>
-    <h1 style="font-size:1.4rem;text-align:center;">Usuarios ðŸ‘¥</h1>
+    <h1 style="font-size:1.4rem;text-align:center;">Usuarios 👥</h1>
     <p id="invQuien" style="font-size:.82rem;color:var(--fg-muted);text-align:center;margin:0 0 10px;"></p>
     <div id="invUsuarios" style="display:flex;flex-direction:column;gap:10px;"></div>
     <div style="display:flex;gap:8px;margin-top:10px;">
       <input type="text" id="invNuevo" placeholder="Nuevo invitado" maxlength="30" autocomplete="off" style="margin-bottom:0;">
-      <button class="btnPri" id="invAgregar" style="width:auto;margin-bottom:0;padding:14px 18px;">ï¼‹</button>
+      <button class="btnPri" id="invAgregar" style="width:auto;margin-bottom:0;padding:14px 18px;">＋</button>
     </div>
   </div>
 
@@ -303,10 +303,10 @@
       <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:14px;">Lo que se paga cada vez que alguien compra uno de sus deseos.</div>
       <label for="invPtsFavor" style="display:block;font-size:.82rem;color:var(--fg-muted);margin-bottom:6px;">Precio de un Favor Express</label>
       <input type="number" id="invPtsFavor" min="0" step="1" value="15">
-      <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:14px;">Lo que se ofrece al pedirle un favor a tu pareja. Quien lo cumple puede cobrar mÃ¡s, o dejarlo en 0.</div>
+      <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:14px;">Lo que se ofrece al pedirle un favor a tu pareja. Quien lo cumple puede cobrar más, o dejarlo en 0.</div>
       <label for="invPctCastigo" style="display:block;font-size:.82rem;color:var(--fg-muted);margin-bottom:6px;">Castigo si aceptan y no cumplen</label>
       <input type="number" id="invPctCastigo" min="0" max="100" step="5" value="50">
-      <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:14px;">Porcentaje del precio que se le descuenta a quien acepta un favor y no lo cumple a tiempo. Lo decides tÃº y solo tÃº se lo cobras.</div>
+      <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:14px;">Porcentaje del precio que se le descuenta a quien acepta un favor y no lo cumple a tiempo. Lo decides tú y solo tú se lo cobras.</div>
       <label for="invMinFavor" style="display:block;font-size:.82rem;color:var(--fg-muted);margin-bottom:6px;">Minutos para cumplir un favor</label>
       <input type="number" id="invMinFavor" min="1" step="1" value="10">
       <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:4px;">El tiempo que le das a tu pareja una vez que acepta. El reloj empieza cuando acepta, no cuando lo pides.</div>
@@ -318,8 +318,8 @@
     </div>
   </div>
   <div id="invVistaTg" style="display:none;width:100%;text-align:left;">
-    <button id="invBackTg" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">â€¹ AtrÃ¡s</button>
-    <h1 style="font-size:1.4rem;text-align:center;">Telegram ðŸ“²</h1>
+    <button id="invBackTg" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">‹ Atrás</button>
+    <h1 style="font-size:1.4rem;text-align:center;">Telegram 📲</h1>
     <p style="font-size:.82rem;color:var(--fg-muted);text-align:center;margin:0 0 16px;">Cada cita y reto avisa al grupo. Sin esto la app funciona igual.</p>
     <label for="tgToken" style="display:block;text-align:left;font-size:.85rem;color:var(--fg);margin:0 0 6px;">Token del bot</label>
     <input type="text" id="tgToken" placeholder="123456:ABC-DEF..." autocomplete="off" style="margin-bottom:8px;">
@@ -335,97 +335,97 @@
   </div>
 </div>
 
-<!-- ================= MENÃš ================= -->
+<!-- ================= MENÚ ================= -->
 <div id="menu">
 <div class="hero">
   <img class="heroLogo" src="icon-192.png" alt="Complicidad en Pareja">
-  <div class="hola">Hola, <span id="quienNombre"></span> ðŸ’›</div>
+  <div class="hola">Hola, <span id="quienNombre"></span> 💛</div>
   <div class="fecha" id="heroFecha"></div>
   <a class="fecha" id="linkActividades" href="Citas/actividades.html"
-     style="display:inline-block;text-decoration:none;margin-top:8px;">âš™ï¸ Personaliza tus Actividades</a>
+     style="display:inline-block;text-decoration:none;margin-top:8px;">⚙️ Personaliza tus Actividades</a>
 </div>
 
 <div id="vistaMenu">
 <button class="card" id="btnExp" type="button" style="width:100%;text-align:left;cursor:pointer;font-family:inherit;">
-  <span class="icon">âœ¨</span>
+  <span class="icon">✨</span>
   <span class="label">
     <div class="title">Experiencias en Pareja</div>
     <div class="subtitle">Citas y retos para compartir</div>
   </span>
-  <span class="chevron">â€º</span>
+  <span class="chevron">›</span>
 </button>
 
 
 
 <button class="card" id="btnJuegos" type="button" style="display:none;width:100%;text-align:left;cursor:pointer;font-family:inherit;">
-  <span class="icon">ðŸŽ®</span>
+  <span class="icon">🎮</span>
   <span class="label">
     <div class="title">Juegos</div>
     <div class="subtitle">Para divertirse juntos</div>
   </span>
-  <span class="chevron">â€º</span>
+  <span class="chevron">›</span>
 </button>
 
 <button class="card" id="btnRetos" type="button" style="display:none;width:100%;text-align:left;cursor:pointer;font-family:inherit;">
-  <span class="icon">ðŸ</span>
+  <span class="icon">🏁</span>
   <span class="label">
     <div class="title">Retos</div>
-    <div class="subtitle">PropÃ³n retos, gana puntos y cobra recompensas</div>
+    <div class="subtitle">Propón retos, gana puntos y cobra recompensas</div>
   </span>
-  <span class="chevron">â€º</span>
+  <span class="chevron">›</span>
 </button>
 <button class="card" id="btnCom" type="button" style="width:100%;text-align:left;cursor:pointer;font-family:inherit;">
-  <span class="icon">ðŸ’¬</span>
+  <span class="icon">💬</span>
   <span class="label">
     <div class="title">Comunicaciones</div>
-    <div class="subtitle">Chate en vivo y algo mÃ¡s</div>
+    <div class="subtitle">Chate en vivo y algo más</div>
   </span>
-  <span class="chevron">â€º</span>
+  <span class="chevron">›</span>
 </button>
 </div>
 
 <div id="vistaJuegos" style="display:none;width:100%">
-<button class="volverSub" id="btnJuegosVolver" type="button">â€¹ Volver</button>
-  <div class="subTitulo">Juegos ðŸŽ®</div>
+<button class="volverSub" id="btnJuegosVolver" type="button">‹ Volver</button>
+  <div class="subTitulo">Juegos 🎮</div>
   <div id="packsJuegos" style="width:100%"></div>
 </div>
 
 <div id="vistaRetos" style="display:none;width:100%">
-<button class="volverSub" id="btnRetosVolver" type="button">â€¹ Volver</button>
-  <div class="subTitulo">Retos ðŸ†</div>
+<button class="volverSub" id="btnRetosVolver" type="button">‹ Volver</button>
+  <div class="subTitulo">Retos 🏆</div>
   <div id="packsRetos" style="width:100%"></div>
 </div>
 
 <div id="vistaCom" style="display:none;width:100%">
-<button class="volverSub" id="btnComVolver" type="button">â€¹ Volver</button>
-  <div class="subTitulo">ComunicaciÃ³n y algo mÃ¡s ðŸ˜‰</div>
+<button class="volverSub" id="btnComVolver" type="button">‹ Volver</button>
+  <div class="subTitulo">Comunicación y algo más 😉</div>
   <a class="card" href="Chat/">
-    <span class="icon">ðŸ’¬</span>
+    <span class="icon">💬</span>
     <span class="label">
       <div class="title">Chat</div>
-      <div class="subtitle">Hablen en vivo cuando estÃ©n conectados</div>
+      <div class="subtitle">Hablen en vivo cuando estén conectados</div>
     </span>
-    <span class="chevron">â€º</span>
+    <span class="chevron">›</span>
   </a>
   <a class="card" href="Acompanante/">
-    <span class="icon">âœ¨</span>
+    <span class="icon">✨</span>
     <span class="label">
-      <div class="title">AcompaÃ±ante</div>
+      <div class="title">Acompañante</div>
       <div class="subtitle">Conversa, ideas y retos picarones</div>
     </span>
-    <span class="chevron">â€º</span>
+    <span class="chevron">›</span>
   </a>
 </div>
 
 <div id="vistaExp" style="display:none;width:100%">
-<button class="volverSub" id="btnExpVolver" type="button">â€¹ Volver</button>
+<button class="volverSub" id="btnExpVolver" type="button">‹ Volver</button>
 <a class="card" href="Citas/">
   <span class="icon"><svg width="38" height="38" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="gCal" x1="0" y1="0" x2="24" y2="24"><stop offset="0" stop-color="#ff6a5c"/><stop offset="1" stop-color="#2fd9c7"/></linearGradient></defs><rect x="3.5" y="5" width="17" height="15.5" rx="3.5" stroke="url(#gCal)" stroke-width="1.8"/><path d="M3.5 9.5h17" stroke="url(#gCal)" stroke-width="1.8"/><path d="M8 3v3.4M16 3v3.4" stroke="url(#gCal)" stroke-width="1.8" stroke-linecap="round"/><path d="M12 17.4s-2.5-1.6-3.45-3C7.76 13.36 8.11 12.1 9.22 11.63c.66-.27 1.39-.16 2 .35.61-.51 1.34-.62 2-.35 1.11.47 1.46 1.73.67 2.77-.95 1.4-3.45 3-3.45 3z" fill="url(#gCal)"/></svg></span>
   <span class="label">
     <div class="title">Citas</div>
     <div class="subtitle">Agenda, confirma y revisa actividades</div>
   </span>
-  <span class="chevron">â€º</span>
+  <span class="chevron">›</span>
 </a>
 
 <div id="packsExp" style="width:100%"></div>
@@ -442,20 +442,20 @@ import {
   CLAVE_CONFIG, leerConfigGuardada, guardarConfig,
   resolverFirebase, guardarUsuariosLocal, leerUsuariosLocal, cargarUsuarios
 } from "./config.js";
-// LÃ³gica de licencias compartida con el resto de la app (ver acceso.js).
+// Lógica de licencias compartida con el resto de la app (ver acceso.js).
 import { miProyecto, appTaq, leerLicencias, graciasDisponibles, escucharCatalogo } from "./acceso.js";
 import { confirmar } from "./confirmar.js";
-// Chorro de pegamento: cae en el submenÃº de Experiencias si alguien se queda
+// Chorro de pegamento: cae en el submenú de Experiencias si alguien se queda
 // mirando la pantalla sin hacer nada. Va en su propio modulo (y no metido en el
-// codigo del submenÃº) para que, si algo falla, la pantalla siga igual.
+// codigo del submenú) para que, si algo falla, la pantalla siga igual.
 import { glueSiEstaQuieto, glueOlvidado } from "./glue.js";
-// Campana en la pestaÃ±a: si alguien te invitÃ³ al Chat, el Ã­cono de la pestaÃ±a
-// se cambia por una campana aunque estÃ©s viendo otra cosa. OJO: esto solo
+// Campana en la pestaña: si alguien te invitó al Chat, el ícono de la pestaña
+// se cambia por una campana aunque estés viendo otra cosa. OJO: esto solo
 // funciona en Chrome de computadora; en el celular los navegadores no dejan
-// cambiar el Ã­cono de la pestaÃ±a.
+// cambiar el ícono de la pestaña.
 import { vigilarInvitaciones, vigilarRetos, vigilarFavores } from "./pestana.js";
 import { montarFavor } from "./favor.js";
-// Modo invitado: la regla de "cuÃ¡ndo eres invitado de verdad" vive aquÃ­.
+// Modo invitado: la regla de "cuándo eres invitado de verdad" vive aquí.
 import {
   CLAVE_BACKUP, CLAVE_LOCAL, hayRespaldo, soyInvitado, quedasteMedioCamino,
   respaldar, restaurar, recuperarMedioCamino, salirDeInvitado, dbActual, miIdInvitado
@@ -505,16 +505,16 @@ function leerGuardado(){
 function iconoMenu(modo){
   const b = document.getElementById("menuBtn");
   if(modo === "exp"){
-    b.textContent = "âš™ï¸";
+    b.textContent = "⚙️";
     b.href = "Citas/actividades.html";
-    b.setAttribute("aria-label", "ConfiguraciÃ³n");
-    // En Experiencias el botÃ³n de la esquina es el de configurar actividades,
+    b.setAttribute("aria-label", "Configuración");
+    // En Experiencias el botón de la esquina es el de configurar actividades,
     // o sea es CONTEXTUAL de esta pantalla. Va a la izquierda, porque el
-    // "Volver" ocupa la derecha (y lo tapaba: Fredy no lo veÃ­a, oct-2026).
+    // "Volver" ocupa la derecha (y lo tapaba: Fredy no lo veía, oct-2026).
     b.style.left = "18px";
     b.style.right = "auto";
   }else{
-    b.textContent = "ðŸ›’";
+    b.textContent = "🛒";
     b.href = "Tienda/";
     b.setAttribute("aria-label", "Centro de Adquisiciones");
     b.style.left = "";
@@ -531,17 +531,17 @@ function mostrarMenu(nombre){
   asistenteEl.style.display = "none";
   pantallaEl.style.display = "none";
   menuEl.style.display = "flex";
-  // Si se llegÃ³ con #juegos o #retos (el botÃ³n "Volver" de un juego, o una
-  // direcciÃ³n guardada), se abre directo esa subpantalla en vez del menÃº.
+  // Si se llegó con #juegos o #retos (el botón "Volver" de un juego, o una
+  // dirección guardada), se abre directo esa subpantalla en vez del menú.
   const h = hashActual();
   if(h !== "" && !(history.state && history.state.sub)){
-    // Ese paso NO lo guardamos nosotros: se marca "fijo" para que el "â€¹ Volver"
-    // del submenÃº lo cierre aquÃ­, en vez de devolver a la partida de donde vino.
+    // Ese paso NO lo guardamos nosotros: se marca "fijo" para que el "‹ Volver"
+    // del submenú lo cierre aquí, en vez de devolver a la partida de donde vino.
     try{ history.replaceState({ sub:h, fijo:true }, "", "#" + h); }catch(e){}
   }
   abrirSegunHash(h);
   renderPacks();
-  // La campana de la pestaÃ±a. Va aqui y no al arrancar porque es justo cuando
+  // La campana de la pestaña. Va aqui y no al arrancar porque es justo cuando
   // ya se sabe que hay base valida; si no hay, `vigilarInvitaciones` no hace
   // nada y el menu sigue igual. Va en su propio modulo: si algo falla, aqui no
   // se rompe nada (mismo criterio que glue.js).
@@ -559,10 +559,10 @@ function mostrarMenu(nombre){
   try{ montarFavor(); }catch(e){}
 }
 
-// BotÃ³n "atrÃ¡s" / "adelante" del navegador. Ahora los submenÃºs SÃ son pasos del
-// historial (ver abrirSub), asÃ­ que aquÃ­ no se adivina nada: se obedece lo que
-// diga el historial. Antes solo se miraba el "#", y por eso el botÃ³n atrÃ¡s se
-// saltaba el submenÃº y luego lo reabrÃ­a solo (oct-2026).
+// Botón "atrás" / "adelante" del navegador. Ahora los submenús SÍ son pasos del
+// historial (ver abrirSub), así que aquí no se adivina nada: se obedece lo que
+// diga el historial. Antes solo se miraba el "#", y por eso el botón atrás se
+// saltaba el submenú y luego lo reabría solo (oct-2026).
 window.addEventListener("popstate", (e)=>{
   if(e.state && e.state.sub) abrirSegunHash(e.state.sub);
   else verMenu();
@@ -611,7 +611,7 @@ window.addEventListener("hashchange", ()=>{
     // en la pagina texto que venga de la base de datos.
     ic.innerHTML = SVG_DIABLITOS;
   }else{
-    ic.textContent = p.icono || "ðŸŽ";
+    ic.textContent = p.icono || "🎁";
   }
   const lab = document.createElement("span");
   lab.className = "label";
@@ -624,7 +624,7 @@ window.addEventListener("hashchange", ()=>{
   lab.appendChild(t); lab.appendChild(s);
   const ch = document.createElement("span");
   ch.className = "chevron";
-  ch.textContent = "â€º";
+  ch.textContent = "›";
   a.appendChild(ic); a.appendChild(lab); a.appendChild(ch);
   return a;
 }
@@ -673,26 +673,26 @@ async function renderPacksDeVerdad(){
   // El icono de Diablitos va dibujado (SVG_DIABLITOS, unas lineas mas arriba)
   // en vez de emoji, para que se vea igual de bien en todos los telefonos.
   let packs = [
-    { id: "guiadas", titulo: "Citas Guiadas", icono: "ðŸ—ºï¸",
+    { id: "guiadas", titulo: "Citas Guiadas", icono: "🗺️",
       desc: "Niveles y secuencias paso a paso", ruta: "Guiadas", seccion: "experiencias" },
     { id: "diablitos", titulo: "Diablitos",
-      desc: "DiviÃ©rtete picando diablitos traviesos",
+      desc: "Diviértete picando diablitos traviesos",
       ruta: "Diablitos", seccion: "juegos", libre: true },
-    // Retos iba como tarjeta escrita a mano DENTRO del submenÃº. Eso rompÃ­a el
-    // botÃ³n del submenÃº: btnRetos se esconde si no hay nada en su lista, y la
-    // lista solo se llenaba con el catÃ¡logo. Con Retos aquÃ­ ya pasa por el mismo
-    // camino que Diablitos y el botÃ³n aparece siempre (oct-2026).
-    { id: "retos", titulo: "Retos", icono: "ðŸ†",
-      desc: "PropÃ³n retos, gana puntos y cobra recompensas",
+    // Retos iba como tarjeta escrita a mano DENTRO del submenú. Eso rompía el
+    // botón del submenú: btnRetos se esconde si no hay nada en su lista, y la
+    // lista solo se llenaba con el catálogo. Con Retos aquí ya pasa por el mismo
+    // camino que Diablitos y el botón aparece siempre (oct-2026).
+    { id: "retos", titulo: "Retos", icono: "🏆",
+      desc: "Propón retos, gana puntos y cobra recompensas",
       ruta: "Retos", seccion: "retos", libre: true, orden: 10 },
-    // El Centro vive DENTRO del submenÃº de Retos (no en la pantalla de Retos):
+    // El Centro vive DENTRO del submenú de Retos (no en la pantalla de Retos):
     // el titulo lleva el nombre de tu pareja, asi que se arma aqui, con el
     // nombre que tenga ahora. Si no hay pareja registrada, la tarjeta no sale
     // (el Centro es de dos). Es un archivo suelto, por eso la ruta trae .html
     // y `tarjetaPack` ya no le agrega la "/" (oct-2026).
     // `orden: 20` lo deja DEBAJO de la tarjeta de Retos: sin esto el listado se
     // ordenaba por nombre y "Centro..." caia antes que "Retos".
-    { id: "centro", titulo: "Centro de Adquisiciones", icono: "ðŸ›’",
+    { id: "centro", titulo: "Centro de Adquisiciones", icono: "🛒",
       desc: "Tu lista de deseos y la tienda de tu pareja",
       ruta: "Retos/centro.html", seccion: "retos", libre: true, necesitaPareja: true, orden: 20 }
   ];
@@ -753,8 +753,8 @@ async function renderPacksDeVerdad(){
   if(juegos) btnJ.style.display = "";
   if(retos) btnX.style.display = "";
 }
-// Quita del menÃº en ese momento si revocan. La escucha vive en acceso.js;
-// aquÃ­ solo se redibuja el menÃº cuando cambian los cÃ³digos.
+// Quita del menú en ese momento si revocan. La escucha vive en acceso.js;
+// aquí solo se redibuja el menú cuando cambian los códigos.
 escucharCatalogo({ cambio(){ renderPacks(); } });
 function mostrarIdentidad(usuarios){
   listaEl.innerHTML = "";
@@ -803,7 +803,7 @@ document.getElementById("wBtn1").onclick = async ()=>{
   if(!cfg){ msg("Pega el bloque firebaseConfig completo (sin TU_...)."); return; }
   const btn = document.getElementById("wBtn1");
   btn.disabled = true;
-  msg("Probando conexiÃ³n...", true);
+  msg("Probando conexión...", true);
   try{
     const app = initializeApp(cfg, "asistente");
     const db = getFirestore(app);
@@ -832,7 +832,7 @@ document.getElementById("wOmitir").onclick = ()=>{
   verPaso(3);
 };
 
-// Filas dinÃ¡micas: 2 fijos + invitados extra. MÃ­nimo 2 con nombre.
+// Filas dinámicas: 2 fijos + invitados extra. Mínimo 2 con nombre.
 function armarFilas(valores){
   const cont = document.getElementById("wNombres");
   cont.innerHTML = "";
@@ -866,7 +866,7 @@ function agregarFila(valor, adminMarcado){
   if(idx >= 2){
     const x = document.createElement("button");
     x.type = "button";
-    x.textContent = "âœ•";
+    x.textContent = "✕";
     x.style.cssText = "background:none;border:none;color:var(--fg-muted);font-size:1rem;cursor:pointer;";
     x.onclick = ()=>{ fila.remove(); renumerarRadios(); };
     fila.appendChild(x);
@@ -904,7 +904,7 @@ document.getElementById("wBtn3").onclick = async ()=>{
     mostrarIdentidad(usuarios);
   }catch(e){
     btn.disabled = false;
-    msg("No se pudo guardar. Revisa tu conexiÃ³n y las reglas.");
+    msg("No se pudo guardar. Revisa tu conexión y las reglas.");
     verPaso(3);
   }
 };
@@ -931,9 +931,9 @@ async function entrar(db){
 
 async function iniciar(){
   document.getElementById("avisoConn").style.display = "none";
-  // Si quedÃ³ a medio camino (escaneÃ³ un QR pero nunca se registrÃ³), se
+  // Si quedó a medio camino (escaneó un QR pero nunca se registró), se
   // devuelve todo lo suyo ANTES de conectarse a cualquier base. Sin esto, el
-  // telÃ©fono abrirÃ­a la base de otra persona con la identidad de esta.
+  // teléfono abriría la base de otra persona con la identidad de esta.
   try{ if(recuperarMedioCamino()) return; }catch(e){}
   const g = leerConfigGuardada();
   let db = null, ok = false, hayConfig = !!(g && g.firebase);
@@ -946,7 +946,7 @@ async function iniciar(){
     }catch(e){ ok = false; }
   }
   if(!ok){
-    // Sin config vÃ¡lida: elegir crear base o unirse con QR
+    // Sin config válida: elegir crear base o unirse con QR
     menuEl.style.display = "none";
     pantallaEl.style.display = "none";
     asistenteEl.style.display = "flex";
@@ -987,7 +987,7 @@ async function volverSiInvitadoSinPartida(db){
   return false;
 }
 
-// ---------- elecciÃ³n inicial ----------
+// ---------- elección inicial ----------
 document.getElementById("wNueva").onclick = ()=>{ msg(""); verPaso(1); };
 document.getElementById("wUnirme").onclick = ()=>{ msg(""); verPaso("QR"); iniciarScan(); };
 document.getElementById("wQRCancelar").onclick = async ()=>{
@@ -1018,7 +1018,7 @@ async function iniciarScan(){
           const data = JSON.parse(texto);
           const fb = data && data.firebase;
           const need = ["apiKey","authDomain","projectId","storageBucket","messagingSenderId","appId"];
-          if(!fb || need.some(k=>!fb[k])){ msgQR("Ese QR no trae configuraciÃ³n vÃ¡lida."); return; }
+          if(!fb || need.some(k=>!fb[k])){ msgQR("Ese QR no trae configuración válida."); return; }
           await detenerScan();
           const cfg = { firebase: fb };
           if(data.telegram && data.telegram.token && data.telegram.chat) cfg.telegram = data.telegram;
@@ -1034,21 +1034,21 @@ async function iniciarScan(){
       ()=>{}
     );
   }catch(e){
-    msgQR("Sin cÃ¡mara o sin permiso. Revisa el navegador.");
+    msgQR("Sin cámara o sin permiso. Revisa el navegador.");
   }
 }
-// ---------- submenÃºs ----------
-// Son funciones (y no onclick en lÃ­nea) porque tambiÃ©n se llaman al arrancar
-// cuando se llega con #juegos o #experiencias desde el botÃ³n "Volver" de un juego.
+// ---------- submenús ----------
+// Son funciones (y no onclick en línea) porque también se llaman al arrancar
+// cuando se llega con #juegos o #experiencias desde el botón "Volver" de un juego.
 //
-// Un submenÃº abierto es un PASO REAL del historial: se guarda con pushState y se
+// Un submenú abierto es un PASO REAL del historial: se guarda con pushState y se
 // deshace con history.back(), igual que las vistas de Encuentros/ y Guiadas/.
-// Antes no se guardaba nada, y por eso el botÃ³n "atrÃ¡s" del celular se saltaba
-// el submenÃº entero y, al volver, lo reabrÃ­a solo aunque ya se hubiera cerrado.
+// Antes no se guardaba nada, y por eso el botón "atrás" del celular se saltaba
+// el submenú entero y, al volver, lo reabría solo aunque ya se hubiera cerrado.
 
-// El menÃº principal, con sus dos botones de la esquina âš™ï¸ y ðŸ›’. Vive en una
-// funciÃ³n propia porque hay tres caminos que lo necesitan: mostrarMenu(), el
-// "â€¹ Volver" del submenÃº y el botÃ³n "atrÃ¡s" del navegador.
+// El menú principal, con sus dos botones de la esquina ⚙️ y 🛒. Vive en una
+// función propia porque hay tres caminos que lo necesitan: mostrarMenu(), el
+// "‹ Volver" del submenú y el botón "atrás" del navegador.
 function verMenu(){
   try{ glueOlvidado(); }catch(e){}
   document.getElementById("vistaMenu").style.display = "block";
@@ -1056,8 +1056,8 @@ function verMenu(){
   document.getElementById("vistaJuegos").style.display = "none";
   document.getElementById("vistaRetos").style.display = "none";
   document.getElementById("vistaCom").style.display = "none";
-  // Los botones de la esquina son del MENÃš. Antes solo los devolvÃ­a
-  // mostrarMenu(), asÃ­ que al llegar con el botÃ³n "atrÃ¡s" se quedaban apagados.
+  // Los botones de la esquina son del MENÚ. Antes solo los devolvía
+  // mostrarMenu(), así que al llegar con el botón "atrás" se quedaban apagados.
   document.getElementById("gearBtn").style.display = "";
   document.getElementById("menuBtn").style.display = "";
   iconoMenu("menu");
@@ -1075,7 +1075,7 @@ function abrirSegunHash(h){
   else if(h === "com") abrirCom();
   else verMenu();
 }
-// El botÃ³n del submenÃº: guarda el paso y lo muestra.
+// El botón del submenú: guarda el paso y lo muestra.
 function abrirSub(h){
   const id = (h || "").replace(/^#/, "");
   if(!id) return;
@@ -1083,9 +1083,9 @@ function abrirSub(h){
   abrirSegunHash(id);
   renderPacks();
 }
-// El "â€¹ Volver" del submenÃº: deshace el paso que guardamos nosotros. Si se llegÃ³
-// por un enlace (el "Volver" de un juego, o la direcciÃ³n escrita a mano) ese paso
-// no es nuestro, asÃ­ que se quita el "#" a mano para quedarse en el menÃº y no
+// El "‹ Volver" del submenú: deshace el paso que guardamos nosotros. Si se llegó
+// por un enlace (el "Volver" de un juego, o la dirección escrita a mano) ese paso
+// no es nuestro, así que se quita el "#" a mano para quedarse en el menú y no
 // saltar de vuelta a la partida.
 function cerrarSub(){
   if(history.state && history.state.sub && !history.state.fijo){
@@ -1108,8 +1108,8 @@ function cerrarExp(){
   glueOlvidado();
   cerrarSub();
 }
-// En Juegos solo vive el "â€¹ Volver": el carrito y el engrane son del menÃº
-// principal, asÃ­ que se esconden los dos.
+// En Juegos solo vive el "‹ Volver": el carrito y el engrane son del menú
+// principal, así que se esconden los dos.
 function abrirJuegos(){
   document.getElementById("vistaMenu").style.display = "none";
   document.getElementById("vistaJuegos").style.display = "block";
@@ -1123,8 +1123,8 @@ function abrirRetos(){
   document.getElementById("vistaMenu").style.display = "none";
   document.getElementById("vistaRetos").style.display = "block";
   document.getElementById("gearBtn").style.display = "none";
-  // El carrito tampoco va aquÃ­: en los submenÃºs solo vive el "Volver".
-  // (Y como el "Volver" estÃ¡ arriba a la derecha, lo tapaba.)
+  // El carrito tampoco va aquí: en los submenús solo vive el "Volver".
+  // (Y como el "Volver" está arriba a la derecha, lo tapaba.)
   document.getElementById("menuBtn").style.display = "none";
 }
 function cerrarRetos(){
@@ -1136,9 +1136,9 @@ document.getElementById("btnJuegos").onclick = ()=> abrirSub("#juegos");
 document.getElementById("btnJuegosVolver").onclick = cerrarJuegos;
 document.getElementById("btnRetos").onclick = ()=> abrirSub("#retos");
 document.getElementById("btnRetosVolver").onclick = cerrarRetos;
-// Comunicaciones. Nace SIEMPRE visible: este submenÃº tiene tarjetas
-// escritas a mano, asÃ­ que no puede depender del catÃ¡logo para mostrarse
-// (la lecciÃ³n del bug de Retos, oct-2026).
+// Comunicaciones. Nace SIEMPRE visible: este submenú tiene tarjetas
+// escritas a mano, así que no puede depender del catálogo para mostrarse
+// (la lección del bug de Retos, oct-2026).
 function abrirCom(){
   document.getElementById("vistaMenu").style.display = "none";
   document.getElementById("vistaCom").style.display = "block";
@@ -1151,19 +1151,19 @@ function cerrarCom(){
 document.getElementById("btnCom").onclick = ()=> abrirSub("#com");
 document.getElementById("btnComVolver").onclick = cerrarCom;
 // ---------- modo invitado ----------
-// Las reglas viven en ./invitado.js. AquÃ­ solo se ajustan las pantallas.
+// Las reglas viven en ./invitado.js. Aquí solo se ajustan las pantallas.
 const invEl = document.getElementById("pantallaInvitado");
 function invMsg(t){ document.getElementById("invMsg").textContent = t || ""; }
 // Tres estados, y solo uno cuenta como "ya entraste":
-//   1) nada            -> la opciÃ³n normal
-//   2) escaneÃ³, sin registrar -> "Solicitando Acceso" (todavÃ­a NO eres invitado)
-//   3) te registrÃ³    -> "EstÃ¡s de visita" + botÃ³n para salir
+//   1) nada            -> la opción normal
+//   2) escaneó, sin registrar -> "Solicitando Acceso" (todavía NO eres invitado)
+//   3) te registró    -> "Estás de visita" + botón para salir
 function invRefrescar(){
   const soy = soyInvitado();
   document.getElementById("invSalir").style.display = soy ? "" : "none";
   try{
     document.getElementById("invEstado").textContent = soy
-      ? "EstÃ¡s de visita. Al salir vuelves a tu base."
+      ? "Estás de visita. Al salir vuelves a tu base."
       : (hayRespaldo()
           ? "Solicitando Acceso"
           : "Entra a otra base como invitado o vuelve a la tuya.");
@@ -1179,8 +1179,8 @@ async function pintarInvUsuarios(){
   try{ yo = JSON.parse(localStorage.getItem(CLAVE_LOCAL) || "null"); }catch(e){}
   try{
     document.getElementById("invQuien").textContent = us.length
-      ? ("EstÃ¡s como " + ((yo && yo.nombre) || "?") + ". Toca otro para cambiar.")
-      : "Sin usuarios todavÃ­a.";
+      ? ("Estás como " + ((yo && yo.nombre) || "?") + ". Toca otro para cambiar.")
+      : "Sin usuarios todavía.";
   }catch(e){}
   us.forEach(u=>{
     const fila = document.createElement("div");
@@ -1197,13 +1197,13 @@ async function pintarInvUsuarios(){
     // Boton de los dos numeros de puntos del Centro de Adquisiciones. Es un
     // carrito porque abre justo la "tienda": da mas pista que un regalo, que se
     // leia como "un regalito". TAMBIEN se quito el tachon de eliminar usuario
-    // (decisiÃ³n de Fredy, oct-2026): borrar a alguien dejaba datos colgados en
-    // varias colecciones y rompÃ­a la app. Ademas, con el tachon las filas
-    // quedaban de distinto tamaÃ±o (solo la de los demÃ¡s lo traÃ­a) y los iconos
+    // (decisión de Fredy, oct-2026): borrar a alguien dejaba datos colgados en
+    // varias colecciones y rompía la app. Ademas, con el tachon las filas
+    // quedaban de distinto tamaño (solo la de los demás lo traía) y los iconos
     // de la derecha no alineaban. Ahora TODAS las filas traen nombre + carrito.
     const g = document.createElement("button");
     g.type = "button";
-    g.textContent = "ðŸ›’";
+    g.textContent = "🛒";
     g.setAttribute("aria-label", "Tienda de " + u.nombre);
     g.style.cssText = "background:var(--card);border:1px solid var(--card-border);border-radius:12px;color:var(--fg);font-size:1.05rem;cursor:pointer;padding:12px;min-width:46px;";
     g.onclick = ()=> abrirPuntos(u);
@@ -1245,11 +1245,11 @@ document.getElementById("invPtsGuardar").onclick = async ()=>{
   const favor    = parseInt(document.getElementById("invPtsFavor").value, 10);
   const pctCast  = parseInt(document.getElementById("invPctCastigo").value, 10);
   const minFav   = parseInt(document.getElementById("invMinFavor").value, 10);
-  if(!(activar > 0)){ document.getElementById("invPtsMsg").textContent = "El de activar tiene que ser mÃ¡s de 0."; return; }
-  if(!(precio > 0)){ document.getElementById("invPtsMsg").textContent = "El precio tiene que ser mÃ¡s de 0."; return; }
-  if(!(favor >= 0)){ document.getElementById("invPtsMsg").textContent = "El del favor tiene que ser 0 o mÃ¡s."; return; }
+  if(!(activar > 0)){ document.getElementById("invPtsMsg").textContent = "El de activar tiene que ser más de 0."; return; }
+  if(!(precio > 0)){ document.getElementById("invPtsMsg").textContent = "El precio tiene que ser más de 0."; return; }
+  if(!(favor >= 0)){ document.getElementById("invPtsMsg").textContent = "El del favor tiene que ser 0 o más."; return; }
   if(!(pctCast >= 0 && pctCast <= 100)){ document.getElementById("invPtsMsg").textContent = "El castigo va de 0 a 100 %."; return; }
-  if(!(minFav >= 1)){ document.getElementById("invPtsMsg").textContent = "Los minutos tienen que ser 1 o mÃ¡s."; return; }
+  if(!(minFav >= 1)){ document.getElementById("invPtsMsg").textContent = "Los minutos tienen que ser 1 o más."; return; }
   const db = dbActual();
   if(!db){ document.getElementById("invPtsMsg").textContent = "No hay base de datos."; return; }
   try{
@@ -1273,7 +1273,7 @@ document.getElementById("invPtsGuardar").onclick = async ()=>{
     cerrarPuntos();
     pintarInvUsuarios();
   }catch(e){
-    document.getElementById("invPtsMsg").textContent = "No se pudo guardar. Revisa tu conexiÃ³n.";
+    document.getElementById("invPtsMsg").textContent = "No se pudo guardar. Revisa tu conexión.";
   }
 };
 document.getElementById("invAgregar").onclick = async ()=>{
@@ -1291,7 +1291,7 @@ document.getElementById("invAgregar").onclick = async ()=>{
     inp.value = "";
     guardarUsuariosLocal(arr);
     pintarInvUsuarios();
-  }catch(e){ invMsg("No se pudo agregar. Revisa tu conexiÃ³n."); }
+  }catch(e){ invMsg("No se pudo agregar. Revisa tu conexión."); }
 };
 document.getElementById("invQR").onclick = ()=>{
   let g = null;
@@ -1342,7 +1342,7 @@ function invModoScan(on){
   }
 }
 // Si se sale antes de registrarse, todo vuelve a como estaba y sin preguntar.
-// Sin esto el telÃ©fono se quedarÃ­a apuntando a la base de otra persona.
+// Sin esto el teléfono se quedaría apuntando a la base de otra persona.
 async function salirSinHaberEntrado(){
   await detenerScanInv();
   if(!quedasteMedioCamino()) return false;
@@ -1380,7 +1380,7 @@ function tgTarjeta(){
   try{
     document.getElementById("invTgSub").textContent = tgGuardado()
       ? "Avisos activos al grupo"
-      : "Apagados Â· toca para activarlos";
+      : "Apagados · toca para activarlos";
   }catch(e){}
 }
 function tgEstado(txt, malo){
@@ -1445,7 +1445,7 @@ document.getElementById("tgBuscar").onclick = async ()=>{
     vistos.forEach(v=>{
       const b = document.createElement("button");
       b.type = "button";
-      b.textContent = v.nombre + " Â· " + v.id;
+      b.textContent = v.nombre + " · " + v.id;
       b.style.cssText = "width:100%;text-align:left;background:var(--card);border:1px solid var(--card-border);border-radius:12px;color:var(--fg);padding:12px;font-size:.85rem;font-family:'Chakra Petch',sans-serif;cursor:pointer;";
       b.onclick = ()=>{
         document.getElementById("tgChat").value = String(v.id);
@@ -1465,11 +1465,11 @@ document.getElementById("tgProbar").onclick = async ()=>{
   try{
     const r = await conTiempo(tgApi(token, "sendMessage", {
       chat_id: chat,
-      text: "âœ… Avisos activados. Cada cita y reto va a llegar aqui."
+      text: "✅ Avisos activados. Cada cita y reto va a llegar aqui."
     }), 15000);
     if(r && r.ok){
       try{ localStorage.removeItem(CLAVE_TG_ERROR); }catch(e){}
-      tgEstado("Â¡Llego! Ya puedes Guardar.");
+      tgEstado("¡Llego! Ya puedes Guardar.");
     }else{
       tgEstado("Telegram lo rechazo: " + ((r && r.description) || "respuesta vacia"), true);
     }
@@ -1542,7 +1542,7 @@ document.getElementById("invVolverTop").onclick = async ()=>{
 };
 document.getElementById("invSalir").onclick = async ()=>{
   if(!soyInvitado()) return;
-  const confirmado = await confirmar({ aviso: true, titulo: "Â¿Salir de modo invitado?", ok: "Salir" });
+  const confirmado = await confirmar({ aviso: true, titulo: "¿Salir de modo invitado?", ok: "Salir" });
   if(!confirmado) return;
   await salirDeInvitado(dbActual());
   location.replace("./");
@@ -1557,9 +1557,9 @@ async function detenerScanInv(){
 let dbInvitado = null;
 document.getElementById("invEntrar").onclick = async ()=>{
   invMsg("");
-  // OJO: aquÃ­ NO se guarda nada. TodavÃ­a no eres invitado: solo se abre
-  // el escÃ¡ner. La copia se toma al escanear un QR vÃ¡lido, porque es el
-  // momento en que vamos a cambiar la base y necesitamos poder volver atrÃ¡s.
+  // OJO: aquí NO se guarda nada. Todavía no eres invitado: solo se abre
+  // el escáner. La copia se toma al escanear un QR válido, porque es el
+  // momento en que vamos a cambiar la base y necesitamos poder volver atrás.
   invModoScan(true);
   const box = document.getElementById("lectorInv");
   await detenerScanInv();
@@ -1575,11 +1575,11 @@ document.getElementById("invEntrar").onclick = async ()=>{
           const data = JSON.parse(texto);
           const fb = data && data.firebase;
           const need = ["apiKey","authDomain","projectId","storageBucket","messagingSenderId","appId"];
-          if(!fb || need.some(k=>!fb[k])){ invMsg("Ese QR no trae configuraciÃ³n vÃ¡lida."); return; }
+          if(!fb || need.some(k=>!fb[k])){ invMsg("Ese QR no trae configuración válida."); return; }
           await detenerScanInv();
           const cfg = { firebase: fb };
           if(data.telegram && data.telegram.token && data.telegram.chat) cfg.telegram = data.telegram;
-          // Ãšltimo momento antes de cambiar la base: aquÃ­ se guarda la copia
+          // Último momento antes de cambiar la base: aquí se guarda la copia
           // para poder devolver todo si el invitado se sale antes de registrarse.
           respaldar();
           guardarConfig(cfg);
@@ -1609,16 +1609,16 @@ document.getElementById("invEntrar").onclick = async ()=>{
       ()=>{}
     );
   }catch(e){
-    invMsg("Sin cÃ¡mara o sin permiso. Revisa el navegador.");
+    invMsg("Sin cámara o sin permiso. Revisa el navegador.");
   }
 };
 document.getElementById("invConQuien").onchange = ()=>{
   const sel = document.getElementById("invConQuien");
   const txt = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : "";
-  document.getElementById("invVista").textContent = txt ? ("EntrarÃ¡s como invitado de " + txt + ".") : "";
+  document.getElementById("invVista").textContent = txt ? ("Entrarás como invitado de " + txt + ".") : "";
 };
 // Comparar nombres sin que estorben las mayusculas ni los acentos: "Jose" y
-// "JosÃ©" son la misma persona.
+// "José" son la misma persona.
 function normalizaNombre(s){
   return String(s || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
@@ -1627,7 +1627,7 @@ document.getElementById("invConfirmar").onclick = async (e)=>{
   const sel = document.getElementById("invConQuien");
   const conQuien = sel.value;
   if(!nombre){ invMsg("Escribe tu nombre."); return; }
-  if(!dbInvitado){ invMsg("Lee primero un cÃ³digo QR."); return; }
+  if(!dbInvitado){ invMsg("Lee primero un código QR."); return; }
   invMsg("");
   const btn = e.target;
   btn.disabled = true;
@@ -1674,7 +1674,7 @@ document.getElementById("invConfirmar").onclick = async (e)=>{
     // lo devuelva al formulario de registro de otra persona.
     location.replace("Diablitos/");
   }catch(e){
-    invMsg("No se pudo registrar. Revisa tu conexiÃ³n.");
+    invMsg("No se pudo registrar. Revisa tu conexión.");
     btn.disabled = false;
   }
 };

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -58,20 +58,20 @@
 
 <div id="encabezado">
   <div class="fila">
-    <h1>Chat ðŸ’¬</h1>
+    <h1>Chat 💬</h1>
     <span class="filaDer">
-      <button id="btnInvitar" type="button">Invitar ðŸ””</button>
-      <a href="../index.html#com" id="btnVolver">â† Volver</a>
+      <button id="btnInvitar" type="button">Invitar 🔔</button>
+      <a href="../index.html#com" id="btnVolver">← Volver</a>
     </span>
   </div>
-  <div id="presencia">â€¦</div>
+  <div id="presencia">…</div>
 </div>
 
-<div id="lista"><div id="vacio">AÃºn no hay mensajes. Â¡Saluda! ðŸ‘‹</div></div>
+<div id="lista"><div id="vacio">Aún no hay mensajes. ¡Saluda! 👋</div></div>
 
 <div id="envio">
   <input id="texto" type="text" placeholder="Escribe..." maxlength="500" autocomplete="off">
-  <button id="btnEnviar">âž¤</button>
+  <button id="btnEnviar">➤</button>
 </div>
 
 <div id="aviso" style="display:none;">Elige tu usuario en el <a href="../index.html">inicio</a> para chatear.</div>
@@ -129,7 +129,7 @@ function pintar(docs){
     div.className = "msg" + (m.autorId === yo.id ? " mio" : "");
     const a = document.createElement("div");
     a.className = "autor";
-    a.textContent = m.autorId === yo.id ? "TÃº" : (m.autorNombre || "");
+    a.textContent = m.autorId === yo.id ? "Tú" : (m.autorNombre || "");
     const t = document.createElement("div");
     t.textContent = m.texto || "";
     const h = document.createElement("div");
@@ -145,7 +145,7 @@ onSnapshot(query(chatRef, orderBy("creadoEn", "asc"), limit(100)), (snap)=>{
   pintar(snap.docs);
 }, ()=>{});
 
-// ====== presencia: "en lÃ­nea" ======
+// ====== presencia: "en línea" ======
 async function latir(){
   try{
     await setDoc(doc(db, "presencia", yo.id), { nombre: yo.nombre, visto: serverTimestamp() }, { merge: true });
@@ -174,8 +174,8 @@ onSnapshot(presenciaRef, (snap)=>{
     }
   });
   presenciaEl.innerHTML = otros.length
-    ? '<span class="on">â— ' + otros.join(", ") + " en lÃ­nea</span>"
-    : "Tu pareja aparece aquÃ­ cuando abre la app";
+    ? '<span class="on">● ' + otros.join(", ") + " en línea</span>"
+    : "Tu pareja aparece aquí cuando abre la app";
 }, ()=>{});
 
 // ====== enviar ======
@@ -200,10 +200,10 @@ textoEl.addEventListener("keydown", (e)=>{ if(e.key === "Enter") enviar(); });
 
 // ====== invitar ======
 // Lo mismo que ya hacen Citas/ y Retos/: el aviso sale por Telegram CON un
-// botÃ³n "Abrir ðŸ‘€" que lleva a la pÃ¡gina. Y ADEMAS se escribe en la base de la
-// pareja, que es lo que enciende la campana en la pestaÃ±a del otro (ver
+// botón "Abrir 👀" que lleva a la página. Y ADEMAS se escribe en la base de la
+// pareja, que es lo que enciende la campana en la pestaña del otro (ver
 // ../pestana.js). El Telegram es para cuando tiene la app cerrada; la base es
-// para cuando la tiene abierta en otra pestaÃ±a.
+// para cuando la tiene abierta en otra pestaña.
 const APP_URL = baseUrl();
 const REF_INVITO = doc(db, "invitosChat", "actual");
 const btnInvitar = document.getElementById("btnInvitar");
@@ -216,12 +216,12 @@ btnInvitar.onclick = async ()=>{
   inviting = true;
   btnInvitar.disabled = true;
   const textoAntes = btnInvitar.textContent;
-  btnInvitar.textContent = "Mandandoâ€¦";
+  btnInvitar.textContent = "Mandando…";
   try{
     const pareja = (nombres||[]).find(u => u && u.id && u.id !== yo.id && !u.invitado)
                 || (nombres||[]).find(u => u && u.id && u.id !== yo.id);
     // Primero la base: eso es lo que prende la campana. `para` va con el OTRO
-    // id, y por eso quien manda NO ve la campana de su propia invitaciÃ³n.
+    // id, y por eso quien manda NO ve la campana de su propia invitación.
     await setDoc(REF_INVITO, {
       de: yo.id,
       deNombre: yo.nombre,
@@ -229,8 +229,8 @@ btnInvitar.onclick = async ()=>{
       creadoEn: serverTimestamp(),
       visto: false
     });
-    await avisarTelegram("ðŸ’¬ " + yo.nombre + " te estÃ¡ esperando en el Chat", APP_URL + "Chat/");
-    btnInvitar.textContent = "âœ“ Enviada";
+    await avisarTelegram("💬 " + yo.nombre + " te está esperando en el Chat", APP_URL + "Chat/");
+    btnInvitar.textContent = "✓ Enviada";
     setTimeout(()=>{ btnInvitar.textContent = textoAntes; }, 2000);
   }catch(e){
     btnInvitar.textContent = textoAntes;
@@ -240,9 +240,9 @@ btnInvitar.onclick = async ()=>{
   btnInvitar.disabled = false;
 };
 
-// La campana de la pestaÃ±a. Se enciende sola con lo que escriba el otro.
+// La campana de la pestaña. Se enciende sola con lo que escriba el otro.
 // `esChat` porque AQUI es donde la campana se apaga al entrar: en el resto de
-// pantallas, entrar a la pestaÃ±a saca un cartelito en vez de apagarla.
+// pantallas, entrar a la pestaña saca un cartelito en vez de apagarla.
 vigilarInvitaciones(db, { esChat:true });
 </script>
 

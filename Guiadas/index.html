@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -93,19 +93,19 @@
 </head>
 <body>
 
-<a class="back" id="lnkInicio" href="../index.html#experiencias">â† Volver</a>
-<button id="btnCfg" aria-label="Configurar">âš™ï¸</button>
+<a class="back" id="lnkInicio" href="../index.html#experiencias">← Volver</a>
+<button id="btnCfg" aria-label="Configurar">⚙️</button>
 
 <div class="eyebrow">Citas Guiadas</div>
 
 <!-- ============ BLOQUEO (sin acceso) ============ -->
 <div class="vista" id="vistaBloqueo">
-  <h1>Acceso ðŸ”’</h1>
-  <p class="desc">Citas Guiadas no estÃ¡ activado en tu menÃº. PÃ­delo en Centro de Adquisiciones y al aprobarse aparece solo.</p>
+  <h1>Acceso 🔒</h1>
+  <p class="desc">Citas Guiadas no está activado en tu menú. Pídelo en Centro de Adquisiciones y al aprobarse aparece solo.</p>
   <button class="btnPri" id="btnTienda">Ir a Centro de Adquisiciones</button>
-  <button class="btnSec" id="btnRevisar">Ya lo pedÃ­, revisar acceso</button>
-  <button class="btnSec" id="btnTengo">Tengo cÃ³digo</button>
-  <textarea id="licCodigo" style="display:none;width:100%;border-radius:12px;border:1px solid var(--card-border);background:var(--card);color:var(--fg);padding:12px;font-size:.8rem;min-height:90px;" placeholder="Pega tu cÃ³digo aquÃ­"></textarea>
+  <button class="btnSec" id="btnRevisar">Ya lo pedí, revisar acceso</button>
+  <button class="btnSec" id="btnTengo">Tengo código</button>
+  <textarea id="licCodigo" style="display:none;width:100%;border-radius:12px;border:1px solid var(--card-border);background:var(--card);color:var(--fg);padding:12px;font-size:.8rem;min-height:90px;" placeholder="Pega tu código aquí"></textarea>
   <button class="btnPri" id="btnValidar" style="display:none">Validar y entrar</button>
   <div id="licMsg" style="min-height:20px;font-size:.85rem;color:var(--rojo);margin:6px 0;text-align:center;"></div>
 </div>
@@ -113,18 +113,18 @@
 <!-- ============ LISTA (jugar) ============ -->
 <div class="vista" id="vistaLista">
   <h1 id="tituloLista">Elige actividad</h1>
-  <p class="desc" id="descLista">Â¿QuÃ© vas a jugar hoy?</p>
-  <input class="buscar" id="buscarLista" type="text" placeholder="ðŸ” Buscar actividad..." autocomplete="off">
+  <p class="desc" id="descLista">¿Qué vas a jugar hoy?</p>
+  <input class="buscar" id="buscarLista" type="text" placeholder="🔍 Buscar actividad..." autocomplete="off">
   <div id="cajaActs" style="width:100%;max-height:55dvh;overflow-y:auto;border:1px solid var(--card-border);border-radius:16px;padding:10px;background:var(--bg-2);">
     <div id="listaActs" style="width:100%"></div>
   </div>
-  <button class="btnPri" id="btnMulti" style="margin-top:12px;">Modo MultiActividades ðŸ”—</button>
+  <button class="btnPri" id="btnMulti" style="margin-top:12px;">Modo MultiActividades 🔗</button>
   <div id="filaMultiSel" style="display:none;width:100%;gap:8px;margin-top:12px;">
     <button class="btnPri" id="btnMultiGo" disabled style="flex:1;opacity:.4;margin-bottom:0;">Combinar (0/3)</button>
     <button class="btnSec" id="btnMultiCancel" style="width:auto;padding:12px 16px;text-decoration:none;">Cancelar</button>
   </div>
   <div id="cajaModoJuego" style="width:100%;background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:14px;margin-top:6px;">
-    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;text-align:center;">Â¿CÃ³mo van a Jugar hoy?</div>
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;text-align:center;">¿Cómo van a Jugar hoy?</div>
     <label class="opModo"><input type="radio" name="modoJuego" value="local" checked> Acciones en un Celular</label>
     <label class="opModo"><input type="radio" name="modoJuego" value="compartido"> Cada quien en el suyo</label>
   </div>
@@ -134,7 +134,7 @@
 <div class="vista" id="vistaConfig">
   <h1>Configurar</h1>
   <p class="desc">Elige actividad.</p>
-  <input class="buscar" id="buscarCfg" type="text" placeholder="ðŸ” Buscar actividad..." autocomplete="off">
+  <input class="buscar" id="buscarCfg" type="text" placeholder="🔍 Buscar actividad..." autocomplete="off">
   <div id="listaActsCfg" style="width:100%"></div>
 </div>
 
@@ -148,7 +148,7 @@
     <div class="tomasGrid" id="tomasGrid"></div>
   </div>
   <div id="msg"></div>
-  <button class="btnPri" id="btnJugar">Jugar â–¶</button>
+  <button class="btnPri" id="btnJugar">Jugar ▶</button>
 </div>
 
 <!-- ============ PLAYER ============ -->
@@ -157,25 +157,25 @@
   <div id="progreso" hidden></div>
   <div id="nivelTag" hidden></div>
   <div id="actividadAhora"></div>
-  <div id="finMsg" style="display:none">Â¡Gracias por jugar!</div>
-  <button class="btnPri" id="btnSig">Siguiente â†’</button>
+  <div id="finMsg" style="display:none">¡Gracias por jugar!</div>
+  <button class="btnPri" id="btnSig">Siguiente →</button>
   <button class="btnSec" id="btnTerminar">Terminar</button>
 </div>
 
 <!-- ============ CONTINUAR (ventana emergente) ============ -->
 <div class="vista" id="vistaSeguir" style="position:fixed;inset:0;z-index:60;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.6);max-width:none;width:100%;">
   <div style="width:100%;max-width:380px;background:var(--card);border:1px solid var(--teal);border-radius:18px;padding:22px 20px;text-align:center;">
-    <h1 id="sgTitulo" style="font-size:1.3rem;">Â¿Continuar cita anterior?</h1>
+    <h1 id="sgTitulo" style="font-size:1.3rem;">¿Continuar cita anterior?</h1>
     <p class="desc" id="sgDesc" style="max-width:none;"></p>
-    <button class="btnPri" id="btnContinuar">Continuar â†’</button>
+    <button class="btnPri" id="btnContinuar">Continuar →</button>
     <button class="btnSec" id="btnNueva">Cita nueva</button>
   </div>
 </div>
 
-<!-- ============ MODAL CORTESÃA VENCIDO ============ -->
+<!-- ============ MODAL CORTESÍA VENCIDO ============ -->
 <div id="modalGracia" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;align-items:center;justify-content:center;padding:20px;">
   <div style="width:100%;max-width:380px;background:var(--card);border:1px solid var(--teal);border-radius:18px;padding:22px 20px;text-align:center;">
-    <div style="font-size:.95rem;line-height:1.5;">Su acceso venciÃ³ ðŸ¥º pero hoy no les arruinamos su cita ðŸ’› les obsequiamos este Ãºltimo acceso</div>
+    <div style="font-size:.95rem;line-height:1.5;">Su acceso venció 🥺 pero hoy no les arruinamos su cita 💛 les obsequiamos este último acceso</div>
     <div style="font-size:.75rem;color:var(--fg-muted);margin-top:10px;text-align:right;">Solicite su acceso en<br>Centro de Adquisiciones</div>
     <button class="btnPri" id="btnGraciaOk" style="margin-top:14px;">Aceptar</button>
   </div>
@@ -184,9 +184,9 @@
 <!-- ============ MODAL MULTI 2: CONFIRMAR ============ -->
 <div id="modalMulti2" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;align-items:center;justify-content:center;padding:20px;">
   <div style="width:100%;max-width:380px;background:var(--card);border:1px solid var(--teal);border-radius:18px;padding:22px 20px;text-align:center;">
-    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;">Â¿Son estas 3?</div>
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;">¿Son estas 3?</div>
     <div id="multiResumen" style="font-size:.95rem;margin:12px 0;line-height:1.6;"></div>
-    <button class="btnPri" id="btnMulti2Ok" style="margin-bottom:8px;">SÃ­, continuar â†’</button>
+    <button class="btnPri" id="btnMulti2Ok" style="margin-bottom:8px;">Sí, continuar →</button>
     <button class="btnSec" id="btnMulti2Back">Re-elegir</button>
   </div>
 </div>
@@ -194,19 +194,19 @@
 <!-- ============ MODAL MULTI 3: TOMAS ============ -->
 <div id="modalMulti3" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;align-items:center;justify-content:center;padding:20px;">
   <div style="width:100%;max-width:380px;background:var(--card);border:1px solid var(--card-border);border-radius:18px;padding:22px 20px;">
-    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;text-align:center;margin-bottom:10px;">Â¿CuÃ¡ntas acciones por nivel?</div>
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;text-align:center;margin-bottom:10px;">¿Cuántas acciones por nivel?</div>
     <div class="tomasGrid" id="multiTomasGrid"></div>
-    <button class="btnPri" id="btnMulti3Ok" style="margin-top:12px;">Aceptar y jugar â–¶</button>
-    <button class="btnSec" id="btnMulti3Back">AtrÃ¡s</button>
+    <button class="btnPri" id="btnMulti3Ok" style="margin-top:12px;">Aceptar y jugar ▶</button>
+    <button class="btnSec" id="btnMulti3Back">Atrás</button>
   </div>
 </div>
 
-<!-- ============ MODAL UNIRSE (sesiÃ³n compartida) ============ -->
+<!-- ============ MODAL UNIRSE (sesión compartida) ============ -->
 <div id="modalUnir" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:70;align-items:center;justify-content:center;padding:20px;">
   <div style="width:100%;max-width:380px;background:var(--card);border:1px solid var(--teal);border-radius:18px;padding:22px 20px;text-align:center;">
-    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.15rem;">Â¿Quieres jugar? Â¿Unirte?</div>
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.15rem;">¿Quieres jugar? ¿Unirte?</div>
     <div id="unirDesc" style="font-size:.9rem;color:var(--fg-muted);margin:10px 0 0;"></div>
-    <button class="btnPri" id="btnUnirme" style="margin-top:16px;">Unirme â†’</button>
+    <button class="btnPri" id="btnUnirme" style="margin-top:16px;">Unirme →</button>
     <button class="btnSec" id="btnUnirNo">Ahora no</button>
   </div>
 </div>
@@ -217,7 +217,7 @@
      y el resto de la pantalla deja pasar el toque que lanza mas fuegos. -->
 <div id="modalFin" style="display:none;position:fixed;inset:0;background:transparent;z-index:80;align-items:center;justify-content:center;padding:20px;pointer-events:none;">
   <div style="width:100%;max-width:380px;background:var(--card);border:1px solid var(--teal);border-radius:18px;padding:22px 20px;text-align:center;pointer-events:auto;">
-    <div id="finTxt" style="font-size:1.1rem;">Â¡Gracias por jugar!</div>
+    <div id="finTxt" style="font-size:1.1rem;">¡Gracias por jugar!</div>
     <button class="btnPri" id="btnFinOk" style="margin-top:14px;">Aceptar</button>
   </div>
 </div>
@@ -228,7 +228,7 @@ import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, addD
 import firebaseConfigBase from "../firebase-config.js";
 import { resolverFirebase, cargarUsuarios, asegurarFabrica, unirConFabrica } from "../config.js";
 import { verificarCodigo, verificarFirma } from "../taquilla.js";
-// LÃ³gica de licencias compartida con el resto de la app (ver acceso.js).
+// Lógica de licencias compartida con el resto de la app (ver acceso.js).
 import { miProyecto, appTaq, leerLicencias, guardarLicencia, quitarLicencia, tengoAcceso, oficialesAprobados, escucharItem } from "../acceso.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 // Fuegos de celebracion al acabar la cita (igual que Elecciones Peligrosas).
@@ -238,7 +238,7 @@ import { montarFavor } from "../favor.js";
 try{ montarFavor(); }catch(e){}
 
 const NIVELES = [
-  { id: "basico", nombre: "BÃ¡sico" },
+  { id: "basico", nombre: "Básico" },
   { id: "medio", nombre: "Medio" },
   { id: "avanzado", nombre: "Avanzado" },
   { id: "experto", nombre: "Experto" },
@@ -291,7 +291,7 @@ async function entrar(){
     try{ escucharSesion(); }catch(e){}
     return;
   }
-  // CortesÃ­a Ãºnica si venciÃ³ y no se ha usado
+  // Cortesía única si venció y no se ha usado
   try{
     const lic = leerLicencias()[ITEM_ID];
     if(lic){
@@ -361,14 +361,14 @@ document.getElementById("btnValidar").onclick = async ()=>{
     entrar();
     return;
   }
-  // Acepta vencido con firma vÃ¡lida para activar la cortesÃ­a Ãºnica en entrar()
+  // Acepta vencido con firma válida para activar la cortesía única en entrar()
   const pf = await verificarFirma(cod);
   if(pf && pf.item === ITEM_ID && pf.para === miProyecto()){
     guardarLicencia(ITEM_ID, cod);
     entrar();
     return;
   }
-  licMsg("CÃ³digo invÃ¡lido o vencido.");
+  licMsg("Código inválido o vencido.");
 };
 
 let actividad = null;
@@ -378,7 +378,7 @@ let paso = 0;
 
 let ultimaActividad = null;
 
-// ---------- modo de juego + sesiÃ³n compartida (Cada quien en el suyo) ----------
+// ---------- modo de juego + sesión compartida (Cada quien en el suyo) ----------
 let modoJuego = "local";        // 'local' | 'compartido'
 let miUsuario = null;
 let usuariosLista = [];
@@ -402,7 +402,7 @@ function mostrarFin(){
 function abrirFin(texto){
   if(finMostrado) return;
   finMostrado = true;
-  try{ document.getElementById("finTxt").textContent = texto || "Â¡Gracias por jugar!"; }catch(e){}
+  try{ document.getElementById("finTxt").textContent = texto || "¡Gracias por jugar!"; }catch(e){}
   mostrarFin();
 }
 let pendienteSrc = "local"; // 'local' (guia_prog) | 'sesion' (sesionGuiada/actual)
@@ -513,17 +513,17 @@ function escucharSesion(){
           sidMostrado = d.sid;
           if(soyHost){
             pendienteSrc = "sesion";
-            seguirEncima("Â¿Continuar cita anterior?",
+            seguirEncima("¿Continuar cita anterior?",
               (d.titulo || "Cita") + ": ibas en la " + ((d.paso || 0) + 1) + " de " + (d.lista || []).length + ".");
           }else{
             document.getElementById("unirDesc").textContent = d.reanudada
-              ? ((d.hostNombre || "Tu pareja") + " retomÃ³ la cita. Puedes continuar donde van.")
-              : ((d.hostNombre || "Tu pareja") + " iniciÃ³ una cita de Citas Guiadas.");
+              ? ((d.hostNombre || "Tu pareja") + " retomó la cita. Puedes continuar donde van.")
+              : ((d.hostNombre || "Tu pareja") + " inició una cita de Citas Guiadas.");
             document.getElementById("modalUnir").style.display = "flex";
           }
         }else if(jugandoCompartido){
           jugandoCompartido = false;
-          if(d && d.terminada){ abrirFin("Â¡Gracias por jugar!"); return; }
+          if(d && d.terminada){ abrirFin("¡Gracias por jugar!"); return; }
           entrar();
         }
       }catch(e){}
@@ -548,9 +548,9 @@ document.getElementById("btnCfg").onclick = ()=>{
   pintarLista("listaActsCfg", "editar");
   ver("vistaConfig");
 };
-// El "â† Volver" (arriba a la derecha) regresa a la pantalla ANTERIOR de
-// Guiadas, no al menÃº: del editor a la lista de configurar, y de ahÃ­ a la lista
-// de jugar. Solo desde la lista de jugar sale al menÃº (Experiencias).
+// El "← Volver" (arriba a la derecha) regresa a la pantalla ANTERIOR de
+// Guiadas, no al menú: del editor a la lista de configurar, y de ahí a la lista
+// de jugar. Solo desde la lista de jugar sale al menú (Experiencias).
 document.getElementById("lnkInicio").addEventListener("click", (e)=>{
   const v = document.querySelector(".vista.ver");
   const id = v ? v.id : "";
@@ -679,7 +679,7 @@ function dibujarLista(boxId, modo, acts, conteos){
       lab.appendChild(t);
       if(esOf){
         const tag = document.createElement("small");
-        tag.textContent = "ðŸ…";
+        tag.textContent = "🏅";
         tag.style.fontFamily = "'Inter',sans-serif";
         tag.style.fontWeight = "400";
         tag.style.fontSize = ".8rem";
@@ -706,24 +706,24 @@ function dibujarLista(boxId, modo, acts, conteos){
       right.style.cssText = "display:flex;align-items:center;gap:6px;flex:0 0 auto;";
       if(esOf){
         const tag = document.createElement("small");
-        tag.textContent = "ðŸ…";
+        tag.textContent = "🏅";
         right.appendChild(tag);
       }
       const s = document.createElement("small");
-      s.textContent = c ? (c + (c === 1 ? " acciÃ³n" : " acciones")) : "sin acciones";
+      s.textContent = c ? (c + (c === 1 ? " acción" : " acciones")) : "sin acciones";
       right.appendChild(s);
       b.appendChild(right);
       b.onclick = ()=>abrirEditor(nombre);
     }else{
       if(esOf){
         const tag = document.createElement("small");
-        tag.textContent = "ðŸ…";
+        tag.textContent = "🏅";
         b.appendChild(tag);
       }
       if(!c){
         b.disabled = true;
         const s = document.createElement("small");
-        s.textContent = "âš™ï¸ configurar acciones";
+        s.textContent = "⚙️ configurar acciones";
         b.appendChild(s);
       }else{
         b.onclick = ()=>jugarDirecto(nombre);
@@ -767,7 +767,7 @@ async function jugarDirecto(nombre){
         const tengoPendientes = Array.isArray(d.lista) && d.lista.length && (d.paso || 0) < d.lista.length;
         if(esMia && tengoPendientes){
           pendienteSrc = "sesion";
-          seguirEncima("Â¿Continuar cita anterior?",
+          seguirEncima("¿Continuar cita anterior?",
             (d.titulo || "Cita") + ": ibas en la " + ((d.paso || 0) + 1) + " de " + d.lista.length + ".");
           return;
         }
@@ -776,7 +776,7 @@ async function jugarDirecto(nombre){
     }catch(e){}
   }
   if(pendiente && pendiente.actividad === nombre && Array.isArray(pendiente.lista) && pendiente.lista.length){
-    seguirEncima("Â¿Continuar cita anterior?",
+    seguirEncima("¿Continuar cita anterior?",
       nombre + ": ibas en la " + (pendiente.paso + 1) + " de " + pendiente.lista.length + ".");
     return;
   }
@@ -827,7 +827,7 @@ async function empezarNuevo(){
   const tomas = tomasGuardadas(docActual || actividad);
   listaJuego = armarListaLados(datos, tomas);
   if(!listaJuego.length){
-    aviso("Sin acciones todavÃ­a. AlimÃ©ntala en âš™ï¸.");
+    aviso("Sin acciones todavía. Aliméntala en ⚙️.");
     return;
   }
   paso = 0;
@@ -916,7 +916,7 @@ document.getElementById("btnNueva").onclick = async ()=>{
   empezarNuevo();
 };
 
-// ---------- MultiActividades (3 obligadas, ciegas, mismo acceso, selecciÃ³n inline) ----------
+// ---------- MultiActividades (3 obligadas, ciegas, mismo acceso, selección inline) ----------
 let multiSel = [];
 let multiModo = false;
 function multiMostrar(id, mostrar){
@@ -925,7 +925,7 @@ function multiMostrar(id, mostrar){
 }
 function multiRefrescar(){
   document.getElementById("tituloLista").textContent = multiModo ? "Selecciona 3 para combinar" : "Elige actividad";
-  document.getElementById("descLista").textContent = multiModo ? ("Llevas " + multiSel.length + "/3") : "Â¿QuÃ© vas a jugar hoy?";
+  document.getElementById("descLista").textContent = multiModo ? ("Llevas " + multiSel.length + "/3") : "¿Qué vas a jugar hoy?";
   document.getElementById("btnMulti").style.display = multiModo ? "none" : "";
   document.getElementById("filaMultiSel").style.display = multiModo ? "flex" : "none";
   const go = document.getElementById("btnMultiGo");
@@ -957,7 +957,7 @@ async function multiAbrir(){
         const pendientes = Array.isArray(d.lista) && d.lista.length && (d.paso || 0) < d.lista.length;
         if(esMia && pendientes && d.modo === "multi"){
           pendienteSrc = "sesion";
-          seguirEncima("Â¿Continuar multi anterior?",
+          seguirEncima("¿Continuar multi anterior?",
             "Multi (" + (d.actividades || []).join(" + ") + "): ibas en la " + ((d.paso || 0) + 1) + " de " + d.lista.length + ".");
           return;
         }
@@ -967,7 +967,7 @@ async function multiAbrir(){
   const pendiente = leerProg();
   if(pendiente && pendiente.modo === "multi" && Array.isArray(pendiente.lista) && pendiente.lista.length){
     const quienes = (pendiente.actividades || []).join(" + ");
-    seguirEncima("Â¿Continuar multi anterior?",
+    seguirEncima("¿Continuar multi anterior?",
       "Multi (" + quienes + "): ibas en la " + (pendiente.paso + 1) + " de " + pendiente.lista.length + ".");
     return;
   }
@@ -1011,7 +1011,7 @@ document.getElementById("btnMulti2Ok").onclick = ()=>{
     g.appendChild(lab);
   });
   if(pendienteMultiPrev){
-    document.getElementById("btnMulti3Ok").textContent = "Aceptar y jugar â–¶";
+    document.getElementById("btnMulti3Ok").textContent = "Aceptar y jugar ▶";
   }
   multiMostrar("modalMulti2", false);
   multiMostrar("modalMulti3", true);
@@ -1064,7 +1064,7 @@ document.getElementById("btnMulti3Ok").onclick = async ()=>{
   });
   multiMostrar("modalMulti3", false);
   if(!listaJuego.length){
-    aviso("Sin acciones en esas 3. Elige otras o alimenta en âš™ï¸.");
+    aviso("Sin acciones en esas 3. Elige otras o alimenta en ⚙️.");
     multiActs = [];
     return;
   }
@@ -1116,7 +1116,7 @@ function pintarEditor(){
     const tag = document.createElement("span");
     tag.className = "tag";
     const total = lados.A.length + lados.B.length;
-    tag.textContent = total + (total === 1 ? " acciÃ³n" : " acciones");
+    tag.textContent = total + (total === 1 ? " acción" : " acciones");
     h.appendChild(tag);
     div.appendChild(h);
     ["A", "B"].forEach(lado=>{
@@ -1129,7 +1129,7 @@ function pintarEditor(){
       const fila = document.createElement("div");
       fila.className = "filaAdd";
       const inp = document.createElement("input");
-      inp.placeholder = "Nueva acciÃ³n (" + nv.nombre.toLowerCase() + ")";
+      inp.placeholder = "Nueva acción (" + nv.nombre.toLowerCase() + ")";
       inp.maxLength = 90;
       const btn = document.createElement("button");
       btn.textContent = "+";
@@ -1138,7 +1138,7 @@ function pintarEditor(){
       inp.addEventListener("keydown", (e)=>{ if(e.key === "Enter") agregar(); });
       fila.appendChild(inp); fila.appendChild(btn);
       div.appendChild(fila);
-      // Al reves: la ultima que agregaste queda ARRIBA, pegada al campo. La "âœ•"
+      // Al reves: la ultima que agregaste queda ARRIBA, pegada al campo. La "✕"
       // lleva su propio texto y borra por TEXTO, no por posicion: con un indice,
       // estando la lista al reves, se llevaria otra accion.
       const chips = document.createElement("div");
@@ -1150,7 +1150,7 @@ function pintarEditor(){
         c.className = "chip";
         c.textContent = txt;
         const x = document.createElement("button");
-        x.textContent = "âœ•";
+        x.textContent = "✕";
         x.onclick = ()=>{ quitarItem(nv.id, lado, txt); };
         c.appendChild(x);
         chips.appendChild(c);
@@ -1259,16 +1259,16 @@ function pintarPaso(){
     btnSig.style.display = "";
     btnSig.disabled = false;
     btnSig.style.opacity = "1";
-    btnSig.textContent = (paso + 1 >= total) ? "Terminar ðŸ”¥" : "Siguiente â†’";
+    btnSig.textContent = (paso + 1 >= total) ? "Terminar 🔥" : "Siguiente →";
   }else{
-    elAct.textContent = "Turno de " + nombreDe(p.lado) + "â€¦";
+    elAct.textContent = "Turno de " + nombreDe(p.lado) + "…";
     elAct.style.color = "var(--fg-muted)";
     btnSig.style.display = "";
     btnSig.disabled = true;
     btnSig.style.opacity = ".4";
     btnSig.textContent = "Espera tu turno";
   }
-  tag.textContent = p.nivel + (p.lado ? " Â· Lado " + p.lado : "");
+  tag.textContent = p.nivel + (p.lado ? " · Lado " + p.lado : "");
 }
 document.getElementById("btnSig").onclick = ()=>{
   if(jugandoCompartido){ avanzarSesion(); return; }
@@ -1276,7 +1276,7 @@ document.getElementById("btnSig").onclick = ()=>{
     // Ultimo paso de una cita en un solo celular: se celebra y, al aceptar,
     // se borra el avance guardado.
     finEnLocal = true;
-    abrirFin("Â¡Gracias por jugar!");
+    abrirFin("¡Gracias por jugar!");
     return;
   }
   paso++;

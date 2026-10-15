@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -58,7 +58,7 @@
   }
   textarea{ resize:vertical; min-height:70px; }
 
-  /* ---------- pantalla: quiÃ©n eres ---------- */
+  /* ---------- pantalla: quién eres ---------- */
   #pantallaUsuario{
     min-height:100dvh; display:flex; flex-direction:column;
     align-items:center; justify-content:center;
@@ -243,10 +243,10 @@
 
 <div id="banner"></div>
 
-<!-- ================= PANTALLA: QUIÃ‰N ERES ================= -->
+<!-- ================= PANTALLA: QUIÉN ERES ================= -->
 <div id="pantallaUsuario">
-  <div class="eyebrow">Complicidad en Pareja Â· Retos</div>
-  <h1>Â¿QuiÃ©n eres?</h1>
+  <div class="eyebrow">Complicidad en Pareja · Retos</div>
+  <h1>¿Quién eres?</h1>
   <p>Selecciona tu usuario para continuar.</p>
   <div id="listaUsuarios"></div>
 </div>
@@ -259,7 +259,7 @@
       <div id="fechaHoy"></div>
     </div>
     <div class="derecha">
-      <a href="../index.html#retos" id="btnVolver">â† Volver</a>
+      <a href="../index.html#retos" id="btnVolver">← Volver</a>
     </div>
   </div>
 
@@ -270,7 +270,7 @@
 
     <div class="seccionTitulo">Retos</div>
     <div id="listaRetos"></div>
-    <div id="vacioMsg" style="display:none;">TodavÃ­a no hay retos.</div>
+    <div id="vacioMsg" style="display:none;">Todavía no hay retos.</div>
   </div>
 
   <button id="btnProponerReto">+ Proponer reto</button>
@@ -296,11 +296,11 @@
 
     <div class="fila">
       <div class="campo">
-        <label for="fVeces">Veces al dÃ­a</label>
+        <label for="fVeces">Veces al día</label>
         <input id="fVeces" type="number" min="1" step="1" value="1">
       </div>
       <div class="campo">
-        <label for="fDias">DuraciÃ³n (dÃ­as)</label>
+        <label for="fDias">Duración (días)</label>
         <input id="fDias" type="number" min="1" step="1" value="7">
       </div>
     </div>
@@ -312,14 +312,14 @@
         <div class="hint" id="hintMeta"></div>
       </div>
       <div class="campo">
-        <label for="fPenalizacion">PenalizaciÃ³n (puntos)</label>
+        <label for="fPenalizacion">Penalización (puntos)</label>
         <input id="fPenalizacion" type="number" min="0" step="1" value="0">
       </div>
     </div>
 
     <div class="campo">
       <label for="fCastigo">Castigo por no cumplir</label>
-      <textarea id="fCastigo" placeholder="Ej: Preparar la cena los prÃ³ximos 3 dÃ­as..."></textarea>
+      <textarea id="fCastigo" placeholder="Ej: Preparar la cena los próximos 3 días..."></textarea>
     </div>
 
     <div class="campo" id="campoRecompensa" style="display:none;">
@@ -387,8 +387,8 @@ let miIdentidad = null;
 let balances = {};
 let retos = [];
 
-// ====== AVISOS (pancarta + sonido + vibraciÃ³n + Telegram) ======
-// Telegram y URL salen del engrane del menÃº; sin ellos, solo avisos locales.
+// ====== AVISOS (pancarta + sonido + vibración + Telegram) ======
+// Telegram y URL salen del engrane del menú; sin ellos, solo avisos locales.
 // `avisarTelegram()` vive en ../telegram.js (antes copiada aqui).
 const APP_URL = baseUrl();
 
@@ -516,17 +516,17 @@ function formatearFecha(valor){
   return f.toLocaleString("es-MX", { day:"numeric", month:"long", hour:"2-digit", minute:"2-digit" });
 }
 
-// DÃ­as que le quedan al reto. Se cuenta por DÃAS DE CALENDARIO, no restando
+// Días que le quedan al reto. Se cuenta por DÍAS DE CALENDARIO, no restando
 // horas: como el reto vence a las 11:59 de la noche, la resta de horas daba un
-// dÃ­a de menos (decÃ­a 6 cuando eran 7). Se usa la duraciÃ³n menos los dÃ­as que ya
-// van, y no la fecha de fin: asÃ­ el nÃºmero no depende de la hora en que se
-// propuso, y a los retos que ya existÃ­an no les cambia lo que se ve.
+// día de menos (decía 6 cuando eran 7). Se usa la duración menos los días que ya
+// van, y no la fecha de fin: así el número no depende de la hora en que se
+// propuso, y a los retos que ya existían no les cambia lo que se ve.
 function diasRestantes(reto){
   if(!reto) return null;
   const fin = reto.fechaFin ? momentoFecha(reto.fechaFin).getTime() : null;
   if(fin !== null && fin <= Date.now()) return 0;
-  // Los retos de la IA duran 48 horas exactas, no dÃ­as de calendario: se
-  // cuentan por horas para que salgan "2 dÃ­as" y no "1".
+  // Los retos de la IA duran 48 horas exactas, no días de calendario: se
+  // cuentan por horas para que salgan "2 días" y no "1".
   if(reto.ia && fin !== null){
     return Math.max(1, Math.ceil((fin - Date.now()) / 86400000));
   }
@@ -537,7 +537,7 @@ function diasRestantes(reto){
   ini.setHours(0, 0, 0, 0);
   const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
   const van = Math.round((hoy.getTime() - ini.getTime()) / 86400000);
-  // El mÃ­nimo es 1 mientras el reto siga vivo: el Ãºltimo dÃ­a no es "0 dÃ­as".
+  // El mínimo es 1 mientras el reto siga vivo: el último día no es "0 días".
   return Math.max(1, total - van);
 }
 
@@ -583,7 +583,7 @@ function mostrarApp(){
   appEl.style.display = "flex";
   intentosResalte = 0;
   intentarResaltar();
-  // La campana de la pestaÃ±a (pestana.js): AQUI se apaga el aviso de un reto
+  // La campana de la pestaña (pestana.js): AQUI se apaga el aviso de un reto
   // nuevo, igual que el Chat apaga el suyo al abrirse. Va DENTRO de mostrarApp()
   // y no al arrancar, porque si la identidad guardada ya no esta en la lista esta
   // pantalla muestra "elige usuario" y el reto NUNCA se ve: si se apagara
@@ -634,7 +634,7 @@ function renderBalances(){
 
 function truncar(s, n){
   s = String(s || "");
-  return s.length > n ? s.slice(0, n - 1) + "â€¦" : s;
+  return s.length > n ? s.slice(0, n - 1) + "…" : s;
 }
 
 // ====== FORMULARIO ======
@@ -657,27 +657,27 @@ function actualizarVisibilidadRecompensa(){
   if(aVer !== miIdentidad.id) fRecompensa.value = "";
 }
 
-// ---------- la meta se calcula sola: "veces al dÃ­a" x "duraciÃ³n" ----------
+// ---------- la meta se calcula sola: "veces al día" x "duración" ----------
 // El campo NO se escribe a mano. Antes se rellenaba UNA vez y ya: en cuanto
-// tenÃ­a un nÃºmero, `rellenarMetaSiVacio` ya no volvÃ­a a hacer nada, asÃ­ que
-// cambiar los dÃ­as despuÃ©s dejaba la meta congelada (y al editar un reto viejo,
-// que ya traÃ­a su nÃºmero, nunca se recalculaba). Ahora sigue a los dos campos.
+// tenía un número, `rellenarMetaSiVacio` ya no volvía a hacer nada, así que
+// cambiar los días después dejaba la meta congelada (y al editar un reto viejo,
+// que ya traía su número, nunca se recalculaba). Ahora sigue a los dos campos.
 //
-// Abriendo un reto ya guardado se RESPETA la meta que tenÃ­a (aunque no cuadre
-// con sus dÃ­as): los datos que ya existen no se tocan (decisiÃ³n de Fredy,
-// oct-2026). Solo los retos nuevos usan el cÃ¡lculo automÃ¡tico.
+// Abriendo un reto ya guardado se RESPETA la meta que tenía (aunque no cuadre
+// con sus días): los datos que ya existen no se tocan (decisión de Fredy,
+// oct-2026). Solo los retos nuevos usan el cálculo automático.
 let metaLibre = false;
 
 function pintarHintMeta(){
   if(metaLibre){
-    hintMeta.textContent = "Este reto ya traÃ­a su propia meta. No se recalcula.";
+    hintMeta.textContent = "Este reto ya traía su propia meta. No se recalcula.";
     return;
   }
   const veces = parseInt(fVeces.value, 10) || 0;
   const dias = parseInt(fDias.value, 10) || 0;
   hintMeta.textContent = (veces > 0 && dias > 0)
-    ? ("Se calcula solo: " + veces + " Ã— " + dias + " = " + (veces * dias) + " puntos.")
-    : "Pon â€œveces al dÃ­aâ€ y â€œduraciÃ³nâ€ y los puntos se calculan solos.";
+    ? ("Se calcula solo: " + veces + " × " + dias + " = " + (veces * dias) + " puntos.")
+    : "Pon “veces al día” y “duración” y los puntos se calculan solos.";
 }
 function calcularMeta(){
   if(!metaLibre){
@@ -693,15 +693,15 @@ fVeces.oninput = calcularMeta;
 fDias.oninput = calcularMeta;
 
 function resumenHtml(reto){
-  const nom = u=> (u && u.nombre) || "â€”";
+  const nom = u=> (u && u.nombre) || "—";
   return (
     '<div class="r-act">' + esc(reto.actividad) + '</div>' +
     '<div><span class="k">Propuesto por</span><span class="v">' + esc(nom(reto.asignadoPor)) + '</span></div>' +
     '<div><span class="k">Asignado a</span><span class="v">' + esc(nom(reto.asignadoA)) + '</span></div>' +
-    '<div><span class="k">Veces al dÃ­a</span><span class="v">' + esc(reto.vecesAlDia) + '</span></div>' +
-    '<div><span class="k">DuraciÃ³n</span><span class="v">' + esc(reto.duracionDias) + ' dÃ­as</span></div>' +
+    '<div><span class="k">Veces al día</span><span class="v">' + esc(reto.vecesAlDia) + '</span></div>' +
+    '<div><span class="k">Duración</span><span class="v">' + esc(reto.duracionDias) + ' días</span></div>' +
     '<div><span class="k">Meta</span><span class="v">' + esc(reto.puntosMeta) + ' pts</span></div>' +
-    '<div><span class="k">PenalizaciÃ³n</span><span class="v">' + esc(reto.penalizacionPuntos) + ' pts</span></div>' +
+    '<div><span class="k">Penalización</span><span class="v">' + esc(reto.penalizacionPuntos) + ' pts</span></div>' +
     '<div><span class="k">Castigo</span><span class="v">' + esc(reto.castigo) + '</span></div>' +
     '<div><span class="k">Recompensa</span><span class="v">' + esc(reto.recompensa || "Por definir") + '</span></div>'
   );
@@ -791,17 +791,17 @@ function leerFormulario(){
   };
 }
 
-// El reto vive hasta el FINAL de su Ãºltimo dÃ­a, no a la misma hora en que se
-// propuso. Antes vencÃ­a a esa hora, y como la meta es "veces x dÃ­as", quedaban
-// unas horas menos de las que la cuenta prometÃ­a. La funciÃ³n vive en config.js
-// porque Acompanante/ la necesita tambiÃ©n (ahÃ­ crea los retos que propone la IA).
+// El reto vive hasta el FINAL de su último día, no a la misma hora en que se
+// propuso. Antes vencía a esa hora, y como la meta es "veces x días", quedaban
+// unas horas menos de las que la cuenta prometía. La función vive en config.js
+// porque Acompanante/ la necesita también (ahí crea los retos que propone la IA).
 function validarFormulario(f, requiereRecompensa){
   if(!f.actividad){ return "Escribe el nombre de la actividad."; }
-  if(!f.asignadoAId){ return "Elige a quiÃ©n se le asigna el reto."; }
-  if(f.vecesAlDia < 1){ return "Indica al menos 1 vez al dÃ­a."; }
-  if(f.duracionDias < 1){ return "Indica una duraciÃ³n de al menos 1 dÃ­a."; }
-  if(f.puntosMeta < 1){ return "Indica cuÃ¡ntos puntos se necesitan para cumplir."; }
-  if(f.penalizacionPuntos < 0){ return "La penalizaciÃ³n no puede ser negativa."; }
+  if(!f.asignadoAId){ return "Elige a quién se le asigna el reto."; }
+  if(f.vecesAlDia < 1){ return "Indica al menos 1 vez al día."; }
+  if(f.duracionDias < 1){ return "Indica una duración de al menos 1 día."; }
+  if(f.puntosMeta < 1){ return "Indica cuántos puntos se necesitan para cumplir."; }
+  if(f.penalizacionPuntos < 0){ return "La penalización no puede ser negativa."; }
   if(!f.castigo){ return "Escribe el castigo por no cumplir."; }
   if(requiereRecompensa && !f.recompensa){ return "Define tu recompensa antes de continuar."; }
   return null;
@@ -835,7 +835,7 @@ btnAccion.onclick = async ()=>{
         fechaFin: finDeUltimoDia(ahora, f.duracionDias),
           autorizadaPor: { id: miIdentidad.id, nombre: miIdentidad.nombre }
         });
-        avisarTelegram("ðŸ† Nuevo reto en curso de " + miIdentidad.nombre + " para " + usuarios.find(u=>u.id===f.asignadoAId).nombre + ": " + f.actividad + " (" + f.puntosMeta + " pts)", APP_URL + "Retos/?reto=" + refNuevo.id);
+        avisarTelegram("🏆 Nuevo reto en curso de " + miIdentidad.nombre + " para " + usuarios.find(u=>u.id===f.asignadoAId).nombre + ": " + f.actividad + " (" + f.puntosMeta + " pts)", APP_URL + "Retos/?reto=" + refNuevo.id);
       }else{
         const refNuevo = await addDoc(retosRef, {
           actividad: f.actividad,
@@ -851,11 +851,11 @@ btnAccion.onclick = async ()=>{
           estado: "propuesta",
           creadoEn: serverTimestamp()
         });
-        avisarTelegram("ðŸ† " + miIdentidad.nombre + " propuso un reto para " + usuarios.find(u=>u.id===f.asignadoAId).nombre + ": " + f.actividad + " (" + f.puntosMeta + " pts)", APP_URL + "Retos/?reto=" + refNuevo.id);
+        avisarTelegram("🏆 " + miIdentidad.nombre + " propuso un reto para " + usuarios.find(u=>u.id===f.asignadoAId).nombre + ": " + f.actividad + " (" + f.puntosMeta + " pts)", APP_URL + "Retos/?reto=" + refNuevo.id);
       }
       cerrarFormulario();
     }catch(e){
-      formMsg.textContent = "Error al guardar. Revisa tu conexiÃ³n.";
+      formMsg.textContent = "Error al guardar. Revisa tu conexión.";
       console.error(e);
     }finally{
       btnAccion.disabled = false;
@@ -878,10 +878,10 @@ btnAccion.onclick = async ()=>{
         castigo: f.castigo,
         recompensa: soyReceptor ? f.recompensa : (retoActual ? retoActual.recompensa : "")
       });
-      avisarTelegram("âœï¸ " + miIdentidad.nombre + " modificÃ³ el reto: " + f.actividad, APP_URL + "Retos/?reto=" + retoEnEdicion);
+      avisarTelegram("✏️ " + miIdentidad.nombre + " modificó el reto: " + f.actividad, APP_URL + "Retos/?reto=" + retoEnEdicion);
       cerrarFormulario();
     }catch(e){
-      formMsg.textContent = "Error al guardar. Revisa tu conexiÃ³n.";
+      formMsg.textContent = "Error al guardar. Revisa tu conexión.";
       console.error(e);
     }finally{
       btnAccion.disabled = false;
@@ -893,9 +893,9 @@ btnAccion.onclick = async ()=>{
     if(err){ formMsg.textContent = err; return; }
     btnAccion.disabled = true;
     try{
-      // `ahora` solo existÃ­a en la rama de "nueva". Sin declararlo aquÃ­, el
-      // updateDoc de autorizar tronaba y salÃ­a "Revisa tu conexiÃ³n" aunque la
-      // conexiÃ³n estuviera bien (bug reportado por Fredy, oct-2026).
+      // `ahora` solo existía en la rama de "nueva". Sin declararlo aquí, el
+      // updateDoc de autorizar tronaba y salía "Revisa tu conexión" aunque la
+      // conexión estuviera bien (bug reportado por Fredy, oct-2026).
       const ahora = new Date();
       suprimir(retoEnEdicion);
       await updateDoc(doc(db, "retos", retoEnEdicion), {
@@ -912,10 +912,10 @@ btnAccion.onclick = async ()=>{
         fechaFin: finDeUltimoDia(ahora, f.duracionDias),
         autorizadaPor: { id: miIdentidad.id, nombre: miIdentidad.nombre }
       });
-      avisarTelegram("âœ… " + miIdentidad.nombre + " autorizÃ³ el reto: " + f.actividad + " para " + usuarios.find(u=>u.id===f.asignadoAId).nombre + ". Â¡En curso!", APP_URL + "Retos/?reto=" + retoEnEdicion);
+      avisarTelegram("✅ " + miIdentidad.nombre + " autorizó el reto: " + f.actividad + " para " + usuarios.find(u=>u.id===f.asignadoAId).nombre + ". ¡En curso!", APP_URL + "Retos/?reto=" + retoEnEdicion);
       cerrarFormulario();
     }catch(e){
-      formMsg.textContent = "Error al guardar. Revisa tu conexiÃ³n.";
+      formMsg.textContent = "Error al guardar. Revisa tu conexión.";
       console.error(e);
     }finally{
       btnAccion.disabled = false;
@@ -945,11 +945,11 @@ btnGuardarRecompensa.onclick = async ()=>{
   try{
     suprimir(retoRecompensaId);
     await updateDoc(doc(db, "retos", retoRecompensaId), { recompensa: recompensa });
-    avisarTelegram("ðŸŽ " + miIdentidad.nombre + " definiÃ³ recompensa en " + ((retoActual && retoActual.actividad) || "un reto") + ": " + recompensa, APP_URL + "Retos/?reto=" + retoRecompensaId);
+    avisarTelegram("🎁 " + miIdentidad.nombre + " definió recompensa en " + ((retoActual && retoActual.actividad) || "un reto") + ": " + recompensa, APP_URL + "Retos/?reto=" + retoRecompensaId);
     overlayRecompensa.style.display = "none";
     retoRecompensaId = null;
   }catch(e){
-    recompensaMsg.textContent = "Error al guardar. Revisa tu conexiÃ³n.";
+    recompensaMsg.textContent = "Error al guardar. Revisa tu conexión.";
     console.error(e);
   }finally{
     btnGuardarRecompensa.disabled = false;
@@ -962,7 +962,7 @@ function buscarReto(id){
   return d ? (d.data ? d.data() : d) : null;
 }
 async function rechazarReto(id){
-  const confirmado = await confirmar({ aviso: true, titulo: "Â¿Rechazar este reto?", ok: "Rechazar" });
+  const confirmado = await confirmar({ aviso: true, titulo: "¿Rechazar este reto?", ok: "Rechazar" });
   if(!confirmado) return;
   const r = buscarReto(id);
   suprimir(id);
@@ -970,30 +970,30 @@ async function rechazarReto(id){
     estado: "rechazada",
     ultimaAccionPor: { id: miIdentidad.id, nombre: miIdentidad.nombre }
   });
-  avisarTelegram("âŒ " + miIdentidad.nombre + " rechazÃ³ el reto: " + (r ? r.actividad : ""), APP_URL + "Retos/?reto=" + id);
+  avisarTelegram("❌ " + miIdentidad.nombre + " rechazó el reto: " + (r ? r.actividad : ""), APP_URL + "Retos/?reto=" + id);
 }
 
 async function retirarReto(id){
-  const confirmado = await confirmar({ aviso: true, titulo: "Â¿Retirar esta propuesta?", ok: "Retirar" });
+  const confirmado = await confirmar({ aviso: true, titulo: "¿Retirar esta propuesta?", ok: "Retirar" });
   if(!confirmado) return;
   const r = buscarReto(id);
   suprimir(id);
   await deleteDoc(doc(db, "retos", id));
-  avisarTelegram("ðŸ—‘ï¸ " + miIdentidad.nombre + " retirÃ³ la propuesta: " + (r ? r.actividad : ""), APP_URL + "Retos/");
+  avisarTelegram("🗑️ " + miIdentidad.nombre + " retiró la propuesta: " + (r ? r.actividad : ""), APP_URL + "Retos/");
 }
 
 // ====== RETO DE LA IA: se cumple de una vez, no cuenta veces ======
-// En un reto de la IA `puntosMeta` es el VALOR (quÃ© tan atrevido es, 1 a 10),
-// no el nÃºmero de veces que hay que apretar. Al apretar "Cumplida" el dueÃ±o del
+// En un reto de la IA `puntosMeta` es el VALOR (qué tan atrevido es, 1 a 10),
+// no el número de veces que hay que apretar. Al apretar "Cumplida" el dueño del
 // reto (asignadoA, que es quien lo tiene que hacer) recibe ese valor entero, de
-// una sola vez. Lo aprieta quien lo mandÃ³, que es el otro (decisiÃ³n de Fredy,
+// una sola vez. Lo aprieta quien lo mandó, que es el otro (decisión de Fredy,
 // oct-2026).
 async function cumplirRetoIA(reto, id){
   if(!id || !reto) return;
   const asig = reto.asignadoA || {};
   const valor = Math.max(1, parseInt(reto.puntosMeta, 10) || 1);
   const confirmado = await confirmar({
-    titulo: "Â¿Marcar el reto como cumplido?",
+    titulo: "¿Marcar el reto como cumplido?",
     texto: "Se le suman " + valor + " puntos a " + (asig.nombre || "tu pareja") + ".",
     ok: "Cumplida"
   });
@@ -1008,13 +1008,13 @@ async function cumplirRetoIA(reto, id){
       liquidadoEn: serverTimestamp(),
       ultimaAccionPor: { id: miIdentidad.id, nombre: miIdentidad.nombre }
     });
-    // Los puntos van al que CUMPLIÃ“, que es el dueÃ±o del reto.
+    // Los puntos van al que CUMPLIÓ, que es el dueño del reto.
     if(asig.id) batch.set(doc(db, "puntosUsuarios", asig.id), { balance: increment(valor) }, { merge: true });
     await batch.commit();
-    avisarTelegram("â­ " + miIdentidad.nombre + " confirmÃ³ el reto de " + (reto.actividad || "") + ": " + valor + " pts para " + (asig.nombre || "su pareja") + ".", APP_URL + "Retos/?reto=" + id);
+    avisarTelegram("⭐ " + miIdentidad.nombre + " confirmó el reto de " + (reto.actividad || "") + ": " + valor + " pts para " + (asig.nombre || "su pareja") + ".", APP_URL + "Retos/?reto=" + id);
   }catch(e){
     console.error(e);
-    aviso("Error al marcar el reto. Revisa tu conexiÃ³n.");
+    aviso("Error al marcar el reto. Revisa tu conexión.");
   }finally{
     btnProponerReto.disabled = false;
   }
@@ -1023,7 +1023,7 @@ async function cumplirRetoIA(reto, id){
 async function eliminarReto(reto, id){
   const confirmado = await confirmar({
     aviso: true,
-    titulo: "Â¿Eliminar este reto?",
+    titulo: "¿Eliminar este reto?",
     texto: "No se puede deshacer.",
     ok: "Eliminar"
   });
@@ -1039,16 +1039,16 @@ async function eliminarReto(reto, id){
     }else{
       await deleteDoc(doc(db, "retos", id));
     }
-    avisarTelegram("ðŸ—‘ï¸ " + miIdentidad.nombre + " eliminÃ³ el reto: " + (reto.actividad || ""), APP_URL + "Retos/");
+    avisarTelegram("🗑️ " + miIdentidad.nombre + " eliminó el reto: " + (reto.actividad || ""), APP_URL + "Retos/");
   }catch(e){
     console.error(e);
-    aviso("Error al eliminar el reto. Revisa tu conexiÃ³n.");
+    aviso("Error al eliminar el reto. Revisa tu conexión.");
   }
 }
 
 async function marcarCumplida(reto, id){
   const confirmado = await confirmar({
-    titulo: "Â¿Le das un punto a " + reto.asignadoA.nombre + "?",
+    titulo: "¿Le das un punto a " + reto.asignadoA.nombre + "?",
     ok: "Dar el punto"
   });
   if(!confirmado) return;
@@ -1064,55 +1064,55 @@ async function marcarCumplida(reto, id){
       ...(metaAlcanzada ? { estado: "cobrada", cumplidaEn: serverTimestamp() } : {})
     });
     // Cada "Cumplida +1" suma un punto y NO se descuenta nada al llegar a la
-    // meta: un reto normal completado deja a quien lo cumpliÃ³ con `puntosMeta`
-    // puntos (decisiÃ³n de Fredy, oct-2026). ANTES el Ãºltimo +1 hacÃ­a
-    // `1 - meta`, o sea devolvÃ­a todos los puntos: un reto completo dejaba en 0
+    // meta: un reto normal completado deja a quien lo cumplió con `puntosMeta`
+    // puntos (decisión de Fredy, oct-2026). ANTES el último +1 hacía
+    // `1 - meta`, o sea devolvía todos los puntos: un reto completo dejaba en 0
     // y los puntos no acumulaban (bug reportado por Fredy, oct-2026).
     const delta = 1;
     batch.set(doc(db, "puntosUsuarios", reto.asignadoA.id), { balance: increment(delta) }, { merge: true });
     await batch.commit();
-    let msg = "â­ " + miIdentidad.nombre + " dio +1 punto a " + reto.asignadoA.nombre + " en " + reto.actividad + " (" + nuevoConteo + "/" + (reto.puntosMeta || 0) + ")";
-    if(metaAlcanzada) msg += "\nðŸŽ‰ Â¡Meta cumplida! Ya puede cobrar" + (reto.recompensa ? ": " + reto.recompensa : ".");
+    let msg = "⭐ " + miIdentidad.nombre + " dio +1 punto a " + reto.asignadoA.nombre + " en " + reto.actividad + " (" + nuevoConteo + "/" + (reto.puntosMeta || 0) + ")";
+    if(metaAlcanzada) msg += "\n🎉 ¡Meta cumplida! Ya puede cobrar" + (reto.recompensa ? ": " + reto.recompensa : ".");
     avisarTelegram(msg, APP_URL + "Retos/?reto=" + id);
   }catch(e){
     console.error(e);
-    aviso("Error al dar el punto. Revisa tu conexiÃ³n.");
+    aviso("Error al dar el punto. Revisa tu conexión.");
   }finally{
     btnProponerReto.disabled = false;
   }
 }
 
 async function cobrarRecompensaVisual(reto, id){
-  const confirmado = await confirmar({ titulo: "Â¿Cobrar tu recompensa?", ok: "Cobrar" });
+  const confirmado = await confirmar({ titulo: "¿Cobrar tu recompensa?", ok: "Cobrar" });
   if(!confirmado) return;
   try{
     suprimir(id);
     await updateDoc(doc(db, "retos", id), { recompensaCobrada: true });
-    avisarTelegram("ðŸ’° " + reto.asignadoA.nombre + " cobrÃ³ su recompensa: " + (reto.recompensa || "") + " (" + reto.actividad + ")", APP_URL + "Retos/?reto=" + id);
+    avisarTelegram("💰 " + reto.asignadoA.nombre + " cobró su recompensa: " + (reto.recompensa || "") + " (" + reto.actividad + ")", APP_URL + "Retos/?reto=" + id);
   }catch(e){
     console.error(e);
-    aviso("Error al cobrar la recompensa. Revisa tu conexiÃ³n.");
+    aviso("Error al cobrar la recompensa. Revisa tu conexión.");
   }
 }
 
 async function aplicarCastigoVisual(reto, id){
   const confirmado = await confirmar({
-    titulo: "Â¿Aplicar el castigo?",
-    texto: "Â«" + (reto.castigo || "") + "Â»",
+    titulo: "¿Aplicar el castigo?",
+    texto: "«" + (reto.castigo || "") + "»",
     ok: "Aplicar"
   });
   if(!confirmado) return;
   try{
     suprimir(id);
     await updateDoc(doc(db, "retos", id), { castigoAplicado: true });
-    avisarTelegram("âš ï¸ Castigo para " + reto.asignadoA.nombre + ": " + (reto.castigo || "") + " (" + reto.actividad + ")", APP_URL + "Retos/?reto=" + id);
+    avisarTelegram("⚠️ Castigo para " + reto.asignadoA.nombre + ": " + (reto.castigo || "") + " (" + reto.actividad + ")", APP_URL + "Retos/?reto=" + id);
   }catch(e){
     console.error(e);
-    aviso("Error al aplicar el castigo. Revisa tu conexiÃ³n.");
+    aviso("Error al aplicar el castigo. Revisa tu conexión.");
   }
 }
 
-// ====== LIQUIDACIÃ“N AUTOMÃTICA AL VENCER ======
+// ====== LIQUIDACIÓN AUTOMÁTICA AL VENCER ======
 async function finalizarRetosVencidos(){
   try{
     const q = query(retosRef, where("estado", "==", "enCurso"));
@@ -1128,13 +1128,13 @@ async function finalizarRetosVencidos(){
         if(!actual.exists) return;
         const data = actual.data();
         if(data.estado !== "enCurso") return;
-        // Un reto de la IA nunca se cumple "por puntos": o se aprieta el botÃ³n
-        // (y entonces ya no sigue enCurso) o se vencieron las 48 horas. AsÃ­ que
-        // si llegamos aquÃ­ y es de la IA, es que NO se cumpliÃ³.
+        // Un reto de la IA nunca se cumple "por puntos": o se aprieta el botón
+        // (y entonces ya no sigue enCurso) o se vencieron las 48 horas. Así que
+        // si llegamos aquí y es de la IA, es que NO se cumplió.
         if(data.ia){
-          // El dueÃ±o pierde LA MITAD del valor, redondeada HACIA ABAJO (decisiÃ³n
-          // de Fredy, oct-2026: si la mitad da .5, baja; si da mÃ¡s de .5, sube).
-          // Y la otra persona se lleva la diferencia: lo que el dueÃ±o NO perdiÃ³.
+          // El dueño pierde LA MITAD del valor, redondeada HACIA ABAJO (decisión
+          // de Fredy, oct-2026: si la mitad da .5, baja; si da más de .5, sube).
+          // Y la otra persona se lleva la diferencia: lo que el dueño NO perdió.
           const valor = Math.max(1, parseInt(data.puntosMeta, 10) || 1);
           const pierde = Math.floor(valor / 2);
           const gana = valor - pierde;
@@ -1142,7 +1142,7 @@ async function finalizarRetosVencidos(){
           if(data.asignadoA && data.asignadoA.id && pierde > 0){
             t.set(doc(db, "puntosUsuarios", data.asignadoA.id), { balance: increment(-pierde) }, { merge: true });
           }
-          // La diferencia va a quien MANDÃ“ el reto, que es el otro.
+          // La diferencia va a quien MANDÓ el reto, que es el otro.
           const otro = (data.asignadoPor && data.asignadoPor.id) || "";
           if(otro && otro !== (data.asignadoA && data.asignadoA.id) && gana > 0){
             t.set(doc(db, "puntosUsuarios", otro), { balance: increment(gana) }, { merge: true });
@@ -1151,10 +1151,10 @@ async function finalizarRetosVencidos(){
         }
         const cumplido = (data.conteo || 0) >= (data.puntosMeta || 0);
         if(cumplido){
-          // Los puntos ya se dieron uno por uno en cada "Cumplida +1", asÃ­ que
-          // aquÃ­ NO se vuelve a restar la meta: completar un reto jamÃ¡s resta.
-          // Antes lo hacÃ­a (`increment(-puntosMeta)`) y por eso los puntos no
-          // acumulaban (decisiÃ³n de Fredy, oct-2026).
+          // Los puntos ya se dieron uno por uno en cada "Cumplida +1", así que
+          // aquí NO se vuelve a restar la meta: completar un reto jamás resta.
+          // Antes lo hacía (`increment(-puntosMeta)`) y por eso los puntos no
+          // acumulaban (decisión de Fredy, oct-2026).
           t.update(ref, { estado: "cobrada", liquidadoEn: serverTimestamp() });
         }else{
           t.update(ref, { estado: "noCumplido", liquidadoEn: serverTimestamp() });
@@ -1200,7 +1200,7 @@ function renderRetos(){
     // Quien lo mando: en un reto de la IA no fue la pareja, fue la IA. Se muestra
     // el nombre que la pareja le puso en el chat (ya viene guardado en el reto).
     if(c.ia){
-      html += '<div class="quien">' + esc((c.iaNombre || "IA") + " IA") + ' le mandÃ³ el reto para ' + esc(c.asignadoA.nombre) + '</div>';
+      html += '<div class="quien">' + esc((c.iaNombre || "IA") + " IA") + ' le mandó el reto para ' + esc(c.asignadoA.nombre) + '</div>';
     }else{
       html += '<div class="quien">' + esc(c.asignadoPor.nombre) + ' propuso para ' + esc(c.asignadoA.nombre) + '</div>';
     }
@@ -1218,43 +1218,43 @@ function renderRetos(){
 
       html += '<div class="lienzo">';
       if(!c.ia){
-        html += '<div><span class="k">Veces al dÃ­a</span><span class="v">' + esc(c.vecesAlDia) + '</span></div>';
-        html += '<div><span class="k">DuraciÃ³n</span><span class="v">' + esc(c.duracionDias) + ' dÃ­as</span></div>';
+        html += '<div><span class="k">Veces al día</span><span class="v">' + esc(c.vecesAlDia) + '</span></div>';
+        html += '<div><span class="k">Duración</span><span class="v">' + esc(c.duracionDias) + ' días</span></div>';
       }
       html += '<div><span class="k">' + (c.ia ? "Valor" : "Meta") + '</span><span class="v">' + esc(meta) + ' pts</span></div>';
-      if(!c.ia) html += '<div><span class="k">PenalizaciÃ³n</span><span class="v">' + esc(c.penalizacionPuntos) + ' pts</span></div>';
+      if(!c.ia) html += '<div><span class="k">Penalización</span><span class="v">' + esc(c.penalizacionPuntos) + ' pts</span></div>';
       html += '<div><span class="k">Castigo</span><span class="v">' + esc(c.castigo) + '</span></div>';
       if(c.recompensa) html += '<div><span class="k">Recompensa</span><span class="v">' + esc(c.recompensa) + '</span></div>';
       else html += '<div><span class="k">Recompensa</span><span class="v">Por definir</span></div>';
       if(estado === "enCurso" || estado === "cumplido" || estado === "cobrada" || estado === "noCumplido"){
         html += '<div><span class="k">Termina</span><span class="v">' + esc(formatearFecha(c.fechaFin)) + '</span></div>';
         const faltan = diasRestantes(c);
-        if(faltan !== null && estado === "enCurso") html += '<div><span class="k">Tiempo restante</span><span class="v">' + faltan + ' dÃ­a(s)</span></div>';
+        if(faltan !== null && estado === "enCurso") html += '<div><span class="k">Tiempo restante</span><span class="v">' + faltan + ' día(s)</span></div>';
       }
       html += '</div>';
     }
 
     if(estado === "enCurso" && faltanTiempo(c)){
       if(c.ia){
-        html += '<div class="nota warn">Vale ' + esc(meta) + ' pts para quien lo tiene que hacer. Tienes 48 horas desde que se mandÃ³. Si se cumple, se los lleva enteros; si no, esa persona pierde la mitad y tÃº te quedas con la diferencia.</div>';
+        html += '<div class="nota warn">Vale ' + esc(meta) + ' pts para quien lo tiene que hacer. Tienes 48 horas desde que se mandó. Si se cumple, se los lleva enteros; si no, esa persona pierde la mitad y tú te quedas con la diferencia.</div>';
       }else{
         html += '<div class="nota warn">Si al vencer alcanzas los ' + esc(meta) + ' puntos, se entrega la recompensa (' + esc(c.recompensa || "por definir") + '). Si no, se descuentan ' + esc(c.penalizacionPuntos) + ' pts.</div>';
       }
     }
 
-    // --- mensajes segÃºn estado ---
+    // --- mensajes según estado ---
     if(estado === "propuesta" && soyProponente){
-      html += '<div class="nota">Esperando autorizaciÃ³n de la administradora...</div>';
+      html += '<div class="nota">Esperando autorización de la administradora...</div>';
     }
     if(estado === "cumplido" && soyAsignado){
-      html += '<div class="nota bien">Â¡Meta cumplida! Recompensa: ' + esc(c.recompensa || "por definir") + '</div>';
+      html += '<div class="nota bien">¡Meta cumplida! Recompensa: ' + esc(c.recompensa || "por definir") + '</div>';
     }
     if(estado === "noCumplido"){
       if(c.ia){
         const mitad = Math.floor(meta / 2);
-        html += '<div class="nota mal">No se cumpliÃ³ Â· ' + esc(c.asignadoA.nombre) + ' perdiÃ³ ' + mitad + ' pts y tÃº te quedaste con ' + (meta - mitad) + ' pts Â· Castigo: ' + esc(c.castigo || "â€”") + '</div>';
+        html += '<div class="nota mal">No se cumplió · ' + esc(c.asignadoA.nombre) + ' perdió ' + mitad + ' pts y tú te quedaste con ' + (meta - mitad) + ' pts · Castigo: ' + esc(c.castigo || "—") + '</div>';
       }else{
-        html += '<div class="nota mal">No se cumpliÃ³ la meta Â· Se descontaron ' + esc(c.penalizacionPuntos) + ' puntos Â· Castigo: ' + esc(c.castigo || "â€”") + '</div>';
+        html += '<div class="nota mal">No se cumplió la meta · Se descontaron ' + esc(c.penalizacionPuntos) + ' puntos · Castigo: ' + esc(c.castigo || "—") + '</div>';
       }
     }
     if(estado === "rechazada"){
@@ -1275,8 +1275,8 @@ function renderRetos(){
     if(estado === "enCurso"){
       // EN UN RETO NORMAL marca quien lo propuso. En uno de la IA (`ia:true`)
       // los puntos NO cuentan veces: son el valor del reto, y se entregan de
-      // una vez al que lo cumpliÃ³ (el que NO lo propuso, o sea el dueÃ±o).
-      // El botÃ³n lo aprieta quien lo mandÃ³, que es el otro.
+      // una vez al que lo cumplió (el que NO lo propuso, o sea el dueño).
+      // El botón lo aprieta quien lo mandó, que es el otro.
       if(soyProponente){
         const esIA = !!c.ia;
         acciones.push(esIA
@@ -1404,28 +1404,28 @@ function escucharRetos(){
       if(antes === undefined){
         if(esRelevanteReto(c) && !(c.asignadoPor && c.asignadoPor.id === yo)){
           notificar(c.ia
-            ? "ðŸ˜ " + miIdentidad.nombre + " te mandÃ³ un reto: " + c.actividad
-            : "ðŸ† Nuevo reto para " + (c.asignadoA && c.asignadoA.nombre) + ": " + c.actividad, "reto-" + id);
+            ? "😏 " + miIdentidad.nombre + " te mandó un reto: " + c.actividad
+            : "🏆 Nuevo reto para " + (c.asignadoA && c.asignadoA.nombre) + ": " + c.actividad, "reto-" + id);
         }
       }else if(antes.f !== ahora[id].f){
         if(!esRelevanteReto(c)) return;
         const a = ahora[id];
         const asig = c.asignadoA && c.asignadoA.nombre;
-        if(a.e !== antes.e && a.e === "cobrada") notificar("ðŸŽ‰ Â¡Meta cumplida en " + c.actividad + "! " + asig + " ya puede cobrar.", "reto-" + id);
-        else if(a.e !== antes.e && a.e === "noCumplido") notificar("âš ï¸ No se cumpliÃ³ " + c.actividad + ". Castigo: " + (c.castigo || ""), "reto-" + id);
-        else if(a.e !== antes.e && a.e === "rechazada") notificar("âŒ Reto rechazado: " + c.actividad, "reto-" + id);
-        else if(a.e !== antes.e && a.e === "enCurso" && antes.e === "propuesta") notificar("âœ… Reto autorizado y en curso: " + c.actividad, "reto-" + id);
-        else if(a.n > antes.n) notificar("â­ +1 punto para " + asig + " en " + c.actividad + " (" + a.n + "/" + (c.puntosMeta || 0) + ")", "reto-" + id);
-        else if(a.rc && !antes.rc) notificar("ðŸ’° Recompensa cobrada: " + (c.recompensa || "") + " (" + c.actividad + ")", "reto-" + id);
-        else if(a.ca && !antes.ca) notificar("âš ï¸ Castigo aplicado a " + asig + ": " + (c.castigo || ""), "reto-" + id);
-        else if(a.r && !antes.r) notificar("ðŸŽ Recompensa definida en " + c.actividad + ": " + a.r, "reto-" + id);
-        else notificar("âœï¸ Reto modificado: " + c.actividad, "reto-" + id);
+        if(a.e !== antes.e && a.e === "cobrada") notificar("🎉 ¡Meta cumplida en " + c.actividad + "! " + asig + " ya puede cobrar.", "reto-" + id);
+        else if(a.e !== antes.e && a.e === "noCumplido") notificar("⚠️ No se cumplió " + c.actividad + ". Castigo: " + (c.castigo || ""), "reto-" + id);
+        else if(a.e !== antes.e && a.e === "rechazada") notificar("❌ Reto rechazado: " + c.actividad, "reto-" + id);
+        else if(a.e !== antes.e && a.e === "enCurso" && antes.e === "propuesta") notificar("✅ Reto autorizado y en curso: " + c.actividad, "reto-" + id);
+        else if(a.n > antes.n) notificar("⭐ +1 punto para " + asig + " en " + c.actividad + " (" + a.n + "/" + (c.puntosMeta || 0) + ")", "reto-" + id);
+        else if(a.rc && !antes.rc) notificar("💰 Recompensa cobrada: " + (c.recompensa || "") + " (" + c.actividad + ")", "reto-" + id);
+        else if(a.ca && !antes.ca) notificar("⚠️ Castigo aplicado a " + asig + ": " + (c.castigo || ""), "reto-" + id);
+        else if(a.r && !antes.r) notificar("🎁 Recompensa definida en " + c.actividad + ": " + a.r, "reto-" + id);
+        else notificar("✏️ Reto modificado: " + c.actividad, "reto-" + id);
       }
     });
     Object.keys(vistosRetos).forEach(id=>{
       if(!(id in ahora) && !estaSuprimido(id)){
         const r = vistosRetos[id].d;
-        if(r && esRelevanteReto(r)) notificar("ðŸ—‘ï¸ Se eliminÃ³ el reto: " + r.actividad);
+        if(r && esRelevanteReto(r)) notificar("🗑️ Se eliminó el reto: " + r.actividad);
       }
     });
     vistosRetos = ahora;
