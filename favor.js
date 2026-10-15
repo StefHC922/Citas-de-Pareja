@@ -23,7 +23,7 @@
 
 import {
   doc, getDoc, setDoc, collection, addDoc, serverTimestamp,
-  onSnapshot, runTransaction, increment, query, where, getDocs
+  onSnapshot, runTransaction, increment, query, where, getDocs, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { aviso } from "./confirmar.js";
 import { avisarTelegram } from "./telegram.js";
@@ -302,15 +302,36 @@ export function mostrarBotonFavor(){
   if(montado && montado.btn) montado.btn.style.display = "block";
 }
 
+// Registro de TODOS los favores que llegan por el snapshot, en cualquier estado.
+//
+// Antes `abrirVentanaFavor()` solo buscaba en las colas, que son las de los
+// favores "pendientes". Por eso al tocar un favor en curso en el Centro salia
+// "Ese favor todavia no se ha cargado" (lo reporto Fredy probando, oct-2026):
+// el favor estaba ahi, pero no en ninguna cola.
+let todosLosFavores = {};
+
+// Lo que se abre SOLO, sin que nadie toque nada: lo que acaba de cambiar hace
+// poco. Si no, cada vez que se navega a otra pantalla se volveria a abrir la
+// misma ventana y el aviso se repetiria eternamente (oct-2026).
+const RECIENTE_MS = 10 * 60 * 1000;
+function esReciente(f){
+  if(!f || !f.d) return false;
+  const t = (f.d.actualizadoEn) ? f.d.actualizadoEn : f.d.creadoEn;
+  if(!t) return false;
+  const ms = (typeof t.toDate === "function") ? t.toDate().getTime() : Number(t);
+  return (ms > 0) && ((Date.now() - ms) < RECIENTE_MS);
+}
+
 // Para que otra pantalla (el Centro) pueda abrir la ventana de un favor concreto
 // al tocar su renglon. Ahi NO se repiten las acciones: solo se llama a la ventana
 // que ya existe.
 export function abrirVentanaFavor(id){
   const yo = Yo();
   if(!yo || !id) return false;
-  const f = cola.concat(colaPropia).find(x=> x.id === id);
+  cola = []; colaPropia = [];
+  // Primero lo que le toca responder; si no, cualquier otro estado.
+  const f = todosLosFavores[id];
   if(f){
-    cola = []; colaPropia = [];
     if(leTocaResponder(f.d, yo.id)) mostrarRespuesta(f);
     else mostrarPropio(f);
     return true;
@@ -411,6 +432,7 @@ liquidarVencidos(db, snap);
         if(!d) return;
         if(ESTADOS_VIVOS.indexOf(d.estado) < 0) return;
         if(!leTocaResponder(d, yo.id)) return;
+        if(!esReciente({ id: ds.id, d })) return;   // lo viejo se ve al tocarlo, no solo
         nuevos.push({ id: ds.id, d });
       });
       cola = nuevos;
@@ -651,7 +673,12 @@ async function responder(db, f, accion, nuevoPrecio){
     // esta aceptado por los dos. Si arrancara al pedir, se venceria por estar
     // ocupada: es justo lo que dijo Fredy (oct-2026).
     if(sig.estado === "enCurso"){
-      cambios.venceEn = Date.now() + ((minutosDe(d) * 60000));
+      // OJO: esto se guarda como FECHA de Firebase (Timestamp), no como numero
+      // suelto. Con un numero, todo el codigo que lo lee buscando `.toDate()` no
+      // lo encuentra y la cuenta regresiva salia en cero desde el segundo uno:
+      // "le falta: se acabo el tiempo" apenas se aceptaba (lo reporto Fredy
+      // probando, oct-2026).
+      cambios.venceEn = Timestamp.fromMillis(Date.now() + (minutosDe(d) * 60000));
       cambios.aceptadoPor = yo.id;
       cambios.aceptadoEn = serverTimestamp();
     }
@@ -737,6 +764,18 @@ function laCapaPropia(){
   return c;
 }
 
+// `venceEn` puede venir como FECHA de Firebase (Timestamp) o como numero
+// suelto (los favores que se crearon antes de arreglar esto, oct-2026). Si solo
+// se aceptara el formato de fecha, los numeros caian en 0 y el reloj arrancaba
+// en "se acabo el tiempo" de inmediato.
+function milisRestantes(venceEn){
+  if(!venceEn) return 0;
+  const ms = (typeof venceEn.toDate === "function")
+    ? venceEn.toDate().getTime()
+    : Number(venceEn);
+  return (ms > 0 && isFinite(ms)) ? ms : 0;
+}
+
 function faltaEn(ms){
   if(!ms || ms <= 0) return "se acabó el tiempo";
   const s = Math.ceil(ms / 1000);
@@ -769,11 +808,29 @@ function mostrarPropio(f){
   // falta. El pago y el castigo se aprietan a mano, siempre.
   let reloj = 0;
 
-  if(d.estado === "enCurso"){
+  if(d.estado === "enCurso" && d.de.id !== yo.id){
+    // Lo esta CUMPLIENDO la otra persona. Este boton ("Recibí ✓" / cobrar) es
+    // solo de quien PIDIO el favor: si apareciera aqui, el que cumple podria
+    // cobrarse a si mismo (lo reporto Fredy probando, oct-2026).
+    // Solo se mira: no hay nada que hacer, unicamente "Ahora no".
+    ok.style.display = "none"; sec.style.display = "none"; btnCancelar.style.display = "none";
+    $("vpTitulo").textContent = "Estás cumpliendo";
+    $("vpPrecio").textContent = (d.texto || "") + " · " + cents(d.precio)
+      + ". Te pidió " + otro.nombre + ". Cuando termines, él te paga.";
+    const ms = milisRestantes(d.venceEn);
+    const pintarEspera = ()=>{
+      const t = milisRestantes(d.venceEn) - Date.now();
+      $("vpPrecio").textContent = (d.texto || "") + " · " + cents(d.precio)
+        + ". Le falta: " + faltaEn(t);
+    };
+    pintarEspera();
+    reloj = setInterval(pintarEspera, 1000);
+    void ms;
+  }else if(d.estado === "enCurso"){
     ok.style.display = "block"; sec.style.display = "none"; btnCancelar.style.display = "none";
     ok.textContent = "Recib\u00ed \u2713 \u00b7 " + cents(d.precio);
     const pintar = ()=>{
-      const ms = (d.venceEn && d.venceEn.toDate) ? (d.venceEn.toDate().getTime() - Date.now()) : 0;
+      const ms = milisRestantes(d.venceEn) - Date.now();
       $("vpTitulo").textContent = otro.nombre + " est\u00e1 cumpliendo";
       $("vpPrecio").textContent = "Pactado: " + cents(d.precio) + ". Le falta: " + faltaEn(ms);
     };
@@ -814,8 +871,11 @@ function encolarPropios(snap, yo){
   colaPropia = [];
   snap.forEach(ds=>{
     const d = ds.data();
-    if(!d || !d.de || d.de.id !== yo.id) return;
+    if(!d) return;
+    todosLosFavores[ds.id] = { id: ds.id, d };
+    if(!d.de || d.de.id !== yo.id) return;
     if(["pedido","enCurso","vencido"].indexOf(d.estado) < 0) return;
+    if(!esReciente({ id: ds.id, d })) return;   // lo viejo se ve al tocarlo, no solo
     colaPropia.push({ id: ds.id, d });
   });
   siguientePropio();
@@ -858,7 +918,7 @@ async function liquidarVencidos(db, snap){
     const d = ds.data();
     if(!d || d.estado !== "enCurso") return;
     if(!d.venceEn) return;
-    const ms = (d.venceEn && d.venceEn.toDate) ? d.venceEn.toDate().getTime() : Number(d.venceEn);
+    const ms = milisRestantes(d.venceEn);
     if(!ms || ms > ahora) return;
     // Que lo marque UNA sola vez: se hace aqui y no con un reloj, porque si los
     // dos tienen la app cerrada puede pasar el tiempo sin que nadie lo note.
