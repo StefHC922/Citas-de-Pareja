@@ -22,7 +22,8 @@
 // ============================================================================
 
 import {
-  doc, getDoc, setDoc, getFirestore, collection, addDoc, serverTimestamp
+  doc, getDoc, setDoc, collection, addDoc, serverTimestamp,
+  runTransaction, increment
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { aviso } from "./confirmar.js";
 import { avisarTelegram } from "./telegram.js";
@@ -32,6 +33,13 @@ import { baseUrl } from "./config.js";
 // Si no hay numero guardado, este. OJO: aqui el 0 SI es valido (ella puede
 // regalar el favor), asi que no se comprueba "> 0" como en el 🛒 de los deseos.
 const FAVOR_POR_DEFECTO = 15;
+
+// Qué porcentaje del precio se le descuenta a quien ACEPTA y no cumple a tiempo.
+// Sale del 🛒 de QUIEN PIDE (es su expectativa), y se congela al crear el favor.
+// Lo cobrar SIEMPRE es a mano: al vencerse, quien pidió decide si lo cobra o lo
+// deja pasar. Nunca se descuenta solo (decision de Fredy, oct-2026: que el
+// castigo no espante de aceptar favores).
+const PCT_CASTIGO_POR_DEFECTO = 50;
 
 // Cuánto tiempo hay para cumplirlo una vez que se acepta. La FASE 3 lo saca de
 // aquí y lo hace configurable en el 🛒 (decisión de Fredy, oct-2026). Por ahora
@@ -135,6 +143,7 @@ export function montarFavor(db){
   const btnMandar = $("fvMandar");
 
   let precio = FAVOR_POR_DEFECTO;
+  let pctCastigo = PCT_CASTIGO_POR_DEFECTO;
   let pareja = null;
 
   function cerrar(){ capa.classList.remove("ver"); }
@@ -168,6 +177,8 @@ export function montarFavor(db){
       if(mio){
         const n = parseInt(mio.precioFavor, 10);
         precio = isFinite(n) ? n : FAVOR_POR_DEFECTO;
+        const pc = parseInt(mio.pctCastigo, 10);
+        pctCastigo = isFinite(pc) ? pc : PCT_CASTIGO_POR_DEFECTO;
       }
       pareja = lista.find(u=> u && u.id !== yo.id && !u.invitado)
             || lista.find(u=> u && u.id !== yo.id);
@@ -202,6 +213,9 @@ export function montarFavor(db){
         texto: texto,
         precioBase: precio,
         precio: precio,
+        // El % de castigo queda congelado aqui. Si despues ella contradice otro
+        // precio, el castigo se recalcula solo (es un % del precio final).
+        tasaCastigo: pctCastigo,
         estado: "pedido",
         // El reloj NO arranca aqui: arranca cuando ella ACEPTA (decision de
         // Fredy, oct-2026). Si arrancara al pedir, se venceria por estar
@@ -302,6 +316,11 @@ function escucharRespuestas(db, yo){
   if(!yo) return;
   try{
     onSnapshot(collection(db, "favoresExpress"), (snap)=>{
+      // Primero se liquida lo que ya se vencio: nadie va a estar mirando la app
+      // en el minuto exacto, y si los dos la tuvieron cerrada el paso del tiempo
+      // tiene que recuperarse al abrir.
+      liquidarVencidos(db, snap);
+      encolarPropios(snap, yo);
       const nuevos = [];
       snap.forEach(ds=>{
         const d = ds.data();
@@ -406,6 +425,24 @@ function mostrarRespuesta(f){
     await responder(db, f, "contra", n);
     cerrar();
   };
+  // Cancelar: solo si el favor es MIO (lo pedi yo) y todavia no esta en curso.
+  // Una vez en "enCurso" ya no se cancela: se cumple o se cobra el castigo.
+  const btnCancelar = document.createElement("button");
+  btnCancelar.className = "btnSec";
+  btnCancelar.style.color = "var(--rojo)";
+  btnCancelar.textContent = "Cancelar el favor";
+  if(d.de.id === yo.id){
+    btnCancelar.style.display = "block";
+    btnCancelar.onclick = async ()=>{
+      btnCancelar.disabled = true;
+      await cerrarFavor(db, f, "cancelado", {});
+      btnCancelar.disabled = false;
+      cerrar();
+    };
+  }else{
+    btnCancelar.style.display = "none";
+  }
+  c.querySelector(".fvCaja").appendChild(btnCancelar);
   $("vrCerrar").onclick = cerrar;
   c.addEventListener("click", (e)=>{ if(e.target === c) cerrar(); });
 
@@ -480,6 +517,11 @@ async function avisarAlOtro(db, yo, otro, d, sig){
       deNombre: yo.nombre,
       titulo: sig.estado === "rechazado" ? "No aceptaron tu favor"
            : sig.estado === "enCurso" ? "Aceptaron tu favor"
+           : sig.estado === "vencido" ? "No te cumplió a tiempo"
+           : sig.estado === "cobrado" ? "Se cobró el castigo"
+           : sig.estado === "perdonado" ? "Lo dejaste pasar"
+           : sig.estado === "cancelado" ? "Cancelaste el favor"
+           : sig.estado === "cumplido" ? "Favor cumplido"
            : "Contestaron tu favor",
       aviso: texto,
       creadoEn: serverTimestamp(),
@@ -487,4 +529,264 @@ async function avisarAlOtro(db, yo, otro, d, sig){
     }, { merge: true });
   }catch(e){}
   await avisarTelegram(texto, baseUrl() + "Retos/");
+}
+
+// ============================================================================
+//  FASE 3 (parte 2) — la ventana de MI favor: cancelar, cobrar, perdonar
+// ----------------------------------------------------------------------------
+//  Se abre solo para quien PIDIO el favor, y solo en los estados donde hay algo
+//  que hacer. En `contra` y `esperando`, si es mi turno, la ventanita de
+//  responder trae su propio "Cancelar": así nunca se abren dos encimadas.
+// ============================================================================
+
+let colaPropia = [];
+let mostrandoPropio = false;
+
+function siguientePropio(){
+  if(mostrandoPropio || !colaPropia.length) return;
+  if(hayCajaAbierta()){ setTimeout(siguientePropio, 400); return; }
+  colaPropia.sort((a,b)=> cuandoMil(b) - cuandoMil(a));
+  const f = colaPropia[0];
+  colaPropia = colaPropia.slice(1);
+  mostrarPropio(f);
+}
+
+let capaPropia = null;
+function laCapaPropia(){
+  if(capaPropia) return capaPropia;
+  const c = document.createElement("div");
+  c.className = "fvCapa";
+  c.innerHTML = '<div class="fvCaja">'
+    + '<div class="fvNombre" id="vpTitulo"></div>'
+    + '<div class="fvTexto" id="vpTexto"></div>'
+    + '<div class="fvPrecio" id="vpPrecio"></div>'
+    + '<div class="fvMsg" id="vpMsg"></div>'
+    + '<button class="btnPri" id="vpOk"></button>'
+    + '<button class="btnSec" id="vpSec"></button>'
+    + '<button class="btnSec" id="vpCancelar" style="color:var(--rojo);">Cancelar favor</button>'
+    + '<button class="btnSec" id="vpCerrar">Ahora no</button>'
+    + '</div>';
+  document.body.appendChild(c);
+  capaPropia = c;
+  return c;
+}
+
+function faltaEn(ms){
+  if(!ms || ms <= 0) return "se acabó el tiempo";
+  const s = Math.ceil(ms / 1000);
+  const m = Math.floor(s / 60);
+  return m > 0 ? (m + " min " + (s % 60) + " s") : (s + " s");
+}
+
+function mostrarPropio(f){
+  const yo = Yo();
+  const d = f.d;
+  const otro = (d.para && d.para.id === yo.id) ? d.de : d.para;
+  const c = laCapaPropia();
+  const $ = (id)=> c.querySelector("#" + id);
+  const ok = $("vpOk"), sec = $("vpSec"), btnCancelar = $("vpCancelar"), msg = $("vpMsg");
+  msg.textContent = "";
+  $("vpTexto").textContent = d.texto || "";
+
+  const cerrar = ()=>{
+    clearInterval(reloj);
+    c.classList.remove("ver");
+    mostrandoPropio = false;
+    setTimeout(siguientePropio, 250);
+  };
+  const btnCerrar = $("vpCerrar");
+  btnCerrar.onclick = cerrar;
+  c.addEventListener("click", (e)=>{ if(e.target === c) cerrar(); });
+
+  // El reloj de la ventana no suelta el pago ni el castigo: solo pinta lo que
+  // falta. El pago y el castigo se aprietan a mano, siempre.
+  let reloj = 0;
+
+  if(d.estado === "enCurso"){
+    ok.style.display = "block"; sec.style.display = "none"; btnCancelar.style.display = "none";
+    ok.textContent = "Recib\u00ed \u2713 \u00b7 " + cents(d.precio);
+    const pintar = ()=>{
+      const ms = (d.venceEn && d.venceEn.toDate) ? (d.venceEn.toDate().getTime() - Date.now()) : 0;
+      $("vpTitulo").textContent = otro.nombre + " est\u00e1 cumpliendo";
+      $("vpPrecio").textContent = "Pactado: " + cents(d.precio) + ". Le falta: " + faltaEn(ms);
+    };
+    pintar();
+    reloj = setInterval(pintar, 1000);
+    ok.onclick = async ()=>{ ok.disabled = true; const r = await pagarFavor(db, f); ok.disabled = false; if(r) cerrar(); };
+  }else if(d.estado === "vencido"){
+    ok.style.display = "block"; sec.style.display = "block"; btnCancelar.style.display = "none";
+    const multa = castigoDe(d);
+    $("vpTitulo").textContent = "No te cumpli\u00f3 a tiempo";
+    $("vpPrecio").textContent = "Se acab\u00f3 el tiempo por: " + (d.texto || "")
+      + ". Si le cobras, paga " + cents(multa) + " (" + ((d.tasaCastigo != null ? d.tasaCastigo : PCT_CASTIGO_POR_DEFECTO)) + "% de " + cents(d.precio) + ").";
+    ok.textContent = "Cobrar el castigo \u00b7 " + cents(multa);
+    sec.textContent = "Dejarlo pasar";
+    ok.onclick = async ()=>{ ok.disabled = true; const r = await cobrarCastigo(db, f); ok.disabled = false; if(r) cerrar(); };
+    sec.onclick = async ()=>{ sec.disabled = true; const r = await cerrarFavor(db, f, "perdonado", {}); sec.disabled = false; if(r) cerrar(); };
+  }else{
+    // Todavia no lo ha aceptado: se puede cancelar.
+    ok.style.display = "none"; sec.style.display = "none"; btnCancelar.style.display = "block";
+    $("vpTitulo").textContent = "Esperando a " + otro.nombre;
+    $("vpPrecio").textContent = "Le pediste: " + (d.texto || "") + " \u00b7 " + cents(d.precio)
+      + ". Todav\u00eda no lo acepta.";
+    btnCancelar.onclick = async ()=>{
+      btnCancelar.disabled = true;
+      const r = await cerrarFavor(db, f, "cancelado", {});
+      btnCancelar.disabled = false;
+      if(r) cerrar();
+    };
+  }
+
+  mostrandoPropio = true;
+  c.classList.add("ver");
+}
+
+// Se engancha al mismo snapshot que las de responder.
+function encolarPropios(snap, yo){
+  colaPropia = [];
+  snap.forEach(ds=>{
+    const d = ds.data();
+    if(!d || !d.de || d.de.id !== yo.id) return;
+    if(["pedido","enCurso","vencido"].indexOf(d.estado) < 0) return;
+    colaPropia.push({ id: ds.id, d });
+  });
+  siguientePropio();
+}
+
+// ============================================================================
+//  FASE 3 — el reloj, el pago y el castigo
+// ----------------------------------------------------------------------------
+//  - El reloj NO es una alarma: nadie va a estar mirando la app en el minuto
+//    exacto. Se revisa al abrir, y lo que se vencio mientras tanto se liquida.
+//  - El castigo NO es automatico: le toca a quien PIDIO decidir si lo cobra.
+//  - Los puntos SIEMPRE se mueven con `runTransaction`, que relee los saldos
+//    adentro: dos celulares apretando a la vez no pueden gastar dos veces lo
+//    que no hay.
+// ============================================================================
+
+// Cuanto es el castigo de este favor. Es un PORCENTAJE del precio final, asi
+// que si el otro ofrece otro precio el castigo se ajusta solo.
+function castigoDe(d){
+  const pct = parseInt(d && d.tasaCastigo, 10);
+  const tasa = isFinite(pct) ? pct : PCT_CASTIGO_POR_DEFECTO;
+  const precio = (d && typeof d.precio === "number") ? d.precio : 0;
+  return Math.floor(precio * tasa / 100);
+}
+
+function cents(n){ return (n > 0) ? (n + " pts") : "gratis"; }
+
+// Marca como vencido lo que ya paso de tiempo. No cobra nada: solo deja el
+// favor en "vencido" para que quien pidio decida.
+async function liquidarVencidos(db, snap){
+  const yo = Yo();
+  const ahora = Date.now();
+  snap.forEach(ds=>{
+    const d = ds.data();
+    if(!d || d.estado !== "enCurso") return;
+    if(!d.venceEn) return;
+    const ms = (d.venceEn && d.venceEn.toDate) ? d.venceEn.toDate().getTime() : Number(d.venceEn);
+    if(!ms || ms > ahora) return;
+    // Que lo marque UNA sola vez: se hace aqui y no con un reloj, porque si los
+    // dos tienen la app cerrada puede pasar el tiempo sin que nadie lo note.
+    setDoc(doc(db, "favoresExpress", ds.id), {
+      estado: "vencido",
+      liquidadoEn: serverTimestamp()
+    }, { merge: true }).catch(()=>{});
+  });
+}
+
+// ---- mover puntos ----
+
+// El que pide le paga el precio a quien cumplio.
+async function pagarFavor(db, f){
+  const yo = Yo();
+  const d = f.d;
+  if(!yo || !d || d.de.id !== yo.id) return false;
+  const aPagar = (typeof d.precio === "number") ? d.precio : 0;
+  if(aPagar <= 0){ return cerrarFavor(db, f, "cumplido", { pagado: 0 }); }
+  try{
+    await runTransaction(db, async (t)=>{
+      const refMio = doc(db, "puntosUsuarios", yo.id);
+      const s = await t.get(refMio);
+      const mio = (s.exists() ? (s.data().balance || 0) : 0);
+      if(mio < aPagar) throw new Error("saldo");
+      t.update(refMio, { balance: increment(-aPagar) });
+      t.set(doc(db, "puntosUsuarios", d.para.id), { balance: increment(aPagar) }, { merge: true });
+    });
+  }catch(e){
+    if(e && e.message === "saldo"){
+      aviso("No te alcanzan " + aPagar + " pts. Revisa tu saldo antes de marcar.");
+      return false;
+    }
+    aviso("No se pudo pagar. Revisa tu conexi\u00f3n.");
+    return false;
+  }
+  return cerrarFavor(db, f, "cumplido", { pagado: aPagar });
+}
+
+// El castigo. NUNCA se descuenta solo: quien pide aprieta el boton. Y se
+// descuenta HASTA donde alcance, con tope cero (decision de Fredy, oct-2026).
+async function cobrarCastigo(db, f){
+  const yo = Yo();
+  const d = f.d;
+  if(!yo || !d || d.de.id !== yo.id) return false;
+  const multa = castigoDe(d);
+  let cobrado = 0;
+  if(multa > 0){
+    try{
+      await runTransaction(db, async (t)=>{
+        const refSuyo = doc(db, "puntosUsuarios", d.para.id);
+        const s = await t.get(refSuyo);
+        const suyo = (s.exists() ? (s.data().balance || 0) : 0);
+        cobrado = Math.min(multa, Math.max(0, suyo));
+        if(cobrado > 0){
+          t.update(refSuyo, { balance: increment(-cobrado) });
+          t.set(doc(db, "puntosUsuarios", yo.id), { balance: increment(cobrado) }, { merge: true });
+        }
+      });
+    }catch(e){
+      aviso("No se pudo cobrar el castigo. Revisa tu conexi\u00f3n.");
+      return false;
+    }
+  }
+  return cerrarFavor(db, f, "cobrado", { castigo: multa, cobrado: cobrado });
+}
+
+async function cerrarFavor(db, f, estado, extra){
+  const yo = Yo();
+  const d = f.d;
+  if(!yo) return false;
+  try{
+    const cambios = Object.assign({
+      estado: estado,
+      cerradoPor: yo.id,
+      cerradoEn: serverTimestamp()
+    }, extra || {});
+    await setDoc(doc(db, "favoresExpress", f.id), cambios, { merge: true });
+    const otro = (d.para.id === yo.id) ? d.de : d.para;
+    let texto = "";
+    if(estado === "cumplido"){
+      texto = "\u2B50 " + yo.nombre + " marc\u00f3 tu favor como hecho. " + cents((extra && extra.pagado) || 0) + " para ti.";
+    }else if(estado === "cobrado"){
+      texto = "\u26A0 " + yo.nombre + " te cobr\u00f3 el castigo por: " + (d.texto || "");
+    }else if(estado === "perdonado"){
+      texto = "\u1F49A " + yo.nombre + " te dej\u00f3 pasar el favor: " + (d.texto || "");
+    }else if(estado === "cancelado"){
+      texto = "\u274C " + yo.nombre + " cancel\u00f3 el favor: " + (d.texto || "");
+    }
+    if(texto){
+      try{
+        await setDoc(doc(db, "invitosFavor", yo.id), {
+          para: otro.id, de: yo.id, deNombre: yo.nombre,
+          titulo: "Cerraron tu favor", aviso: texto,
+          creadoEn: serverTimestamp(), visto: false
+        }, { merge: true });
+      }catch(e){}
+      await avisarTelegram(texto, baseUrl() + "Retos/");
+    }
+    return true;
+  }catch(e){
+    console.error("Favor Express: no se pudo cerrar", e);
+    return false;
+  }
 }

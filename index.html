@@ -303,7 +303,10 @@
       <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:14px;">Lo que se paga cada vez que alguien compra uno de sus deseos.</div>
       <label for="invPtsFavor" style="display:block;font-size:.82rem;color:var(--fg-muted);margin-bottom:6px;">Precio de un Favor Express</label>
       <input type="number" id="invPtsFavor" min="0" step="1" value="15">
-      <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:4px;">Lo que se ofrece al pedirle un favor a tu pareja. Quien lo cumple puede cobrar más, o dejarlo en 0.</div>
+      <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:14px;">Lo que se ofrece al pedirle un favor a tu pareja. Quien lo cumple puede cobrar más, o dejarlo en 0.</div>
+      <label for="invPctCastigo" style="display:block;font-size:.82rem;color:var(--fg-muted);margin-bottom:6px;">Castigo si aceptan y no cumplen</label>
+      <input type="number" id="invPctCastigo" min="0" max="100" step="5" value="50">
+      <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:4px;">Porcentaje del precio que se le descuenta a quien acepta un favor y no lo cumple a tiempo. Lo decides tú y solo tú se lo cobras.</div>
       <p id="invPtsMsg" style="font-size:.82rem;color:var(--rojo);min-height:18px;margin:10px 0;"></p>
       <div style="display:flex;gap:10px;">
         <button class="btnPri" id="invPtsCancelar" style="flex:1;background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Cancelar</button>
@@ -1220,6 +1223,8 @@ function abrirPuntos(u){
   // favor), asi que no se comprueba "> 0" como en los otros dos.
   const favorGuardado = parseInt(u.precioFavor, 10);
   document.getElementById("invPtsFavor").value = isFinite(favorGuardado) ? favorGuardado : 15;
+  const pctGuardado = parseInt(u.pctCastigo, 10);
+  document.getElementById("invPctCastigo").value = isFinite(pctGuardado) ? pctGuardado : 50;
   document.getElementById("invPtsMsg").textContent = "";
   document.getElementById("invOverlayPts").style.display = "flex";
 }
@@ -1233,9 +1238,11 @@ document.getElementById("invPtsGuardar").onclick = async ()=>{
   const activar  = parseInt(document.getElementById("invPtsActivar").value, 10);
   const precio   = parseInt(document.getElementById("invPtsPrecio").value, 10);
   const favor    = parseInt(document.getElementById("invPtsFavor").value, 10);
+  const pctCast  = parseInt(document.getElementById("invPctCastigo").value, 10);
   if(!(activar > 0)){ document.getElementById("invPtsMsg").textContent = "El de activar tiene que ser más de 0."; return; }
   if(!(precio > 0)){ document.getElementById("invPtsMsg").textContent = "El precio tiene que ser más de 0."; return; }
   if(!(favor >= 0)){ document.getElementById("invPtsMsg").textContent = "El del favor tiene que ser 0 o más."; return; }
+  if(!(pctCast >= 0 && pctCast <= 100)){ document.getElementById("invPtsMsg").textContent = "El castigo va de 0 a 100 %."; return; }
   const db = dbActual();
   if(!db){ document.getElementById("invPtsMsg").textContent = "No hay base de datos."; return; }
   try{
@@ -1244,7 +1251,7 @@ document.getElementById("invPtsGuardar").onclick = async ()=>{
     const arr = (snap.exists() && Array.isArray(snap.data().usuarios)) ? snap.data().usuarios.slice() : [];
     const i = arr.findIndex(v=> v.id === usuarioPts.id);
     if(i < 0) return;
-    arr[i] = Object.assign({}, arr[i], { ptsActivar: activar, precioCompra: precio, precioFavor: favor });
+    arr[i] = Object.assign({}, arr[i], { ptsActivar: activar, precioCompra: precio, precioFavor: favor, pctCastigo: pctCast });
     await setDoc(ref, { usuarios: arr, actualizadoEn: serverTimestamp() }, { merge: true });
     guardarUsuariosLocal(arr);
     // Si editas los numeros del usuario con el que estas, tu copia local tambien
@@ -1252,7 +1259,7 @@ document.getElementById("invPtsGuardar").onclick = async ()=>{
     try{
       const yoLoc = JSON.parse(localStorage.getItem(CLAVE_LOCAL) || "null");
       if(yoLoc && yoLoc.id === usuarioPts.id){
-        yoLoc.ptsActivar = activar; yoLoc.precioCompra = precio; yoLoc.precioFavor = favor;
+        yoLoc.ptsActivar = activar; yoLoc.precioCompra = precio; yoLoc.precioFavor = favor; yoLoc.pctCastigo = pctCast;
         localStorage.setItem(CLAVE_LOCAL, JSON.stringify(yoLoc));
       }
     }catch(e){}
