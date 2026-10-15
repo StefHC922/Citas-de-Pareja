@@ -23,7 +23,7 @@
 
 import {
   doc, getDoc, setDoc, collection, addDoc, serverTimestamp,
-  runTransaction, increment
+  onSnapshot, runTransaction, increment
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { aviso } from "./confirmar.js";
 import { avisarTelegram } from "./telegram.js";

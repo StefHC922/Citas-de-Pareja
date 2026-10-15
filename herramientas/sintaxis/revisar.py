@@ -39,6 +39,7 @@ if not archivos:
     print("No hay nada que revisar.")
     sys.exit(1)
 
+# 1) llaves y parenteses
 print("\n== jscheck.py (%d archivos) ==" % len(archivos))
 malos = 0
 for p in archivos:
@@ -46,7 +47,16 @@ for p in archivos:
     if r.returncode != 0:
         malos += 1
 
+# 2) que no se use nada que no este importado
+# (esto se col\u00f3 en oct-2026: `onSnapshot()` se usaba en favor.js sin
+#  importarlo, y como estaba dentro de un try{} con catch vacio, fallaba en
+#  silencio: no habia cartelito ni ventana y ningun error en pantalla.)
+print("\n== nombres.py (%d archivos) ==" % len(archivos))
+r = subprocess.run([sys.executable, os.path.join(HERE, "nombres.py")] + archivos)
+if r.returncode != 0:
+    malos += 1
+
 if malos:
-    print("\n%d archivo(s) con problemas." % malos)
+    print("\n%d revision(es) con problemas." % malos)
     sys.exit(1)
 print("\nTodo bien: %d archivos." % len(archivos))
