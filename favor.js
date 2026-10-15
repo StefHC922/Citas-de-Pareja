@@ -62,6 +62,15 @@ let estiloPuesto = false;
 let yaMontado = false;
 let esperandoIdentidad = false;
 let montado = null;
+// La base guardada a nivel de MODULO, no como parametro.
+//
+// OJO: esto no es cosmetico. Las ventanas (`mostrarRespuesta`, `mostrarPropio`,
+// `abrirVentanaFavor`) son funciones aparte que necesitan la base para escribir.
+// Antes usaban un `db` "suelto" que solo existia como parametro de
+// `montarFavor()`: al apretar Aceptar / Rechazar / Cancelar salia un
+// ReferenceError y **no pasaba nada, en silencio** (lo reporto Fredy probando,
+// oct-2026). "Ahora no" si funcionaba porque no usa la base.
+let dbBase = null;
 
 // Los colores se piden con `--card` y caen a `--tarjeta`, porque cada pantalla
 // les puso un nombre distinto y `Diablitos/` usa la otra serie. Mismo truco que
@@ -135,6 +144,7 @@ export function montarFavor(db, intentos){
   }
   esperandoIdentidad = false;
   db = base;
+  dbBase = base;
   ponerEstilo();
 
   const btn = document.createElement("button");
@@ -473,13 +483,13 @@ function mostrarRespuesta(f){
 
   btnAceptar.onclick = async ()=>{
     btnAceptar.disabled = true;
-    await responder(db, f, "aceptar");
+    await responder(dbBase, f, "aceptar");
     btnAceptar.disabled = false;
     cerrar();
   };
   btnRechazar.onclick = async ()=>{
     btnRechazar.disabled = true;
-    await responder(db, f, "rechazar");
+    await responder(dbBase, f, "rechazar");
     btnRechazar.disabled = false;
     cerrar();
   };
@@ -487,7 +497,7 @@ function mostrarRespuesta(f){
   $("vrMandarOtro").onclick = async ()=>{
     const n = parseInt($("vrPrecioFinal").value, 10);
     if(!isFinite(n) || n < 0){ msg.textContent = "El precio tiene que ser 0 o más."; return; }
-    await responder(db, f, "contra", n);
+    await responder(dbBase, f, "contra", n);
     cerrar();
   };
   // Cancelar: solo si el favor es MIO (lo pedi yo) y todavia no esta en curso.
@@ -500,7 +510,7 @@ function mostrarRespuesta(f){
     btnCancelar.style.display = "block";
     btnCancelar.onclick = async ()=>{
       btnCancelar.disabled = true;
-      await cerrarFavor(db, f, "cancelado", {});
+      await cerrarFavor(dbBase, f, "cancelado", {});
       btnCancelar.disabled = false;
       cerrar();
     };
@@ -681,7 +691,7 @@ function mostrarPropio(f){
     };
     pintar();
     reloj = setInterval(pintar, 1000);
-    ok.onclick = async ()=>{ ok.disabled = true; const r = await pagarFavor(db, f); ok.disabled = false; if(r) cerrar(); };
+    ok.onclick = async ()=>{ ok.disabled = true; const r = await pagarFavor(dbBase, f); ok.disabled = false; if(r) cerrar(); };
   }else if(d.estado === "vencido"){
     ok.style.display = "block"; sec.style.display = "block"; btnCancelar.style.display = "none";
     const multa = castigoDe(d);
@@ -690,8 +700,8 @@ function mostrarPropio(f){
       + ". Si le cobras, paga " + cents(multa) + " (" + ((d.tasaCastigo != null ? d.tasaCastigo : PCT_CASTIGO_POR_DEFECTO)) + "% de " + cents(d.precio) + ").";
     ok.textContent = "Cobrar el castigo \u00b7 " + cents(multa);
     sec.textContent = "Dejarlo pasar";
-    ok.onclick = async ()=>{ ok.disabled = true; const r = await cobrarCastigo(db, f); ok.disabled = false; if(r) cerrar(); };
-    sec.onclick = async ()=>{ sec.disabled = true; const r = await cerrarFavor(db, f, "perdonado", {}); sec.disabled = false; if(r) cerrar(); };
+    ok.onclick = async ()=>{ ok.disabled = true; const r = await cobrarCastigo(dbBase, f); ok.disabled = false; if(r) cerrar(); };
+    sec.onclick = async ()=>{ sec.disabled = true; const r = await cerrarFavor(dbBase, f, "perdonado", {}); sec.disabled = false; if(r) cerrar(); };
   }else{
     // Todavia no lo ha aceptado: se puede cancelar.
     ok.style.display = "none"; sec.style.display = "none"; btnCancelar.style.display = "block";
@@ -700,7 +710,7 @@ function mostrarPropio(f){
       + ". Todav\u00eda no lo acepta.";
     btnCancelar.onclick = async ()=>{
       btnCancelar.disabled = true;
-      const r = await cerrarFavor(db, f, "cancelado", {});
+      const r = await cerrarFavor(dbBase, f, "cancelado", {});
       btnCancelar.disabled = false;
       if(r) cerrar();
     };
@@ -778,7 +788,7 @@ async function pagarFavor(db, f){
   const d = f.d;
   if(!yo || !d || d.de.id !== yo.id) return false;
   const aPagar = (typeof d.precio === "number") ? d.precio : 0;
-  if(aPagar <= 0){ return cerrarFavor(db, f, "cumplido", { pagado: 0 }); }
+  if(aPagar <= 0){ return cerrarFavor(dbBase, f, "cumplido", { pagado: 0 }); }
   try{
     await runTransaction(db, async (t)=>{
       const refMio = doc(db, "puntosUsuarios", yo.id);
@@ -796,7 +806,7 @@ async function pagarFavor(db, f){
     aviso("No se pudo pagar. Revisa tu conexi\u00f3n.");
     return false;
   }
-  return cerrarFavor(db, f, "cumplido", { pagado: aPagar });
+  return cerrarFavor(dbBase, f, "cumplido", { pagado: aPagar });
 }
 
 // El castigo. NUNCA se descuenta solo: quien pide aprieta el boton. Y se
@@ -824,7 +834,7 @@ async function cobrarCastigo(db, f){
       return false;
     }
   }
-  return cerrarFavor(db, f, "cobrado", { castigo: multa, cobrado: cobrado });
+  return cerrarFavor(dbBase, f, "cobrado", { castigo: multa, cobrado: cobrado });
 }
 
 async function cerrarFavor(db, f, estado, extra){
