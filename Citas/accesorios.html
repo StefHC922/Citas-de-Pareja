@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -153,18 +153,18 @@
 </head>
 <body>
 
-<a class="back" href="../index.html">← Volver</a>
+<a class="back" href="../index.html">â† Volver</a>
 
-<div class="eyebrow">Configuración</div>
+<div class="eyebrow">ConfiguraciÃ³n</div>
 <h1 id="tituloCfg">Actividades y Accesorios</h1>
-<p class="desc" id="descCfg">Elige una opción para configurar tu app.</p>
+<p class="desc" id="descCfg">Elige una opciÃ³n para configurar tu app.</p>
 
 <div class="tabs">
   <a href="actividades.html">Actividades</a>
   <button id="tabLista" type="button">Accesorios</button>
 </div>
 
-<a id="volverAct" href="actividades.html">‹ Volver a la actividad <b id="volverActNombre"></b></a>
+<a id="volverAct" href="actividades.html">â€¹ Volver a la actividad <b id="volverActNombre"></b></a>
 
 <div id="alta">
   <div class="fila">
@@ -187,6 +187,8 @@ import {
 import firebaseConfigBase from "../firebase-config.js";
 import { resolverFirebase, leerConfigGuardada, cargarUsuarios, asegurarFabrica } from "../config.js";
 import { confirmar } from "../confirmar.js";
+import { montarFavor } from "../favor.js";
+try{ montarFavor(); }catch(e){}
 const firebaseConfig = resolverFirebase(firebaseConfigBase);
 
 const app = initializeApp(firebaseConfig);
@@ -253,7 +255,7 @@ function pintar(){
 }
 
 // Si lo escrito coincide con uno agregado desde la app,
-// el botón se convierte en "Eliminar".
+// el botÃ³n se convierte en "Eliminar".
 function actualizarModo(){
   const clave = normalizar(inputEl.value);
 
@@ -364,7 +366,7 @@ async function agregar(){
     actualizarModo();
     avisar("Accesorio agregado.", true);
   }catch(e){
-    avisar("No se pudo guardar. Revisa tu conexión.");
+    avisar("No se pudo guardar. Revisa tu conexiÃ³n.");
   }
   actualizarModo();   // decide si el boton queda activo o apagado
 }
@@ -375,7 +377,7 @@ async function eliminar(){
   const cual = inputEl.value.trim();
   const confirmado = await confirmar({
     aviso: true,
-    titulo: "¿Eliminar el accesorio «" + cual + "»?",
+    titulo: "Â¿Eliminar el accesorio Â«" + cual + "Â»?",
     texto: "No se puede deshacer.",
     ok: "Eliminar"
   });
@@ -391,7 +393,7 @@ async function eliminar(){
     actualizarModo();
     avisar("Accesorio eliminado.", true);
   }catch(e){
-    avisar("No se pudo eliminar. Revisa tu conexión.");
+    avisar("No se pudo eliminar. Revisa tu conexiÃ³n.");
   }
   actualizarModo();
 }
@@ -408,7 +410,7 @@ inputEl.addEventListener("keydown", e=>{
   if(e.key === "Enter") btnAgregar.onclick();
 });
 
-// ====== PANELES (lista) — Usuarios y Vincular viven en el ⚙️ del inicio ======
+// ====== PANELES (lista) â€” Usuarios y Vincular viven en el âš™ï¸ del inicio ======
 const tabLista = document.getElementById("tabLista");
 function todosApagados(){
   [tabLista].forEach(b=>b.classList.remove("activo"));
@@ -416,7 +418,7 @@ function todosApagados(){
   conteoEl.hidden = true;
   document.getElementById("alta").style.display = "";
   document.getElementById("tituloCfg").textContent = "Actividades y Accesorios";
-  document.getElementById("descCfg").textContent = "Elige una opción para configurar tu app.";
+  document.getElementById("descCfg").textContent = "Elige una opciÃ³n para configurar tu app.";
 }
 function ponerTitulo(t, d){
   document.getElementById("tituloCfg").textContent = t;
@@ -441,7 +443,7 @@ tabLista.onclick = ()=>{
   try{ vuelta = JSON.parse(sessionStorage.getItem("citasIrAccesorios") || "null"); }catch(e){}
   if(!vuelta || !vuelta.n) return;
   if(Date.now() - (vuelta.t || 0) > 21600000) return;   // mas de 6 h: ya no aplica
-  document.getElementById("volverActNombre").textContent = "«" + vuelta.n + "»";
+  document.getElementById("volverActNombre").textContent = "Â«" + vuelta.n + "Â»";
   document.getElementById("volverAct").classList.add("ver");
 })();
 

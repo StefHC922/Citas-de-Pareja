@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -220,11 +220,11 @@
 </head>
 <body>
 
-<a class="back" href="../index.html">← Volver</a>
+<a class="back" href="../index.html">â† Volver</a>
 
-<div class="eyebrow">Configuración</div>
+<div class="eyebrow">ConfiguraciÃ³n</div>
 <h1 id="tituloCfg">Actividades y Accesorios</h1>
-<p class="desc" id="descCfg">Elige una opción para configurar tu app.</p>
+<p class="desc" id="descCfg">Elige una opciÃ³n para configurar tu app.</p>
 
 <div class="tabs">
   <button id="tabLista" type="button">Actividades</button>
@@ -293,6 +293,8 @@ import {
 
 import firebaseConfigBase from "../firebase-config.js";
 import { resolverFirebase, leerConfigGuardada, cargarUsuarios, asegurarFabrica } from "../config.js";
+import { montarFavor } from "../favor.js";
+try{ montarFavor(); }catch(e){}
 const firebaseConfig = resolverFirebase(firebaseConfigBase);
 
 const app = initializeApp(firebaseConfig);
@@ -336,12 +338,12 @@ let catalogoAcc = []; // accesorios del JSON
 let extrasAcc = [];   // accesorios extra de Firebase
 
 let actividadEditando = null;
-// ¿Esta abierto el editor de una actividad? Es una bandera de verdad y NO se
+// Â¿Esta abierto el editor de una actividad? Es una bandera de verdad y NO se
 // pregunta por editorWrap.style.display: al abrir la pagina ese estilo de linea
 // esta vacio (el display:none lo pone el CSS), asi que la comparacion daba
 // "abierto" desde el arranque y la lista de actividades NUNCA se mostraba.
 let editorAbierto = false;
-// Lo que hay guardado en Firebase para la actividad que se está editando.
+// Lo que hay guardado en Firebase para la actividad que se estÃ¡ editando.
 // Sirve para saber si marcaste algo sin guardar antes de irte a otra pantalla.
 let accsGuardados = [];
 
@@ -391,7 +393,7 @@ function pintar(){
     pista.textContent = "accesorios";
     const chev = document.createElement("span");
     chev.className = "chev";
-    chev.textContent = "›";
+    chev.textContent = "â€º";
     pista.appendChild(chev);
     btn.appendChild(span);
     btn.appendChild(pista);
@@ -417,7 +419,7 @@ function actualizarModo(){
   btnAgregar.classList.remove("eliminar");
 
   if(!clave){
-    btnAgregar.disabled = true;          // vacío: no se puede agregar
+    btnAgregar.disabled = true;          // vacÃ­o: no se puede agregar
     msgEl.textContent = "";
     msgEl.className = "";
     return;
@@ -425,14 +427,14 @@ function actualizarModo(){
 
   if(listaActividades().some(n=>normalizar(n) === clave)){
     btnAgregar.disabled = true;          // ya existe: no se puede volver a agregar
-    msgEl.textContent = "Esa actividad ya existe. Tócala en la lista para editarla o borrarla.";
+    msgEl.textContent = "Esa actividad ya existe. TÃ³cala en la lista para editarla o borrarla.";
     msgEl.className = "";
     return;
   }
 
   msgEl.textContent = "";
   msgEl.className = "";
-  btnAgregar.disabled = false;           // nombre nuevo: sí
+  btnAgregar.disabled = false;           // nombre nuevo: sÃ­
 }
 
 async function cargar(){
@@ -517,9 +519,9 @@ async function agregar(){
     actualizarModo();
     avisar("Actividad agregada.", true);
   }catch(e){
-    avisar("No se pudo guardar. Revisa tu conexión.");
+    avisar("No se pudo guardar. Revisa tu conexiÃ³n.");
   }
-  actualizarModo();   // decide si el botón queda activo o apagado
+  actualizarModo();   // decide si el botÃ³n queda activo o apagado
 }
 
 // ====== EDITOR DE PRESET ======
@@ -531,7 +533,7 @@ function editorAvisar(texto, ok){
 function fuentePreset(nombre, hayNube, hayArchivo){
   if(hayNube && hayArchivo) return 'Accesorios <b>guardados</b> (sustituyen a los originales).';
   if(hayNube) return 'Accesorios <b>guardados</b>.';
-  if(hayArchivo) return 'Accesorios <b>originales</b>. Guárdalos para personalizarlos.';
+  if(hayArchivo) return 'Accesorios <b>originales</b>. GuÃ¡rdalos para personalizarlos.';
   return 'Sin accesorios definidos. Marca y guarda.';
 }
 
@@ -581,8 +583,8 @@ async function abrirEditor(nombre){
   // El boton para ir a la pantalla de Accesorios siempre esta disponible.
   btnIrAccesorios.style.display = "";
 
-  // Renombrar y eliminar: solo para las actividades creadas aquí (las de
-  // fábrica son del catálogo y no se tocan).
+  // Renombrar y eliminar: solo para las actividades creadas aquÃ­ (las de
+  // fÃ¡brica son del catÃ¡logo y no se tocan).
   const esPropia = extrasActs.some(e=>e.nombre === nombre);
   btnRenombrar.style.display = esPropia ? "" : "none";
   btnEliminarAct.style.display = esPropia ? "" : "none";
@@ -590,9 +592,9 @@ async function abrirEditor(nombre){
   filaEliminar.classList.remove("ver");
   inputRenombrar.value = "";
   inputConfirmar.value = "";
-  borrarNombre.textContent = "«" + nombre + "»";
+  borrarNombre.textContent = "Â«" + nombre + "Â»";
 
-  // El editor REEMPLAZA la lista: así no se ve nada encimado.
+  // El editor REEMPLAZA la lista: asÃ­ no se ve nada encimado.
   listaEl.hidden = true;
   editorWrap.style.display = "block";
   editorAbierto = true;
@@ -627,12 +629,12 @@ async function guardarPreset(){
     accsGuardados = marcados.slice();
     origenPreset.innerHTML = fuentePreset(actividadEditando, true, true);
   }catch(e){
-    editorAvisar("No se pudo guardar. Revisa tu conexión.");
+    editorAvisar("No se pudo guardar. Revisa tu conexiÃ³n.");
   }
   btnGuardarPreset.disabled = false;
 }
 
-// ¿Hay accesorios marcados que todavia NO estan guardados?
+// Â¿Hay accesorios marcados que todavia NO estan guardados?
 function hayCambiosSinGuardar(){
   const marcados = Array.from(checksEl.querySelectorAll("input:checked")).map(i=>i.value).sort();
   const guardados = accsGuardados.slice().sort();
@@ -673,7 +675,7 @@ async function volverDesdeAccesorios(){
     return;
   }
   await abrirEditor(vuelta.n);
-  avisar("De vuelta en «" + vuelta.n + "».", true);
+  avisar("De vuelta en Â«" + vuelta.n + "Â».", true);
 }
 
 // ====== RENOMBRAR UNA ACTIVIDAD ======
@@ -734,7 +736,7 @@ async function renombrarActividad(){
     extra.nombre = nuevo;
     actividadEditando = nuevo;
     editorTitulo.textContent = nuevo;
-    borrarNombre.textContent = "«" + nuevo + "»";
+    borrarNombre.textContent = "Â«" + nuevo + "Â»";
     filaRenombrar.classList.remove("ver");
     inputRenombrar.value = "";
     pintar();
@@ -809,7 +811,7 @@ editorWrap.addEventListener("click", e=>{
   if(e.target === editorWrap) cerrarEditor();
 });
 
-// ====== PANELES (lista) — Usuarios y Vincular viven en el ⚙️ del inicio ======
+// ====== PANELES (lista) â€” Usuarios y Vincular viven en el âš™ï¸ del inicio ======
 const tabLista = document.getElementById("tabLista");
 function todosApagados(){
   [tabLista].forEach(b=>b.classList.remove("activo"));
@@ -817,7 +819,7 @@ function todosApagados(){
   conteoEl.hidden = true;
   document.getElementById("alta").style.display = "";
   document.getElementById("tituloCfg").textContent = "Actividades y Accesorios";
-  document.getElementById("descCfg").textContent = "Elige una opción para configurar tu app.";
+  document.getElementById("descCfg").textContent = "Elige una opciÃ³n para configurar tu app.";
 }
 function ponerTitulo(t, d){
   document.getElementById("tituloCfg").textContent = t;

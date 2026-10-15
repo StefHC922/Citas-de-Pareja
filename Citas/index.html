@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -56,8 +56,8 @@
   }
   textarea{ resize:vertical; min-height:70px; }
 
-  /* ---------- pantalla: quién eres ---------- */
-  /* display:none: antes se veía de entrada mientras la app decide si
+  /* ---------- pantalla: quiÃ©n eres ---------- */
+  /* display:none: antes se veÃ­a de entrada mientras la app decide si
      hace falta. El JS la enciende SOLO si de verdad hay que elegir usuario. */
   #pantallaUsuario{
     min-height:100dvh; display:none; flex-direction:column;
@@ -183,10 +183,10 @@
 
 <div id="banner"></div>
 
-<!-- ================= PANTALLA: QUIÉN ERES ================= -->
+<!-- ================= PANTALLA: QUIÃ‰N ERES ================= -->
 <div id="pantallaUsuario">
   <div class="eyebrow">Complicidad en Pareja</div>
-  <h1>¿Quién eres?</h1>
+  <h1>Â¿QuiÃ©n eres?</h1>
   <p>Selecciona tu usuario para continuar.</p>
   <div id="listaUsuarios"></div>
 </div>
@@ -199,13 +199,13 @@
       <div id="fechaHoy"></div>
     </div>
     <div class="derecha">
-<a href="../index.html#experiencias" id="btnVolver">← Volver</a>
+<a href="../index.html#experiencias" id="btnVolver">â† Volver</a>
     </div>
   </div>
 
   <div id="contenido">
     <div id="listaCitas"></div>
-    <div id="vacioMsg" style="display:none;">Todavía no hay citas agendadas.</div>
+    <div id="vacioMsg" style="display:none;">TodavÃ­a no hay citas agendadas.</div>
   </div>
 
   <button id="btnNuevaCita">+ Agendar cita</button>
@@ -227,12 +227,12 @@
     </div>
 
     <div class="campo" id="campoParaWrap" style="display:none;">
-      <label for="fCampoPara">¿Para quién es esta cita?</label>
+      <label for="fCampoPara">Â¿Para quiÃ©n es esta cita?</label>
       <select id="fCampoPara"></select>
     </div>
 
     <div class="campo">
-      <label for="fCampoDescripcion">Descripción / especificaciones</label>
+      <label for="fCampoDescripcion">DescripciÃ³n / especificaciones</label>
       <textarea id="fCampoDescripcion" placeholder="Alguna sugerencia o detalle especial..."></textarea>
     </div>
 
@@ -262,6 +262,8 @@ import firebaseConfigBase from "../firebase-config.js";
 import { resolverFirebase, baseUrl, cargarUsuarios, asegurarFabrica, unirConFabrica } from "../config.js";
 import { confirmar } from "../confirmar.js";
 import { avisarTelegram } from "../telegram.js";
+import { montarFavor } from "../favor.js";
+try{ montarFavor(); }catch(e){}
 const firebaseConfig = resolverFirebase(firebaseConfigBase);
 
 const app = initializeApp(firebaseConfig);
@@ -279,8 +281,8 @@ let accesoriosPorActividadCache = {};
 let miIdentidad = null; // { id, nombre }
 let editandoId = null;  // id del doc si estamos modificando una cita existente
 
-// ====== AVISOS (pancarta + sonido + vibración + Telegram) ======
-// Telegram y URL salen del engrane del menú; sin ellos, solo avisos locales.
+// ====== AVISOS (pancarta + sonido + vibraciÃ³n + Telegram) ======
+// Telegram y URL salen del engrane del menÃº; sin ellos, solo avisos locales.
 // `avisarTelegram()` vive en ../telegram.js (antes copiada aqui).
 const APP_URL = baseUrl();
 
@@ -379,7 +381,7 @@ const formMsg = document.getElementById("formMsg");
 const btnCancelarForm = document.getElementById("btnCancelarForm");
 const btnGuardarCita = document.getElementById("btnGuardarCita");
 
-// ====== CARGA DE CATÁLOGOS ======
+// ====== CARGA DE CATÃLOGOS ======
 // Si la nube no responde en unos segundos (p. ej. config sin poner),
 // se sigue solo con el JSON en vez de colgar la pantalla.
 function conTiempo(promesa, ms){
@@ -415,7 +417,7 @@ async function cargarCatalogos(){
       if(nombre) extrasActs.push(nombre);
     });
   }catch(e){
-    // Sin conexión a la nube: se usa solo la fabrica
+    // Sin conexiÃ³n a la nube: se usa solo la fabrica
   }
 
   try{
@@ -425,7 +427,7 @@ async function cargarCatalogos(){
       if(nombre) extrasAccs.push(nombre);
     });
   }catch(e){
-    // Sin conexión a la nube: se usa solo la fabrica
+    // Sin conexiÃ³n a la nube: se usa solo la fabrica
   }
 
   // La base manda. El JSON solo se suma si la siembra no pudo ocurrir.
@@ -540,7 +542,7 @@ async function obtenerAccesoriosActividad(nombre){
   if(!nombre) return [];
   if(accesoriosPorActividadCache[nombre]) return accesoriosPorActividadCache[nombre];
 
-  // Primero la nube (pantalla ☰); si no hay, el archivo <actividad>.json
+  // Primero la nube (pantalla â˜°); si no hay, el archivo <actividad>.json
   try{
     const snap = await conTiempo(getDoc(doc(db, "presetsActividad", nombre)), 8000);
     if(snap.exists() && Array.isArray(snap.data().accesorios)){
@@ -591,8 +593,8 @@ function esEnPasado(valor){
   return f.getTime() < Date.now();
 }
 // El min es en el mismo formato que el campo, pero en la hora local de quien
-// está: se le resta el desfase para que no salga corrida. Con esto el calendario
-// del celular pinta en gris lo que ya pasó, sin dejar escribirlo a mano.
+// estÃ¡: se le resta el desfase para que no salga corrida. Con esto el calendario
+// del celular pinta en gris lo que ya pasÃ³, sin dejar escribirlo a mano.
 function ponerMinimoFecha(){
   const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -617,14 +619,14 @@ async function abrirFormulario(modo, citaExistente){
     editandoId = citaExistente.id;
     formTitulo.textContent = "Modificar cita";
     fCampoFecha.value = citaExistente.fechaCita || "";
-    // Sin mínimo al modificar: una cita vieja puede estar en el pasado y hay
+    // Sin mÃ­nimo al modificar: una cita vieja puede estar en el pasado y hay
     // que poder corregirla (cambiarle una palabra) sin que el campo la rechace.
     fCampoFecha.removeAttribute("min");
     fCampoActividad.value = citaExistente.actividad || (actividades[0] || "");
     fCampoDescripcion.value = citaExistente.descripcion || "";
     llenarAccesoriosForm(citaExistente.accesorios || []);
     await aplicarAccesoriosDeActividad(fCampoActividad.value, "unir");
-    // al modificar, el destinatario ya está definido por la cita original
+    // al modificar, el destinatario ya estÃ¡ definido por la cita original
     campoParaWrap.style.display = "none";
   }
 
@@ -658,9 +660,9 @@ btnGuardarCita.onclick = async ()=>{
     return;
   }
   // No se agenda en el pasado. Al MODIFICAR no se bloquea: la cita ya existe y
-  // lo que se está corrigiendo puede ser una fecha vieja a propósito.
+  // lo que se estÃ¡ corrigiendo puede ser una fecha vieja a propÃ³sito.
   if(!editandoId && esEnPasado(fecha)){
-    formMsg.textContent = "Esa fecha ya pasó. Elige una fecha de hoy o de un día futuro.";
+    formMsg.textContent = "Esa fecha ya pasÃ³. Elige una fecha de hoy o de un dÃ­a futuro.";
     return;
   }
   if(!actividad){
@@ -683,7 +685,7 @@ btnGuardarCita.onclick = async ()=>{
         ultimaAccionPorId: miIdentidad.id,
         ultimaAccionPorNombre: miIdentidad.nombre
       });
-      avisarTelegram("✏️ " + miIdentidad.nombre + " modificó la cita: " + actividad + " (" + formatearFecha(fecha) + ")", APP_URL + "Citas/?cita=" + editandoId);
+      avisarTelegram("âœï¸ " + miIdentidad.nombre + " modificÃ³ la cita: " + actividad + " (" + formatearFecha(fecha) + ")", APP_URL + "Citas/?cita=" + editandoId);
     }else{
       const paraId = fCampoPara.value;
       const paraUsuario = usuarios.find(u=>u.id === paraId);
@@ -703,11 +705,11 @@ btnGuardarCita.onclick = async ()=>{
         ultimaAccionPorId: miIdentidad.id,
         ultimaAccionPorNombre: miIdentidad.nombre
       });
-      avisarTelegram("📅 Nueva cita de " + miIdentidad.nombre + " para " + paraUsuario.nombre + ": " + actividad + " (" + formatearFecha(fecha) + ")", APP_URL + "Citas/?cita=" + refNueva.id);
+      avisarTelegram("ðŸ“… Nueva cita de " + miIdentidad.nombre + " para " + paraUsuario.nombre + ": " + actividad + " (" + formatearFecha(fecha) + ")", APP_URL + "Citas/?cita=" + refNueva.id);
     }
     cerrarFormulario();
   }catch(e){
-    formMsg.textContent = "Error al guardar. Revisa tu conexión.";
+    formMsg.textContent = "Error al guardar. Revisa tu conexiÃ³n.";
     console.error(e);
   }finally{
     btnGuardarCita.disabled = false;
@@ -724,7 +726,7 @@ async function confirmarCita(id){
     ultimaAccionPorNombre: miIdentidad.nombre
   });
   const c = citasPorId[id];
-  avisarTelegram("✅ " + miIdentidad.nombre + " confirmó la cita: " + (c ? c.actividad : "") + (c ? " (" + formatearFecha(c.fechaCita) + ")" : ""), APP_URL + "Citas/?cita=" + id);
+  avisarTelegram("âœ… " + miIdentidad.nombre + " confirmÃ³ la cita: " + (c ? c.actividad : "") + (c ? " (" + formatearFecha(c.fechaCita) + ")" : ""), APP_URL + "Citas/?cita=" + id);
 }
 
 async function rechazarCita(id){
@@ -736,13 +738,13 @@ async function rechazarCita(id){
     ultimaAccionPorNombre: miIdentidad.nombre
   });
   const c = citasPorId[id];
-  avisarTelegram("❌ " + miIdentidad.nombre + " rechazó la cita: " + (c ? c.actividad : "") + (c ? " (" + formatearFecha(c.fechaCita) + ")" : ""), APP_URL + "Citas/?cita=" + id);
+  avisarTelegram("âŒ " + miIdentidad.nombre + " rechazÃ³ la cita: " + (c ? c.actividad : "") + (c ? " (" + formatearFecha(c.fechaCita) + ")" : ""), APP_URL + "Citas/?cita=" + id);
 }
 
 async function eliminarCita(id){
   const confirmado = await confirmar({
     aviso: true,
-    titulo: "¿Eliminar esta cita?",
+    titulo: "Â¿Eliminar esta cita?",
     texto: "No se puede deshacer.",
     ok: "Eliminar"
   });
@@ -750,7 +752,7 @@ async function eliminarCita(id){
   const c = citasPorId[id];
   suprimir(id);
   await deleteDoc(doc(db, "citas", id));
-  avisarTelegram("🗑️ " + miIdentidad.nombre + " eliminó la cita: " + (c ? c.actividad : ""), APP_URL + "Citas/");
+  avisarTelegram("ðŸ—‘ï¸ " + miIdentidad.nombre + " eliminÃ³ la cita: " + (c ? c.actividad : ""), APP_URL + "Citas/");
 }
 
 // ====== RENDER ======
@@ -931,20 +933,20 @@ function escucharCitas(){
       const antes = vistosCitas[id];
       if(antes === undefined){
         if(esRelevanteCita(c) && c.proponenteId !== yo){
-          notificar("📅 Nueva cita de " + c.proponenteNombre + " para " + c.paraNombre + ": " + c.actividad, "cita-" + id);
+          notificar("ðŸ“… Nueva cita de " + c.proponenteNombre + " para " + c.paraNombre + ": " + c.actividad, "cita-" + id);
         }
       }else if(antes !== ahora[id]){
         if(esRelevanteCita(c) && c.ultimaAccionPorId !== yo){
-          if(c.estado === "confirmada") notificar("✅ " + (c.ultimaAccionPorNombre || "Alguien") + " confirmó: " + c.actividad, "cita-" + id);
-          else if(c.estado === "rechazada") notificar("❌ " + (c.ultimaAccionPorNombre || "Alguien") + " rechazó: " + c.actividad, "cita-" + id);
-          else notificar("✏️ Cita modificada por " + (c.ultimaAccionPorNombre || "alguien") + ": " + c.actividad, "cita-" + id);
+          if(c.estado === "confirmada") notificar("âœ… " + (c.ultimaAccionPorNombre || "Alguien") + " confirmÃ³: " + c.actividad, "cita-" + id);
+          else if(c.estado === "rechazada") notificar("âŒ " + (c.ultimaAccionPorNombre || "Alguien") + " rechazÃ³: " + c.actividad, "cita-" + id);
+          else notificar("âœï¸ Cita modificada por " + (c.ultimaAccionPorNombre || "alguien") + ": " + c.actividad, "cita-" + id);
         }
       }
     });
     Object.keys(vistosCitas).forEach(id=>{
       if(!(id in ahora) && !estaSuprimido(id)){
         const c = citasPorId[id];
-        if(c && esRelevanteCita(c)) notificar("🗑️ Se eliminó la cita: " + c.actividad);
+        if(c && esRelevanteCita(c)) notificar("ðŸ—‘ï¸ Se eliminÃ³ la cita: " + c.actividad);
       }
     });
     vistosCitas = ahora;

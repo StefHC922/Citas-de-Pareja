@@ -70,10 +70,22 @@ export function baseUrl(){  try{
     let u = location.href.split("?")[0].split("#")[0];
     u = u.replace(/[^/]+\.html?$/i, "");
     if(!/\/$/.test(u)) u += "/";
-    u = u.replace(/\/(Citas|Retos)\/$/, "/");
+    // Todas las pantallas viven a UN nivel: /Carpeta/index.html. Se quita la
+    // ultima carpeta de la RUTA. Antes solo se quitaba si se llamaba Citas o
+    // Retos, y desde Chat/, Acompanante/... el enlace quedaba apuntando a una
+    // carpeta que no existe (el boton "Abrir" del Telegram no abria nada).
+    //
+    // OJO: hay que separar el dominio de la ruta ANTES de quitar nada. Si se
+    // intenta con una regla normal, "https://app.com/" tambien parece una
+    // carpeta y se comeria el dominio.
+    const m = u.match(/^([a-z]+:\/\/[^/]*\/)(.*)$/i);
+    if(m && m[2]){
+      const padre = m[2].split("/").filter(x=> x.length).slice(0, -1);
+      u = m[1] + (padre.length ? padre.join("/") + "/" : "");
+    }
     return u;
   }catch(e){ return PH.app; }
-}
+  }
 
 /** Usuarios: copia local rápida del asistente. */
 export function guardarUsuariosLocal(usuarios){

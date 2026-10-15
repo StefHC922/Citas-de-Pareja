@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -71,7 +71,7 @@
   .pegarBox{ margin-top:8px; }
   .pegarBox textarea{ width:100%; min-height:120px; border-radius:12px; border:1px solid var(--card-border);
     background:var(--bg); color:var(--fg); padding:12px; font-size:.85rem; font-family:'Inter',sans-serif; }
-  /* pestañas + tabla de opciones */
+  /* pestaÃ±as + tabla de opciones */
   .tabs{ display:flex; gap:8px; width:100%; }
   .tab{ flex:1; padding:12px; border-radius:12px; border:1px solid var(--card-border); background:var(--card);
     color:var(--fg-muted); font-family:'Chakra Petch',sans-serif; font-weight:600; font-size:.9rem; cursor:pointer; }
@@ -149,22 +149,22 @@
 <body>
 
 <!-- Este juego esta en el catalogo de JUEGOS (no en Experiencias), asi que el
-     "← Volver" tiene que abrir ESA subpantalla y no la de experiencias en pareja.
+     "â† Volver" tiene que abrir ESA subpantalla y no la de experiencias en pareja.
      En las pantallas de adentro (config) el boton no navega: se atrapa el clic
      y se regresa a la anterior, como en Encuentros. -->
-<a class="back" id="lnkInicio" href="../index.html#juegos">← Volver</a>
-<button id="btnCfg" aria-label="Configurar">⚙️</button>
+<a class="back" id="lnkInicio" href="../index.html#juegos">â† Volver</a>
+<button id="btnCfg" aria-label="Configurar">âš™ï¸</button>
 
 <div class="eyebrow">Elige con cuidado</div>
 
 <!-- ============ BLOQUEO (sin acceso) ============ -->
 <div class="vista" id="vistaBloqueo">
-  <h1>Acceso 🔒</h1>
-  <p class="desc">Elecciones Peligrosas no está activado en tu menú. Pídelo en Centro de Adquisiciones y al aprobarse aparece solo.</p>
+  <h1>Acceso ðŸ”’</h1>
+  <p class="desc">Elecciones Peligrosas no estÃ¡ activado en tu menÃº. PÃ­delo en Centro de Adquisiciones y al aprobarse aparece solo.</p>
   <button class="btnPri" id="btnTienda">Ir a Centro de Adquisiciones</button>
-  <button class="btnSec" id="btnRevisar">Ya lo pedí, revisar acceso</button>
-  <button class="btnSec" id="btnTengo">Tengo código</button>
-  <textarea id="licCodigo" style="display:none;width:100%;border-radius:12px;border:1px solid var(--card-border);background:var(--card);color:var(--fg);padding:12px;font-size:.8rem;min-height:90px;" placeholder="Pega tu código aquí"></textarea>
+  <button class="btnSec" id="btnRevisar">Ya lo pedÃ­, revisar acceso</button>
+  <button class="btnSec" id="btnTengo">Tengo cÃ³digo</button>
+  <textarea id="licCodigo" style="display:none;width:100%;border-radius:12px;border:1px solid var(--card-border);background:var(--card);color:var(--fg);padding:12px;font-size:.8rem;min-height:90px;" placeholder="Pega tu cÃ³digo aquÃ­"></textarea>
   <button class="btnPri" id="btnValidar" style="display:none">Validar y entrar</button>
   <div id="licMsg"></div>
 </div>
@@ -174,11 +174,11 @@
   <h1>Elecciones Peligrosas</h1>
   <p class="desc">Elijan sus Opciones</p>
   <div class="caja">
-    <div class="cajaTitulo">Número de rondas</div>
+    <div class="cajaTitulo">NÃºmero de rondas</div>
     <input type="number" id="rondas" class="rondasInput" min="2" max="50" value="3" inputmode="numeric">
   </div>
   <div class="caja cajaBotones">
-    <div class="cajaTitulo">¿Cómo van a jugar?</div>
+    <div class="cajaTitulo">Â¿CÃ³mo van a jugar?</div>
     <button class="btnPri" id="btnSolo" style="margin-top:10px;">Jugar solo</button>
     <button class="btnPri" id="btnPareja">Jugar con Pareja</button>
     <button class="btnPri" id="btnMulti" style="margin-bottom:0;">Multijugador</button>
@@ -188,7 +188,7 @@
 <!-- ============ ESPERA (pareja / invitado) ============ -->
 <div class="vista" id="vistaEspera">
   <h1>Elecciones Peligrosas</h1>
-  <p class="desc" id="esperaDesc">Esperando a que el anfitrión inicie la partida…</p>
+  <p class="desc" id="esperaDesc">Esperando a que el anfitriÃ³n inicie la partidaâ€¦</p>
   <button class="btnSec" id="btnEsperaRefrescar">Volver a revisar</button>
 </div>
 
@@ -206,17 +206,17 @@
     <button id="btnPickB">Escoge B</button>
   </div>
   <div id="esperaTurno" style="display:none"></div>
-  <div id="finMsg" style="display:none">¡Gracias por jugar!</div>
+  <div id="finMsg" style="display:none">Â¡Gracias por jugar!</div>
   <button class="btnSec" id="btnSaltar" style="display:none">Saltar turno</button>
   <div class="filaBotones">
     <button class="btnSec" id="btnTerminar" style="display:none">Pausar y Salir</button>
     <button class="btnSec" id="btnQR" style="display:none">QR Invita a Alguien</button>
     <button class="btnSec" id="btnTerminarPartida" style="display:none">Terminar Partida</button>
-    <button class="btnSec" id="btnAgregarInv" style="display:none">➕ Agregar invitado</button>
+    <button class="btnSec" id="btnAgregarInv" style="display:none">âž• Agregar invitado</button>
   </div>
 
-  <!-- Quién sigue esperando afuera y quién ya está jugando. Solo aparece en
-       partida compartida: en un solo celular no hay a quién esperar. -->
+  <!-- QuiÃ©n sigue esperando afuera y quiÃ©n ya estÃ¡ jugando. Solo aparece en
+       partida compartida: en un solo celular no hay a quiÃ©n esperar. -->
   <div id="salaPanel">
     <div class="salaCaja">
       <h4>En la espera <b id="esperaCount">0</b></h4>
@@ -232,20 +232,20 @@
 <!-- ============ CONFIG (editor de las dos listas) ============ -->
 <div class="vista" id="vistaConfig">
   <h1>Configurar</h1>
-  <p class="desc">Elige la lista y edítala. Separa las opciones con Enter.</p>
+  <p class="desc">Elige la lista y edÃ­tala. Separa las opciones con Enter.</p>
   <div class="tabs">
     <button class="tab" id="tabA">Lado A</button>
     <button class="tab" id="tabB">Lado B</button>
   </div>
-  <input class="buscar" id="buscarOpt" type="text" placeholder="🔍 Buscar opción..." autocomplete="off" style="margin-top:12px;">
+  <input class="buscar" id="buscarOpt" type="text" placeholder="ðŸ” Buscar opciÃ³n..." autocomplete="off" style="margin-top:12px;">
   <div class="tablaBox" id="tablaBox"></div>
   <div class="filaAdd" style="margin-top:12px;">
-    <input id="inpNueva" placeholder="Nueva opción" maxlength="120">
+    <input id="inpNueva" placeholder="Nueva opciÃ³n" maxlength="120">
     <button id="btnAdd">+</button>
   </div>
   <button class="btnSec" id="btnPegar">Pegar lista completa</button>
   <div class="pegarBox" id="pegarBox" style="display:none">
-    <textarea id="pegarTa" placeholder="Una opción por línea."></textarea>
+    <textarea id="pegarTa" placeholder="Una opciÃ³n por lÃ­nea."></textarea>
     <button class="btnPri" id="btnPegarOk" style="margin-top:8px;">Agregar a la lista</button>
   </div>
   <div id="msg"></div>
@@ -254,9 +254,9 @@
 <!-- ============ CONTINUAR ============ -->
 <div class="modal" id="vistaSeguir">
   <div class="caja">
-    <h1 id="sgTitulo" style="font-size:1.3rem;">¿Continuar partida anterior?</h1>
+    <h1 id="sgTitulo" style="font-size:1.3rem;">Â¿Continuar partida anterior?</h1>
     <p class="desc" id="sgDesc" style="max-width:none;"></p>
-    <button class="btnPri" id="btnContinuar">Continuar →</button>
+    <button class="btnPri" id="btnContinuar">Continuar â†’</button>
     <button class="btnSec" id="btnNueva">Partida nueva</button>
   </div>
 </div>
@@ -264,7 +264,7 @@
 <!-- ============ GRACIA ============ -->
 <div class="modal" id="modalGracia">
   <div class="caja">
-    <div style="font-size:.95rem;line-height:1.5;">Su acceso venció 🥺 pero hoy no les arruinamos su juego 💛 les obsequiamos este último acceso</div>
+    <div style="font-size:.95rem;line-height:1.5;">Su acceso venciÃ³ ðŸ¥º pero hoy no les arruinamos su juego ðŸ’› les obsequiamos este Ãºltimo acceso</div>
     <div style="font-size:.75rem;color:var(--fg-muted);margin-top:10px;text-align:right;">Solicite su acceso en<br>Centro de Adquisiciones</div>
     <button class="btnPri" id="btnGraciaOk" style="margin-top:14px;">Aceptar</button>
   </div>
@@ -273,7 +273,7 @@
 <!-- ============ PAUSA ============ -->
 <div class="modal" id="modalPausa">
   <div class="caja">
-    <div style="font-size:.95rem;line-height:1.5;">El anfitrión pausó la partida. Cuando la retome, podrás volver a unirte.</div>
+    <div style="font-size:.95rem;line-height:1.5;">El anfitriÃ³n pausÃ³ la partida. Cuando la retome, podrÃ¡s volver a unirte.</div>
     <button class="btnPri" id="btnPausaOk" style="margin-top:14px;">Aceptar</button>
   </div>
 </div>
@@ -281,7 +281,7 @@
 <!-- ============ FIN ============ -->
 <div class="modal" id="modalFin">
   <div class="caja">
-    <div id="finTxt">¡Gracias por jugar!</div>
+    <div id="finTxt">Â¡Gracias por jugar!</div>
     <button class="btnPri" id="btnFinOk" style="margin-top:14px;">Aceptar</button>
   </div>
 </div>
@@ -289,9 +289,9 @@
 <!-- ============ UNIRSE ============ -->
 <div class="modal" id="modalUnir">
   <div class="caja">
-    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.15rem;">¿Quieres jugar? ¿Unirte?</div>
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.15rem;">Â¿Quieres jugar? Â¿Unirte?</div>
     <div id="unirDesc" style="font-size:.9rem;color:var(--fg-muted);margin:10px 0 0;"></div>
-    <button class="btnPri" id="btnUnirme" style="margin-top:16px;">Unirme →</button>
+    <button class="btnPri" id="btnUnirme" style="margin-top:16px;">Unirme â†’</button>
     <button class="btnSec" id="btnUnirNo">Ahora no</button>
   </div>
 </div>
@@ -299,7 +299,7 @@
 <!-- ============ SOLO: elegir lista ============ -->
 <div class="modal" id="modalSolo">
   <div class="caja">
-    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.6rem;">¿Quién Juega?</div>
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.6rem;">Â¿QuiÃ©n Juega?</div>
     <button class="btnPri" id="btnSoloA" style="margin-top:18px;">Lado A</button>
     <button class="btnPri" id="btnSoloB">Lado B</button>
     <button class="btnSec" id="btnSoloNo">Cancelar</button>
@@ -309,7 +309,7 @@
 <!-- ============ MODO: un celular / cada quien ============ -->
 <div class="modal" id="modalModo">
   <div class="caja">
-    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.15rem;">¿Cómo van a Jugar?</div>
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.15rem;">Â¿CÃ³mo van a Jugar?</div>
     <button class="btnPri" id="btnModoLocal" style="margin-top:14px;">Un solo Celular</button>
     <button class="btnPri" id="btnModoComp">Cada quien en el suyo</button>
     <button class="btnSec" id="btnModoNo">Cancelar</button>
@@ -320,16 +320,16 @@
 <div class="modal" id="modalAgregar">
   <div class="caja">
     <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.3rem;">Agregar invitado</div>
-    <div style="font-size:.82rem;color:var(--fg-muted);margin:8px 0 0;">Entrará a partir de la siguiente ronda.</div>
+    <div style="font-size:.82rem;color:var(--fg-muted);margin:8px 0 0;">EntrarÃ¡ a partir de la siguiente ronda.</div>
     <div id="listaAgregar" style="margin-top:14px;"></div>
     <button class="btnSec" id="btnAgregarNo">Cancelar</button>
   </div>
 </div>
 
-<!-- ============ CÓDIGO QR (para registrar invitados sin salir) ============ -->
+<!-- ============ CÃ“DIGO QR (para registrar invitados sin salir) ============ -->
 <div class="modal" id="modalQR">
   <div class="caja">
-    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.2rem;">Código QR</div>
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.2rem;">CÃ³digo QR</div>
     <div style="font-size:.82rem;color:var(--fg-muted);margin:8px 0 12px;">Que lo escanee quien quiera entrar como invitado.</div>
     <div id="qrCajaJuego" style="background:#fff;padding:12px;border-radius:14px;display:none;justify-content:center;margin:0 auto 12px;width:fit-content;"></div>
     <div id="qrMsg" style="font-size:.82rem;color:var(--rojo);min-height:18px;"></div>
@@ -347,6 +347,8 @@ import { miProyecto, appTaq, leerLicencias, guardarLicencia, quitarLicencia, ten
 import { publicarInvitacion, retirarInvitacion, pausarInvitacion } from "../invitado.js";
 import { encenderFuegos, apagarFuegos } from "../fuegos.js";
 import { confirmar, aviso } from "../confirmar.js";
+import { montarFavor } from "../favor.js";
+try{ montarFavor(); }catch(e){}
 
 function mezclar(a){
   const x = (a || []).slice();
@@ -419,7 +421,7 @@ document.getElementById("btnValidar").onclick = async ()=>{
   if(pay && pay.item === ITEM_ID && pay.para === miProyecto()){ guardarLicencia(ITEM_ID, cod); entrar(); return; }
   const pf = await verificarFirma(cod);
   if(pf && pf.item === ITEM_ID && pf.para === miProyecto()){ guardarLicencia(ITEM_ID, cod); entrar(); return; }
-  licMsg("Código inválido o vencido.");
+  licMsg("CÃ³digo invÃ¡lido o vencido.");
 };
 function licMsg(t){ document.getElementById("licMsg").textContent = t || ""; }
 
@@ -451,7 +453,7 @@ function pintarSalidas(){
 }
 function nombreAdmin(){
   const a = usuariosLista.find(u=>u.admin);
-  return (a && a.nombre) || "el anfitrión";
+  return (a && a.nombre) || "el anfitriÃ³n";
 }
 // A = administrador, B = pareja (el primer usuario que no es admin ni invitado).
 function nombreLado(lado){
@@ -502,7 +504,7 @@ let estado = null;   // { cabezas, listas, pares, eliminadas, orden, turno, term
 let jugando = false;
 let jugandoCompartido = false;
 // soyHost: mando en la partida EN CURSO (puedo pausar/terminar/saltar/agregar).
-// Se pone al iniciar, al reanudar como anfitrión, o al entrar a una partida mía.
+// Se pone al iniciar, al reanudar como anfitriÃ³n, o al entrar a una partida mÃ­a.
 let soyHost = false;
 let modoLocal = false;
 let modoJuego = "multi";
@@ -578,13 +580,13 @@ function aplicarPick(d, headId, choice){
 async function entrar(){
   let ok = false;
   try{ ok = await tengoAcceso(ITEM_ID); }catch(e){ ok = false; }
-  if(!ok && esInvitadoFlag) ok = true; // invitado juega con el acceso del anfitrión
+  if(!ok && esInvitadoFlag) ok = true; // invitado juega con el acceso del anfitriÃ³n
   if(ok){
     modoLocal = (typeof navigator !== "undefined" && navigator.onLine === false);
     // La pareja (no invitado) tambien tiene su pantalla de inicio y puede jugar
     // por su cuenta, como el administrador. El invitado sigue esperando.
     if(!esInvitadoFlag){
-      if(esAdminFlag && modoLocal){ try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){} }
+      if(esAdminFlag && modoLocal){ try{ aviso("Sin conexiÃ³n. Se jugarÃ¡ en este celular."); }catch(e){} }
       await cargarOpciones();
       pintarInicio();
       ver("vistaInicio", false);
@@ -595,7 +597,7 @@ async function entrar(){
     try{ escucharSesion(); }catch(e){}
     return;
   }
-  // cortesía única si venció
+  // cortesÃ­a Ãºnica si venciÃ³
   try{
     const lic = leerLicencias()[ITEM_ID];
     if(lic){
@@ -642,7 +644,7 @@ document.getElementById("btnModoLocal").onclick = ()=>{ cerrarModal("modalModo")
 document.getElementById("btnModoComp").onclick = ()=>{ cerrarModal("modalModo"); iniciar(modoPendiente, null, false); };
 document.getElementById("btnModoNo").onclick = ()=>{ cerrarModal("modalModo"); };
 
-// ---------- sesión compartida ----------
+// ---------- sesiÃ³n compartida ----------
 function cargarEstado(d){
   estado = {
     cabezas: Array.isArray(d.cabezas) ? d.cabezas : [],
@@ -695,19 +697,19 @@ async function chequearPartidaEspera(){
   const pon = (t)=>{ try{ if(el) el.textContent = t; }catch(e){} };
   try{
     const sd = await getDoc(sesionRef());
-    if(!sd.exists()){ pon("Sin partida en curso. (Tú: " + yo + ")"); return; }
+    if(!sd.exists()){ pon("Sin partida en curso. (TÃº: " + yo + ")"); return; }
     const d = sd.data();
-    if(!d || !d.activa || d.terminada){ pon("Sin partida en curso. (Tú: " + yo + ")"); return; }
+    if(!d || !d.activa || d.terminada){ pon("Sin partida en curso. (TÃº: " + yo + ")"); return; }
     sesionActual = d;
     if(d.hostUid === miId) return;
     if(soyCabeza(d)){
       document.getElementById("unirDesc").textContent = d.reanudada
-        ? ((d.hostNombre || "El anfitrión") + " retomó la partida. Puedes continuar donde van.")
-        : ((d.hostNombre || "El anfitrión") + " inició Elecciones Peligrosas.");
+        ? ((d.hostNombre || "El anfitriÃ³n") + " retomÃ³ la partida. Puedes continuar donde van.")
+        : ((d.hostNombre || "El anfitriÃ³n") + " iniciÃ³ Elecciones Peligrosas.");
       abrirModal("modalUnir");
     }else{
       const nombres = (d.cabezas || []).map(c=>c.nombre).join(", ");
-      pon("Hay partida de " + (d.hostNombre || "el anfitrión") + ", pero no estás en la lista. Participantes: " + nombres + ". Tú: " + yo + ".");
+      pon("Hay partida de " + (d.hostNombre || "el anfitriÃ³n") + ", pero no estÃ¡s en la lista. Participantes: " + nombres + ". TÃº: " + yo + ".");
     }
   }catch(e){
     pon("No se pudo revisar la partida. (" + (e && e.message ? e.message : "error") + ")");
@@ -735,8 +737,8 @@ function escucharSesion(){
           if(d.hostUid !== miId){
             if(entrarDirecto && soyCabeza(d)){ entrarAlJuego(d); return; }
             document.getElementById("unirDesc").textContent = d.reanudada
-              ? ((d.hostNombre || "El anfitrión") + " retomó la partida. Puedes continuar donde van.")
-              : ((d.hostNombre || "El anfitrión") + " inició Elecciones Peligrosas.");
+              ? ((d.hostNombre || "El anfitriÃ³n") + " retomÃ³ la partida. Puedes continuar donde van.")
+              : ((d.hostNombre || "El anfitriÃ³n") + " iniciÃ³ Elecciones Peligrosas.");
             abrirModal("modalUnir");
           }
         }else{
@@ -747,7 +749,7 @@ function escucharSesion(){
             pintarPaso();
             jugando = false;
 if(d.porAdmin){
-               abrirFin("El anfitrión acabó la partida.");
+               abrirFin("El anfitriÃ³n acabÃ³ la partida.");
              }else{
                finPartida();
              }
@@ -784,12 +786,12 @@ async function pickSesion(choice){
 }
 async function saltarTurno(){
   const d = sesionActual;
-  if(!d || !d.activa || d.hostUid !== miId){ aviso("Solo el anfitrión puede saltar un turno."); return; }
+  if(!d || !d.activa || d.hostUid !== miId){ aviso("Solo el anfitriÃ³n puede saltar un turno."); return; }
   const deQuien = nombreCabeza((d.orden || [])[d.turno || 0]);
   if(d.orden[d.turno || 0] === miId){ pintarPaso(); return; }
   const saltar = await confirmar({
     aviso: true,
-    titulo: "¿Saltar el turno de " + deQuien + "?",
+    titulo: "Â¿Saltar el turno de " + deQuien + "?",
     texto: "Esa persona pierde su turno y el juego sigue con el siguiente.",
     ok: "Saltar turno"
   });
@@ -825,7 +827,7 @@ function anunciarInvitacion(sid, cabezasIn, hostNombre){
     publicarInvitacion({
       juego: JUEGO_INV,
       titulo: JUEGO_TITULO,
-      icono: "🎲",
+      icono: "ðŸŽ²",
       ruta: "Opciones",
       hostUid: miId,
       hostNombre: hostNombre || "",
@@ -841,9 +843,9 @@ async function cerrarSesion(){
 }
 
 // ---------- player ----------
-// ¿Mando en la partida en curso? (pausar/terminar/saltar/agregar invitado)
+// Â¿Mando en la partida en curso? (pausar/terminar/saltar/agregar invitado)
 function esAnfitrion(){ return soyHost; }
-// ¿Se puede invitar a alguien en la partida que se está jugando?
+// Â¿Se puede invitar a alguien en la partida que se estÃ¡ jugando?
 // SOLO en Multijugador. En Pareja el encuentro es de los dos, y en Solo juega
 // una sola persona: en los dos casos no hay a quien meter, asi que el QR,
 // "Agregar invitado" y el panel de la sala no se muestran. Da igual si se
@@ -908,7 +910,7 @@ function pintarSala(){
     arr.forEach(it=>{
       const s = document.createElement("span");
       s.className = "chip" + (it.yo ? " yo" : "") + (it.inv ? " inv" : "");
-      s.textContent = it.nombre + (it.yo ? " (tú)" : "") + (it.inv ? " · invitado" : "");
+      s.textContent = it.nombre + (it.yo ? " (tÃº)" : "") + (it.inv ? " Â· invitado" : "");
       destino.appendChild(s);
     });
   };
@@ -961,10 +963,10 @@ function pintarPaso(){
   prog.textContent = (d.rondas ? ("Ronda " + rondaActual + " de " + d.rondas) : ("Turno " + ((d.turno || 0) + 1)));
   if(soy){
     cardsRow.style.display = "flex";
-    opA.textContent = "🅰️ " + (par.a || "");
+    opA.textContent = "ðŸ…°ï¸ " + (par.a || "");
     if(par.b){
       opB.style.display = "flex";
-      opB.textContent = "🅱️ " + par.b;
+      opB.textContent = "ðŸ…±ï¸ " + par.b;
       btnB.style.display = "";
       btnA.textContent = "Escoge A";
     }else{
@@ -980,7 +982,7 @@ function pintarPaso(){
     cardsRow.style.display = "none";
     pickRow.style.display = "none";
     espera.style.display = "flex";
-    espera.textContent = "Turno de " + nombre + "…";
+    espera.textContent = "Turno de " + nombre + "â€¦";
     turnoNombre.textContent = "";
     try{
       btnSaltar.style.display = esAnfitrion() ? "" : "none";
@@ -997,7 +999,7 @@ function abrirFin(texto){
   abrirModal("modalFin");
 }
 function finPartida(){
-  abrirFin("¡Gracias por jugar!");
+  abrirFin("Â¡Gracias por jugar!");
 }
 async function pick(choice){
   if(!estado || estado.terminada || !jugando) return;
@@ -1020,8 +1022,8 @@ document.getElementById("btnSaltar").onclick = ()=>{ saltarTurno(); };
 // listas, pero NO al orden actual. Cuando la ronda da la vuelta, el orden se
 // revuelve con todos los que siguen vivos y ahi entra. Su lista trae tantas
 // opciones como rondas le falten (R - ronda), asi termina junto con los demas.
-// Quién todavía NO está en la partida. En Multijugador todas las cabezas entran
-// desde el arranque, así que lo que sale aquí es gente que se registró después.
+// QuiÃ©n todavÃ­a NO estÃ¡ en la partida. En Multijugador todas las cabezas entran
+// desde el arranque, asÃ­ que lo que sale aquÃ­ es gente que se registrÃ³ despuÃ©s.
 function disponiblesInvitados(){
   const ids = new Set(((estado && estado.cabezas) || []).map(c=>c && c.id));
   return (usuariosLista || []).filter(u=> u && u.id && !ids.has(u.id));
@@ -1053,7 +1055,7 @@ async function agregarInvitado(id){
   const restantes = R - ronda;   // empieza la ronda siguiente
   if(restantes < 1){ aviso("Ya no quedan rondas para que entre."); return; }
   const fuente = ((cab.lado === "A") ? opciones.A : opciones.B) || [];
-  if(!fuente.length){ aviso("La lista de ese lado está vacía."); return; }
+  if(!fuente.length){ aviso("La lista de ese lado estÃ¡ vacÃ­a."); return; }
   const deck = mezclar(fuente);
   const pool = [];
   for(let i = 0; i < restantes; i++) pool.push(deck[i % deck.length]);
@@ -1095,7 +1097,7 @@ document.getElementById("btnQR").onclick = ()=>{
   caja.innerHTML = "";
   if(!g || !g.firebase){
     caja.style.display = "none";
-    msg.textContent = "No se encontró la configuración.";
+    msg.textContent = "No se encontrÃ³ la configuraciÃ³n.";
     abrirModal("modalQR");
     return;
   }
@@ -1158,13 +1160,13 @@ async function iniciar(modo, ladoSoloElegido, unCelularFlag){
     const f = (c.lado === "A") ? opciones.A : opciones.B;
     return !Array.isArray(f) || f.length < 2;
   });
-  if(faltan.length){ aviso("Cada lista necesita al menos 2 opciones. Configúralas en el engrane ⚙️."); return; }
+  if(faltan.length){ aviso("Cada lista necesita al menos 2 opciones. ConfigÃºralas en el engrane âš™ï¸."); return; }
   let maxR = 50;
   new Set(cabezasIn.map(c=>c.lado)).forEach(l=>{ maxR = Math.min(maxR, ((l === "A") ? opciones.A : opciones.B).length); });
-  if(R > maxR){ aviso("El número de rondas no puede pasar de " + maxR + " (lo que tiene la lista más corta)."); return; }
+  if(R > maxR){ aviso("El nÃºmero de rondas no puede pasar de " + maxR + " (lo que tiene la lista mÃ¡s corta)."); return; }
   const quiereCompartido = (modo !== "solo") && !unCelularFlag;
   const compartido = quiereCompartido && !modoLocal;
-  if(quiereCompartido && modoLocal){ try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){} }
+  if(quiereCompartido && modoLocal){ try{ aviso("Sin conexiÃ³n. Se jugarÃ¡ en este celular."); }catch(e){} }
   jugandoCompartido = compartido;
   const pools = repartirOpciones(cabezasIn, opciones, R);
   const d = iniciarEstado(cabezasIn, pools);
@@ -1181,7 +1183,7 @@ async function iniciar(modo, ladoSoloElegido, unCelularFlag){
   sidMostrado = sid;
   if(compartido){
     try{ await setDoc(sesionRef(), nueva); }
-    catch(e){ try{ aviso("No se pudo iniciar. Revisa conexión."); }catch(x){} }
+    catch(e){ try{ aviso("No se pudo iniciar. Revisa conexiÃ³n."); }catch(x){} }
     anunciarInvitacion(sid, cabezasIn, nueva.hostNombre);
   }else{
     try{ await cerrarSesion(); }catch(e){}
@@ -1195,7 +1197,7 @@ async function iniciar(modo, ladoSoloElegido, unCelularFlag){
 
 // ---------- pausar / terminar ----------
 document.getElementById("btnTerminar").onclick = async ()=>{
-  if(!esAnfitrion()){ aviso("Pausar la partida es cosa del anfitrión."); return; }
+  if(!esAnfitrion()){ aviso("Pausar la partida es cosa del anfitriÃ³n."); return; }
   jugando = false;
   if(jugandoCompartido){
     try{ await setDoc(sesionRef(), { pausada: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
@@ -1205,7 +1207,7 @@ document.getElementById("btnTerminar").onclick = async ()=>{
   entrar();
 };
 document.getElementById("btnTerminarPartida").onclick = async ()=>{
-  if(!esAnfitrion()){ aviso("Terminar la partida es cosa del anfitrión."); return; }
+  if(!esAnfitrion()){ aviso("Terminar la partida es cosa del anfitriÃ³n."); return; }
   jugando = false;
   if(jugandoCompartido){
     try{ await setDoc(sesionRef(), { activa: false, terminada: true, porAdmin: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
@@ -1237,7 +1239,7 @@ async function conPendiente(accion){
   }catch(e){}
   if(pend){
     accionPendiente = accion;
-    seguirEncima("¿Continuar partida anterior?", "Había una partida a medias. ¿La retomas?");
+    seguirEncima("Â¿Continuar partida anterior?", "HabÃ­a una partida a medias. Â¿La retomas?");
   }else{
     accion();
   }
@@ -1265,7 +1267,7 @@ async function continuarPartida(){
 document.getElementById("btnContinuar").onclick = ()=>{ continuarPartida(); };
 document.getElementById("btnNueva").onclick = async ()=>{
   seguirFuera();
-  if(!esAnfitrion()){ aviso("Quien inicia o renueva la partida es el anfitrión."); return; }
+  if(!esAnfitrion()){ aviso("Quien inicia o renueva la partida es el anfitriÃ³n."); return; }
   try{ await cerrarSesion(); }catch(e){}
   jugando = false;
   if(accionPendiente){ const f = accionPendiente; accionPendiente = null; f(); return; }
@@ -1366,7 +1368,7 @@ function pintarCfg(){
     inp.addEventListener("keydown", (e)=>{ if(e.key === "Enter") inp.blur(); });
     const x = document.createElement("button");
     x.className = "optX";
-    x.textContent = "✕";
+    x.textContent = "âœ•";
     x.onclick = async ()=>{
       opciones[ladoCfg].splice(i, 1);
       await guardarOpciones();
@@ -1378,7 +1380,7 @@ function pintarCfg(){
   if(!box.children.length){
     const vacio = document.createElement("div");
     vacio.className = "vacio";
-    vacio.textContent = filtro ? "Sin resultados." : "Sin opciones todavía. Agrega o pega abajo.";
+    vacio.textContent = filtro ? "Sin resultados." : "Sin opciones todavÃ­a. Agrega o pega abajo.";
     box.appendChild(vacio);
   }
   document.getElementById("msg").textContent = "";
@@ -1417,7 +1419,7 @@ async function abrirCfg(){
 }
 document.getElementById("btnCfg").onclick = ()=>{ abrirCfg(); };
 
-// ---------- navegación ----------
+// ---------- navegaciÃ³n ----------
 function ver(id, guardar){
   document.querySelectorAll(".vista").forEach(v=>v.classList.remove("ver"));
   document.getElementById(id).classList.add("ver");
@@ -1441,7 +1443,7 @@ document.getElementById("lnkInicio").addEventListener("click", (e)=>{
 });
 document.getElementById("btnEsperaRefrescar").onclick = ()=>{ entrar(); };
 
-// ---------- grupo (mantiene la lista de usuarios al día) ----------
+// ---------- grupo (mantiene la lista de usuarios al dÃ­a) ----------
 // Igual que Encuentros: si alguien se agrega o se va mientras hay partida, la
 // lista se actualiza en vivo. Sin esto, un telefono con la lista vieja podia
 // borrar del documento a un invitado valido (no debe haber limite de invitados).
@@ -1465,7 +1467,7 @@ function escucharGrupo(){
 }
 
 // ---------- arranque ----------
-// Respaldo: mientras el acompañante/invitado espera, se revisa la partida cada
+// Respaldo: mientras el acompaÃ±ante/invitado espera, se revisa la partida cada
 // pocos segundos (por si la escucha en vivo se cayo y no aviso).
 setInterval(()=>{
   try{

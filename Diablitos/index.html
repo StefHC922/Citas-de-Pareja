@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
@@ -367,17 +367,17 @@ h1{
   <header>
     <h1>Sala de Espera</h1>
     <p class="sub">Si me alcanzas.......</p>
-    <button id="engrane" class="engrane" style="display:none" title="Mensajes">⚙</button>
+    <button id="engrane" class="engrane" style="display:none" title="Mensajes">âš™</button>
   </header>
 
   <div class="campo" id="campo">
     <div class="pista gone" id="pista"></div>
   </div>
 
-  <!-- Botón de regresar: SOLO para quien NO es invitado (vino por el menú).
-       El invitado no tiene salida a propósito: no debe pasearse por los datos
-       del anfitrión. Lo muestra el bloque de la sala. -->
-  <button id="volverSala" type="button" style="display:none;position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;z-index:7;background:var(--tarjeta);border:1px solid var(--borde);border-radius:12px;color:var(--apagado);font-family:'Inter',sans-serif;font-size:.78rem;padding:9px 12px;cursor:pointer;">‹ Volver</button>
+  <!-- BotÃ³n de regresar: SOLO para quien NO es invitado (vino por el menÃº).
+       El invitado no tiene salida a propÃ³sito: no debe pasearse por los datos
+       del anfitriÃ³n. Lo muestra el bloque de la sala. -->
+  <button id="volverSala" type="button" style="display:none;position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;z-index:7;background:var(--tarjeta);border:1px solid var(--borde);border-radius:12px;color:var(--apagado);font-family:'Inter',sans-serif;font-size:.78rem;padding:9px 12px;cursor:pointer;">â€¹ Volver</button>
 
   <!-- ============ INVITACIONES (solo para invitados) ============ -->
   <!-- La sala de espera. No tiene salida: cuando el invitado entra a un juego
@@ -386,15 +386,15 @@ h1{
        de diablitos sigue funcionando igual. -->
   <div id="salaInv" style="display:none;margin-top:10px;width:100%;max-width:560px;">
     <div id="salaEsperando" style="background:rgba(32,25,51,.8);border:1px solid var(--borde);border-radius:14px;padding:11px 14px;text-align:center;color:var(--apagado);font-size:.86rem;">
-      Esperando Invitación…
+      Esperando InvitaciÃ³nâ€¦
     </div>
     <div id="salaCarta" style="display:none;background:var(--tarjeta);border:1px solid var(--teal);border-radius:16px;padding:14px;align-items:center;gap:12px;">
-      <span id="salaIcono" style="font-size:1.8rem;line-height:1;">🎲</span>
+      <span id="salaIcono" style="font-size:1.8rem;line-height:1;">ðŸŽ²</span>
       <span style="flex:1;min-width:0;">
         <span id="salaTitulo" style="display:block;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1rem;color:var(--texto);"></span>
         <span id="salaQuien" style="display:block;font-size:.78rem;color:var(--apagado);margin-top:2px;"></span>
       </span>
-      <button id="salaIr" style="flex:0 0 auto;border:none;border-radius:12px;padding:11px 16px;cursor:pointer;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.9rem;color:#1a1024;background:linear-gradient(90deg,var(--coral),var(--teal));">Entrar →</button>
+      <button id="salaIr" style="flex:0 0 auto;border:none;border-radius:12px;padding:11px 16px;cursor:pointer;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.9rem;color:#1a1024;background:linear-gradient(90deg,var(--coral),var(--teal));">Entrar â†’</button>
     </div>
   </div>
 
@@ -407,17 +407,17 @@ h1{
         <button id="pestAviso" class="pest">Avisos</button>
       </div>
       <div id="secMsg" class="seccion">
-        <p class="sub2">Lo que dicen los diablitos al atraparlos.<br>Máximo 30 letras y hasta 15 mensajes.</p>
+        <p class="sub2">Lo que dicen los diablitos al atraparlos.<br>MÃ¡ximo 30 letras y hasta 15 mensajes.</p>
         <div class="listaCfg" id="listaMsg"></div>
-        <p class="tope" id="topeMsg" style="display:none">Ya hay 15 mensajes: no se pueden agregar más.</p>
+        <p class="tope" id="topeMsg" style="display:none">Ya hay 15 mensajes: no se pueden agregar mÃ¡s.</p>
         <input id="nuevoMsg" type="text" placeholder="Escribe un mensaje" maxlength="30">
         <button id="agregarMsg" class="gradiente">Agregar</button>
         <button id="fabricaMsg" class="fantasma">Volver a los originales</button>
       </div>
       <div id="secAviso" class="seccion" style="display:none">
-        <p class="sub2">Lo que aparece abajo del recuadro cada 20 toques.<br>Máximo 50 letras y hasta 10 avisos.</p>
+        <p class="sub2">Lo que aparece abajo del recuadro cada 20 toques.<br>MÃ¡ximo 50 letras y hasta 10 avisos.</p>
         <div class="listaCfg" id="listaAviso"></div>
-        <p class="tope" id="topeAviso" style="display:none">Ya hay 15 avisos: no se pueden agregar más.</p>
+        <p class="tope" id="topeAviso" style="display:none">Ya hay 15 avisos: no se pueden agregar mÃ¡s.</p>
         <input id="nuevoAviso" type="text" placeholder="Escribe un aviso" maxlength="50">
         <button id="agregarAviso" class="gradiente">Agregar</button>
         <button id="fabricaAviso" class="fantasma">Volver a los originales</button>
@@ -453,32 +453,32 @@ h1{
   var AVISO_CADA = 15;
   var TOQUES = 0;
   var FRASES_FABRICA = [
-    '¡Ay!',
-    '¡No me caigo!',
-    '¡Eso sí dolió!',
-    '¡Ya me voy!',
-    '¡Suerte en la otra!',
-    '¡Siguiente!',
-    '¡No me toques!',
-    '¡Es broma!',
-    '¡Hasta la próxima!',
-    '¡Ahí nos vemos!',
-    '¡Cuidado!',
-    '¡Me salvé!'
+    'Â¡Ay!',
+    'Â¡No me caigo!',
+    'Â¡Eso sÃ­ doliÃ³!',
+    'Â¡Ya me voy!',
+    'Â¡Suerte en la otra!',
+    'Â¡Siguiente!',
+    'Â¡No me toques!',
+    'Â¡Es broma!',
+    'Â¡Hasta la prÃ³xima!',
+    'Â¡AhÃ­ nos vemos!',
+    'Â¡Cuidado!',
+    'Â¡Me salvÃ©!'
   ];
   var FRASES = [];
   var AVISOS = [];
   var AVISOS_FABRICA = [
-    '¡Vas muy bien, sigue así!',
-    '¡Media vuelta! Ahora a por todas.',
-    '¡Qué buena puntería, no fallaste una!',
-    '¡Sigue, que ya casi lo logras!',
-    '¡Wow, esos diablitos no se salvaron!',
-    '¡Vas imparable, no te detengas!',
-    '¡Bravo! Eso estuvo muy bien, crack!',
-    '¡Ya dominaste a los diablitos!',
-    '¡Mitad del camino, sigue fuerte!',
-    '¡Cada vez mejor, crack!'
+    'Â¡Vas muy bien, sigue asÃ­!',
+    'Â¡Media vuelta! Ahora a por todas.',
+    'Â¡QuÃ© buena punterÃ­a, no fallaste una!',
+    'Â¡Sigue, que ya casi lo logras!',
+    'Â¡Wow, esos diablitos no se salvaron!',
+    'Â¡Vas imparable, no te detengas!',
+    'Â¡Bravo! Eso estuvo muy bien, crack!',
+    'Â¡Ya dominaste a los diablitos!',
+    'Â¡Mitad del camino, sigue fuerte!',
+    'Â¡Cada vez mejor, crack!'
   ];
   var avisoTimer = null;
   var TAQUITOS = [];
@@ -996,7 +996,7 @@ h1{
     var btn = document.createElement('button');
     btn.className = 'quitar';
     btn.type = 'button';
-    btn.textContent = '✕';
+    btn.textContent = 'âœ•';
     btn.onclick = function(){ quitarFila(indice, s); };
 
     inp.oninput = function(){
@@ -1064,8 +1064,8 @@ h1{
     }
     var seguir = await confirmar({
       aviso: true,
-      titulo: '¿Volver a los originales?',
-      texto: 'Perderás ' + (editados + extra) + ' de los tuyos.',
+      titulo: 'Â¿Volver a los originales?',
+      texto: 'PerderÃ¡s ' + (editados + extra) + ' de los tuyos.',
       ok: 'Volver a los originales'
     });
     if(!seguir) return;
@@ -1202,6 +1202,8 @@ cambiarPestana(SEC_ACTIVA);
 <script type="module">
 import { soyInvitado, vigilarInvitaciones, salirDeInvitado } from "../invitado.js";
 import { confirmar } from "../confirmar.js";
+import { montarFavor } from "../favor.js";
+try{ montarFavor(); }catch(e){}
 
 const panel = document.getElementById("salaInv");
 const esperando = document.getElementById("salaEsperando");
@@ -1219,7 +1221,7 @@ function pintar(mias){
     panel.style.display = "block";
     carta.style.display = "none";
     esperando.style.display = "block";
-    esperando.textContent = "Esperando Invitación…";
+    esperando.textContent = "Esperando InvitaciÃ³nâ€¦";
     if(huboInvitacion){
       huboInvitacion = false;
       salirDeInvitado().then(()=>{ location.replace("../"); });
@@ -1233,14 +1235,14 @@ function pintar(mias){
   if(!unibles.length){
     carta.style.display = "none";
     esperando.style.display = "block";
-    esperando.textContent = "La partida está en pausa…";
+    esperando.textContent = "La partida estÃ¡ en pausaâ€¦";
     return;
   }
   // Si hay varias partidas vivas se muestra UNA: la MAS RECIENTE que se pueda
   // entrar (decision de Fredy, oct-2026). Antes ganaba la primera del listado, y
-  // esa sale por orden alfabetico del nombre interno, asi que siempre se veía la
+  // esa sale por orden alfabetico del nombre interno, asi que siempre se veÃ­a la
   // misma. Ahora gana la ultima que se publico (o la que se reanudo). Ojo: si
-  // la mas reciente esta en pausa NO gana — si no, el invitado se queda sin
+  // la mas reciente esta en pausa NO gana â€” si no, el invitado se queda sin
   // poder entrar a ninguna.
   unibles.sort((a,b)=> cuando(a) - cuando(b));
   const v = unibles[unibles.length - 1];
@@ -1248,9 +1250,9 @@ function pintar(mias){
   panel.style.display = "block";
   esperando.style.display = "none";
   carta.style.display = "flex";
-  document.getElementById("salaIcono").textContent = v.icono || "🎲";
+  document.getElementById("salaIcono").textContent = v.icono || "ðŸŽ²";
   document.getElementById("salaTitulo").textContent = v.titulo || "Hay una partida";
-  document.getElementById("salaQuien").textContent = (v.hostNombre || "Tu anfitrión") + " te está esperando";
+  document.getElementById("salaQuien").textContent = (v.hostNombre || "Tu anfitriÃ³n") + " te estÃ¡ esperando";
 }
 
 // Cuando se toco esta invitacion por ultima vez (publicarla, pausarla o

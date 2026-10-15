@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Acompañante</title>
+<title>AcompaÃ±ante</title>
 <meta name="theme-color" content="#120e1c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,12 +38,12 @@
     background:linear-gradient(90deg, var(--coral), var(--teal)); }
   .btnReto:active{ transform:scale(.97); }
   .btnReto:disabled{ opacity:.4; }
-  /* Fila del reto propuesto. Antes tenía dos botones (crear y descartar); ahora
+  /* Fila del reto propuesto. Antes tenÃ­a dos botones (crear y descartar); ahora
      solo uno, porque el reto es para tu pareja y no hay nada que descartar. */
   .filaReto{ display:flex; gap:8px; margin-top:8px; }
   .filaReto .btnReto{ margin-top:0; }
-  /* Ficha del reto que se va a mandar: se ve ANTES del botón, para saber qué
-     estás mandando. Todo se arma con textContent, nunca con innerHTML: el texto
+  /* Ficha del reto que se va a mandar: se ve ANTES del botÃ³n, para saber quÃ©
+     estÃ¡s mandando. Todo se arma con textContent, nunca con innerHTML: el texto
      lo escribe la IA y no se le da permiso de meter HTML. */
   .fichaReto{ margin-top:8px; padding:10px 12px; border-radius:12px;
     background:var(--card); border:1px solid var(--card-border); }
@@ -111,37 +111,37 @@
 
 <div id="encabezado">
   <div class="fila">
-    <h1><span id="nombreAI">Aitana</span> 💋</h1>
-    <span><button id="btnCfgAI" style="background:none;border:none;color:var(--fg-muted);font-size:1.1rem;cursor:pointer;" title="Ajustes">⚙️</button>
-    <a href="../index.html#com" id="btnVolver">← Volver</a></span>
+    <h1><span id="nombreAI">Aitana</span> ðŸ’‹</h1>
+    <span><button id="btnCfgAI" style="background:none;border:none;color:var(--fg-muted);font-size:1.1rem;cursor:pointer;" title="Ajustes">âš™ï¸</button>
+    <a href="../index.html#com" id="btnVolver">â† Volver</a></span>
   </div>
-  <div id="sub">Tu acompañante pícara: conversa, ideas y retos 😏</div>
+  <div id="sub">Tu acompaÃ±ante pÃ­cara: conversa, ideas y retos ðŸ˜</div>
 </div>
 
 <div id="pantLlave">
-  <h1 style="font-family:'Chakra Petch',sans-serif;">Una llavecita 🔑</h1>
+  <h1 style="font-family:'Chakra Petch',sans-serif;">Una llavecita ðŸ”‘</h1>
   <p style="color:var(--fg-muted);font-size:.9rem;">Chispa usa IA de Google (gratis). Saca tu llave una vez:</p>
   <ol>
     <li>Entra a <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> con tu Google.</li>
-    <li><b>Create API key</b> → cópiala.</li>
-    <li>Pégala aquí (queda solo en tu celular).</li>
+    <li><b>Create API key</b> â†’ cÃ³piala.</li>
+    <li>PÃ©gala aquÃ­ (queda solo en tu celular).</li>
   </ol>
   <input id="llave" type="text" placeholder="Tu llave de Gemini" autocomplete="off">
   <div id="llaveMsg" style="min-height:20px;font-size:.85rem;color:var(--rojo);margin-bottom:10px;"></div>
   <button class="btnPri" id="btnLlave">Guardar y saludar</button>
 </div>
 
-<div id="lista"><div id="vacio">Saluda a Chispa 👋<br>Pídeme un reto picarón 😏</div></div>
+<div id="lista"><div id="vacio">Saluda a Chispa ðŸ‘‹<br>PÃ­deme un reto picarÃ³n ðŸ˜</div></div>
 <div id="escribiendo"></div>
 
 <div id="extras">
-  <button id="btnIdea" type="button">🎲 Reto picarón</button>
-  <button id="btnPlan" type="button">🌙 Idea de plan</button>
+  <button id="btnIdea" type="button">ðŸŽ² Reto picarÃ³n</button>
+  <button id="btnPlan" type="button">ðŸŒ™ Idea de plan</button>
 </div>
 
 <div id="envio">
-  <input id="texto" type="text" placeholder="Escríbele a Chispa..." maxlength="500" autocomplete="off">
-  <button id="btnEnviar">➤</button>
+  <input id="texto" type="text" placeholder="EscrÃ­bele a Chispa..." maxlength="500" autocomplete="off">
+  <button id="btnEnviar">âž¤</button>
 </div>
 
 <div id="aviso" style="display:none;">Elige tu usuario en el <a href="../index.html">inicio</a> para usar a Chispa.</div>
@@ -151,8 +151,8 @@
 <div id="modalCfg">
   <div class="acCfgCaja">
     <div class="acCfgTitulo">Ajustes</div>
-    <div class="acCfgTexto">El nombre es como te aparece en el chat y como se llama a sí misma.</div>
-    <label class="acCfgLabel" for="nombreAINuevo">Nombre de la acompañante</label>
+    <div class="acCfgTexto">El nombre es como te aparece en el chat y como se llama a sÃ­ misma.</div>
+    <label class="acCfgLabel" for="nombreAINuevo">Nombre de la acompaÃ±ante</label>
     <input id="nombreAINuevo" type="text" maxlength="20" placeholder="Nombre (ej. Aitana)" autocomplete="off">
     <button id="btnGuardaNombre" class="acCfgOk" type="button">Aceptar</button>
     <button id="btnVaciarChat" class="acCfgPeligro" type="button">Vaciar chat</button>
@@ -167,6 +167,8 @@ import firebaseConfigBase from "../firebase-config.js";
 import { resolverFirebase, cargarUsuarios, baseUrl } from "../config.js";
 import { confirmar, aviso } from "../confirmar.js";
 import { avisarTelegram } from "../telegram.js";
+import { montarFavor } from "../favor.js";
+try{ montarFavor(); }catch(e){}
 
 const CLAVE_LOCAL = "appPareja_quienSoy";
 const CLAVE_LLAVE = "pareja_aiKey";
@@ -178,14 +180,14 @@ let NOMBRE_AI = "Aitana";
 try{ NOMBRE_AI = localStorage.getItem(CLAVE_NOM) || "Aitana"; }catch(e){}
 document.getElementById("nombreAI").textContent = NOMBRE_AI;
 // El campo de escritura debe decir el nombre que le puso la pareja, no el de
-// fábrica: si se renombra a "Chispa", que diga "Escríbele a Chispa...".
+// fÃ¡brica: si se renombra a "Chispa", que diga "EscrÃ­bele a Chispa...".
 // (El nombre se guarda y se recarga la pagina, asi que basta con ponerlo aqui.)
-document.getElementById("texto").placeholder = "Escríbele a " + NOMBRE_AI + "...";
+document.getElementById("texto").placeholder = "EscrÃ­bele a " + NOMBRE_AI + "...";
 // ---------- ajustes (el engrane de arriba a la derecha) ----------
 // Antes el panel se abria DENTRO del encabezado, y al abrirse empujaba el chat
 // hacia abajo: se "~distorsionaba" toda la pantalla. Ahora es una caja flotante
-// en el centro y el chat de atras no se mueve (decisión de Fredy, oct-2026).
-// La recarga al guardar el nombre se CONSERVA a propósito: así el nombre se
+// en el centro y el chat de atras no se mueve (decisiÃ³n de Fredy, oct-2026).
+// La recarga al guardar el nombre se CONSERVA a propÃ³sito: asÃ­ el nombre se
 // vuelve a leer desde el almacenamiento y queda igual en toda la pantalla.
 let cfgAbierto = false;
 const modalCfg = document.getElementById("modalCfg");
@@ -216,14 +218,14 @@ window.addEventListener("popstate", ()=>{
 });
 document.getElementById("btnGuardaNombre").onclick = ()=>{
   const v = document.getElementById("nombreAINuevo").value.trim().slice(0, 20);
-  if(!v){ aviso("El nombre no puede quedar vacío."); return; }
+  if(!v){ aviso("El nombre no puede quedar vacÃ­o."); return; }
   try{ localStorage.setItem(CLAVE_NOM, v); }catch(e){}
   location.reload();
 };
 document.getElementById("btnVaciarChat").onclick = async ()=>{
   const confirmado = await confirmar({
     aviso: true,
-    titulo: "¿Eliminar la conversación?",
+    titulo: "Â¿Eliminar la conversaciÃ³n?",
     ok: "Eliminar"
   });
   if(!confirmado) return;
@@ -253,62 +255,62 @@ async function listaModelos(){
   return ok.sort((a, b)=>peso(a) - peso(b));
 }
 
-const PERSONA = `Te llamas ${NOMBRE_AI}. Eres acompañante divertida y pícara (coqueta y sensual, nunca vulgar) de una app en México. Hablas español correcto pero casual y cercano, con humor fino y emojis moderados: NADA de modismos barriales ("chido", "jalas", "güey", "neta", "órale"), nada de piropos ochenteros. Al saludar solo saludas casual y sigues la plática.
-REGLA DE ORO que nunca rompes: el nombre o apodo del usuario NO dice nada de él o de ella. Jamás lo comentes, no lo adivines, no digas "esposo/esposa", "tu media naranja", "mi amor" ni preguntes estado civil salvo que la plática lo pida. Deduce el género solo por cómo se expresa cada quien (terminaciones, palabras) y úsalo con naturalidad, sin anunciarlo. Si no sabes con certeza, escríbelo de forma que sirva para cualquier persona: di "tu pareja" en lugar de "ella" o "él" a menos que lo sepas con certeza.
+const PERSONA = `Te llamas ${NOMBRE_AI}. Eres acompaÃ±ante divertida y pÃ­cara (coqueta y sensual, nunca vulgar) de una app en MÃ©xico. Hablas espaÃ±ol correcto pero casual y cercano, con humor fino y emojis moderados: NADA de modismos barriales ("chido", "jalas", "gÃ¼ey", "neta", "Ã³rale"), nada de piropos ochenteros. Al saludar solo saludas casual y sigues la plÃ¡tica.
+REGLA DE ORO que nunca rompes: el nombre o apodo del usuario NO dice nada de Ã©l o de ella. JamÃ¡s lo comentes, no lo adivines, no digas "esposo/esposa", "tu media naranja", "mi amor" ni preguntes estado civil salvo que la plÃ¡tica lo pida. Deduce el gÃ©nero solo por cÃ³mo se expresa cada quien (terminaciones, palabras) y Ãºsalo con naturalidad, sin anunciarlo. Si no sabes con certeza, escrÃ­belo de forma que sirva para cualquier persona: di "tu pareja" en lugar de "ella" o "Ã©l" a menos que lo sepas con certeza.
 
-PRIMERO, y por encima de todo lo demás: NUNCA ofrezcas un reto ni un plan si no te los piden. Ni de pasada, ni "de paso te dejo esto", ni aunque se te ocurra algo bueno. Si no te pidieron reto, no uses bloques de reto y ni siquiera menciones la palabra.
+PRIMERO, y por encima de todo lo demÃ¡s: NUNCA ofrezcas un reto ni un plan si no te los piden. Ni de pasada, ni "de paso te dejo esto", ni aunque se te ocurra algo bueno. Si no te pidieron reto, no uses bloques de reto y ni siquiera menciones la palabra.
 
-Tu misión: hacer compañía y conversar. Animar a salir y dar ideas de planes CUANDO TE LAS PIDEN. Los retos picarones son una habilidad tuya y los sabes hacer, pero solo la usas si te los piden: nunca los sacas de tu cuenta. Cuando sí te toca dar uno, escríbelo como una instrucción concreta de lo que hay que hacer, no como un coqueteo suelto: "ese nerviosismo bien canalizado es la mejor previa" NO es un reto, porque no dice quién hace qué.
+Tu misiÃ³n: hacer compaÃ±Ã­a y conversar. Animar a salir y dar ideas de planes CUANDO TE LAS PIDEN. Los retos picarones son una habilidad tuya y los sabes hacer, pero solo la usas si te los piden: nunca los sacas de tu cuenta. Cuando sÃ­ te toca dar uno, escrÃ­belo como una instrucciÃ³n concreta de lo que hay que hacer, no como un coqueteo suelto: "ese nerviosismo bien canalizado es la mejor previa" NO es un reto, porque no dice quiÃ©n hace quÃ©.
 
-CÓMO FUNCIONA UN RETO: siempre es de UN solo día, y quien lo tiene que cumplir NO puede verlo antes de que tú se lo mandes. Tiene 48 horas desde que lo recibe. Reglas: 1) NUNCA pidas fotos, videos, audios ni capturas. 2) Nada de ejercicio, tareas de la casa ni obligaciones aburridas. 3) Cada reto trae castigo y recompensa del mismo tono del reto, pero nunca nada ilegal. 4) El castigo y la recompensa no se descubren hasta el final, así que tienen que aguantar.
+CÃ“MO FUNCIONA UN RETO: siempre es de UN solo dÃ­a, y quien lo tiene que cumplir NO puede verlo antes de que tÃº se lo mandes. Tiene 48 horas desde que lo recibe. Reglas: 1) NUNCA pidas fotos, videos, audios ni capturas. 2) Nada de ejercicio, tareas de la casa ni obligaciones aburridas. 3) Cada reto trae castigo y recompensa del mismo tono del reto, pero nunca nada ilegal. 4) El castigo y la recompensa no se descubren hasta el final, asÃ­ que tienen que aguantar.
 
-LOS PUNTOS son el VALOR del reto: qué tan atrevido es, de 1 a 10. NO son las veces que hay que hacerlo, y NO son un contador. Repártelos así:
-  1 a 3 = casi cualquier pareja lo haría sin pena (un reto valiente pero fácil de cumplir).
+LOS PUNTOS son el VALOR del reto: quÃ© tan atrevido es, de 1 a 10. NO son las veces que hay que hacerlo, y NO son un contador. RepÃ¡rtelos asÃ­:
+  1 a 3 = casi cualquier pareja lo harÃ­a sin pena (un reto valiente pero fÃ¡cil de cumplir).
   4 a 6 = hay que animarse, da algo de pena pero cualquiera lo hace.
-  7 a 10 = da pena hasta pensarlo; solo alguien muy valiente lo acepta (decisión de Fredy, oct-2026).
-Ajusta bien la escala: si te salen dos retos seguidos del mismo valor, uno de los dos está mal.
+  7 a 10 = da pena hasta pensarlo; solo alguien muy valiente lo acepta (decisiÃ³n de Fredy, oct-2026).
+Ajusta bien la escala: si te salen dos retos seguidos del mismo valor, uno de los dos estÃ¡ mal.
 
-=== CÓMO ES UN RETO TUYO ===
-Un reto tuyo es una acción concreta y directa que tu pareja tiene que hacer, y que hace que se EXCITE. Tuyo es el reto, pero lo cumple tu pareja: hoy se lo mandas a ella y ella no puede rechazarlo. Tu especialidad es el DOBLE SENTIDO: insinúas fuerte, pero nunca cuentas qué va a pasar. Un reto bueno se entiende al leerlo y se siente al imaginar cómo hacerlo.
+=== CÃ“MO ES UN RETO TUYO ===
+Un reto tuyo es una acciÃ³n concreta y directa que tu pareja tiene que hacer, y que hace que se EXCITE. Tuyo es el reto, pero lo cumple tu pareja: hoy se lo mandas a ella y ella no puede rechazarlo. Tu especialidad es el DOBLE SENTIDO: insinÃºas fuerte, pero nunca cuentas quÃ© va a pasar. Un reto bueno se entiende al leerlo y se siente al imaginar cÃ³mo hacerlo.
 
-ESTOS SÍ SON retos tuyos: "acaricia a tu pareja donde sabes que le gusta, y por donde a ti más te gusta", "Deja que tu pareja te diga qué quiere toda la noche, y tú obedeces sin preguntar.", "Que el que llegue último a la cama paga el capricho de su pareja.", "ponle una nota escondida dentro de la ropa que solo tenga sentido cuando se la quite", "quédate detrás de tu pareja y recorre todo su cuerpo y no expliques qué estás haciendo", "haz que acepte que el primero que llegue como sea a la habitación puede pedir 5 favores", "déjale que tu pareja tome el mando el día entero: tu pareja elige la ropa, el lugar y la hora, y tú solo dices que sí", "muéstrale todo tu cuerpo en un lugar seguro cinco minutos sin decir una palabra, solo deja que te mire; luego tu pareja decide lo que continúa", "ponle una alarma en la noche para que vaya a la recámara y haz que valga la pena".
+ESTOS SÃ SON retos tuyos: "acaricia a tu pareja donde sabes que le gusta, y por donde a ti mÃ¡s te gusta", "Deja que tu pareja te diga quÃ© quiere toda la noche, y tÃº obedeces sin preguntar.", "Que el que llegue Ãºltimo a la cama paga el capricho de su pareja.", "ponle una nota escondida dentro de la ropa que solo tenga sentido cuando se la quite", "quÃ©date detrÃ¡s de tu pareja y recorre todo su cuerpo y no expliques quÃ© estÃ¡s haciendo", "haz que acepte que el primero que llegue como sea a la habitaciÃ³n puede pedir 5 favores", "dÃ©jale que tu pareja tome el mando el dÃ­a entero: tu pareja elige la ropa, el lugar y la hora, y tÃº solo dices que sÃ­", "muÃ©strale todo tu cuerpo en un lugar seguro cinco minutos sin decir una palabra, solo deja que te mire; luego tu pareja decide lo que continÃºa", "ponle una alarma en la noche para que vaya a la recÃ¡mara y haz que valga la pena".
 
-OJO, esto es lo más importante: NO TE REPITAS. Hay cinco formas distintas de reto y tienes que repartirlas. Nunca des dos retos de la misma forma:
-  (A) tú le haces algo a tu pareja,
+OJO, esto es lo mÃ¡s importante: NO TE REPITAS. Hay cinco formas distintas de reto y tienes que repartirlas. Nunca des dos retos de la misma forma:
+  (A) tÃº le haces algo a tu pareja,
   (B) tu pareja te hace algo a ti,
   (C) algo que hacen los dos juntos,
   (D) algo al azar, o con una regla que no se pueda ver venir,
-  (E) un cebo: insinúas una cosa y no cumples, o cumples otra.
+  (E) un cebo: insinÃºas una cosa y no cumples, o cumples otra.
 Si te sale un reto con la misma forma del que acabas de dar, ese no lo mandes: cambia de forma.
 
-CASTIGO Y RECOMPENSA, y esto se te olvida a veces: los dos SIEMPRE están escritos desde el mismo punto de vista, el de tu pareja, que es quien TIENE QUE CUMPLIR el reto. Así, si el reto es "acaricia donde os guste", el castigo es "tu pareja tiene que..." y la recompensa es "tu pareja se lleva...". NUNCA escribas "te debe", "le debes", "me debe a mí" ni "quien te lo pidió": eso inventa una deuda y confunde quién mandó el reto con quién lo cumple. Y los dos tienen que ser del mismo tono del reto: si el reto es atrevido, el castigo también, y la recompensa también.
+CASTIGO Y RECOMPENSA, y esto se te olvida a veces: los dos SIEMPRE estÃ¡n escritos desde el mismo punto de vista, el de tu pareja, que es quien TIENE QUE CUMPLIR el reto. AsÃ­, si el reto es "acaricia donde os guste", el castigo es "tu pareja tiene que..." y la recompensa es "tu pareja se lleva...". NUNCA escribas "te debe", "le debes", "me debe a mÃ­" ni "quien te lo pidiÃ³": eso inventa una deuda y confunde quiÃ©n mandÃ³ el reto con quiÃ©n lo cumple. Y los dos tienen que ser del mismo tono del reto: si el reto es atrevido, el castigo tambiÃ©n, y la recompensa tambiÃ©n.
 
-ESTO NUNCA es reto tuyo: "tomar café", "caminar por el parque", "salir a cenar", "ver una película", "hacer ejercicio", "relajarse", "dar un paseo", "jugar un juego de mesa". Si se te ocurre algo de esa lista, no lo mandes: cámbialo por uno que sí haga que tu pareja se exponga.
+ESTO NUNCA es reto tuyo: "tomar cafÃ©", "caminar por el parque", "salir a cenar", "ver una pelÃ­cula", "hacer ejercicio", "relajarse", "dar un paseo", "jugar un juego de mesa". Si se te ocurre algo de esa lista, no lo mandes: cÃ¡mbialo por uno que sÃ­ haga que tu pareja se exponga.
 
-=== DÓNDE ESTÁ LA LÍMITE ===
+=== DÃ“NDE ESTÃ LA LÃMITE ===
 Tu trabajo es tentar, no contar. Y esto es lo que tienes que hacer bien:
-  PUEDES, y aquí te mueves con soltura: la ropa, el cuerpo, placer, excitación, la piel, tocar, la promesa de algo más, el cebo.
-  NO PUEDES: describir el acto, decir paso a paso qué va a pasar, decir quién hace qué, ni usar palabras crudas o directas.
-Si dudas de si algo pasa de la raya, es porque ya pasó: cámbialo por algo más sugerente. Ante la duda, más sugestivo y menos claro.
+  PUEDES, y aquÃ­ te mueves con soltura: la ropa, el cuerpo, placer, excitaciÃ³n, la piel, tocar, la promesa de algo mÃ¡s, el cebo.
+  NO PUEDES: describir el acto, decir paso a paso quÃ© va a pasar, decir quiÃ©n hace quÃ©, ni usar palabras crudas o directas.
+Si dudas de si algo pasa de la raya, es porque ya pasÃ³: cÃ¡mbialo por algo mÃ¡s sugerente. Ante la duda, mÃ¡s sugestivo y menos claro.
 
 === LOS PLANES ===
-Un plan no es "salir a cenar bonito": es un lugar y una hora pensados para que la noche se alargue sola. Y hay cinco formas distintas de plan, así que no te repitas:
-  (A) en casa, sin salir: "tu pareja llega y tú no vas a la puerta; pasa la noche haciendo algo íntimo",
-  (B) de día, cuando nadie lo espera: "un plan de mediodía donde no se supone que pase nada y seduzcas a tu pareja",
-  (C) sorpresa: "tu pareja llega sin saber a dónde van y tú ya sabes; la gracia es que no se lo cuentes",  (D) con otra gente: "invitan a otra pareja; el plan es comportarse como si estuvieran a solas",
+Un plan no es "salir a cenar bonito": es un lugar y una hora pensados para que la noche se alargue sola. Y hay cinco formas distintas de plan, asÃ­ que no te repitas:
+  (A) en casa, sin salir: "tu pareja llega y tÃº no vas a la puerta; pasa la noche haciendo algo Ã­ntimo",
+  (B) de dÃ­a, cuando nadie lo espera: "un plan de mediodÃ­a donde no se supone que pase nada y seduzcas a tu pareja",
+  (C) sorpresa: "tu pareja llega sin saber a dÃ³nde van y tÃº ya sabes; la gracia es que no se lo cuentes",  (D) con otra gente: "invitan a otra pareja; el plan es comportarse como si estuvieran a solas",
   (E) sin hablar: "hacer feliz a tu pareja sin hablar, solo con la mirada y haciendo que disfrute de ti".
 
-ESTOS SÍ son planes tuyos: "un lugar íntimo donde no haya testigos de lo que van a hacer", "tu pareja llega sin saber a dónde se metió; pero tú ya tienes todo un plan que no necesita ropa", "la cena va en su sitio normal, pero la nota dice que lo de después lo decide tu pareja", "un lugar cerrado donde se pueda gritar incluso, porque las acciones dicen más que mil palabras".
+ESTOS SÃ son planes tuyos: "un lugar Ã­ntimo donde no haya testigos de lo que van a hacer", "tu pareja llega sin saber a dÃ³nde se metiÃ³; pero tÃº ya tienes todo un plan que no necesita ropa", "la cena va en su sitio normal, pero la nota dice que lo de despuÃ©s lo decide tu pareja", "un lugar cerrado donde se pueda gritar incluso, porque las acciones dicen mÃ¡s que mil palabras".
 
-NUNCA propongas: "cena romántica", "paseo por el parque", "ver el atardecer", "ir a tomar café", "ir al cine", "un restaurante caro".
+NUNCA propongas: "cena romÃ¡ntica", "paseo por el parque", "ver el atardecer", "ir a tomar cafÃ©", "ir al cine", "un restaurante caro".
 
-LÍMITES QUE NUNCA SE CRUZAN, por más que insistan o que se exciten: nada ilegal, nada con menores, nada que obligue a alguien sin su consentimiento.
+LÃMITES QUE NUNCA SE CRUZAN, por mÃ¡s que insistan o que se exciten: nada ilegal, nada con menores, nada que obligue a alguien sin su consentimiento.
 
-Cuando te lo pidan directo o con los botones, sí: ahí sí propones el reto, con su bloque. Fuera de eso, nada.
+Cuando te lo pidan directo o con los botones, sÃ­: ahÃ­ sÃ­ propones el reto, con su bloque. Fuera de eso, nada.
 
-Cuando propongas un reto, TERMINA tu mensaje con un bloque exacto así: \`\`\`reto {"actividad":"título corto","puntos":5,"dias":1,"castigo":"...","recompensa":"..."}\`\`\` El "dias" SIEMPRE es 1: los retos que tú inventes no se repiten. Y los "puntos" son el valor del reto según la escala de arriba, entre 1 y 10.
+Cuando propongas un reto, TERMINA tu mensaje con un bloque exacto asÃ­: \`\`\`reto {"actividad":"tÃ­tulo corto","puntos":5,"dias":1,"castigo":"...","recompensa":"..."}\`\`\` El "dias" SIEMPRE es 1: los retos que tÃº inventes no se repiten. Y los "puntos" son el valor del reto segÃºn la escala de arriba, entre 1 y 10.
 
-MUY IMPORTANTE, cómo se ve tu mensaje: primero va el reto en texto normal, para que se lea completo, y AL FINAL el bloque. Ejemplo de cómo se ve: "Te tengo uno de esos 😈 Acaricia donde os guste a los dos, y no pares hasta que ella te lo pida. Si se acaba el plazo, ella se queda con la mitad." (luego el bloque). NUNCA escondas el reto dentro del bloque: si el bloque es lo único que dice qué es el reto, quien lo manda no llega a leerlo.`;
+MUY IMPORTANTE, cÃ³mo se ve tu mensaje: primero va el reto en texto normal, para que se lea completo, y AL FINAL el bloque. Ejemplo de cÃ³mo se ve: "Te tengo uno de esos ðŸ˜ˆ Acaricia donde os guste a los dos, y no pares hasta que ella te lo pida. Si se acaba el plazo, ella se queda con la mitad." (luego el bloque). NUNCA escondas el reto dentro del bloque: si el bloque es lo Ãºnico que dice quÃ© es el reto, quien lo manda no llega a leerlo.`;
 
 function leerIdentidad(){
   try{ return JSON.parse(localStorage.getItem(CLAVE_LOCAL)); }catch(e){ return null; }
@@ -340,7 +342,7 @@ if(!llave){
 document.getElementById("btnLlave").onclick = ()=>{
   const v = document.getElementById("llave").value.trim();
   if(v.length < 10){
-    document.getElementById("llaveMsg").textContent = "Pega una llave válida.";
+    document.getElementById("llaveMsg").textContent = "Pega una llave vÃ¡lida.";
     return;
   }
   try{ localStorage.setItem(CLAVE_LLAVE, v); }catch(e){}
@@ -395,8 +397,8 @@ function extraerReto(texto){
     actividad: String(o.actividad).slice(0, 80),
     puntos,
     dias,
-    castigo: String(o.castigo || "Repetir el reto mañana 😏").slice(0, 120),
-    recompensa: String(o.recompensa || "Un gusto para ti 😌").slice(0, 120)
+    castigo: String(o.castigo || "Repetir el reto maÃ±ana ðŸ˜").slice(0, 120),
+    recompensa: String(o.recompensa || "Un gusto para ti ðŸ˜Œ").slice(0, 120)
   };
 }
 // Reserva: si pediste un reto y la IA NO mando bloque, el reto no se pierde.
@@ -405,11 +407,11 @@ function retoDeReserva(texto){
   const limpio = textoLimpio(texto);
   if(!limpio) return null;
   return {
-    actividad: "Reto picarón",
+    actividad: "Reto picarÃ³n",
     puntos: 5,
     dias: 1,
-    castigo: "Repetir el reto mañana 😏",
-    recompensa: "Un gusto para ti 😌",
+    castigo: "Repetir el reto maÃ±ana ðŸ˜",
+    recompensa: "Un gusto para ti ðŸ˜Œ",
     reserva: true
   };
 }
@@ -425,7 +427,7 @@ function textoLimpio(texto){
 function pintar(){
   listaEl.innerHTML = "";
   if(!hist.length){
-    vacioEl.innerHTML = "Saluda a " + NOMBRE_AI + " 👋<br>Pídeme un reto picarón 😏";
+    vacioEl.innerHTML = "Saluda a " + NOMBRE_AI + " ðŸ‘‹<br>PÃ­deme un reto picarÃ³n ðŸ˜";
     listaEl.appendChild(vacioEl); vacioEl.style.display = "block"; return;
   }
   hist.forEach((m, i)=>{
@@ -433,15 +435,15 @@ function pintar(){
     div.className = "msg" + (m.rol === "yo" ? " mio" : "");
     const a = document.createElement("div");
     a.className = "autor";
-    a.innerHTML = m.rol === "yo" ? "Tú" : '<span class="quien">' + NOMBRE_AI + " 💫</span>";
+    a.innerHTML = m.rol === "yo" ? "TÃº" : '<span class="quien">' + NOMBRE_AI + " ðŸ’«</span>";
     const t = document.createElement("div");
     t.textContent = m.texto;
     div.appendChild(a); div.appendChild(t);
     if(m.rol === "chispa" && m.reto && !m.retoCreado){
-      // El reto DE VERDAD se muestra antes del botón. Antes solo se veía el
-      // preámbulo coquetito y el bloque del reto se borraba del mensaje: se
-      // apretaba "Crear" sin saber qué se mandaba. Con el botón nuevo
-      // ("Mandárselo a tu pareja") eso ya era mandar algo que no habías leído.
+      // El reto DE VERDAD se muestra antes del botÃ³n. Antes solo se veÃ­a el
+      // preÃ¡mbulo coquetito y el bloque del reto se borraba del mensaje: se
+      // apretaba "Crear" sin saber quÃ© se mandaba. Con el botÃ³n nuevo
+      // ("MandÃ¡rselo a tu pareja") eso ya era mandar algo que no habÃ­as leÃ­do.
       const r = m.reto;
       const ficha = document.createElement("div");
       ficha.className = "fichaReto";
@@ -473,14 +475,14 @@ function pintar(){
       }
       div.appendChild(ficha);
 
-      // SOLO un botón. Ya no hay "Descartar": el reto es para tu pareja, que no
-      // está aquí para rechazarlo. Si tú pudieras devolverlo, dejaría de ser un
-      // reto y sería un menú (decisión de Fredy, oct-2026).
+      // SOLO un botÃ³n. Ya no hay "Descartar": el reto es para tu pareja, que no
+      // estÃ¡ aquÃ­ para rechazarlo. Si tÃº pudieras devolverlo, dejarÃ­a de ser un
+      // reto y serÃ­a un menÃº (decisiÃ³n de Fredy, oct-2026).
       const fila = document.createElement("div");
       fila.className = "filaReto";
       const b = document.createElement("button");
       b.className = "btnReto";
-      b.textContent = "➕ Mandárselo a tu pareja (" + r.puntos + " pts)";
+      b.textContent = "âž• MandÃ¡rselo a tu pareja (" + r.puntos + " pts)";
       b.onclick = ()=>crearReto(i, b);
       fila.appendChild(b);
       div.appendChild(fila);
@@ -491,18 +493,18 @@ function pintar(){
 }
 
 async function llamarAI(textoUsuario){
-  // El mensaje actual YA está en `hist` (se guarda antes de llamar), así que aquí
+  // El mensaje actual YA estÃ¡ en `hist` (se guarda antes de llamar), asÃ­ que aquÃ­
   // se saca de la historia. Antes no se sacaba y se mandaba DOS VECES seguidas:
-  // el modelo recibía "user: mándale un reto..." y debajo otra vez lo mismo
-  // (lo reportó Fredy, oct-2026).
+  // el modelo recibÃ­a "user: mÃ¡ndale un reto..." y debajo otra vez lo mismo
+  // (lo reportÃ³ Fredy, oct-2026).
   const previos = hist.slice(0, -1).slice(-10).map(m=>({
     role: m.rol === "yo" ? "user" : "model",
     parts: [{ text: m.texto }]
   }));
   // El "(Me llamo...)" ya NO va pegado a cada mensaje: se acumulaba en todos los
-  // turnos de la conversación y el modelo terminaba contestándole a ese texto.
-  // La regla de no suponer el género por el nombre ya está en la instrucción
-  // (REGLA DE ORO), así que alcanza con eso.
+  // turnos de la conversaciÃ³n y el modelo terminaba contestÃ¡ndole a ese texto.
+  // La regla de no suponer el gÃ©nero por el nombre ya estÃ¡ en la instrucciÃ³n
+  // (REGLA DE ORO), asÃ­ que alcanza con eso.
   const contenidos = previos.concat([{ role: "user", parts: [{ text: textoUsuario }] }]);
   const cuerpo = {
     system_instruction: { parts: [{ text: PERSONA }] },
@@ -560,7 +562,7 @@ async function enviar(textoDirecto){
   textoEl.value = "";
   hist.push({ rol: "yo", texto });
   guardarHist(); pintar();
-  escribiendoEl.textContent = NOMBRE_AI + " está escribiendo…";
+  escribiendoEl.textContent = NOMBRE_AI + " estÃ¡ escribiendoâ€¦";
   escribiendoEl.style.display = "block";
   try{
     const resp = await llamarAI(texto);
@@ -574,13 +576,13 @@ async function enviar(textoDirecto){
     console.error("Chispa:", e);
     if(e.message === "llave"){
       try{ localStorage.removeItem(CLAVE_LLAVE); }catch(_){}
-      hist.push({ rol: "chispa", texto: "Tu llave no jala 😅 Pon una nueva en la pantalla de llave (borra este chat recargando)." });
+      hist.push({ rol: "chispa", texto: "Tu llave no jala ðŸ˜… Pon una nueva en la pantalla de llave (borra este chat recargando)." });
     }else if(e.message === "cuota"){
-      hist.push({ rol: "chispa", texto: "Uff, me acabé mi energía gratis por hoy 🙈 Intenta más tarde." });
+      hist.push({ rol: "chispa", texto: "Uff, me acabÃ© mi energÃ­a gratis por hoy ðŸ™ˆ Intenta mÃ¡s tarde." });
     }else if(e.message.indexOf("http") === 0){
-      hist.push({ rol: "chispa", texto: "Google me regresó " + e.message.slice(4) + " 🙈 Dime ese número." });
+      hist.push({ rol: "chispa", texto: "Google me regresÃ³ " + e.message.slice(4) + " ðŸ™ˆ Dime ese nÃºmero." });
     }else{
-      hist.push({ rol: "chispa", texto: "Se me fue la señal 🙈 ¿Me lo repites?" });
+      hist.push({ rol: "chispa", texto: "Se me fue la seÃ±al ðŸ™ˆ Â¿Me lo repites?" });
     }
     guardarHist();
   }
@@ -599,21 +601,21 @@ async function crearReto(i, btn){
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // El reto es de la PAREJA, no de quien está en el chat. Así el que lo tiene
-    // no está ahí para escogelo ni rechazarlo, y por eso sigue siendo un reto
-    // y no un menú (decisión de Fredy, oct-2026).
+    // El reto es de la PAREJA, no de quien estÃ¡ en el chat. AsÃ­ el que lo tiene
+    // no estÃ¡ ahÃ­ para escogelo ni rechazarlo, y por eso sigue siendo un reto
+    // y no un menÃº (decisiÃ³n de Fredy, oct-2026).
     const lista = await cargarUsuarios(db, getDoc, doc, []);
     const pareja = (lista || []).find(u => u && u.id && u.id !== yo.id && !u.invitado)
                 || (lista || []).find(u => u && u.id && u.id !== yo.id);
     if(!pareja){
-      aviso("No encontré a tu pareja en la app. Agrégala primero.");
+      aviso("No encontrÃ© a tu pareja en la app. AgrÃ©gala primero.");
       btn.disabled = false;
       return;
     }
 
     const ahora = new Date();
     // 48 horas exactas desde que se crea. Son 24 para cumplirlo y 24 para
-    // marcarlo. Los retos normales NO usan esto: siguen con su duración.
+    // marcarlo. Los retos normales NO usan esto: siguen con su duraciÃ³n.
     const fin = new Date(ahora.getTime() + 48 * 3600000);
     const valor = Math.min(10, Math.max(1, parseInt(m.reto.puntos, 10) || 5));
 
@@ -624,9 +626,9 @@ async function crearReto(i, btn){
       // tiene que cumplir sepa QUE HACER. Solo lo muestran los retos de la IA.
       descripcion: m.texto || "",
       // En los retos de la IA `puntosMeta` NO cuenta veces: es el VALOR del
-      // reto (qué tan atrevido es), de 1 a 10. Quien lo cumple lo recibe de una
+      // reto (quÃ© tan atrevido es), de 1 a 10. Quien lo cumple lo recibe de una
       // vez. Lo decide `ia: true`, que es lo que Retos/ lee para usar la
-      // mecánica nueva en vez del contador de los retos normales.
+      // mecÃ¡nica nueva en vez del contador de los retos normales.
       puntosMeta: valor,
       conteo: 0,
       estado: "enCurso",
@@ -651,7 +653,7 @@ async function crearReto(i, btn){
     // campana de la pestana, suena el bip y saca el cartelito al abrir la app.
     // OJO: el documento es POR QUIEN MANDA (`invitosRetos/{miId}`), no uno solo.
     // Con uno solo, si los dos piden un reto, el segundo sobrescribe al primero y
-    // quien lo mandó nunca se entera (se corrigió oct-2026).
+    // quien lo mandÃ³ nunca se entera (se corrigiÃ³ oct-2026).
     try{
       await setDoc(doc(db, "invitosRetos", yo.id), {
         para: pareja.id,
@@ -660,11 +662,11 @@ async function crearReto(i, btn){
         visto: false
       }, { merge:true });
     }catch(e){}
-    avisarTelegram("🎲 " + yo.nombre + " te mandó un reto: " + (m.reto.actividad || "reto sorpresa")
+    avisarTelegram("ðŸŽ² " + yo.nombre + " te mandÃ³ un reto: " + (m.reto.actividad || "reto sorpresa")
       + ". Tienes 48 horas.", baseUrl() + "Retos/");
   }catch(e){
     btn.disabled = false;
-    aviso("No se pudo crear. Revisa tu conexión.");
+    aviso("No se pudo crear. Revisa tu conexiÃ³n.");
   }
 }
 
@@ -673,24 +675,24 @@ async function crearReto(i, btn){
 
 btnEnviar.onclick = ()=>enviar();
 textoEl.addEventListener("keydown", (e)=>{ if(e.key === "Enter") enviar(); });
-// Los botones NO mandan siempre la misma frase. Antes los dos pedían exactamente
-// lo mismo cada vez, y el modelo repetía: con la misma entrada sale el mismo reto
-// con otro nombre. Ahora cada aperte pregunta distinto, así de verdad hay variedad.
+// Los botones NO mandan siempre la misma frase. Antes los dos pedÃ­an exactamente
+// lo mismo cada vez, y el modelo repetÃ­a: con la misma entrada sale el mismo reto
+// con otro nombre. Ahora cada aperte pregunta distinto, asÃ­ de verdad hay variedad.
 const PEDIROS_RETO = [
-  ", mándale a mi pareja un reto picarón de hoy 😏",
-  ", invéntale a mi pareja un reto de esos que dan vergüenza pedir 😏",
-  ", ponle un reto atrevido a mi pareja para estos dos días 😈",
-  ", invéntale algo a mi pareja que no vamos a decir en voz alta 😏",
-  ", ponle a mi pareja un reto donde tenga que hacerse la valiente 😏",
-  ", algo que a mi pareja le dé algo de nervio, pero no te lo cuentes 😏"
+  ", mÃ¡ndale a mi pareja un reto picarÃ³n de hoy ðŸ˜",
+  ", invÃ©ntale a mi pareja un reto de esos que dan vergÃ¼enza pedir ðŸ˜",
+  ", ponle un reto atrevido a mi pareja para estos dos dÃ­as ðŸ˜ˆ",
+  ", invÃ©ntale algo a mi pareja que no vamos a decir en voz alta ðŸ˜",
+  ", ponle a mi pareja un reto donde tenga que hacerse la valiente ðŸ˜",
+  ", algo que a mi pareja le dÃ© algo de nervio, pero no te lo cuentes ðŸ˜"
 ];
 
 const PEDIROS_PLAN = [
-  ", dame una idea de plan para salir 🌙",
-  ", propónme un plan donde la noche se alargue 🌙",
-  ", quiero un plan que no sea 'ir a cenar' 🌙",
-  ", invéntame dónde pasar la noche, sin contármelo todo 🌙",
-  ", un plan de esos que se recuerdan, a ver qué tienes 🌙"
+  ", dame una idea de plan para salir ðŸŒ™",
+  ", propÃ³nme un plan donde la noche se alargue ðŸŒ™",
+  ", quiero un plan que no sea 'ir a cenar' ðŸŒ™",
+  ", invÃ©ntame dÃ³nde pasar la noche, sin contÃ¡rmelo todo ðŸŒ™",
+  ", un plan de esos que se recuerdan, a ver quÃ© tienes ðŸŒ™"
 ];
 
 const pedirAlAzar = (lista)=> lista[Math.floor(Math.random() * lista.length)];
@@ -698,7 +700,7 @@ const pedirAlAzar = (lista)=> lista[Math.floor(Math.random() * lista.length)];
 document.getElementById("btnIdea").onclick = ()=>enviar(NOMBRE_AI + pedirAlAzar(PEDIROS_RETO));
 document.getElementById("btnPlan").onclick = ()=>enviar(NOMBRE_AI + pedirAlAzar(PEDIROS_PLAN));
 if(!hist.length && llave){
-  hist.push({ rol: "chispa", texto: "Hola, soy " + NOMBRE_AI + " 💋 ¿De qué tienes ganas de hablar hoy?" });
+  hist.push({ rol: "chispa", texto: "Hola, soy " + NOMBRE_AI + " ðŸ’‹ Â¿De quÃ© tienes ganas de hablar hoy?" });
   guardarHist();
 }
 pintar();
