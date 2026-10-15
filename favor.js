@@ -989,7 +989,8 @@ async function liquidarVencidos(db, snap){
     // dos tienen la app cerrada puede pasar el tiempo sin que nadie lo note.
     setDoc(doc(db, "favoresExpress", ds.id), {
       estado: "vencido",
-      liquidadoEn: serverTimestamp()
+      liquidadoEn: serverTimestamp(),
+      actualizadoEn: serverTimestamp()
     }, { merge: true }).catch(()=>{});
   });
 }
@@ -1059,7 +1060,12 @@ async function cerrarFavor(db, f, estado, extra){
     const cambios = Object.assign({
       estado: estado,
       cerradoPor: yo.id,
-      cerradoEn: serverTimestamp()
+      cerradoEn: serverTimestamp(),
+      // OJO: `actualizadoEn` tiene que ir en CADA cambio. Si falta, todo lo que
+      // decide "esto es reciente" cae al `creadoEn` viejo y el cambio se ve como
+      // si fuera cosa del pasado: los mensajes llegaban desfasados (lo reporto
+      // Fredy probando, oct-2026).
+      actualizadoEn: serverTimestamp()
     }, extra || {});
     await setDoc(doc(db, "favoresExpress", f.id), cambios, { merge: true });
     const otro = (d.para.id === yo.id) ? d.de : d.para;

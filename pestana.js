@@ -187,6 +187,18 @@ function pintar(canal, mia, creadoEn, d){
   // algo nuevo", a veces es que te contestaron o que te rechazaron el favor.
   canal.tituloDoc = (d && d.titulo) || "";
   canal.avisoDoc = (d && d.aviso) || "";
+  // La "firma" del cartelito es el MENSAJE, no el canal. Antes `cartelitoYaSalio`
+  // solo se reiniciaba cuando el canal dejaba de estar pendiente: si llegaba un
+  // aviso NUEVO encima del anterior, el cartelito ya no volvia a salir y el
+  // usuario seguia viendo el primero (uno viejo). Los mensajes llegaban
+  // desfasados: se veia el que ya habia pasado y no el del momento (lo reporto
+  // Fredy probando, oct-2026).
+  const mil = (creadoEn && creadoEn.toDate) ? creadoEn.toDate().getTime() : 0;
+  const firma = mil ? String(mil) : (canal.tituloDoc + "|" + canal.avisoDoc);
+  if(firma !== canal.firmaAviso){
+    canal.firmaAviso = firma;
+    canal.cartelitoYaSalio = false;
+  }
   if(canal.pendiente){
     ponerCampana();
     programarVigencia(canal, creadoEn);
@@ -302,7 +314,7 @@ export function vigilarInvitaciones(db, opciones){
   if(canales[tipo]) return;
   const canal = canales[tipo] = {
     tipo, ref:null, pendiente:false, esEsta:false,
-    cartelitoYaSalio:false, reloj:0, alTerminar:null
+    cartelitoYaSalio:false, reloj:0, alTerminar:null, firmaAviso:""
   };
   // Que hacer DESPUES de que el usuario le de "Entendido" al aviso. En los
   // favores es abrir la ventana del favor (oct-2026).
