@@ -42,7 +42,7 @@ for rel, tag in targets:
 
 # archivos .js sueltos
 for f in ("acceso.js", "taquilla.js", "config.js", "firebase-config.js", "glue.js",
-          "pestana.js", "invitado.js", "confirmar.js", "telegram.js"):
+          "pestana.js", "invitado.js", "confirmar.js", "telegram.js", "favor.js"):
     p = os.path.join(REPO, f)
     if os.path.exists(p):
         src = io.open(p, encoding="utf-8-sig").read()

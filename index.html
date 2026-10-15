@@ -300,7 +300,10 @@
       <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:14px;">Lo que se descuenta al poner un deseo a la venta.</div>
       <label for="invPtsPrecio" style="display:block;font-size:.82rem;color:var(--fg-muted);margin-bottom:6px;">Precio para comprar un deseo</label>
       <input type="number" id="invPtsPrecio" min="1" step="1" value="100">
-      <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:4px;">Lo que se paga cada vez que alguien compra uno de sus deseos.</div>
+      <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:14px;">Lo que se paga cada vez que alguien compra uno de sus deseos.</div>
+      <label for="invPtsFavor" style="display:block;font-size:.82rem;color:var(--fg-muted);margin-bottom:6px;">Precio de un Favor Express</label>
+      <input type="number" id="invPtsFavor" min="0" step="1" value="15">
+      <div class="hint" style="font-size:.72rem;color:var(--fg-muted);margin-bottom:4px;">Lo que se ofrece al pedirle un favor a tu pareja. Quien lo cumple puede cobrar más, o dejarlo en 0.</div>
       <p id="invPtsMsg" style="font-size:.82rem;color:var(--rojo);min-height:18px;margin:10px 0;"></p>
       <div style="display:flex;gap:10px;">
         <button class="btnPri" id="invPtsCancelar" style="flex:1;background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Cancelar</button>
@@ -445,6 +448,7 @@ import { glueSiEstaQuieto, glueOlvidado } from "./glue.js";
 // funciona en Chrome de computadora; en el celular los navegadores no dejan
 // cambiar el ícono de la pestaña.
 import { vigilarInvitaciones, vigilarRetos } from "./pestana.js";
+import { montarFavor } from "./favor.js";
 // Modo invitado: la regla de "cuándo eres invitado de verdad" vive aquí.
 import {
   CLAVE_BACKUP, CLAVE_LOCAL, hayRespaldo, soyInvitado, quedasteMedioCamino,
@@ -542,6 +546,10 @@ function mostrarMenu(nombre){
     vigilarInvitaciones(dbActual());
     vigilarRetos(dbActual());
   }catch(e){}
+  // El boton flotante del Favor Express. Se prende aqui (y no al arrancar)
+  // porque es justo cuando ya se sabe que hay identidad y base valida. Va en su
+  // propio modulo: si algo falla, el menu sigue igual (mismo criterio que antes).
+  try{ montarFavor(dbActual()); }catch(e){}
 }
 
 // Botón "atrás" / "adelante" del navegador. Ahora los submenús SÍ son pasos del
@@ -1207,6 +1215,10 @@ function abrirPuntos(u){
   document.getElementById("invPtsTitulo").textContent = "Tienda de " + u.nombre;
   document.getElementById("invPtsActivar").value = parseInt(u.ptsActivar, 10) > 0 ? u.ptsActivar : 500;
   document.getElementById("invPtsPrecio").value = parseInt(u.precioCompra, 10) > 0 ? u.precioCompra : 100;
+  // El del Favor Express. OJO: aqui el 0 SI es valido (ella puede regalar el
+  // favor), asi que no se comprueba "> 0" como en los otros dos.
+  const favorGuardado = parseInt(u.precioFavor, 10);
+  document.getElementById("invPtsFavor").value = isFinite(favorGuardado) ? favorGuardado : 15;
   document.getElementById("invPtsMsg").textContent = "";
   document.getElementById("invOverlayPts").style.display = "flex";
 }
@@ -1219,8 +1231,10 @@ document.getElementById("invPtsGuardar").onclick = async ()=>{
   if(!usuarioPts) return;
   const activar  = parseInt(document.getElementById("invPtsActivar").value, 10);
   const precio   = parseInt(document.getElementById("invPtsPrecio").value, 10);
+  const favor    = parseInt(document.getElementById("invPtsFavor").value, 10);
   if(!(activar > 0)){ document.getElementById("invPtsMsg").textContent = "El de activar tiene que ser más de 0."; return; }
   if(!(precio > 0)){ document.getElementById("invPtsMsg").textContent = "El precio tiene que ser más de 0."; return; }
+  if(!(favor >= 0)){ document.getElementById("invPtsMsg").textContent = "El del favor tiene que ser 0 o más."; return; }
   const db = dbActual();
   if(!db){ document.getElementById("invPtsMsg").textContent = "No hay base de datos."; return; }
   try{
@@ -1229,7 +1243,7 @@ document.getElementById("invPtsGuardar").onclick = async ()=>{
     const arr = (snap.exists() && Array.isArray(snap.data().usuarios)) ? snap.data().usuarios.slice() : [];
     const i = arr.findIndex(v=> v.id === usuarioPts.id);
     if(i < 0) return;
-    arr[i] = Object.assign({}, arr[i], { ptsActivar: activar, precioCompra: precio });
+    arr[i] = Object.assign({}, arr[i], { ptsActivar: activar, precioCompra: precio, precioFavor: favor });
     await setDoc(ref, { usuarios: arr, actualizadoEn: serverTimestamp() }, { merge: true });
     guardarUsuariosLocal(arr);
     // Si editas los numeros del usuario con el que estas, tu copia local tambien
@@ -1237,7 +1251,7 @@ document.getElementById("invPtsGuardar").onclick = async ()=>{
     try{
       const yoLoc = JSON.parse(localStorage.getItem(CLAVE_LOCAL) || "null");
       if(yoLoc && yoLoc.id === usuarioPts.id){
-        yoLoc.ptsActivar = activar; yoLoc.precioCompra = precio;
+        yoLoc.ptsActivar = activar; yoLoc.precioCompra = precio; yoLoc.precioFavor = favor;
         localStorage.setItem(CLAVE_LOCAL, JSON.stringify(yoLoc));
       }
     }catch(e){}

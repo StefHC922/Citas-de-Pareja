@@ -1,13 +1,88 @@
 # Plan: Favores Express
 
-> **oct-2026 · NO ESTÁ CONSTRUIDO.** Esto es un **plan de desarrollo**, no una
-> pantalla existente. Nadie debe buscar `favoresExpress` en el código: **ahí no
-> está.**
+> **oct-2026 · EN CONSTRUCCIÓN.** Esto empezó como plan y ya tiene **código**.
+> La parte que **sí** existe va marcada como **FASE 1 (hecha)** abajo. Lo demás
+> sigue siendo idea.
 >
-> **Qué se hace con este archivo:** se va llenando mientras se piensa. Cuando la
-> función esté construida y probada, **se borra** y lo que valga pasa a
-> `GUIA.md`. Es un archivo temporal a propósito, para no hacer crecer `GUIA.md`
-> con algo que todavía no existe.
+> **Qué se hace con este archivo:** se va llenando mientras se construye. Cuando
+> la función esté terminada y probada, **se borra** y lo que valga pasa a
+> `GUIA.md`. Es un archivo temporal a propósito.
+
+## Cómo va la construcción
+
+| Fase | Qué hace | Estado |
+|---|---|---|
+| **1** | El 🛒 con su número, el botón flotante, la ventana de **pedir**, y que el aviso llegue | **HECHA, sin probar en vivo** |
+| **2** | La ventana de responder: **aceptar / cobrar otro precio / rechazar**, con los 4 estados | Pendiente |
+| **3** | El reloj (10 min), el **"Recibí ✓"**, el pago con `runTransaction` y la sanción con tope cero | Pendiente |
+| **4** | El registro: una pestaña más del Centro, con el historial escondido | Pendiente |
+| **5** | El botón flotante en las 13 pantallas | Pendiente |
+
+**Cada fase se puede probar sola**, y si se corta la sesión aquí queda escrito
+qué sigue.
+
+## FASE 1 (hecha oct-2026) — lo que existe
+
+| Pieza | Dónde |
+|---|---|
+| **El número del 🛒** | `index.html`, el overlay de puntos: *"Precio de un Favor Express"*. Guarda como **`precioFavor`** en el usuario de `config/ajustes`. **Default 15** |
+| **El módulo** | `favor.js`, en la raíz. Trae el botón flotante + la ventana de pedir |
+| **Conectado en** | **Solo el menú** (`index.html`). Las otras 12 pantallas son la fase 5 |
+| **La colección** | **`favoresExpress`** (un documento por favor) |
+| **El aviso de campana** | **`invitosFavor/{id de quien manda}`** — por persona, no uno solo |
+
+### El modelo del documento
+
+```js
+{
+  de:    { id, nombre },   // QUIEN PIDE
+  para:  { id, nombre },   // a quien se le pide (la pareja)
+  texto: "...",            // el favor, texto libre
+  precioBase: 15,          // del 🛒 de quien pide. NO se puede cambiar al pedir
+  precio: 15,              // el precio vigente (lo mueve quien cumple)
+  estado: "pedido",        // pendiente | contra | esperando | enCurso | cumplido | rechazado | vencido
+  venceEn: null,           // el reloj NO arranca al pedir: arranca al aceptar
+  creadoEn: serverTimestamp()
+}
+```
+
+**Los estados** (para la fase 2):
+
+| Estado | Quién lo ve | Qué falta |
+|---|---|---|
+| `pedido` | Ella | Aceptar / cobrar otro precio / rechazar |
+| `contra` | Él | Aceptar su precio o no |
+| `esperando` | Ella | Confirmar (solo pasa si hubo contra) |
+| `enCurso` | Los dos | El reloj corre |
+| `cumplido` | — | Ya se pagaron los puntos |
+| `rechazado` / `vencido` | — | Se acabó, sin puntos |
+
+### El precio: las reglas (decididas por Fredy, oct-2026)
+
+| | |
+|---|---|
+| **Lo pone el 🛒** | Del que pide. Al pedir, el precio sale **escrito y no editable** |
+| **Quien pidió** | **No lo toca.** Solo escribe qué favor quiere |
+| **Quien va a cumplir** | **Sí lo cambia**: para arriba, o hasta **0** si lo regala |
+| **Por qué puede bajar** | *"El beso es gratis, ¿qué voy a cobrar por eso?"* Y no es trampa: solo puede bajarlo quien hace el trabajo, y bajarlo le **perjudica a él** |
+| **El saldo** | Nunca negativo, tope cero. Pero el botón **siempre aparece**: si no alcanza, avisa. **Es al revés que el Centro**, a propósito |
+
+**Por qué NO se puso un campo "cobra extra":** porque la gente no lee. Quien
+fuera, puso 20 pensando que era el precio final. La solución que sí quedó: el
+número solo aparece si ella aprieta **"Otro precio"**, y el campo se llama
+**"Precio final"**. Aceptar a 15 es un botón grande, de un solo toque.
+
+### Lo que falta probar de la fase 1
+
+1. Que el círculosito salga abajo a la derecha en el menú.
+2. Que al abrirlo salga el precio del 🛒.
+3. Que "Mandar" guarde y avise.
+4. **Que el Telegram llegue a la pareja.**
+
+**Si algo falla, casi siempre es el paso 4**, y la causa se ve en ⚙️ → Telegram,
+que muestra el error guardado.
+
+---
 
 ## Qué es
 
@@ -66,7 +141,7 @@ cualquier paso, el favor muere y no pasa nada.
 | Decisión | Detalle |
 |---|---|
 | **Los dos pueden pedir** | No es solo uno le pide al otro |
-| **El precio SÍ se le muestra** | De entrada, en la notificación. Se Discussió ocultarlo (para el sorpresa de "esto no vale N puntos") y se descartó: ella acepta a ciegas y no le pagan, se siente engañada |
+| **El precio SÍ se le muestra** | De entrada, en la notificación. Se discutió ocultarlo (para el sorpresa de "esto no vale N puntos") y se descartó: ella acepta a ciegas y no le pagan, se siente engañada |
 | **El reloj arranca al aceptar**, no al pedir | Si arrancara al pedir, se vencería por estar ocupada, que es justo lo que pasa |
 | **Expiración base: 10 minutos** | Cada pareja la ajusta. **Va en Usuarios**, junto a los otros números del 🛒 |
 | **El saldo nunca queda negativo** | Tope cero. Si a alguien no le alcanza, **el botón igual aparece** y se le avisa que no tiene saldo |
@@ -74,6 +149,8 @@ cualquier paso, el favor muere y no pasa nada.
 | **Las ventanas solo avisan y actuán** | El cartelito dice "tienes un favor nuevo" / "hay contra-oferta" / "aceptaron" / "no aceptaron". **Nada de historial en una ventana** |
 | **El registro se guarda para siempre** | Ver abajo, es importante |
 | **El precio del mismo para los dos** | Como el del Centro: es un número tuyo para todos tus favores |
+| **Quien pidió NO toca el precio** | Sale escrito en la ventana y no se puede cambiar. Podría ofrecer pagar de más y no tiene sentido |
+| **Quien cumple SÍ lo cambia** | Hacia arriba, o hasta **0** si lo regala. **Nadie puede bajar el precio y ganar algo**: solo lo baja quien hace el trabajo, y le sale peor |
 
 ## Por qué el registro NO se borra (importante)
 
@@ -104,17 +181,15 @@ Esa diferencia es lo que hace que el segundo no sea un menú.
 
 ## Lo que sigue SIN decidir
 
-1. **Dónde vive exactamente** (propuesta: pestaña del Centro) y cómo se llama.
-2. **La colección** en la base: se propone `favoresExpress`.
-3. **El texto** de la notificación y el de la ventana.
-4. **Si también se avisa por el 🛒 de Usuarios** el número de cada quien, como ya
-   se hace con `ptsActivar` y `precioCompra`.
-5. **Qué pasa con el 🛒** cuando se ajusta a medio reto: ¿se puede cambiar el
-   precio mientras hay una negociación viva?
-6. **Qué pone el botón flotante** y qué pasa si lo aprietas sin saldo (ya está
-   decidido que **te avisa**, pero falta el texto).
-7. **El botón flotante en sí**: dónde va, cómo se arma y qué se importa en cada
-   pantalla. Ya está decided arriba, pero **no se ha construido nada**.
+1. **Dónde vive el registro** (propuesta: pestaña del Centro) y cómo se llama.
+2. **El texto** de la notificación y el de la ventana de responder.
+3. **Si el 🛒 también avisa** del precio al_acceptar, como ya se hace con
+   `ptsActivar` y `precioCompra` al comprar.
+4. **Qué pasa si se cambia el 🛒 mientras hay una negociación viva**: el precio
+   ya quedó guardado en el documento, así que **no la afecta**. Por decidir si
+   además se avisa.
+5. **Si el mismo puede pedir dos favores a la vez.** Ahora sí puede: cada pedido
+   es un documento aparte.
 
 ## Cómo se pide: un botón flotante en toda la app
 
