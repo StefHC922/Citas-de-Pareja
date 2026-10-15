@@ -128,6 +128,28 @@ function yoLocal(){
  * que al principio todavía no hay quién es. En vez de colgar el botón de un
  * hook distinto en cada pantalla, se espera un poco y se reintenta.
  */
+// ¿Esta persona ya tiene un favor VIVO con su pareja? (no terminado todavia).
+// Un solo favor a la vez: con dos, los avisos se pisan entre ellos porque el
+// aviso es UN hueco por quien lo manda (oct-2026). Se usa al abrir el formulario
+// y otra vez al mandar.
+const FINALES = ["cumplido","cobrado","perdonado","cancelado","rechazado"];
+async function hayFavorVivo(db, yo, pareja){
+  if(!db || !yo || !pareja) return false;
+  try{
+    const mias = await getDocs(query(collection(db, "favoresExpress"), where("de.id", "==", yo.id)));
+    let vivo = false;
+    mias.forEach(ds=>{
+      const d = ds.data();
+      if(!d || !d.para || d.para.id !== pareja.id) return;
+      if(FINALES.indexOf(d.estado) < 0) vivo = true;
+    });
+    return vivo;
+  }catch(e){
+    console.error("Favor Express: no se pudo revisar si ya hay uno vivo", e);
+    return false;
+  }
+}
+
 export function montarFavor(db, intentos){
   if(yaMontado || typeof document === "undefined") return;
   const base = db || dbActual();
@@ -211,6 +233,23 @@ export function montarFavor(db, intentos){
     pintarPrecio();
     textoEl.value = "";
     capa.classList.add("ver");
+    // Si ya hay un favor vivo, se dice AQUI MISMO, al abrir, no hasta que
+    // intenten mandar: no tiene caso dejarlos escribir para luego negarles el
+    // envio (lo pidio Fredy, oct-2026).
+    let bloqueado = false;
+    try{
+      const yo = yoLocal();
+      bloqueado = await hayFavorVivo(db, yo, pareja);
+    }catch(e){ bloqueado = false; }
+    if(bloqueado){
+      msgEl.textContent = "Ya tienen un favor en curso. Termínenlo antes de pedir otro.";
+      textoEl.disabled = true;
+      btnMandar.disabled = true;
+      return;
+    }
+    msgEl.textContent = "";
+    textoEl.disabled = false;
+    btnMandar.disabled = false;
     try{ textoEl.focus(); }catch(e){}
   };
 
@@ -269,29 +308,11 @@ export function montarFavor(db, intentos){
       console.error("Favor Express: no se pudo leer el saldo", e);
     }
 
-    // Un favor a la vez con la misma persona, hasta que TERMINE.
-    //
-    // No basta con bloquear los que no se han aceptado: el aviso vive en UN solo
-    // hueco por quien lo manda (`invitosFavor/{miId}`). Con dos favores vivos, un
-    // aviso pisa al otro: si el favor A esta en curso y pido el B, el aviso de "te
-    // pide B" lo PISA el de "recibiste A" cuando marco recibido, y el B se queda
-    // sin avisar (lo pregunto Fredy, oct-2026). Con uno solo a la vez no hay con
-    // quien pisarse. Se deja pedir otro cuando el anterior llego a un final.
-    try{
-      const mias = await getDocs(query(collection(db, "favoresExpress"), where("de.id", "==", yo.id)));
-      let vivo = false;
-      mias.forEach(ds=>{
-        const d = ds.data();
-        if(!d || !d.para || d.para.id !== pareja.id) return;
-        // Final = ya no va a generar mas avisos.
-        if(["cumplido","cobrado","perdonado","cancelado","rechazado"].indexOf(d.estado) < 0) vivo = true;
-      });
-      if(vivo){
-        msgEl.textContent = "Ya tienen un favor en curso. Termínenlo antes de pedir otro.";
-        return;
-      }
-    }catch(e){
-      console.error("Favor Express: no se pudo revisar si ya hay uno vivo", e);
+    // Doble seguro: al abrir ya se avisa, pero se revisa otra vez al mandar (pudo
+    // terminar el otro mientras escribian, o abrieron el formulario dos veces).
+    if(await hayFavorVivo(db, yo, pareja)){
+      msgEl.textContent = "Ya tienen un favor en curso. Termínenlo antes de pedir otro.";
+      return;
     }
 
     btnMandar.disabled = true;

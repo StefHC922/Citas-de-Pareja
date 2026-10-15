@@ -165,7 +165,7 @@
      repiten aqui: viven en las ventanas de favor.js. -->
 <div class="vista" id="vistaFavores">
   <h1>Favores Express</h1>
-  <p class="desc">Lo que te toca hacer ahora, y lo que ya quedó.</p>
+  <p class="desc">Ponle algo Picante a tu Día</p>
   <div class="tablaBox vacia" id="cajaFavores">
     <div class="vacio" id="vacioFavores">No hay favores pendientes.<br>Aprieta el botón 🛎️, está en la esquina de todas las pantallas, y solicita tu Favor Express.</div>
   </div>
@@ -317,7 +317,9 @@ VACIO_FAV.innerHTML = (verCerrados && !lista.length)
     const d = f.d;
     const yoLoPidi = d.de.id === yo.id;
     const otro = yoLoPidi ? d.para : d.de;
-    const quien = yoLoPidi ? d.de.nombre : d.para.nombre;
+    // OJO: si YO lo pedi, a quien se lo pedi es `para`, no `de` (yo). Estaba al
+    // reves y decia "Se lo pediste a [yo mismo]" (lo reporto Fredy, oct-2026).
+    const quien = yoLoPidi ? d.para.nombre : d.de.nombre;
     const sub = (yoLoPidi ? "Se lo pediste a " : "Te toca entregarlo a ") + quien
       + " · " + (d.precio > 0 ? d.precio + " pts" : "gratis");
     const r = fila(d.texto || "(sin texto)", sub, ETIQUETA[d.estado] || d.estado,
