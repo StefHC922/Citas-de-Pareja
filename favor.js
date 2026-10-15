@@ -23,7 +23,7 @@
 
 import {
   doc, getDoc, setDoc, collection, addDoc, serverTimestamp,
-  onSnapshot, runTransaction, increment
+  onSnapshot, runTransaction, increment, query, where, getDocs
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { aviso } from "./confirmar.js";
 import { avisarTelegram } from "./telegram.js";
@@ -475,26 +475,48 @@ function laCapaRespuesta(){
 // llegaba a salir (porque ya estaba descartada, o porque se navegó a otra
 // pantalla), el aviso se quedaba ahi para siempre.
 async function barrerAvisoHuerfano(db, yo, hayAlgoQueHacer){
+  // Si hay algo pendiente de verdad, la campana DEBE seguir prendida.
+  if(hayAlgoQueHacer) return;
+  await marcarAvisosVistos(db, yo);
+}
+
+// ==============================================================================
+//  AVISO DE LA CAMPANA — el error de raiz (oct-2026)
+// -----------------------------------------------------------------------------
+//  El aviso se guarda en `invitosFavor/{id de QUIEN MANDA}`, con `para` apuntando
+//  a quien lo recibe. O sea que:
+//
+//      tu/device escribe  invitosFavor/{SU id}   ->  para: TU id
+//      su/device escribe  invitosFavor/{TU id}   ->  para: SU id
+//
+//  O sea que el documento que te toca a TI **esta con el nombre de EL**, no con
+//  el tuyo. Este codigo antes marcaba `invitosFavor/{miId}`, o sea el documento
+//  de la OTRA persona: marcaba visto un aviso que no era mio y dejaba sin marcar
+//  el mio. Por eso el cartelito ("No aceptaron tu favor") se repetia en cada
+//  entrada y no se apagaba nunca, aunque no hubiera nada que hacer.
+//
+//  La regla: para "dar por visto lo que meodia a mi" hay que buscar el documento
+//  cuya `para` SOY YO, no el que lleva mi nombre.
+// ==============================================================================
+async function marcarAvisosVistos(db, yo){
   if(!db || !yo || !yo.id) return;
   try{
-    const snap = await getDoc(doc(db, "invitosFavor", yo.id));
-    if(!snap.exists()) return;
-    const d = snap.data();
-    if(!d || d.visto || d.para !== yo.id) return;
-    if(hayAlgoQueHacer) return;      // todavia hay algo que hacer: dejalo prendido
-    await setDoc(doc(db, "invitosFavor", yo.id), {
-      visto: true, vistoEn: serverTimestamp()
-    }, { merge: true });
-  }catch(e){ console.error("Favor Express: fallo el barrido", e); }
+    const q = query(collection(db, "invitosFavor"), where("para", "==", yo.id));
+    const snap = await getDocs(q);
+    snap.forEach(ds=>{
+      const d = ds.data();
+      if(!d || d.visto) return;
+      setDoc(doc(db, "invitosFavor", ds.id), {
+        visto: true, vistoEn: serverTimestamp()
+      }, { merge: true }).catch((e)=>{
+        console.error("Favor Express: no se pudo apagar la campana", e);
+      });
+    });
+  }catch(e){ console.error("Favor Express: fallo el apagado de la campana", e); }
 }
 
 function marcarAvisoVisto(db, yo){
-  try{
-    if(!db || !yo || !yo.id) return;
-    setDoc(doc(db, "invitosFavor", yo.id), {
-      visto: true, vistoEn: serverTimestamp()
-    }, { merge: true }).catch((e)=>{ console.error("Favor Express: no se pudo marcar el aviso", e); });
-  }catch(e){ console.error("Favor Express: no se pudo marcar el aviso", e); }
+  marcarAvisosVistos(db, yo);
 }
 
 function mostrarRespuesta(f){
