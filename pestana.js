@@ -250,7 +250,16 @@ function avisarInvitacion(canal){
   aviso({
     titulo: canal.tituloDoc || t.titulo,
     texto: canal.avisoDoc || t.texto
-  }).then(()=>{
+  }).then((ok)=>{
+    // `ok` es true SOLO si el usuario oprimio el boton. Si el aviso lo cerro otro
+    // aviso mas nuevo (Chat, Retos...), `abrir()` de confirmar.js lo cierra como
+    // false: en ese caso NO hay que abrir nada. Sin esta distincion, un aviso de
+    // Chat que llegara encima disparaba la ventana del favor sola, en un momento
+    // que no tocaba: "todo se pone raro" (lo reporto Fredy probando, oct-2026).
+    if(!ok) return;
+    // Ya lo vio: la campana se apaga. Si no, el mismo cartelito volvia a salir en
+    // cada pantalla que se abriera.
+    try{ marcarVista(canal); }catch(e){}
     try{ if(canal.alTerminar) canal.alTerminar(); }catch(e){}
   });
 }

@@ -29,6 +29,7 @@ import { aviso } from "./confirmar.js";
 import { avisarTelegram } from "./telegram.js";
 import { soyInvitado, CLAVE_LOCAL, dbActual } from "./invitado.js";
 import { baseUrl } from "./config.js";
+import { vigilarFavores } from "./pestana.js";
 
 // Si no hay numero guardado, este. OJO: aqui el 0 SI es valido (ella puede
 // regalar el favor), asi que no se comprueba "> 0" como en el 🛒 de los deseos.
@@ -145,6 +146,15 @@ export function montarFavor(db, intentos){
   esperandoIdentidad = false;
   db = base;
   dbBase = base;
+  // La campana y el aviso de los favores se prenden en TODAS las pantallas donde
+  // se monta el boton, no solo en el menu. Antes solo el menu los prendia: en el
+  // resto de pantallas no salia aviso y la ventana se abria SOLA, asi que cada
+  // dispositivo se comportaba distinto y los mensajes parecian atrasados (lo
+  // reporto Fredy probando, oct-2026). Con esto el aviso es la puerta en todas.
+  try{
+    usarAvisoFavores();
+    vigilarFavores(base, { alTerminar: abrirFavorPendiente });
+  }catch(e){ console.error("Favor Express: no se pudo vigilar los avisos", e); }
   ponerEstilo();
 
   const btn = document.createElement("button");
