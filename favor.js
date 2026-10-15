@@ -335,6 +335,7 @@ let mostrando = false;
 // estar en un estado que me toque (la otra persona contesto, se cancelo, etc).
 let mostrandoAbierta = null;
 let cerrarRespondida = ()=>{};
+let hayAlgoQueHacer = false;
 
 // Favores que esta persona YA DIJO "ahora no" en ESTE estado.
 //
@@ -402,7 +403,7 @@ function escucharRespuestas(db, yo){
       // Primero se liquida lo que ya se vencio: nadie va a estar mirando la app
       // en el minuto exacto, y si los dos la tuvieron cerrada el paso del tiempo
       // tiene que recuperarse al abrir.
-      liquidarVencidos(db, snap);
+liquidarVencidos(db, snap);
       encolarPropios(snap, yo);
       const nuevos = [];
       snap.forEach(ds=>{
@@ -411,8 +412,8 @@ function escucharRespuestas(db, yo){
         if(ESTADOS_VIVOS.indexOf(d.estado) < 0) return;
         if(!leTocaResponder(d, yo.id)) return;
         nuevos.push({ id: ds.id, d });
-});
-cola = nuevos;
+      });
+      cola = nuevos;
       // Si el favor que esta mostrando ya no esta en un estado que me toque
       // (la otra persona contesto, o se cancelo/cobro), se cierra la ventana:
       // si no se quedaba congelada mostrando "Esperando..." para siempre, que
@@ -420,7 +421,11 @@ cola = nuevos;
       if(mostrandoAbierta && !nuevos.some(x=> x.id === mostrandoAbierta.id)){
         try{ cerrarRespondida(); }catch(e){}
       }
+      // Barrido del aviso de la campana: si ya no hay nada que hacer, se apaga.
+      hayAlgoQueHacer = (nuevos.length > 0) || colaPropia.length > 0;
+      try{ barrerAvisoHuerfano(db, yo, hayAlgoQueHacer); }catch(e){}
       siguiente();
+      siguientePropio();
       }, (err)=>{ console.error("Favor Express: fallo el listener", err); });
     // OJO: este catch NO se queda vacio. Un `catch(e){}` aqui se comio el error
     // de `onSnapshot` sin importarlo y la ventana NUNCA salio, sin ningun aviso
@@ -460,6 +465,29 @@ function laCapaRespuesta(){
 // reporto Fredy probando, oct-2026). OJO: para los Retos esto lo hace
 // `Retos/index.html` con `vigilarRetos(db, {esEsta:true})`; los Favores se
 // pueden abrir en CUALQUIER pantalla, asi que se marca desde aqui.
+// Barrido: si el aviso de la campana sigue "pendiente" pero NO hay ningun favor
+// que de verdad me toque, se marca como visto.
+//
+// Sin esto el cartelito se quedaba repitiendo "No aceptaron tu favor" cada vez
+// que se entraba a una pantalla, aunque el favor ya estuviera en el historial y
+// no hubiera nada que hacer (lo reporto Fredy probando, oct-2026). Pasa porque
+// la campana solo se apagaba al ABRIR la ventana del favor: si esa ventana no
+// llegaba a salir (porque ya estaba descartada, o porque se navegó a otra
+// pantalla), el aviso se quedaba ahi para siempre.
+async function barrerAvisoHuerfano(db, yo, hayAlgoQueHacer){
+  if(!db || !yo || !yo.id) return;
+  try{
+    const snap = await getDoc(doc(db, "invitosFavor", yo.id));
+    if(!snap.exists()) return;
+    const d = snap.data();
+    if(!d || d.visto || d.para !== yo.id) return;
+    if(hayAlgoQueHacer) return;      // todavia hay algo que hacer: dejalo prendido
+    await setDoc(doc(db, "invitosFavor", yo.id), {
+      visto: true, vistoEn: serverTimestamp()
+    }, { merge: true });
+  }catch(e){ console.error("Favor Express: fallo el barrido", e); }
+}
+
 function marcarAvisoVisto(db, yo){
   try{
     if(!db || !yo || !yo.id) return;

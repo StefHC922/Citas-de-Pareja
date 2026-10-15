@@ -286,7 +286,12 @@ const el = (id)=> document.getElementById(id);
 // sigue abierto; encendido mete tambien lo ya pagado/cancelado/rechazado. El
 // boton NACE oculto y solo se dibuja si hay alguno cerrado: un boton que lleva a
 // una lista vacia es una trampa (oct-2026).
-const CERRADOS = ["cumplido","cobrado","perdonado","cancelado","rechazado"];
+// OJO: `rechazado` y `cancelado` NO son "cerrados": no cuentan ni para el
+// historial. Un favor que se rechazo no paso nada, y dejarlo anotado es solo
+// ruido (decisión de Fredy, oct-2026). Tampoco aparece mientras esta vivo, asi
+// que un favor rechazado simplemente NO se ve en ninguna parte.
+const CERRADOS = ["cumplido","cobrado","perdonado"];
+const SIN_RESTA = ["rechazado","cancelado"];
 let verCerrados = false;
 const VACIO_FAV = document.getElementById("vacioFavores");
 // El texto de "vacio" de esta vista cambia con el boton de abajo, asi que se
@@ -295,10 +300,11 @@ const VACIO_FAV = document.getElementById("vacioFavores");
 // `appendChild(null)` revienta (el bug que casi tumblo el Centro entero).
 function pintarFavores(){
   const mios = (favores||[]).filter(f => f.d && f.d.de && f.d.para
-    && (f.d.de.id === yo.id || f.d.para.id === yo.id));
+    && (f.d.de.id === yo.id || f.d.para.id === yo.id)
+    && SIN_RESTA.indexOf(f.d.estado) < 0);
   mios.sort((a,b)=> (b.d.creadoEn || 0) - (a.d.creadoEn || 0));
-  const abiertos = mios.filter(f=> CERRADOS.indexOf(f.d.estado) < 0 && f.d.estado !== "vencido");
-  const cerrados = mios.filter(f=> CERRADOS.indexOf(f.d.estado) >= 0 || f.d.estado === "vencido");
+const abiertos = mios.filter(f=> CERRADOS.indexOf(f.d.estado) < 0 && f.d.estado !== "vencido");
+const cerrados = mios.filter(f=> CERRADOS.indexOf(f.d.estado) >= 0);
   const lista = verCerrados ? mios : abiertos;
   // OJO con la frase: NO puede ser "no hay favores", porque puede que tengas
 // favores ya cerrados y lo que no hay son PENDIENTES. Decirlo mal hecho
