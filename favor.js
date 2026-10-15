@@ -191,6 +191,13 @@ export function montarFavor(db, intentos){
 
   btn.onclick = async ()=>{
     msgEl.textContent = "";
+    // OJO: el precio se relee CADA vez que se abre el pedido, no una sola vez al
+    // crear el boton. Antes se leia solo al montar y su error estaba tragado en un
+    // `catch` mudo, asi que si la base todavia no estaba lista el precio se
+    // quedaba clavado en 15 para siempre: cambiar ⚙️ 🛒 a 5 no Change nada y el
+    // boton seguia diciendo "Mandar · 15 pts" (lo reporto Fredy probando,
+    // oct-2026).
+    try{ await preparar(); }catch(e){ console.error("Favor Express: no se pudo leer el precio", e); }
     pintarPrecio();
     textoEl.value = "";
     capa.classList.add("ver");
@@ -208,15 +215,23 @@ export function montarFavor(db, intentos){
       const mio = lista.find(u=> u && u.id === yo.id);
       if(mio){
         const n = parseInt(mio.precioFavor, 10);
-        precio = isFinite(n) ? n : FAVOR_POR_DEFECTO;
+        precio = (isFinite(n) && n >= 0) ? n : FAVOR_POR_DEFECTO;
         const pc = parseInt(mio.pctCastigo, 10);
         pctCastigo = isFinite(pc) ? pc : PCT_CASTIGO_POR_DEFECTO;
         const mn = parseInt(mio.minutosFavor, 10);
         minutos = (isFinite(mn) && mn > 0) ? mn : MINUTOS_POR_DEFECTO;
+      }else{
+        // Sin registro no se aventa el 15 en silencio: se dice, porque asi se
+        // perdio horas de prueba sin entender por que (oct-2026).
+        console.warn("Favor Express: tu usuario no esta en config/ajustes; se usa el precio por defecto (" + FAVOR_POR_DEFECTO + "). Revisa ⚙️ → 🛒.");
       }
       pareja = lista.find(u=> u && u.id !== yo.id && !u.invitado)
             || lista.find(u=> u && u.id !== yo.id);
-    }catch(e){}
+    }catch(e){
+      // Este catch NO puede quedar vacio otra vez: aqui se escondia el fallo
+      // que dejaba el precio siempre en 15 (oct-2026).
+      console.error("Favor Express: fallo la lectura de config/ajustes", e);
+    }
     pintarPrecio();
   }
   preparar();
@@ -237,7 +252,12 @@ export function montarFavor(db, intentos){
         msgEl.textContent = "No te alcanzan " + precio + " pts (tienes " + bal + ").";
         return;
       }
-    }catch(e){}
+    }catch(e){
+      // Si no se pudo leer el saldo NO se bloquea el pedido (preferible dejar
+      // pasar a bloquear sin querer), pero se avisa: un fallo silenciado aqui
+      // es como se escondieron los otros (oct-2026).
+      console.error("Favor Express: no se pudo leer el saldo", e);
+    }
 
     btnMandar.disabled = true;
     try{
