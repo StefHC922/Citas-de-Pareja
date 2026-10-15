@@ -331,18 +331,30 @@ const Yo = ()=> yoLocal();
 
 let cola = [];        // los favores que me tocan responder
 let mostrando = false;
+// Que ventana esta abierta ahorita, para poder cerrarla sola si su favor deja de
+// estar en un estado que me toque (la otra persona contesto, se cancelo, etc).
+let mostrandoAbierta = null;
+let cerrarRespondida = ()=>{};
 
-// Favores que esta persona YA DIJO "ahora no" en esta sesion. Sin esto la
-// ventana se abria, la cerrabas, y 250 ms despues volvia a salir sola: el
-// `onSnapshot`ava filling la cola otra vez con el mismo favor (oct-2026, lo
-// reporto Fredy probando).
+// Favores que esta persona YA DIJO "ahora no" en ESTE estado.
+//
+// OJO: se guarda el estado junto al id, a proposito. Antes solo se guardaba el
+// id y eso hacia que el favor no volviera a salir NUNCA mas en esa sesion: ella
+// countero, el estado cambio a "contra" y el mensaje no llego hasta que se
+// recargo la pantalla (lo reporto Fredy probando, oct-2026). "Ahora no" quiere
+// decir "no me lo muestres EN ESTE estado"; si el estado avanza, se vuelve a
+// avisar, porque es una respuesta nueva a lo que tu yo respondiste.
 const descartados = {};
-function fueDescartado(id){ return !!descartados[id]; }
-function descartar(id){ try{ descartados[id] = Date.now(); }catch(e){} }
+function fueDescartado(id, estado){
+  const previo = descartados[id];
+  return !!previo && previo.estado === estado;
+}
+function descartar(id, estado){
+  try{ descartados[id] = { estado: estado, t: Date.now() }; }catch(e){}
+}
 function olvidarDescartados(){
-  // Que no crezca para siempre: a los 10 minutos se limpian los viejos.
   const viejo = Date.now() - (10 * 60000);
-  for(const k in descartados){ if(descartados[k] < viejo) delete descartados[k]; }
+  for(const k in descartados){ if(descartados[k].t < viejo) delete descartados[k]; }
 }
 
 function cuandoMil(f){
@@ -361,8 +373,8 @@ function siguiente(){
   if(hayCajaAbierta()){ setTimeout(siguiente, 400); return; }
   olvidarDescartados();
   cola.sort((a,b)=> cuandoMil(b) - cuandoMil(a));
-  // Se brincan los que esta persona ya cerro con "ahora no".
-  while(cola.length && fueDescartado(cola[0].id)) cola.shift();
+  // Se brincan solo los que esta persona ya cerro en el MISMO estado.
+  while(cola.length && fueDescartado(cola[0].id, cola[0].d.estado)) cola.shift();
   if(!cola.length) return;
   const f = cola[0];
   cola = cola.slice(1);
@@ -400,8 +412,15 @@ function escucharRespuestas(db, yo){
         if(!leTocaResponder(d, yo.id)) return;
         nuevos.push({ id: ds.id, d });
 });
-        cola = nuevos;
-        siguiente();
+cola = nuevos;
+      // Si el favor que esta mostrando ya no esta en un estado que me toque
+      // (la otra persona contesto, o se cancelo/cobro), se cierra la ventana:
+      // si no se quedaba congelada mostrando "Esperando..." para siempre, que
+      // fue lo que paso en la prueba del 24-oct (reportado por Fredy).
+      if(mostrandoAbierta && !nuevos.some(x=> x.id === mostrandoAbierta.id)){
+        try{ cerrarRespondida(); }catch(e){}
+      }
+      siguiente();
       }, (err)=>{ console.error("Favor Express: fallo el listener", err); });
     // OJO: este catch NO se queda vacio. Un `catch(e){}` aqui se comio el error
     // de `onSnapshot` sin importarlo y la ventana NUNCA salio, sin ningun aviso
@@ -433,6 +452,21 @@ function laCapaRespuesta(){
   document.body.appendChild(c);
   capaRespuesta = c;
   return c;
+}
+
+// Cuando se abre la ventana de un favor, ese aviso ya se vio: hay que apagar la
+// campana y marcar `visto` en la base, o el cartelito seguia saliendo cada vez
+// que se entraba a la pantalla aunque el favor ya estuviera resuelto (lo
+// reporto Fredy probando, oct-2026). OJO: para los Retos esto lo hace
+// `Retos/index.html` con `vigilarRetos(db, {esEsta:true})`; los Favores se
+// pueden abrir en CUALQUIER pantalla, asi que se marca desde aqui.
+function marcarAvisoVisto(db, yo){
+  try{
+    if(!db || !yo || !yo.id) return;
+    setDoc(doc(db, "invitosFavor", yo.id), {
+      visto: true, vistoEn: serverTimestamp()
+    }, { merge: true }).catch((e)=>{ console.error("Favor Express: no se pudo marcar el aviso", e); });
+  }catch(e){ console.error("Favor Express: no se pudo marcar el aviso", e); }
 }
 
 function mostrarRespuesta(f){
@@ -474,12 +508,15 @@ function mostrarRespuesta(f){
   btnAceptar.textContent = "Aceptar · " + cents(d.precio);
   btnRechazar.style.display = "block";
 
-  const cerrar = ()=>{
+const cerrar = ()=>{
     c.classList.remove("ver");
     mostrando = false;
-    descartar(f.id);      // "ahora no" significa "ahora no": no vuelve a salir
+    mostrandoAbierta = null;
+    descartar(f.id, f.d.estado);
     setTimeout(siguiente, 250);
   };
+  cerrarRespondida = cerrar;
+  mostrandoAbierta = { id: f.id };
 
   btnAceptar.onclick = async ()=>{
     btnAceptar.disabled = true;
@@ -523,6 +560,7 @@ function mostrarRespuesta(f){
 
   mostrando = true;
   c.classList.add("ver");
+  marcarAvisoVisto(dbBase, yo);
 }
 
 // El estado que sigue depende de DONDE ESTAMOS y de lo que se hizo. El
@@ -622,7 +660,7 @@ function siguientePropio(){
   if(hayCajaAbierta()){ setTimeout(siguientePropio, 400); return; }
   olvidarDescartados();
   colaPropia.sort((a,b)=> cuandoMil(b) - cuandoMil(a));
-  while(colaPropia.length && fueDescartado(colaPropia[0].id)) colaPropia.shift();
+  while(colaPropia.length && fueDescartado(colaPropia[0].id, colaPropia[0].d.estado)) colaPropia.shift();
   if(!colaPropia.length) return;
   const f = colaPropia[0];
   colaPropia = colaPropia.slice(1);
@@ -670,7 +708,7 @@ function mostrarPropio(f){
     clearInterval(reloj);
     c.classList.remove("ver");
     mostrandoPropio = false;
-    descartar(f.id);
+    descartar(f.id, f.d.estado);
     setTimeout(siguientePropio, 250);
   };
   const btnCerrar = $("vpCerrar");
@@ -718,6 +756,7 @@ function mostrarPropio(f){
 
   mostrandoPropio = true;
   c.classList.add("ver");
+  marcarAvisoVisto(dbBase, Yo());
 }
 
 // Se engancha al mismo snapshot que las de responder.
