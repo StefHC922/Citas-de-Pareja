@@ -89,6 +89,7 @@ function ponerEstilo(){
     .fvNombre{ font-family:'Chakra Petch',sans-serif; font-weight:700;
       font-size:1.15rem; color:var(--coral); }
     .fvPrecio{ font-size:.8rem; color:var(--fg-muted, var(--apagado)); }
+    .fvTexto{ font-size:.88rem; color:var(--fg, var(--texto)); white-space:pre-wrap; }
     .fvAlta{ display:flex; flex-direction:column; gap:8px; width:100%; }
     .fvAlta textarea{ width:100%; min-height:74px; border-radius:12px;
       border:1px solid var(--card-border, var(--borde)); background:var(--bg);
@@ -258,10 +259,10 @@ export function montarFavor(db, intentos){
           deNombre: yo.nombre,
           texto: texto,
           precio: precio,
-          creadoEn: serverTimestamp(),
-          visto: false
-        }, { merge: true });
-      }catch(e){}
+creadoEn: serverTimestamp(),
+        visto: false
+      }, { merge: true });
+    }catch(e){ console.error("Favor Express: no se pudo dejar el aviso", e); }
       await avisarTelegram(
         "\u{1F3F8} " + yo.nombre + " te pidi\u00f3 un favor: " + texto
         + " \u00b7 " + precio + " pts", baseUrl() + "Retos/"
@@ -321,6 +322,19 @@ const Yo = ()=> yoLocal();
 let cola = [];        // los favores que me tocan responder
 let mostrando = false;
 
+// Favores que esta persona YA DIJO "ahora no" en esta sesion. Sin esto la
+// ventana se abria, la cerrabas, y 250 ms despues volvia a salir sola: el
+// `onSnapshot`ava filling la cola otra vez con el mismo favor (oct-2026, lo
+// reporto Fredy probando).
+const descartados = {};
+function fueDescartado(id){ return !!descartados[id]; }
+function descartar(id){ try{ descartados[id] = Date.now(); }catch(e){} }
+function olvidarDescartados(){
+  // Que no crezca para siempre: a los 10 minutos se limpian los viejos.
+  const viejo = Date.now() - (10 * 60000);
+  for(const k in descartados){ if(descartados[k] < viejo) delete descartados[k]; }
+}
+
 function cuandoMil(f){
   try{
     const t = f && f.creadoEn;
@@ -335,7 +349,11 @@ function siguiente(){
   // Un aviso puede llegar mientras haya un cartelito de `confirmar.js` en
   // pantalla. Encimarse no se ve bien, asi que se espera a que se cierre.
   if(hayCajaAbierta()){ setTimeout(siguiente, 400); return; }
+  olvidarDescartados();
   cola.sort((a,b)=> cuandoMil(b) - cuandoMil(a));
+  // Se brincan los que esta persona ya cerro con "ahora no".
+  while(cola.length && fueDescartado(cola[0].id)) cola.shift();
+  if(!cola.length) return;
   const f = cola[0];
   cola = cola.slice(1);
   mostrarRespuesta(f);
@@ -371,11 +389,14 @@ function escucharRespuestas(db, yo){
         if(ESTADOS_VIVOS.indexOf(d.estado) < 0) return;
         if(!leTocaResponder(d, yo.id)) return;
         nuevos.push({ id: ds.id, d });
-      });
-      cola = nuevos;
-      siguiente();
-    }, ()=>{});
-  }catch(e){}
+});
+        cola = nuevos;
+        siguiente();
+      }, (err)=>{ console.error("Favor Express: fallo el listener", err); });
+    // OJO: este catch NO se queda vacio. Un `catch(e){}` aqui se comio el error
+    // de `onSnapshot` sin importarlo y la ventana NUNCA salio, sin ningun aviso
+    // en pantalla (oct-2026). Si algo falla, que se vea en la consola.
+    }catch(e){ console.error("Favor Express: no se pudo escuchar", e); }
 }
 
 let capaRespuesta = null;
@@ -446,6 +467,7 @@ function mostrarRespuesta(f){
   const cerrar = ()=>{
     c.classList.remove("ver");
     mostrando = false;
+    descartar(f.id);      // "ahora no" significa "ahora no": no vuelve a salir
     setTimeout(siguiente, 250);
   };
 
@@ -588,7 +610,10 @@ let mostrandoPropio = false;
 function siguientePropio(){
   if(mostrandoPropio || !colaPropia.length) return;
   if(hayCajaAbierta()){ setTimeout(siguientePropio, 400); return; }
+  olvidarDescartados();
   colaPropia.sort((a,b)=> cuandoMil(b) - cuandoMil(a));
+  while(colaPropia.length && fueDescartado(colaPropia[0].id)) colaPropia.shift();
+  if(!colaPropia.length) return;
   const f = colaPropia[0];
   colaPropia = colaPropia.slice(1);
   mostrarPropio(f);
@@ -635,6 +660,7 @@ function mostrarPropio(f){
     clearInterval(reloj);
     c.classList.remove("ver");
     mostrandoPropio = false;
+    descartar(f.id);
     setTimeout(siguientePropio, 250);
   };
   const btnCerrar = $("vpCerrar");
