@@ -170,6 +170,7 @@
     <div class="vacio" id="vacioFavores">No hay favores pendientes.<br>Aprieta el botón 🛎️, está en la esquina de todas las pantallas, y solicita tu Favor Express.</div>
   </div>
   <button class="btnSec" id="btnVerCerrados" style="display:none;margin-top:12px;">Ver los ya cerrados</button>
+  <button class="btnSec" id="btnBorrarDescartados" style="display:none;margin-top:8px;color:var(--rojo);">Borrar los descartados (0)</button>
   <div class="tabs" style="margin-top:12px;">
     <button class="tab tabnav" id="navTienda3">Tienda</button>
     <button class="tab tabnav" id="navDeseos3">Mis deseos</button>
@@ -332,6 +333,13 @@ VACIO_FAV.innerHTML = (verCerrados && !lista.length)
   el("btnVerCerrados").style.display = cerrados.length ? "block" : "none";
   el("btnVerCerrados").textContent = verCerrados
     ? "Ocultar los ya cerrados" : "Ver los ya cerrados (" + cerrados.length + ")";
+  // Los descartados (rechazados y cancelados) NO se muestran en ninguna lista:
+  // no pasaron nada y solo ensucian (decisión de Fredy, oct-2026). Pero sí se
+  // pueden borrar de una pasada. El botón NACE oculto y solo sale si hay alguno.
+  const descartados = (favores||[]).filter(f => f.d && f.d.estado
+    && SIN_RESTA.indexOf(f.d.estado) >= 0);
+  el("btnBorrarDescartados").style.display = descartados.length ? "block" : "none";
+  el("btnBorrarDescartados").textContent = "Borrar los descartados (" + descartados.length + ")";
 }
 const ETIQUETA = {
   pedido:"Esperando", contra:"Contestaron", esperando:"Por confirmar",
@@ -362,6 +370,35 @@ function escucharFavores(){
   }catch(e){}
 }
 el("btnVerCerrados").onclick = ()=>{ verCerrados = !verCerrados; pintarFavores(); };
+
+// Borra de una pasada los favores rechazados y cancelados. Siempre pregunta:
+// un borrado sin avisar es una trampa (regla de la casa). Y avisa si algo falla,
+// porque si no el usuario creeria que se borro.
+el("btnBorrarDescartados").onclick = async ()=>{
+  const descartados = (favores||[]).filter(f => f.d && f.d.estado
+    && SIN_RESTA.indexOf(f.d.estado) >= 0);
+  if(!descartados.length) return;
+  const ok = await confirmar({
+    aviso: true,
+    titulo: "¿Borrar " + descartados.length + (descartados.length === 1 ? " favor descartado?" : " favores descartados?"),
+    texto: "Los que rechazaron o cancelaron. No se puede deshacer.",
+    ok: "Borrar"
+  });
+  if(!ok) return;
+  const btn = el("btnBorrarDescartados");
+  btn.disabled = true;
+  try{
+    for(const f of descartados){
+      await deleteDoc(doc(db, "favoresExpress", f.id));
+    }
+    pintarFavores();
+  }catch(e){
+    console.error("Favor Express: no se pudieron borrar", e);
+    aviso("No se pudieron borrar todos. Revisa tu conexión.");
+  }finally{
+    btn.disabled = false;
+  }
+};
 
 // ---------- navegación (patrón de Guiadas/: una .vista a la vez) ----------
 function ver(id, guardar){
