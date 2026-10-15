@@ -447,7 +447,7 @@ import { glueSiEstaQuieto, glueOlvidado } from "./glue.js";
 // se cambia por una campana aunque estés viendo otra cosa. OJO: esto solo
 // funciona en Chrome de computadora; en el celular los navegadores no dejan
 // cambiar el ícono de la pestaña.
-import { vigilarInvitaciones, vigilarRetos } from "./pestana.js";
+import { vigilarInvitaciones, vigilarRetos, vigilarFavores } from "./pestana.js";
 import { montarFavor } from "./favor.js";
 // Modo invitado: la regla de "cuándo eres invitado de verdad" vive aquí.
 import {
@@ -545,6 +545,7 @@ function mostrarMenu(nombre){
   try{
     vigilarInvitaciones(dbActual());
     vigilarRetos(dbActual());
+    vigilarFavores(dbActual());
   }catch(e){}
   // El boton flotante del Favor Express. Se prende aqui (y no al arrancar)
   // porque es justo cuando ya se sabe que hay identidad y base valida. Va en su

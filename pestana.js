@@ -68,6 +68,16 @@ const TIPOS = {
     unoSolo: false,
     titulo: "Hay un reto nuevo",
     texto: "Ve a Retos para verlo."
+  },
+  favores: {
+    coleccion: "invitosFavor",
+    // Igual que los retos: uno por quien mandó, o se pisan entre los dos.
+    unoSolo: false,
+    // OJO: estos dos textos son los de POR DEFECTO. El documento trae los suyos
+    // (`titulo` y `aviso`) porque aqui no siempre es "hay algo nuevo": a veces
+    // es que te contestaron, aceptaron o rechazaron tu favor.
+    titulo: "Tienes un Favor Express",
+    texto: "Ábrelo para ver de qué se trata."
   }
 };
 
@@ -170,9 +180,13 @@ function ponerQuitarCampana(){
   else quitarCampana();
 }
 
-function pintar(canal, mia, creadoEn){
+function pintar(canal, mia, creadoEn, d){
   const antes = canal.pendiente;
   canal.pendiente = !!mia;
+  // El cartelito puede traer su propio texto: en los favores no siempre es "hay
+  // algo nuevo", a veces es que te contestaron o que te rechazaron el favor.
+  canal.tituloDoc = (d && d.titulo) || "";
+  canal.avisoDoc = (d && d.aviso) || "";
   if(canal.pendiente){
     ponerCampana();
     programarVigencia(canal, creadoEn);
@@ -215,7 +229,10 @@ function avisarInvitacion(canal){
   if(!canal.pendiente || document.hidden || canal.esEsta || canal.cartelitoYaSalio) return;
   canal.cartelitoYaSalio = true;
   const t = TIPOS[canal.tipo] || TIPOS.chat;
-  aviso({ titulo: t.titulo, texto: t.texto });
+  aviso({
+    titulo: canal.tituloDoc || t.titulo,
+    texto: canal.avisoDoc || t.texto
+  });
 }
 
 // ---------- el bip ----------
@@ -287,7 +304,7 @@ export function vigilarInvitaciones(db, opciones){
       canal.ref = doc(db, t.coleccion, "actual");
       onSnapshot(canal.ref, (snap)=>{
         const d = snap.exists() ? snap.data() : null;
-        pintar(canal, esMia(d), d && d.creadoEn);
+        pintar(canal, esMia(d), d && d.creadoEn, d);
       }, ()=>{});
     }else{
       // Uno por quien manda: de todos los documentos se toma el mas reciente que
@@ -298,13 +315,13 @@ export function vigilarInvitaciones(db, opciones){
         snap.forEach(ds=>{
           const d = ds.data();
           if(!esMia(d)) return;
-          if(!mine){ mine = { id: ds.id, creadoEn: d.creadoEn }; return; }
+          if(!mine){ mine = { id: ds.id, creadoEn: d.creadoEn, doc: d }; return; }
           const a = (d.creadoEn && d.creadoEn.toDate) ? d.creadoEn.toDate().getTime() : 0;
           const b = (mine.creadoEn && mine.creadoEn.toDate) ? mine.creadoEn.toDate().getTime() : 0;
-          if(a > b) mine = { id: ds.id, creadoEn: d.creadoEn };
+          if(a > b) mine = { id: ds.id, creadoEn: d.creadoEn, doc: d };
         });
         canal.ref = mine ? doc(db, t.coleccion, mine.id) : null;
-        pintar(canal, !!mine, mine && mine.creadoEn);
+        pintar(canal, !!mine, mine && mine.creadoEn, mine && mine.doc);
       }, ()=>{});
     }
   }catch(e){}
@@ -318,4 +335,9 @@ export function vigilarInvitaciones(db, opciones){
 /** Atajo para los retos: `vigilarRetos(db)` / `vigilarRetos(db, {esEsta:true})`. */
 export function vigilarRetos(db, opciones){
   return vigilarInvitaciones(db, Object.assign({}, opciones || {}, { tipo:"retos" }));
+}
+
+/** Atajo para los Favores Express: `vigilarFavores(db)`. */
+export function vigilarFavores(db, opciones){
+  return vigilarInvitaciones(db, Object.assign({}, opciones || {}, { tipo:"favores" }));
 }

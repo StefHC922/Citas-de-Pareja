@@ -251,3 +251,221 @@ export function ocultarBotonFavor(){
 export function mostrarBotonFavor(){
   if(montado && montado.btn) montado.btn.style.display = "block";
 }
+
+// ============================================================================
+//  FASE 2 — la ventana de RESPONDER: aceptar / cobrar otro precio / rechazar
+// ----------------------------------------------------------------------------
+//  Se escucha `favoresExpress` entera y se filtra en el cliente: la coleccion es
+//  de dos personas, no vale la pena una consulta con `where`.
+// ============================================================================
+
+const Yo = ()=> yoLocal();
+
+let cola = [];        // los favores que me tocan responder
+let mostrando = false;
+
+function cuandoMil(f){
+  try{
+    const t = f && f.creadoEn;
+    if(t && t.toDate) return t.toDate().getTime();
+    if(typeof t === "number") return t;
+  }catch(e){}
+  return 0;
+}
+
+function siguiente(){
+  if(mostrando || !cola.length) return;
+  // Un aviso puede llegar mientras haya un cartelito de `confirmar.js` en
+  // pantalla. Encimarse no se ve bien, asi que se espera a que se cierre.
+  if(hayCajaAbierta()){ setTimeout(siguiente, 400); return; }
+  cola.sort((a,b)=> cuandoMil(b) - cuandoMil(a));
+  const f = cola[0];
+  cola = cola.slice(1);
+  mostrarRespuesta(f);
+}
+
+function escucharRespuestas(db, yo){
+  if(!yo) return;
+  try{
+    onSnapshot(collection(db, "favoresExpress"), (snap)=>{
+      const nuevos = [];
+      snap.forEach(ds=>{
+        const d = ds.data();
+        if(!d || !d.para || d.para.id !== yo.id) return;
+        if(ESTADOS_VIVOS.indexOf(d.estado) < 0) return;
+        nuevos.push({ id: ds.id, d });
+      });
+      cola = nuevos;
+      siguiente();
+    }, ()=>{});
+  }catch(e){}
+}
+
+let capaRespuesta = null;
+function laCapaRespuesta(){
+  if(capaRespuesta) return capaRespuesta;
+  const c = document.createElement("div");
+  c.className = "fvCapa";
+  c.innerHTML = '<div class="fvCaja">'
+    + '<div class="fvNombre" id="vrTitulo"></div>'
+    + '<div class="fvTexto" id="vrTexto"></div>'
+    + '<div class="fvPrecio" id="vrPrecio"></div>'
+    + '<div class="fvMsg" id="vrMsg"></div>'
+    + '<div id="vrOtro" style="display:none;">'
+    + '<input type="number" id="vrPrecioFinal" min="0" step="1" '
+    + 'style="width:100%;border-radius:12px;border:1px solid var(--card-border, var(--borde));'
+    + 'background:var(--bg);color:var(--fg, var(--texto));padding:12px;font-size:.9rem;margin-bottom:8px;">'
+    + '<button class="btnPri" id="vrMandarOtro">Ofrecer este precio</button>'
+    + '</div>'
+    + '<button class="btnPri" id="vrAceptar"></button>'
+    + '<button class="btnSec" id="vrOtroBtn" style="display:none;">Otro precio</button>'
+    + '<button class="btnSec" id="vrRechazar" style="color:var(--rojo);">Rechazar</button>'
+    + '<button class="btnSec" id="vrCerrar">Ahora no</button>'
+    + '</div>';
+  document.body.appendChild(c);
+  capaRespuesta = c;
+  return c;
+}
+
+function mostrarRespuesta(f){
+  const yo = Yo();
+  const d = f.d;
+  const otro = (d.para.id === yo.id) ? d.de : d.para;
+  const c = laCapaRespuesta();
+  const $ = (id)=> c.querySelector("#" + id);
+  const btnAceptar = $("vrAceptar"), btnOtroBtn = $("vrOtroBtn"), btnRechazar = $("vrRechazar");
+  const cajaOtro = $("vrOtro"), msg = $("vrMsg");
+  // Al abrir de nuevo, el campo del contra-precio se esconde otra vez.
+  cajaOtro.style.display = "none";
+  msg.textContent = "";
+  $("vrTexto").textContent = d.texto || "";
+  $("vrPrecioFinal").value = d.precio;
+
+  const cents = (n)=> (n > 0) ? (n + " pts") : "gratis";
+
+  if(d.estado === "pedido"){
+    // Soy quien tiene que cumplirlo.
+    $("vrTitulo").textContent = otro.nombre + " te pide un favor";
+    $("vrPrecio").textContent = "Precio: " + cents(d.precio) + ". Lo paga " + d.de.nombre
+      + ". Puedes cobrar más, o dejarlo en 0.";
+    btnOtroBtn.style.display = "block";
+  }else if(d.estado === "contra"){
+    // Soy quien pidió: me contestan con otro precio.
+    $("vrTitulo").textContent = otro.nombre + " te contesta";
+    $("vrPrecio").textContent = "Quiere cobrar " + cents(d.precio) + " por: " + (d.texto || "");
+    btnOtroBtn.style.display = "none";
+  }else{
+    // Soy quien cumple y me confirman el precio.
+    $("vrTitulo").textContent = d.de.nombre + " confirmó el precio";
+    $("vrPrecio").textContent = cents(d.precio) + " por: " + (d.texto || "");
+    btnOtroBtn.style.display = "none";
+  }
+  btnAceptar.textContent = "Aceptar · " + cents(d.precio);
+  btnRechazar.style.display = "block";
+
+  const cerrar = ()=>{
+    c.classList.remove("ver");
+    mostrando = false;
+    setTimeout(siguiente, 250);
+  };
+
+  btnAceptar.onclick = async ()=>{
+    btnAceptar.disabled = true;
+    await responder(db, f, "aceptar");
+    btnAceptar.disabled = false;
+    cerrar();
+  };
+  btnRechazar.onclick = async ()=>{
+    btnRechazar.disabled = true;
+    await responder(db, f, "rechazar");
+    btnRechazar.disabled = false;
+    cerrar();
+  };
+  btnOtroBtn.onclick = ()=>{ cajaOtro.style.display = "block"; };
+  $("vrMandarOtro").onclick = async ()=>{
+    const n = parseInt($("vrPrecioFinal").value, 10);
+    if(!isFinite(n) || n < 0){ msg.textContent = "El precio tiene que ser 0 o más."; return; }
+    await responder(db, f, "contra", n);
+    cerrar();
+  };
+  $("vrCerrar").onclick = cerrar;
+  c.addEventListener("click", (e)=>{ if(e.target === c) cerrar(); });
+
+  mostrando = true;
+  c.classList.add("ver");
+}
+
+// El estado que sigue depende de DONDE ESTAMOS y de lo que se hizo. El
+// contra-precio es UNA ida y una vuelta: si yo contra-oferteo y el otro acepta,
+// vuelve al que controla y ahi se decide. Nunca hay mas de un rodeo.
+function siguienteEstado(d, accion, nuevoPrecio){
+  if(accion === "rechazar") return { estado:"rechazado" };
+  if(d.estado === "pedido"){
+    if(accion === "contra") return { estado:"contra", precio: nuevoPrecio };
+    return { estado:"enCurso" };               // aceptó directo: arranca el reloj
+  }
+  if(d.estado === "contra"){
+    if(accion === "contra") return null;       // no se puede volver a contra: se acabó
+    return { estado:"esperando" };            // quien pidió aceptó el precio nuevo
+  }
+  // estaba en "esperando": ya no hay a quién responderle. Se acepta y arranca.
+  return { estado:"enCurso" };
+}
+
+function textoParaElOtro(d, sig, miNombre){
+  if(sig.estado === "rechazado") return "\u274C " + miNombre + " no acept\u00f3 tu favor: " + (d.texto || "");
+  if(sig.estado === "contra") return "\u{1F3B2} " + miNombre + " quiere cobrar " + sig.precio + " pts por: " + (d.texto || "");
+  if(sig.estado === "esperando") return "\u{1F3B2} " + miNombre + " acept\u00f3 tu precio de " + d.precio + " pts. Falta que confirme.";
+  return "\u2705 " + miNombre + " acept\u00f3: " + (d.texto || "") + ". Tienes " + MINUTOS_FAVOR + " minutos.";
+}
+
+async function responder(db, f, accion, nuevoPrecio){
+  const yo = Yo();
+  const d = f.d;
+  if(!yo) return false;
+  const sig = siguienteEstado(d, accion, nuevoPrecio);
+  if(!sig) return false;
+  const otro = (d.para.id === yo.id) ? d.de : d.para;
+  try{
+    const cambios = Object.assign({ actualizadoEn: serverTimestamp() }, sig);
+    // El reloj arranca SOLO cuando el favor queda en "enCurso", o sea cuando ya
+    // esta aceptado por los dos. Si arrancara al pedir, se venceria por estar
+    // ocupada: es justo lo que dijo Fredy (oct-2026).
+    if(sig.estado === "enCurso"){
+      cambios.venceEn = Date.now() + (MINUTOS_FAVOR * 60000);
+      cambios.aceptadoPor = yo.id;
+      cambios.aceptadoEn = serverTimestamp();
+    }
+    if(sig.estado === "rechazado"){
+      cambios.rechazadoPor = yo.id;
+      cambios.rechazadoEn = serverTimestamp();
+    }
+    if(sig.estado === "contra" || sig.estado === "esperando"){
+      cambios.respondidoEn = serverTimestamp();
+    }
+    await setDoc(doc(db, "favoresExpress", f.id), cambios, { merge: true });
+    await avisarAlOtro(db, yo, otro, d, sig);
+    return true;
+  }catch(e){
+    console.error("Favor Express: no se pudo responder", e);
+    return false;
+  }
+}
+
+async function avisarAlOtro(db, yo, otro, d, sig){
+  const texto = textoParaElOtro(d, sig, yo.nombre);
+  try{
+    await setDoc(doc(db, "invitosFavor", yo.id), {
+      para: otro.id,
+      de: yo.id,
+      deNombre: yo.nombre,
+      titulo: sig.estado === "rechazado" ? "No aceptaron tu favor"
+           : sig.estado === "enCurso" ? "Aceptaron tu favor"
+           : "Contestaron tu favor",
+      aviso: texto,
+      creadoEn: serverTimestamp(),
+      visto: false
+    }, { merge: true });
+  }catch(e){}
+  await avisarTelegram(texto, baseUrl() + "Retos/");
+}
