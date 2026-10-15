@@ -77,7 +77,8 @@ solo sale una gota menos por tanda cuando el celular va lento. **Por eso puede c
 todo el rato sin arrastrar la pantalla.**
 
 **Verificado:** sintaxis OK en `glue.js` e `index.html`; `glue.js` quedó registrado
-en `herramientas/sintaxis/extract.py`. **Falta la prueba en vivo.**
+en `herramientas/sintaxis/extract.py`. **PROBADO EN VIVO (Fredy, oct-2026).**
+
 ### Una cita no se agenda en el pasado (oct-2026)
 
 En `Citas/`, al agendar solo se comprobaba que el campo de fecha **no estuviera

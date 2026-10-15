@@ -15,7 +15,7 @@ coinciden** y hay que tenerlas presentes:
 |---|---|
 | **B2 ya no aplica** | El borrado de un reto **ya cobrado** no descuenta de mas: `eliminarReto()` solo revierte puntos si el reto sigue `"enCurso"`, y al llegar a la meta pasa a `"cobrada"`. El fallo que se describe aqui era de la logica **anterior** (la que liquidaba con `delta = 1 - meta`), que ya se cambio en oct-2026. **Se puede borrar de la lista de fallas** |
 | **B3 sigue, pero cambio de efecto** | Ya no es "doble penalizacion": la liquidacion antigua (`delta = 1 - meta`) tambien cambio. Hoy `marcarCumplida()` **no descuenta nada**, asi que el riesgo real es **doble premio** (+2 en vez de +1) y el aviso de Telegram duplicado |
-| **Faltan 3 rutas en el inventario** | La seccion 1 se quedo corta: no incluye **`deseos`** ni **`comprasDeseos`** (el Centro de Adquisiciones) ni **`invitosChat/actual`** (la campana del Chat). El conteo real es **14 colecciones + 8 documentos sueltos**, no "17 + 3" |
+| **Faltan rutas en el inventario** | La seccion 1 se quedo corta. Ya se le agregaron **`deseos`** y **`comprasDeseos`** (el Centro) e **`invitosChat/actual`**. Y en oct-2026 se creo **`invitosRetos`**, que es **una coleccion con un documento POR QUIEN MANDA** (no uno solo: ver `Campana-Pestana.md`). El conteo real es **16 colecciones + 8 documentos sueltos**, no "17 + 3" |
 | **Los numeros de linea ya no coinciden** | `eliminarReto` esta en `Retos/index.html:1034` (no 935) y `marcarCumplida` en la 1060 (no 951). Sirven para orientarse, no para buscar. En `index.html`, `volverSiInvitadoSinPartida` esta en la 948 |
 
 **B1 quedo ARREGLADO** (oct-2026): la ruta mal escrita se corrigio y ya se
@@ -84,6 +84,8 @@ documentado en `AGENTS.md`; no se toca aqui.
 | `sesionGuiada/actual` | doc | `activa`, `sid`, `hostUid`, `hostNombre`, `modo`, `titulo`, `actividades[]`, `lista[]`, `paso`, `terminada`, `reanudada`, `empezadaEn`, `actualizadaEn` |
 | `sesionOpciones/actual` | doc | `cabezas[]`, `listas{}`, `pares{}`, `eliminadas{}`, `orden[]`, `turno`, `ronda`, `terminada`, `activa`, `pausada`, `porAdmin`, `sid`, `hostUid`, `hostNombre`, `modo`, `unCelular`, `rondas`, `ladoSolo`, `reanudada`, `empezadaEn`, `actualizadaEn` |
 | `invitaciones` | col (id = juego) | `juego`, `titulo`, `icono`, `ruta`, `hostUid`, `hostNombre`, `participantes[]`, `sesion`, `activa`, `pausada`, `sid`, `actualizadaEn` |
+| `invitosChat/actual` | doc | `para`, `creadoEn`, `visto`, `vistoEn?` — la campana de la pestaña (ver `Campana-Pestana.md`) |
+| `invitosRetos/{idDeQuienManda}` | col (un doc por persona) | `para`, `titulo`, `creadoEn`, `visto`, `vistoEn?` — lo mismo, pero **por quien manda** (oct-2026). Antes era un doc solo y se pisaban entre los dos |
 | `packs` | col (taquilla) | `titulo`, `icono`, `desc`, `ruta`, `seccion`, `orden`, `activo`, `actualizadoEn`, `nuevoHasta`, `oficial?`, `niveles?`, `tomasSugeridas?` |
 | `solicitudes` | col (taquilla) | `para`, `item`, `quien`, `email`, `estado`, `fecha`, `intentos`, `pideDesrevocar`, `codigo?`, `vence?`, `dias?`, `aprobadoEn?`, `revocadoEn?`, `graciaUsada?`, `graciaFecha?` |
 

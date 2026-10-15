@@ -226,8 +226,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, resolverTelegram, baseUrl, cargarUsuarios } from "../config.js";
+import { resolverFirebase, baseUrl, cargarUsuarios } from "../config.js";
 import { confirmar, aviso } from "../confirmar.js";
+import { avisarTelegram } from "../telegram.js";
 
 const firebaseConfig = resolverFirebase(firebaseConfigBase);
 const app = initializeApp(firebaseConfig);
@@ -236,9 +237,6 @@ const deseosRef = collection(db, "deseos");
 const comprasRef = collection(db, "comprasDeseos");
 const puntosUsuariosRef = collection(db, "puntosUsuarios");
 
-const _tg = resolverTelegram();
-const TELEGRAM_BOT_TOKEN = _tg.token;
-const TELEGRAM_CHAT_ID = _tg.chat;
 const APP_URL = baseUrl();
 
 const ACT_POR_DEFECTO = 500;
@@ -250,18 +248,6 @@ let balance = 0;
 let deseos = [], compras = [];
 let abiertoId = null;
 
-async function avisarTelegram(texto, url){
-  if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.indexOf("PON_AQUI") === 0) return;
-  if(!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID.indexOf("PON_AQUI") === 0) return;
-  try{
-    const cuerpo = { chat_id: TELEGRAM_CHAT_ID, text: texto };
-    if(url) cuerpo.reply_markup = { inline_keyboard: [[{ text: "Abrir 👀", url: url }]] };
-    await fetch("https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(cuerpo)
-    }).then(x=>x.json());
-  }catch(e){}
-}
 function numConfig(valor, porDefecto){
   const n = parseInt(valor, 10);
   return (isFinite(n) && n > 0) ? n : porDefecto;

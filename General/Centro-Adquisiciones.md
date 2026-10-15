@@ -158,6 +158,10 @@ tus deseos más secretos que quieres hacer realidad"**.
 podía, con un aviso que decía *"se quita de ahí y no se devuelven los
 puntos"*. **Ahora no se puede**, y por eso el botón no se dibuja:
 
+**PROBADO EN VIVO (Fredy, oct-2026):** un deseo **secreto** se borra con su ✕ y
+su confirmación; uno **en venta** ya **no muestra la ✕**, y al tocarlo la ventana
+dice *"aquí no se puede borrar"*.
+
 | Dónde | Qué hace |
 |---|---|
 | La **✕** de "Mis deseos" | **No aparece** si el deseo ya está en venta. Un botón que no hace nada es una trampa |
@@ -176,6 +180,13 @@ siguen vivos** (son documentos aparte, en `comprasDeseos`, con el nombre del
 deseo copiado dentro) y **quien lo tenía que entregar lo sigue teniendo que
 entregar**. No se rompe nada, pero puede haber un pedido de un deseo que ya no
 está.
+
+**El botón "Comprar" NO sale si no hay saldo.** A diferencia de los Favores
+Express (ver `Plan-Favores-Express.md`), donde **el botón siempre aparece y se
+avisa que no alcanza**. Son reglas **distintas a propósito** (decisión de Fredy,
+oct-2026): aquí no se compra "a debt", y ni se ofrece la opción. Si algún día se
+arman los Favores Express, que nadie "arregle" uno para que sea igual que el otro
+sin preguntar.
 
 **Un apunte sobre el flujo de los pedidos** (lo aclaró Fredy al preguntar): el
 que **compra** puede ser la misma persona que puso el deseo. Si tú lo compras
@@ -254,5 +265,5 @@ deseos, compras y retos, porque quedan huérfanos.
 transacción: dos celulares apretando "Comprar" al mismo tiempo no pueden gastar dos
 veces lo que no hay (el bug B3 de `Modelo-Datos.md`, pero aquí sí prevenido).
 **Verificado:** sintaxis OK en los 3 archivos; `<div>` cuadrados (33/33), sin ids
-repetidos y sin ids de JS inexistentes en `centro.html`. **Falta la prueba en
-vivo** (Fredy, en Pages y con los dos celulares).
+repetidos y sin ids de JS inexistentes en `centro.html`. **PROBADO EN VIVO
+(Fredy, oct-2026)**, en Pages y con los dos celulares.

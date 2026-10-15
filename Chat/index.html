@@ -83,8 +83,9 @@ import {
   onSnapshot, query, orderBy, limit, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, cargarUsuarios, resolverTelegram, baseUrl } from "../config.js";
+import { resolverFirebase, cargarUsuarios, baseUrl } from "../config.js";
 import { vigilarInvitaciones } from "../pestana.js";
+import { avisarTelegram } from "../telegram.js";
 
 const CLAVE_LOCAL = "appPareja_quienSoy";
 const listaEl = document.getElementById("lista");
@@ -201,31 +202,9 @@ textoEl.addEventListener("keydown", (e)=>{ if(e.key === "Enter") enviar(); });
 // pareja, que es lo que enciende la campana en la pestaña del otro (ver
 // ../pestana.js). El Telegram es para cuando tiene la app cerrada; la base es
 // para cuando la tiene abierta en otra pestaña.
-const _tg = resolverTelegram();
-const TELEGRAM_BOT_TOKEN = _tg.token;
-const TELEGRAM_CHAT_ID = _tg.chat;
 const APP_URL = baseUrl();
 const REF_INVITO = doc(db, "invitosChat", "actual");
 const btnInvitar = document.getElementById("btnInvitar");
-
-async function avisarTelegram(texto, url){
-  if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.indexOf("PON_AQUI") === 0) return;
-  if(!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID.indexOf("PON_AQUI") === 0) return;
-  try{
-    const cuerpo = { chat_id: TELEGRAM_CHAT_ID, text: texto };
-    if(url) cuerpo.reply_markup = { inline_keyboard: [[{ text: "Abrir 👀", url: url }]] };
-    const r = await fetch("https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(cuerpo)
-    }).then(x=>x.json());
-    // Un token/chat ID malo responde 200 con ok:false: hay que leerlo, o el
-    // aviso se pierde sin que nadie sepa por que.
-    if(r && r.ok === false) throw new Error(r.description || "Telegram rechazo el aviso");
-  }catch(e){
-    try{ localStorage.setItem("pareja_tg_error", String((e && e.message) || e)); }catch(x){}
-  }
-}
 
 // El boton de "Volver" es el que se apaga mientras se manda, para que un doble
 // toque no mande dos mensajes: un Telegram enviado no se borra.

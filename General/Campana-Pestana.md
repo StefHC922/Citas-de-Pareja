@@ -86,10 +86,50 @@ minutos de vigencia, se dice **una vez**, solo con la pestaña visible, y si la
 pantalla que se abre **es** esa misma (`Retos/`) se da por visto sin decir nada.
 
 **Ojo con la ruta del documento:** `TIPOS[tipo].coleccion` es **solo el nombre
-de la colección** (`"invitosRetos"`), y el `"actual"` se agrega aparte. Escribir
-`"invitosRetos/actual"` en un solo pedazo devuelve una *colección*, no un
-documento, y `onSnapshot` truena en silencio — es el mismo error que se corrigió
-en `index.html` (ver *El invitado vuelve solo al abrir la app*).
+de la colección**, y el `"actual"` (o el id de quien manda) se agrega aparte.
+Escribir `"invitosRetos/actual"` en un solo pedazo devuelve una *colección*, no
+un documento, y `onSnapshot` truena en silencio — es el mismo error que se
+corrigió en `index.html` (ver *El invitado vuelve solo al abrir la app*).
+
+### El aviso de los retos NO puede ser un documento solo (corregido oct-2026)
+
+**Estaba mal y se encontró en la revisión del mismo día.** `Acompanante/`
+escribía siempre en `invitosRetos/actual`, un **documento único**, y
+`pestana.js` leía ese mismo documento. Eso se rompe en dos casos reales:
+
+| Caso | Qué pasaba |
+|---|---|
+| **Los dos piden un reto** (cada uno en su `Acompanante/`) | El segundo envío **sobrescribía** al primero. Quien lo mandó **nunca se enteraba**: no le llegaban ni el Telegram ni la campana |
+| **El mismo pide dos retos seguidos** sin que el otro lo haya visto | Igual |
+
+**Por qué el Chat sí puede con uno solo:** su invitación es **simétrica**
+("ven a plicatear", da igual quién la haga). Un reto **no**: la dirección
+importa.
+
+**Lo que quedó:** el documento es **por quien manda**, `invitosRetos/{idDeQuienManda}`.
+`pestana.js` ahora escucha la **colección** y toma el más reciente dirigido a mí.
+Si llegan dos a la vez (los dos pidieron), **gana el más nuevo**: la campana es
+una sola y no puede avisar de dos cosas. Por eso `TIPOS` tiene el campo
+`unoSolo`: `true` para el Chat (un documento fijo) y `false` para los Retos (una
+colección).
+
+> **Lo que sigue sin cubrir:** si la **misma** persona pide dos retos seguidos sin
+> que el otro haya visto el primero, el segundo **pisa** al primero (mismo autor,
+> mismo documento). El aviso del primero se pierde; **el reto sí existe** en
+> `Retos/`, solo no le llega la notificación. **Pendiente de decidir.**
+
+### La campana se apaga SOLO si la pantalla se mostró de verdad (corregido oct-2026)
+
+`Retos/index.html` llamaba a `vigilarRetos(db, {esEsta:true})` al arrancar. Pero
+si la identidad guardada **ya no está en la lista de usuarios** —típico: un
+invitado que fue expulsado, cuya ficha se borró— esa pantalla no muestra nada de
+`Retos/`: sale el "elige usuario". Y aun así **la campana se apagaba y el aviso se
+marcaba como visto**, sin que nadie lo hubiera leído. Como no hay forma de volver
+a verlo, el aviso se perdía en silencio.
+
+**El arreglo:** la llamada se movió **adentro de `mostrarApp()`**, que es lo
+único que corre cuando `Retos/` sí se está mostrando. Mismo criterio que el resto
+de la app: si no se ve la pantalla, no se apaga nada.
 
 **Lo que sigue igual:** la campana **solo funciona en computadora con Chrome o
 Edge**. En celular no hay ícono de pestaña; ahí llegan el cartelito, la pancarta

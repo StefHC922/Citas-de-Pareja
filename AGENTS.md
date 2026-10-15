@@ -23,6 +23,7 @@ tenia el contexto a la mano.
 | `General/Pegamento-y-Citas.md` | El pegamento, la agenda de `Citas/` y las pantallas de Actividades y Accesorios | Solo si la tarea toca esas pantallas |
 | `General/Modelo-Datos.md` | Como esta guardada la base y como normalizarla | Antes de migrar datos |
 | `General/HISTORIA.md` | **El por que**: relato con fecha de cada arreglo | **Solo** en los casos de abajo |
+| `General/Plan-Favores-Express.md` | Un plan de desarrollo **que no existe todavia** | Solo si la tarea es sobre Favores Express |
 
 **Los cuatro del medio se partieron del `GUIA.md` el oct-2026** (pasó de 2,274
 a 1,417 líneas). Son **detalle de una sola pantalla o un solo modulo**: se leen
@@ -58,8 +59,10 @@ el trabajo diario cae en la lista de "NO lo necesitas", y `GUIA.md` tiene
   hay npm, no hay framework. Se edita el archivo y ya.
 - Los modulos compartidos viven **en la raiz** (`acceso.js`, `invitado.js`,
   `config.js`, `firebase-config.js`, `taquilla.js`, `fuegos.js`, `confirmar.js`,
-  `pestana.js`) y se importan por ruta relativa al **modulo**, no al archivo que
-  lo importa.
+  `pestana.js`, `telegram.js`) y se importan por ruta relativa al **modulo**, no
+  al archivo que lo importa.
+- **`avisarTelegram()` ya NO se copia** (oct-2026): vive en `telegram.js`. Si
+  necesitas mandar un aviso por Telegram, **importalo**; no lo pegues otra vez.
 - **Reglas de Firestore:** no estan en el repo. Viven en la consola de Firebase.
   Cualquier tarea sobre permisos es manual y hay que decirlo.
 - **No hay `git` disponible en el entorno de trabajo.** Para revisar cambios se

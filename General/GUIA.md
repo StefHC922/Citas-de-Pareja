@@ -664,10 +664,30 @@ sección 6.
 
 ### Otros pendientes
 
-- Rotar la llave expuesta en `Default Project\General\README.md` y sacarla de ahi.
+- ~~Rotar la llave expuesta~~ **REVISADO oct-2026: no hay ninguna llave
+  expuesta.** Lo que decía esto era el marcador `PON_AQUI_TU_KEY` de
+  `Default Project\General\README.md`: un espacio reservado, no una llave real, así
+  que **no hay nada que rotar**. Se reviso el repo entero buscando llaves con
+  forma de secreto (`AIza...`, `-----BEGIN`, `sk-...`) y lo único que hay es la
+  API key de Firebase de `taquilla-juegos` y la mitad **pública** del par de
+  licencias: **las dos van al repo por diseño**. La mitad privada no esta en
+  ningún archivo (solo en `localStorage` del aparato del desarrollador).
+  **Lo que sí queda para la arquitectura nueva** es el login con reglas por
+  correo, que es lo que protege de verdad la base de cada pareja (ver *La base de
+  cada PAREJA*). **Único cuidado de aquí en adelante:** no pegar una llave real
+  en ese `README.md`, porque esa carpeta se lee en cada conversación.
 - **Probar la vuelta automatica del invitado al abrir la app** (arreglo oct-2026,
   ver *El invitado vuelve solo al abrir la app*): un invitado con QR y partida en
   curso NO debe ser expulsado; uno sin partida debe volver solo.
+  ~~**PROBADO EN VIVO: las dos pasaron.**~~
+- **Favores Express** — idea de Fredy, oct-2026, **NO está construida**. El plan
+  completo (flujo, decisiones ya tomadas y lo que falta) está en
+  **`General/Plan-Favores-Express.md`**. Ese archivo es **temporal**: cuando la
+  función esté probada se borra y lo que valga pasa aquí.
+- **Los cambios de puntos deben requerir que los dos acepten.** **Hoy NO está
+  hecho**: los números del 🛒 se cambian libremente, que es lo que se usa para
+  probar sin molestar. Cuando se arme, aplica al Centro **y** a los Favores
+  Express.
 - Sala de espera: **falta la prueba con dos telefonos reales** (en vivo).
 - Sesion de Encuentros en `sesionEncuentros/actual`: la lista de TODOS los
   participantes (incluidos invitados) vive en un solo documento. Confirmar en la
@@ -1000,9 +1020,9 @@ notaba: las otras dos dan el mismo resultado y nunca fallaban en voz alta.
 > Sirve de regla: *probado* significa que se ejecuto, no que se reviso el
 > codigo.
 
-**Pendiente:** la prueba en vivo, con dos invitados registrados por QR: uno
-con partida en curso (no debe ser expulsado) y otro sin ella (debe volver
-solo). Es lo unico que no se ha comprobado de este arreglo.
+**PROBADO EN VIVO (Fredy, oct-2026):** las dos pruebas, las dos pasaron. Un
+invitado con partida en curso no es expulsado; uno sin ella vuelve solo a su
+propio espacio y sale de la lista de quien lo invitó.
 
 **Al expulsar a un invitado se le pone el saldo en cero** (oct-2026, decisión de
 Fredy). `salirDeInvitado()` ya borraba su ficha de la lista del anfitrión; ahora
@@ -1055,9 +1075,10 @@ línea que se cambió**. Ninguna otra parte lee, ordena ni compara ese código
 interno: la app siempre muestra el **nombre**. Los usuarios que ya existen no se
 tocan.
 
-**Pendiente:** la prueba en vivo. Dos cosas que no se pueden hacer desde aquí:
-registrarse dos veces con el mismo nombre (debe devolverte la misma ficha y tus
-puntos) y registrar dos personas a la vez (deben quedar las dos).
+**PROBADO EN VIVO (Fredy, oct-2026):** las tres pasaron. Volver a escanear con
+el mismo nombre devuelve la misma ficha (tambien **sin acentos**: "Jose" y
+"José" son la misma persona) y no crea un segundo nombre en la lista; y dos
+personas registrándose al mismo tiempo **quedan las dos**, no se pisan.
 
 ### Iconos dibujados (SVG) en vez de emoji
 
@@ -1082,6 +1103,41 @@ Para cambiar el color, cambiar los `fill`.
 
 **Como volver al emoji:** en `tarjetaPack()`, dejar la linea del `if` y en la
 definicion del pack poner el emoji en `icono`.
+
+### `avisarTelegram()` vive en `telegram.js` (hecho oct-2026)
+
+**Antes:** la función estaba **copiada en 5 archivos** y **ya se había
+deformado**: eran **4 versiones distintas**, y una estaba **rota**.
+
+| Archivo | ¿Revisaba que Telegram hubiera aceptado? |
+|---|---|
+| `Retos/centro.html` | **NO — se tragaba el error** |
+| `Chat/`, `Acompanante/`, `Citas/`, `Retos/` | Sí |
+
+**Por qué la del Centro estaba rota y eso importaba:** un token malo responde
+**HTTP 200 con `ok:false`**. El `fetch` **no falla nunca**, así que sin revisar la
+respuesta la función creía que el aviso salió y **se perdía en silencio**. Las
+otras cuatro sí revisaban, y dejaban la pista en el celular.
+
+**Ahora:** `telegram.js`, en la raíz, exporta `avisarTelegram(texto, url)` y saca
+el token sola con `resolverTelegram()` de `config.js`. Los 5 archivos la
+importan. **Las 24 llamadas no se tocaron.**
+
+| Regla | |
+|---|---|
+| **La llave de la pista** | El error se guarda con **`pareja_tg_error`** y el ⚙️ de Telegram del menú la lee. **No cambiar esa llave.** (`telegram.js` la exporta como `CLAVE_TG_ERROR`, y `index.html` tiene la suya propia: mismo texto) |
+| **El token se lee en cada llamada**, no al cargar el módulo | Para que un cambio hecho en el ⚙️ sirva de inmediato. Es el mismo criterio que `miProyecto()` en `acceso.js` |
+| **Nunca lanza** | Un fallo de Telegram no debe tumbar la pantalla que lo llamó |
+| **Registrado en `extract.py`** | Si no, el chequeo de sintaxis no lo revisa |
+
+**Lo que NO cambió:** lo que ve el usuario. Solo se dejó de tener el mismo texto
+cinco veces.
+
+**Pendiente de probar en vivo:** que **sigan llegando** los Telegram desde los
+5 sitios — un reto nuevo, una cita nueva, una compra en el Centro, el botón
+"Invitar" del Chat y un reto de la IA.
+
+---
 
 ### Notas de mantenimiento
 

@@ -38,7 +38,7 @@
 // ============================================================================
 
 import {
-  doc, onSnapshot, updateDoc, serverTimestamp
+  doc, collection, onSnapshot, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { aviso } from "./confirmar.js";
 
@@ -50,15 +50,22 @@ const MINUTOS_VIGENCIA = 30;
 
 // Qué se puede vigilar. Cada tipo tiene su propio documento y su propio cartelito.
 // El de los retos se agregó en oct-2026: cuando la IA (o la pareja) te manda un
-// reto, suena lo mismo que cuando te invitan al Chat.
+// reto, suena lo mismo que te invitan al Chat.
 const TIPOS = {
   chat: {
     coleccion: "invitosChat",
+    // UN documento fijo: "invitosChat/actual". Da igual quien invite, porque la
+    // invitación al chat es simétrica.
+    unoSolo: true,
     titulo: "Te invitaron al Chat",
     texto: "Ve a Comunicaciones → Chat para platicar."
   },
   retos: {
     coleccion: "invitosRetos",
+    // Un documento POR QUIEN MANDA: "invitosRetos/{id}". Con uno solo los dos se
+    // pisan: si cada uno pide un reto, el segundo sobrescribe al primero y quien
+    // lo mandó nunca se entera (bug encontrado en la revisión de oct-2026).
+    unoSolo: false,
     titulo: "Hay un reto nuevo",
     texto: "Ve a Retos para verlo."
   }
@@ -273,13 +280,33 @@ export function vigilarInvitaciones(db, opciones){
     cartelitoYaSalio:false, reloj:0
   };
   canal.esEsta = !!(o.esEsta ?? (tipo === "chat" ? o.esChat : o.esRetos));
+  const t = TIPOS[tipo];
+  const esMia = (d)=> !!(d && d.para === yo.id && !d.visto && msRestantes(d.creadoEn) > 0);
   try{
-    canal.ref = doc(db, TIPOS[tipo].coleccion, "actual");
-    onSnapshot(canal.ref, (snap)=>{
-      const d = snap.exists() ? snap.data() : null;
-      const mia = !!(d && d.para === yo.id && !d.visto && msRestantes(d.creadoEn) > 0);
-      pintar(canal, mia, d && d.creadoEn);
-    }, ()=>{});
+    if(t.unoSolo){
+      canal.ref = doc(db, t.coleccion, "actual");
+      onSnapshot(canal.ref, (snap)=>{
+        const d = snap.exists() ? snap.data() : null;
+        pintar(canal, esMia(d), d && d.creadoEn);
+      }, ()=>{});
+    }else{
+      // Uno por quien manda: de todos los documentos se toma el mas reciente que
+      // vaya dirigido a MI. Si llegan varios a la vez (los dos pidieron), la
+      // campana es una sola y no puede avisar de dos cosas: gana el mas nuevo.
+      onSnapshot(collection(db, t.coleccion), (snap)=>{
+        let mine = null;
+        snap.forEach(ds=>{
+          const d = ds.data();
+          if(!esMia(d)) return;
+          if(!mine){ mine = { id: ds.id, creadoEn: d.creadoEn }; return; }
+          const a = (d.creadoEn && d.creadoEn.toDate) ? d.creadoEn.toDate().getTime() : 0;
+          const b = (mine.creadoEn && mine.creadoEn.toDate) ? mine.creadoEn.toDate().getTime() : 0;
+          if(a > b) mine = { id: ds.id, creadoEn: d.creadoEn };
+        });
+        canal.ref = mine ? doc(db, t.coleccion, mine.id) : null;
+        pintar(canal, !!mine, mine && mine.creadoEn);
+      }, ()=>{});
+    }
   }catch(e){}
   document.addEventListener("visibilitychange", ()=>{
     if(document.hidden) return;

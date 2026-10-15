@@ -164,8 +164,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDoc, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, cargarUsuarios, resolverTelegram, baseUrl } from "../config.js";
+import { resolverFirebase, cargarUsuarios, baseUrl } from "../config.js";
 import { confirmar, aviso } from "../confirmar.js";
+import { avisarTelegram } from "../telegram.js";
 
 const CLAVE_LOCAL = "appPareja_quienSoy";
 const CLAVE_LLAVE = "pareja_aiKey";
@@ -646,10 +647,13 @@ async function crearReto(i, btn){
     // El reto ya esta creado, pero el otro no tiene por que enterarse: solo
     // aparece si abre Retos/ por su cuenta. Se le avisa por las DOS mitades
     // (decision de Fredy, oct-2026): Telegram, que es lo unico que llega con la
-    // app cerrada, y el documento `invitosRetos/actual`, que es lo que prende
-    // la campana de la pestana, suena el bip y saca el cartelito al abrir la app.
+    // app cerrada, y el documento de `invitosRetos`, que es lo que prende la
+    // campana de la pestana, suena el bip y saca el cartelito al abrir la app.
+    // OJO: el documento es POR QUIEN MANDA (`invitosRetos/{miId}`), no uno solo.
+    // Con uno solo, si los dos piden un reto, el segundo sobrescribe al primero y
+    // quien lo mandó nunca se entera (se corrigió oct-2026).
     try{
-      await setDoc(doc(db, "invitosRetos", "actual"), {
+      await setDoc(doc(db, "invitosRetos", yo.id), {
         para: pareja.id,
         titulo: m.reto.actividad || "Reto sorpresa",
         creadoEn: serverTimestamp(),
@@ -664,27 +668,8 @@ async function crearReto(i, btn){
   }
 }
 
-// Telegram: misma copia que en Retos/, index.html y centro.html. Sin token o
-// sin chat ID no hace nada (quien no lo ha configurado no recibe nada).
-const _tg = resolverTelegram();
-const TELEGRAM_BOT_TOKEN = _tg.token;
-const TELEGRAM_CHAT_ID = _tg.chat;
-async function avisarTelegram(texto, url){
-  if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.indexOf("PON_AQUI") === 0) return;
-  if(!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID.indexOf("PON_AQUI") === 0) return;
-  try{
-    const cuerpo = { chat_id: TELEGRAM_CHAT_ID, text: texto };
-    if(url) cuerpo.reply_markup = { inline_keyboard: [[{ text: "Abrir 👀", url: url }]] };
-    const r = await fetch("https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(cuerpo)
-    }).then(x=>x.json());
-    if(r && r.ok === false) throw new Error(r.description || "Telegram rechazo el aviso");
-  }catch(e){
-    try{ localStorage.setItem("pareja_tg_error", String((e && e.message) || e)); }catch(x){}
-  }
-}
+// Telegram: vive en ../telegram.js (antes estaba copiada en 5 archivos). Sin
+// token o sin chat ID no hace nada: quien no lo ha configurado no recibe nada.
 
 btnEnviar.onclick = ()=>enviar();
 textoEl.addEventListener("keydown", (e)=>{ if(e.key === "Enter") enviar(); });

@@ -367,8 +367,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, resolverTelegram, baseUrl, cargarUsuarios, finDeUltimoDia } from "../config.js";
+import { resolverFirebase, baseUrl, cargarUsuarios, finDeUltimoDia } from "../config.js";
 import { confirmar, aviso } from "../confirmar.js";
+import { avisarTelegram } from "../telegram.js";
 import { vigilarRetos } from "../pestana.js";
 const firebaseConfig = resolverFirebase(firebaseConfigBase);
 
@@ -385,10 +386,8 @@ let balances = {};
 let retos = [];
 
 // ====== AVISOS (pancarta + sonido + vibración + Telegram) ======
-// Telegram y URL salen del asistente (index); sin ellos, solo avisos locales.
-const _tg = resolverTelegram();
-const TELEGRAM_BOT_TOKEN = _tg.token;
-const TELEGRAM_CHAT_ID = _tg.chat;
+// Telegram y URL salen del engrane del menú; sin ellos, solo avisos locales.
+// `avisarTelegram()` vive en ../telegram.js (antes copiada aqui).
 const APP_URL = baseUrl();
 
 const bannerEl = document.getElementById("banner");
@@ -428,25 +427,6 @@ function notificar(texto, ancla){
   mostrarBanner(texto);
   bip();
   try{ if(navigator.vibrate) navigator.vibrate([150, 80, 150]); }catch(e){}
-}
-async function avisarTelegram(texto, url){
-  if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.indexOf("PON_AQUI") === 0) return;
-  if(!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID.indexOf("PON_AQUI") === 0) return;
-  try{
-    const cuerpo = { chat_id: TELEGRAM_CHAT_ID, text: texto };
-    if(url) cuerpo.reply_markup = { inline_keyboard: [[{ text: "Abrir 👀", url: url }]] };
-    const r = await fetch("https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(cuerpo)
-    }).then(x=>x.json());
-    // Un token/chat ID malo responde 200 con ok:false: hay que leerlo, o el
-    // aviso se pierde sin que nadie sepa por que. Se deja la pista en el
-    // celular para que ⚙️ → Telegram la pueda mostrar.
-    if(r && r.ok === false) throw new Error(r.description || "Telegram rechazo el aviso");
-  }catch(e){
-    try{ localStorage.setItem("pareja_tg_error", String((e && e.message) || e)); }catch(x){}
-  }
 }
 // Acciones propias recientes: no alertar de lo que yo mismo hice
 const suprimidos = {};
@@ -601,6 +581,12 @@ function mostrarApp(){
   appEl.style.display = "flex";
   intentosResalte = 0;
   intentarResaltar();
+  // La campana de la pestaña (pestana.js): AQUI se apaga el aviso de un reto
+  // nuevo, igual que el Chat apaga el suyo al abrirse. Va DENTRO de mostrarApp()
+  // y no al arrancar, porque si la identidad guardada ya no esta en la lista esta
+  // pantalla muestra "elige usuario" y el reto NUNCA se ve: si se apagara
+  // aqui, el aviso se perderia sin que nadie lo haya leido (oct-2026).
+  try{ vigilarRetos(db, { esEsta:true }); }catch(e){}
 }
 
 // "Cambiar usuario" se quito de aqui (oct-2026), igual que en Citas/:
@@ -1476,10 +1462,6 @@ function escucharBalances(){
 
   escucharBalances();
   escucharRetos();
-  // La campana de la pestaña (pestana.js): AQUI es donde se apaga el aviso de un
-  // reto nuevo, igual que el Chat apaga el suyo al abrirse. Mismo criterio que
-  // index.html: si algo falla, esta pantalla sigue igual.
-  try{ vigilarRetos(db, { esEsta:true }); }catch(e){}
 })();
 
 </script>
