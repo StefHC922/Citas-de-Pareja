@@ -284,6 +284,20 @@ function siguiente(){
   mostrarRespuesta(f);
 }
 
+// QUIÉN le toca responder, que NO es siempre el mismo. Ojo, aquí estuvo un bug
+// (oct-2026): la ventana se abría solo a quien va dirigido el favor, o sea solo
+// a quien cumple. Pero cuando hay contra-oferta el que tiene que contestar es el
+// que PIDIO el favor, y ese paso se quedaba colgado sin que nadie lo viera.
+//
+//   pedido    -> quien cumple (para)
+//   contra    -> quien PIDIO (de)
+//   esperando -> quien cumple (para)
+function leTocaResponder(d, miId){
+  if(!d) return false;
+  if(d.estado === "contra") return !!(d.de && d.de.id === miId);
+  return !!(d.para && d.para.id === miId);
+}
+
 function escucharRespuestas(db, yo){
   if(!yo) return;
   try{
@@ -291,8 +305,9 @@ function escucharRespuestas(db, yo){
       const nuevos = [];
       snap.forEach(ds=>{
         const d = ds.data();
-        if(!d || !d.para || d.para.id !== yo.id) return;
+        if(!d) return;
         if(ESTADOS_VIVOS.indexOf(d.estado) < 0) return;
+        if(!leTocaResponder(d, yo.id)) return;
         nuevos.push({ id: ds.id, d });
       });
       cola = nuevos;
@@ -347,17 +362,20 @@ function mostrarRespuesta(f){
     // Soy quien tiene que cumplirlo.
     $("vrTitulo").textContent = otro.nombre + " te pide un favor";
     $("vrPrecio").textContent = "Precio: " + cents(d.precio) + ". Lo paga " + d.de.nombre
-      + ". Puedes cobrar más, o dejarlo en 0.";
+      + ". Puedes cobrar más, o dejarlo en 0. Al aceptar te da " + MINUTOS_FAVOR + " minutos.";
     btnOtroBtn.style.display = "block";
   }else if(d.estado === "contra"){
-    // Soy quien pidió: me contestan con otro precio.
+    // Soy quien pidió el favor: me contestan con otro precio. (Este paso casi se
+    // pierde en el bug de `leTocaResponder`.)
     $("vrTitulo").textContent = otro.nombre + " te contesta";
-    $("vrPrecio").textContent = "Quiere cobrar " + cents(d.precio) + " por: " + (d.texto || "");
+    $("vrPrecio").textContent = "Quiere cobrar " + cents(d.precio) + " por: " + (d.texto || "")
+      + ". Si aceptas, falta que confirme.";
     btnOtroBtn.style.display = "none";
   }else{
-    // Soy quien cumple y me confirman el precio.
+    // Soy quien cumple y me confirman el precio. Ahora sí arranca el reloj.
     $("vrTitulo").textContent = d.de.nombre + " confirmó el precio";
-    $("vrPrecio").textContent = cents(d.precio) + " por: " + (d.texto || "");
+    $("vrPrecio").textContent = cents(d.precio) + " por: " + (d.texto || "")
+      + ". Al aceptar te quedan " + MINUTOS_FAVOR + " minutos.";
     btnOtroBtn.style.display = "none";
   }
   btnAceptar.textContent = "Aceptar · " + cents(d.precio);
@@ -416,7 +434,8 @@ function textoParaElOtro(d, sig, miNombre){
   if(sig.estado === "rechazado") return "\u274C " + miNombre + " no acept\u00f3 tu favor: " + (d.texto || "");
   if(sig.estado === "contra") return "\u{1F3B2} " + miNombre + " quiere cobrar " + sig.precio + " pts por: " + (d.texto || "");
   if(sig.estado === "esperando") return "\u{1F3B2} " + miNombre + " acept\u00f3 tu precio de " + d.precio + " pts. Falta que confirme.";
-  return "\u2705 " + miNombre + " acept\u00f3: " + (d.texto || "") + ". Tienes " + MINUTOS_FAVOR + " minutos.";
+  return "\u2705 " + miNombre + " acept\u00f3: " + (d.texto || "")
+      + ". Te quedan " + MINUTOS_FAVOR + " minutos para cumplirlo.";
 }
 
 async function responder(db, f, accion, nuevoPrecio){
