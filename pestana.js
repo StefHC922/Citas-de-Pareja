@@ -229,9 +229,17 @@ function avisarInvitacion(canal){
   if(!canal.pendiente || document.hidden || canal.esEsta || canal.cartelitoYaSalio) return;
   canal.cartelitoYaSalio = true;
   const t = TIPOS[canal.tipo] || TIPOS.chat;
+  // OJO: se espera a que el usuario REALMENTE le de "Entendido" antes de hacer
+  // lo que sea. Antes la ventana de acciones se abria sola al mismo tiempo que
+  // este aviso y se ponian los dos encimados: la de acciones ganaba la carrera y
+  // el usuario caia directo a "Aceptar / Ofrecer / Rechazar" sin haber leido nada;
+  // al salir, recien aparecia el aviso viejo (lo reporto Fredy probando,
+  // oct-2026). Ahora el aviso ES la puerta: primero se lee, luego se actsua.
   aviso({
     titulo: canal.tituloDoc || t.titulo,
     texto: canal.avisoDoc || t.texto
+  }).then(()=>{
+    try{ if(canal.alTerminar) canal.alTerminar(); }catch(e){}
   });
 }
 
@@ -294,8 +302,11 @@ export function vigilarInvitaciones(db, opciones){
   if(canales[tipo]) return;
   const canal = canales[tipo] = {
     tipo, ref:null, pendiente:false, esEsta:false,
-    cartelitoYaSalio:false, reloj:0
+    cartelitoYaSalio:false, reloj:0, alTerminar:null
   };
+  // Que hacer DESPUES de que el usuario le de "Entendido" al aviso. En los
+  // favores es abrir la ventana del favor (oct-2026).
+  canal.alTerminar = typeof o.alTerminar === "function" ? o.alTerminar : null;
   canal.esEsta = !!(o.esEsta ?? (tipo === "chat" ? o.esChat : o.esRetos));
   const t = TIPOS[tipo];
   const esMia = (d)=> !!(d && d.para === yo.id && !d.visto && msRestantes(d.creadoEn) > 0);

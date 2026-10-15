@@ -330,6 +330,12 @@ export function mostrarBotonFavor(){
 // el favor estaba ahi, pero no en ninguna cola.
 let todosLosFavores = {};
 
+// Cuando esta pantalla SI tiene el aviso de la campana para los favores, las
+// ventanas dejan de abrirse solas: el aviso es la puerta (ver `abrirFavorPendiente`).
+// Lo prende la pantalla que llama a `vigilarFavores(...)`.
+let avisoFavoresActivo = false;
+export function usarAvisoFavores(){ avisoFavoresActivo = true; }
+
 // Lo que se abre SOLO, sin que nadie toque nada: lo que acaba de cambiar hace
 // poco. Si no, cada vez que se navega a otra pantalla se volveria a abrir la
 // misma ventana y el aviso se repetiria eternamente (oct-2026).
@@ -444,16 +450,20 @@ function escucharRespuestas(db, yo){
       // Primero se liquida lo que ya se vencio: nadie va a estar mirando la app
       // en el minuto exacto, y si los dos la tuvieron cerrada el paso del tiempo
       // tiene que recuperarse al abrir.
-liquidarVencidos(db, snap);
-      encolarPropios(snap, yo);
+      liquidarVencidos(db, snap);
+      const accionablesPropios = encolarPropios(snap, yo);
+      let hayResponder = 0;
       const nuevos = [];
       snap.forEach(ds=>{
         const d = ds.data();
         if(!d) return;
         if(ESTADOS_VIVOS.indexOf(d.estado) < 0) return;
         if(!leTocaResponder(d, yo.id)) return;
-        if(!esReciente({ id: ds.id, d })) return;   // lo viejo se ve al tocarlo, no solo
-        nuevos.push({ id: ds.id, d });
+        hayResponder++;
+        // Solo lo RECIENTE entra a la cola de auto-abrir; lo viejo se ve al
+        // tocarlo en Centro -> Favores. Pero para el "hay algo que hacer" SI
+        // cuenta lo viejo: si no, se apagaria la campana teniendo algo pendiente.
+        if(esReciente({ id: ds.id, d })) nuevos.push({ id: ds.id, d });
       });
       cola = nuevos;
       // Si el favor que esta mostrando ya no esta en un estado que me toque
@@ -464,10 +474,17 @@ liquidarVencidos(db, snap);
         try{ cerrarRespondida(); }catch(e){}
       }
       // Barrido del aviso de la campana: si ya no hay nada que hacer, se apaga.
-      hayAlgoQueHacer = (nuevos.length > 0) || colaPropia.length > 0;
+      hayAlgoQueHacer = (hayResponder > 0) || (accionablesPropios > 0);
       try{ barrerAvisoHuerfano(db, yo, hayAlgoQueHacer); }catch(e){}
-      siguiente();
-      siguientePropio();
+      // Las ventanas se abren solas SOLO en las pantallas que NO tienen el aviso
+      // de la campana para favores (es el respaldo de siempre). Donde la campana
+      // SI avisa, el aviso es la puerta y la ventana sale al dar "Entendido": si
+      // no, los dos cuadros salian encimados y el usuario caia directo en las
+      // opciones sin leer nada (lo reporto Fredy probando, oct-2026).
+      if(!avisoFavoresActivo){
+        siguiente();
+        siguientePropio();
+      }
       }, (err)=>{ console.error("Favor Express: fallo el listener", err); });
     // OJO: este catch NO se queda vacio. Un `catch(e){}` aqui se comio el error
     // de `onSnapshot` sin importarlo y la ventana NUNCA salio, sin ningun aviso
@@ -889,16 +906,44 @@ function mostrarPropio(f){
 // Se engancha al mismo snapshot que las de responder.
 function encolarPropios(snap, yo){
   colaPropia = [];
+  let accionables = 0;
   snap.forEach(ds=>{
     const d = ds.data();
     if(!d) return;
     todosLosFavores[ds.id] = { id: ds.id, d };
     if(!d.de || d.de.id !== yo.id) return;
     if(["pedido","enCurso","vencido"].indexOf(d.estado) < 0) return;
-    if(!esReciente({ id: ds.id, d })) return;   // lo viejo se ve al tocarlo, no solo
-    colaPropia.push({ id: ds.id, d });
+    accionables++;
+    if(esReciente({ id: ds.id, d })) colaPropia.push({ id: ds.id, d });
   });
-  siguientePropio();
+  // Devuelve cuantos favores Mios hay que hacer, sin importar la antiguedad: eso
+  // lo usa el barrido para NO apagar la campana si todavia queda algo pendiente.
+  return accionables;
+}
+
+// Lo que se llama cuando el usuario ya le dio "Entendido" al aviso de la
+// campana: se abre la ventana del favor que le toca. Y solo ese favor: si hay
+// mas de uno pendiente, el resto se abre desde Centro -> Favores.
+export function abrirFavorPendiente(){
+  const yo = Yo();
+  if(!yo || !yo.id) return false;
+  cola = []; colaPropia = [];
+  let elegido = null;
+  Object.keys(todosLosFavores).forEach(id=>{
+    const f = todosLosFavores[id];
+    if(!f || !f.d) return;
+    if(leTocaResponder(f.d, yo.id)){
+      if(!elegido || (cuandoMil(f) > cuandoMil(elegido))) elegido = f;
+      return;
+    }
+    if(f.d.de && f.d.de.id === yo.id && ["enCurso","vencido"].indexOf(f.d.estado) >= 0){
+      if(!elegido || (cuandoMil(f) > cuandoMil(elegido))) elegido = f;
+    }
+  });
+  if(!elegido) return false;
+  if(leTocaResponder(elegido.d, yo.id)) mostrarRespuesta(elegido);
+  else mostrarPropio(elegido);
+  return true;
 }
 
 // ============================================================================
