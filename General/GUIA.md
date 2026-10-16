@@ -1309,6 +1309,12 @@ secciones del Centro, y de ahí se entra a ver todo el catálogo.
     empezaba con `[`, se caía a "un renglón = un personaje" **en silencio** y
     metía cada línea como un personaje, con todo el texto como nombre (le pasó a
     Fredy al pegar los personajes de un usuario en Contrapartes).
+  - **Las contrapartes van CRUZADAS** (decisión de Fredy, oct-2026): la lista de
+    contrapartes de un usuario son las contrapartes de los personajes **del otro**.
+    O sea, **`C1` ↔ `U2`** y **`C2` ↔ `U1`**. Por eso el desplegable "Contraparte
+    de" de una contraparte de `C1` lista los personajes de `U2`, y los avisos de
+    correspondencia van cruzados igual. *(Antes era del mismo dueño —`C1` ↔ `U1`— y
+    estaba al revés; lo reportó Fredy jugando.)*
   - **Cada quien escoge solo de su lado**: en "cada quien en el suyo" el teléfono
     muestra **solo su pestaña** (y por eso solo puede escribir sus marcas); en "un
     solo celular" salen todas. El lado del invitado sale de `conQuien`.

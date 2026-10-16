@@ -737,7 +737,7 @@ const MODO_SELECCIONAR = "seleccionar";
 let modoBaseCfg = MODO_NORMAL;
 const DESC_MODO = {
   "normal": "",
-  "espejo": "Juega con el Espejo/Contraparte de tu personaje.",
+  "espejo": "Contrapartes",
   "seleccionar": "Selecciona tus personajes favoritos."
 };
 // De dónde sale la lista de un jugador, según el modo.
@@ -2523,7 +2523,7 @@ function filaPersonaje(i, p, clave){
   fila.appendChild(caja);
   // En contrapartes se ve a cuál personaje pertenece (o que falta asignarla).
   if(clave.charAt(0) === "C"){
-    const base = listaSegura("U" + clave.charAt(1)).find(x=> x && x.id === p.par);
+    const base = listaSegura("U" + otroLado(clave.charAt(1))).find(x=> x && x.id === p.par);
     const h = document.createElement("span");
     h.className = "hint" + (base ? "" : " mal");
     h.textContent = base ? ("de " + base.personaje) : "sin contraparte";
@@ -2597,8 +2597,12 @@ function pintarCfg(){
 
 // ---------- avisos de correspondencia (Opción A) ----------
 // SOLO avisan: nunca bloquean ni impiden jugar.
-//   · una contraparte sin `par`, o con un `par` que no existe en la lista de su dueño
+//   · una contraparte sin `par`, o con un `par` que no existe en la lista del otro
 //   · un personaje normal sin contraparte, o con más de una
+// Las contrapartes van CRUZADAS (decidido por Fredy, oct-2026): las de la lista de
+// un usuario son las contrapartes de los personajes del OTRO. O sea, `C1` se ata a
+// `U2` y `C2` a `U1`. Antes era del mismo dueño (`C1` ↔ `U1`) y estaba al revés.
+function otroLado(n){ return (n === "1") ? "2" : "1"; }
 function avisosCorrespondencia(){
   const out = [];
   const normales = {
@@ -2606,7 +2610,7 @@ function avisosCorrespondencia(){
     "2": new Set(listaSegura("U2").map(p=> p && p.id))
   };
   ["C1","C2"].forEach(k=>{
-    const dueno = k.charAt(1);
+    const dueno = otroLado(k.charAt(1));   // la contraparte apunta al OTRO usuario
     listaSegura(k).forEach(c=>{
       if(c.par === null || c.par === undefined){
         out.push("“" + c.personaje + "” todavía no tiene contraparte asignada.");
@@ -2616,8 +2620,9 @@ function avisosCorrespondencia(){
     });
   });
   ["1","2"].forEach(n=>{
+    // Los personajes de este usuario tienen sus contrapartes en la lista CRUZADA.
     const usados = {};
-    listaSegura("C" + n).forEach(c=>{
+    listaSegura("C" + otroLado(n)).forEach(c=>{
       if(c.par === null || c.par === undefined) return;
       (usados[c.par] = usados[c.par] || []).push(c.personaje);
     });
@@ -2649,11 +2654,12 @@ function pintarAvisosCfg(){
 
 // ---------- detalle del personaje ----------
 // Los 8 campos. El `id` se muestra pero no se escribe; el `par` sale de un
-// desplegable con los normales del mismo dueño (C1 ↔ U1, C2 ↔ U2).
+// desplegable con los normales del OTRO usuario (C1 → U2, C2 → U1): las
+// contrapartes van cruzadas (decisión de Fredy, oct-2026).
 let detalle = null;   // { clave, i }  — i = -1 cuando es uno nuevo
 function llenarSelectPar(valor){
   const sel = document.getElementById("pjPar");
-  const dueno = detalle.clave.charAt(1);
+  const dueno = otroLado(detalle.clave.charAt(1));
   sel.innerHTML = "";
   const ninguna = document.createElement("option");
   ninguna.value = "";

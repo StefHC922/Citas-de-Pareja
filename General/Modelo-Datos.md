@@ -109,9 +109,9 @@ estructuras incompatibles.**
 ```
 {
   U1: [personaje, ...],   // normales que personifica el usuario 1
-  U2: [personaje, ...],   // normales del usuario 2
-  C1: [personaje, ...],   // contrapartes del usuario 1
-  C2: [personaje, ...],   // contrapartes del usuario 2
+  U2: [personaje, ...],   // normales que personifica el usuario 2
+  C1: [personaje, ...],   // CONTRAPARTES DE LOS PERSONAJES DEL USUARIO 2
+  C2: [personaje, ...],   // CONTRAPARTES DE LOS PERSONAJES DEL USUARIO 1
   ESP: [ "texto", ... ],  // variantes especiales, COMUNES a los dos
   actualizadoEn
 }
@@ -129,7 +129,7 @@ leen **ATTRACTIVO** y **ACCIÓN**, y no se renombran):
 | `derechos` | → **DERECHOS** |
 | `si_quieres` | → **ACCIÓN** |
 | `imagen` | **URL**, opcional. Nunca base64 ni bytes |
-| `par` | **Solo en `C1`/`C2`.** El `id` del normal del mismo dueño al que corresponde |
+| `par` | **Solo en `C1`/`C2`.** El `id` del personaje normal al que corresponde, **del OTRO usuario**: las contrapartes van **cruzadas** (decisión de Fredy, oct-2026). O sea, el `par` de un `C1` apunta a un `U2`, y el de un `C2` a un `U1` |
 
 ### `sesionRoles/actual` — la partida
 
