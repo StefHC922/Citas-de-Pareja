@@ -15,7 +15,7 @@ coinciden** y hay que tenerlas presentes:
 |---|---|
 | **B2 ya no aplica** | El borrado de un reto **ya cobrado** no descuenta de mas: `eliminarReto()` solo revierte puntos si el reto sigue `"enCurso"`, y al llegar a la meta pasa a `"cobrada"`. El fallo que se describe aqui era de la logica **anterior** (la que liquidaba con `delta = 1 - meta`), que ya se cambio en oct-2026. **Se puede borrar de la lista de fallas** |
 | **B3 sigue, pero cambio de efecto** | Ya no es "doble penalizacion": la liquidacion antigua (`delta = 1 - meta`) tambien cambio. Hoy `marcarCumplida()` **no descuenta nada**, asi que el riesgo real es **doble premio** (+2 en vez de +1) y el aviso de Telegram duplicado |
-| **Faltan rutas en el inventario** | La seccion 1 se quedo corta. Ya se le agregaron **`deseos`** y **`comprasDeseos`** (el Centro) e **`invitosChat/actual`**. Y en oct-2026 se creo **`invitosRetos`**, que es **una coleccion con un documento POR QUIEN MANDA** (no uno solo: ver `Campana-Pestana.md`). El conteo real es **16 colecciones + 8 documentos sueltos**, no "17 + 3" |
+| **Faltan rutas en el inventario** | La seccion 1 se quedo corta. Ya se le agregaron **`deseos`** y **`comprasDeseos`** (el Centro) e **`invitosChat/actual`**. Y en oct-2026 se creo **`invitosRetos`**, que es **una coleccion con un documento POR QUIEN MANDA** (no uno solo: ver `Campana-Pestana.md`). El conteo real es **16 colecciones + 8 documentos sueltos**, no "17 + 3". **Y en oct-2026 se agregaron 3 documentos mas del juego de Roles** (`personajesJuego/actual`, `sesionRoles/actual`, `seleccionRoles/actual`): son **16 colecciones + 11 documentos sueltos**. Ver la seccion 1b |
 | **Los numeros de linea ya no coinciden** | `eliminarReto` esta en `Retos/index.html:1034` (no 935) y `marcarCumplida` en la 1060 (no 951). Sirven para orientarse, no para buscar. En `index.html`, `volverSiInvitadoSinPartida` esta en la 948 |
 
 **B1 quedo ARREGLADO** (oct-2026): la ruta mal escrita se corrigio y ya se
@@ -83,6 +83,9 @@ documentado en `AGENTS.md`; no se toca aqui.
 | `sesionEncuentros/actual` | doc | `activa`, `pausada`, `terminada`, `porAdmin`, `sid`, `hostUid`, `hostNombre`, `modo`, `actividades[]`, `titulo`, `cabezas[]`, `listas{}`, `largo`, `ronda`, `turno`, `orden[]`, `empezadaEn`, `actualizadaEn` |
 | `sesionGuiada/actual` | doc | `activa`, `sid`, `hostUid`, `hostNombre`, `modo`, `titulo`, `actividades[]`, `lista[]`, `paso`, `terminada`, `reanudada`, `empezadaEn`, `actualizadaEn` |
 | `sesionOpciones/actual` | doc | `cabezas[]`, `listas{}`, `pares{}`, `eliminadas{}`, `orden[]`, `turno`, `ronda`, `terminada`, `activa`, `pausada`, `porAdmin`, `sid`, `hostUid`, `hostNombre`, `modo`, `unCelular`, `rondas`, `ladoSolo`, `reanudada`, `empezadaEn`, `actualizadaEn` |
+| `personajesJuego/actual` | doc | `U1[]`, `U2[]`, `C1[]`, `C2[]`, `ESP[]`, `actualizadoEn` — el contenido del juego de Roles (oct-2026) |
+| `sesionRoles/actual` | doc | `cabezas[]`, `listas{}`, `orden[]`, `turno`, `ronda`, `rondas`, `terminada`, `activa`, `pausada`, `porAdmin`, `sid`, `hostUid`, `hostNombre`, `modoJuego`, `modoBase`, `especial`, `especialK`, `especiales[]`, `unCelular`, `ladoSolo`, `reanudada`, `empezadaEn`, `actualizadaEn` |
+| `seleccionRoles/actual` | doc | `activa`, `modo`, `sid`, `hostUid`, `hostNombre`, `rondas`, `cabezas[]`, `sel{}`, `agregar?`, `anfitrionUid?`, `anfitrionNombre?`, `actualizadaEn` |
 | `invitaciones` | col (id = juego) | `juego`, `titulo`, `icono`, `ruta`, `hostUid`, `hostNombre`, `participantes[]`, `sesion`, `activa`, `pausada`, `sid`, `actualizadaEn` |
 | `invitosChat/actual` | doc | `para`, `creadoEn`, `visto`, `vistoEn?` — la campana de la pestaña (ver `Campana-Pestana.md`) |
 | `invitosRetos/{idDeQuienManda}` | col (un doc por persona) | `para`, `titulo`, `creadoEn`, `visto`, `vistoEn?` — lo mismo, pero **por quien manda** (oct-2026). Antes era un doc solo y se pisaban entre los dos |
@@ -92,6 +95,79 @@ documentado en `AGENTS.md`; no se toca aqui.
 **17 colecciones + 3 documentos sueltos. Tres bases de datos distintas
 (Encuentros, Guiadas, Opciones) con el MISMO nombre de campo `listas` y
 estructuras incompatibles.**
+
+---
+
+## 1b. Lo que agrego `Roles/` (oct-2026)
+
+> Juego de Roles. **Sus tres documentos son de contenido íntimo y viven en la
+> base de la pareja, no en un JSON del repo** (decisión de Fredy). Se agregaron
+> después del inventario, así que el conteo de arriba no los incluye.
+
+### `personajesJuego/actual` — el contenido
+
+```
+{
+  U1: [personaje, ...],   // normales que personifica el usuario 1
+  U2: [personaje, ...],   // normales del usuario 2
+  C1: [personaje, ...],   // contrapartes del usuario 1
+  C2: [personaje, ...],   // contrapartes del usuario 2
+  ESP: [ "texto", ... ],  // variantes especiales, COMUNES a los dos
+  actualizadoEn
+}
+```
+
+Un `personaje` (`gancho` y `si_quieres` son nombres internos: en la carta se
+leen **ATTRACTIVO** y **ACCIÓN**, y no se renombran):
+
+| Campo | Qué es |
+|---|---|
+| `id` | Número. **Único en las cuatro listas**, no solo dentro de una. Se asigna solo, no se teclea |
+| `personaje` | El nombre. No se repiten (sin distinguir mayúsculas) |
+| `situacion` | → **SITUACIÓN** |
+| `gancho` | → **ATRACTIVO** |
+| `derechos` | → **DERECHOS** |
+| `si_quieres` | → **ACCIÓN** |
+| `imagen` | **URL**, opcional. Nunca base64 ni bytes |
+| `par` | **Solo en `C1`/`C2`.** El `id` del normal del mismo dueño al que corresponde |
+
+### `sesionRoles/actual` — la partida
+
+Casi la misma forma que `sesionOpciones/actual`, con **tres diferencias**:
+
+| | |
+|---|---|
+| **No existen `pares{}` ni `eliminadas{}`** | En Roles no se escoge nada: se lee la tarjeta y se pasa. `listas{id}` es la **cola de tarjetas que le faltan** a ese jugador, y cada elemento es un **objeto `personaje` completo**, no un texto |
+| **`modoJuego` y `modoBase` son dos campos distintos** | `modoJuego` es **quiénes juega** (`solo`/`pareja`/`multi`) y es el `modo` del juego anterior. `modoBase` es el modo del juego: `normal` / `espejo` / `seleccionar`. **No se reutilizó el nombre `modo`** porque ya significaba otra cosa |
+| **`especiales[]`** | `[{ ronda, jugador, texto }]`, **sorteado una sola vez al arrancar** y guardado aquí para que todos los celulares vean lo mismo. Máximo uno por ronda |
+
+**Ojo con el tamaño (es el problema P4 de este mismo documento):** ahora cada
+tarjeta es un objeto con texto largo, y van todas en un solo documento. Con la
+pareja y rondas normales son unas decenas y cabe de sobra; **si algún día se
+juega con muchos invitados y muchas rondas, hay que revisar el límite de 1 MiB
+por documento** (ver P4).
+
+### `seleccionRoles/actual` — la selección (solo modo "seleccionar")
+
+Sirve para **dos cosas distintas**, y el campo `modo` dice cuál:
+
+| `modo` | Qué es |
+|---|---|
+| (sin `modo`, o `"elegir"`) | La selección **de antes de empezar**. Cada quien marca R tarjetas de su lista y el anfitrión aprieta "Jugar" |
+| `"agregar"` | Un invitado que entra **con la partida ya andando**: él marca sus `R − ronda` tarjetas y el anfitrión aprieta "Meterlo a la partida" |
+
+| Campo | Qué es |
+|---|---|
+| `activa` | While `true`. Al terminar (o cancelar) se apaga a `false` para que nadie se quede pegado |
+| `rondas` | R |
+| `cabezas[]` | Quién tiene que escoger |
+| `sel{}` | `{ idJugador: [idPersonaje, ...] }`. **Cada teléfono escribe solo su llave**; el anfitrión nunca escribe las de los demás |
+| `agregar` | Solo en `modo:"agregar"`: `{ id, nombre, lado, necesidad }` |
+| `anfitrionUid`, `anfitrionNombre` | Quién pidió la selección |
+
+**Patrón que se respetó en los dos casos:** el documento se apaga (`activa:false`)
+**antes** de escribir la partida. Así, si la escritura falla, nadie se queda
+viendo una pantalla que nadie va a contestar.
 
 ---
 

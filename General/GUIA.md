@@ -1217,6 +1217,33 @@ cinco veces.
   **`experiencias`**. El mecanismo de **agregar invitado a media partida**
   (reutilizable para otros juegos) está documentado aparte en
   **`General/Invitado-a-media-partida.md`**.
+- **Juego nuevo "Juego de Roles" (`Roles/`, oct-2026):** hijo de `Opciones/`
+  (misma entrada por catálogo, misma licencia, mismos modos de jugar, mismas
+  salas, mismos invitados, mismos botones). **Lo único que cambia es el turno:**
+  en vez de dos opciones para escoger, **a cada quien le sale una tarjeta de
+  personaje** (situación, atractivo, derechos, acción) que se **lee** y se pasa
+  con **"Siguiente"**. No hay eliminación: cada quien recibe una tarjeta por
+  ronda y las juega todas. El contenido vive en **Firebase**
+  (`personajesJuego/actual` = `{U1,U2,C1,C2,ESP}`), **nunca** en un JSON del
+  repo (contenido íntimo + repo público). La sesión es
+  **`sesionRoles/actual`** y **no tiene `pares{}` ni `eliminadas{}`**: `listas{}`
+  es la **cola de tarjetas que le faltan** a cada jugador, y cada elemento es el
+  objeto `personaje` completo. Modes: **Normal** (sale de `U1`/`U2`), **Espejo**
+  (sale de las contrapartes `C1`/`C2`) y **Seleccionar** (la lista completa del
+  lado, escogida a mano). **Especial NO es un modo**: es un interruptor que se
+  prende encima de cualquiera de los tres, con "¿cuántas veces?" (K, máximo una
+  por ronda), y el sorteo se hace **una sola vez al arrancar** y se guarda en la
+  sesión como `especiales[]`. La carta sale **boca abajo** y se revela al
+  tocarla (tocar otra vez la tapa, para poder pasar el celular). **Ojo con dos
+  campos parecidos:** `modoJuego` es **quiénes juega** (pareja/multi) y
+  `modoBase` es el modo del juego (normal/espejo/seleccionar). Licencia: item
+  **`roles`**. En el catálogo (`packs`): ruta **`Roles`**, sección
+  **`juegos`**, y **sin** marcar `oficial` (el menú salta los `oficial:true`).
+  Engrane ⚙️ con **una pestaña por usuario** (no cinco): cada quien solo ve su
+  lado y el administrador tiene un botón para ver el del otro; dentro, dos
+  sub-pestañas Personajes / Contrapartes; y una tercera, **Especiales**, que es
+  común. "Jugar solo" **no arranca**: avisa. El detalle del modelo y de las tres
+  colecciones está en **`General/Modelo-Datos.md`**, sección **1b**.
 - **Quién puede iniciar partida (Encuentros y Elecciones Peligrosas, oct-2026):**
   la pantalla de inicio la ve **cualquier usuario que no sea invitado** (el
   administrador **y** la pareja), cada quien con su **propia identidad**. Antes

@@ -1,0 +1,2626 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Juego de Roles</title>
+<meta name="theme-color" content="#120e1c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#120e1c; --bg-2:#1a1428; --card:#201933; --card-border:#322a4a;
+    --fg:#f4f1fb; --fg-muted:#a599c7; --coral:#ff6a5c; --teal:#2fd9c7; --rojo:#ff5c7a;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; min-height:100%; width:100%; color:var(--fg);
+    font-family:'Inter',system-ui,sans-serif;
+    background:radial-gradient(circle at 15% 0%, var(--bg-2), transparent 55%),
+      radial-gradient(circle at 100% 30%, #1c1330, transparent 45%), var(--bg); }
+  body{ min-height:100dvh; display:flex; flex-direction:column; align-items:center;
+    padding:max(66px, calc(env(safe-area-inset-top) + 30px)) 20px max(28px, env(safe-area-inset-bottom)); }
+  .back{ position:absolute; top:max(20px, env(safe-area-inset-top)); right:20px;
+    font-family:'Chakra Petch',sans-serif; font-size:.85rem; color:var(--fg-muted); text-decoration:none; }
+  #btnCfg{
+    position:absolute; top:max(20px, env(safe-area-inset-top)); left:20px;
+    background:none; border:none; font-size:1.3rem; cursor:pointer; padding:4px;
+  }
+  .eyebrow{ font-family:'Chakra Petch',sans-serif; font-size:.8rem; letter-spacing:.3em;
+    text-transform:uppercase; color:var(--fg-muted); margin-bottom:10px; text-align:center; }
+  h1{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.8rem; margin:0 0 8px; text-align:center;
+    background:linear-gradient(90deg, var(--coral), var(--teal));
+    -webkit-background-clip:text; background-clip:text; color:transparent; width:fit-content; }
+  p.desc{ font-size:.88rem; color:var(--fg-muted); max-width:360px; margin:0 0 18px; text-align:center; }
+  .vista{ display:none; width:100%; max-width:520px; flex-direction:column; align-items:center; }
+  .vista.ver{ display:flex; }
+  .caja{ width:100%; background:var(--card); border:1px solid var(--card-border); border-radius:16px;
+    padding:14px; margin-top:10px; }
+  .cajaTitulo{ font-family:'Chakra Petch',sans-serif; font-weight:700; text-align:center; margin-bottom:6px; }
+  .opModo{ display:flex; align-items:center; gap:10px; padding:11px 12px; background:var(--bg-2);
+    border:1px solid var(--card-border); border-radius:12px; margin-top:8px; font-size:.9rem; cursor:pointer; }
+  .opModo input{ width:auto; accent-color:var(--teal); }
+  .btnPri{ width:100%; padding:16px; margin-bottom:10px; border:none; border-radius:14px; cursor:pointer;
+    font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1rem; color:var(--bg);
+    background:linear-gradient(90deg, var(--coral), var(--teal)); }
+  .btnPri:active{ transform:scale(.97); }
+  .btnSec{ width:100%; padding:12px; background:none; border:none; cursor:pointer;
+    color:var(--fg-muted); font-size:.9rem; text-decoration:underline; }
+  #msg, #licMsg{ min-height:20px; font-size:.85rem; color:var(--rojo); margin:6px 0; text-align:center; }
+  /* La pantalla de selección de tarjetas (modo Seleccionar) */
+  .filaSel{ display:flex; gap:10px; align-items:center; margin-bottom:6px;
+    border:1px solid var(--card-border); background:var(--card); border-radius:10px; padding:10px; }
+  .filaSel input{ flex:0 0 auto; width:auto; accent-color:var(--teal); }
+  .filaSel .selNombre{ flex:1; min-width:0; font-size:.85rem; }
+  .selTag{ flex:0 0 auto; font-family:'Chakra Petch',sans-serif; font-size:.62rem; font-weight:600;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--fg-muted);
+    border:1px solid var(--card-border); border-radius:8px; padding:2px 7px; }
+  .selTag.c{ color:var(--teal); border-color:var(--teal); }
+  #selCuenta{ font-size:.8rem; color:var(--fg-muted); text-align:center; }
+  #selCuenta b{ font-family:'Chakra Petch',sans-serif; }
+  #miCuenta{ font-size:.9rem; margin-top:14px; }
+  #miCuenta b{ font-family:'Chakra Petch',sans-serif; }
+  .buscar{ width:100%; border-radius:12px; border:1px solid var(--card-border);
+    background:var(--card); color:var(--fg); padding:13px 14px; font-size:.95rem;
+    font-family:'Inter',sans-serif; margin-bottom:14px; }
+  /* editor */
+  .nivel{ width:100%; background:var(--card); border:1px solid var(--card-border);
+    border-radius:16px; padding:16px; margin-bottom:12px; }
+  .nivel h3{ font-family:'Chakra Petch',sans-serif; margin:0 0 4px; font-size:1rem; }
+  .nivel h3 .tag{ font-size:.7rem; color:var(--coral); border:1px solid var(--coral);
+    border-radius:8px; padding:2px 8px; margin-left:8px; vertical-align:middle; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+  .chip{ background:var(--bg-2); border:1px solid var(--card-border); border-radius:20px;
+    padding:6px 8px 6px 14px; font-size:.82rem; display:flex; align-items:center; gap:6px; }
+  .chip button{ background:none; border:none; color:var(--rojo); cursor:pointer; font-size:.9rem; padding:0 4px; }
+  .filaAdd{ display:flex; gap:8px; }
+  .filaAdd input{ flex:1; min-width:0; border-radius:12px; border:1px solid var(--card-border);
+    background:var(--bg); color:var(--fg); padding:12px; font-size:.9rem; font-family:'Inter',sans-serif; }
+  .filaAdd button{ border:none; border-radius:12px; cursor:pointer; padding:12px 16px;
+    font-family:'Chakra Petch',sans-serif; font-weight:700; color:var(--bg);
+    background:linear-gradient(90deg, var(--coral), var(--teal)); }
+  .pegarBox{ margin-top:8px; }
+  .pegarBox textarea{ width:100%; min-height:120px; border-radius:12px; border:1px solid var(--card-border);
+    background:var(--bg); color:var(--fg); padding:12px; font-size:.85rem; font-family:'Inter',sans-serif; }
+  /* pestañas + tabla del engrane */
+  .tabs{ display:flex; gap:8px; width:100%; }
+  .tab{ flex:1; padding:12px; border-radius:12px; border:1px solid var(--card-border); background:var(--card);
+    color:var(--fg-muted); font-family:'Chakra Petch',sans-serif; font-weight:600; font-size:.9rem; cursor:pointer; }
+  .tab.activo{ background:linear-gradient(90deg, var(--coral), var(--teal)); color:var(--bg); border-color:transparent; }
+  .tablaBox{ width:100%; max-height:48dvh; overflow-y:auto; border:1px solid var(--card-border);
+    border-radius:12px; background:var(--bg-2); padding:8px; }
+  .filaOpt{ display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+  .filaOpt .optTexto{ flex:1; min-width:0; border:1px solid var(--card-border); background:var(--card);
+    color:var(--fg); border-radius:10px; padding:10px; font-size:.85rem; font-family:'Inter',sans-serif; }
+  .filaOpt .optTexto:focus{ border-color:var(--teal); outline:none; }
+  .optX{ flex:0 0 auto; background:none; border:none; color:var(--rojo); cursor:pointer; font-size:1rem; padding:6px 10px; }
+  /* La fila de un personaje: se LEE (no se edita en la fila) y se abre el
+     detalle tocando la caja. El lapicito tampoco borra: abre el detalle, y
+     adentro es donde se borra (con confirmar). */
+  .filaOpt .optVer{ flex:1; min-width:0; border:1px solid var(--card-border); background:var(--card);
+    color:var(--fg); border-radius:10px; padding:10px; font-size:.85rem; font-family:'Inter',sans-serif;
+    cursor:pointer; }
+  .filaOpt .hint{ flex:0 1 auto; font-size:.7rem; color:var(--fg-muted); max-width:40%;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .filaOpt .hint.mal{ color:var(--coral); }
+  .optX.edit{ color:var(--teal); }
+  /* detalle del personaje */
+  .pjCampo{ display:block; font-family:'Chakra Petch',sans-serif; font-size:.66rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--fg-muted); margin:0 0 4px; text-align:left; }
+  .pjInput{ width:100%; border-radius:12px; border:1px solid var(--card-border); background:var(--bg);
+    color:var(--fg); padding:11px 12px; font-size:.88rem; font-family:'Inter',sans-serif;
+    margin-bottom:12px; text-align:left; }
+  .pjInput:focus{ border-color:var(--teal); outline:none; }
+  textarea.pjInput{ resize:vertical; min-height:64px; line-height:1.45; }
+  select.pjInput{ -webkit-appearance:none; appearance:none; }
+  #modalPersonaje .caja{ max-height:86dvh; overflow-y:auto; text-align:left; }
+  #modalPersonaje #pjTitulo{ text-align:center; }
+  .vacio{ color:var(--fg-muted); font-size:.85rem; text-align:center; padding:16px; }
+  /* Tamaño MEDIANO, pedido por Fredy (oct-2026): el número de rondas ya no
+     es lo más importante de la pantalla, porque arriba están "quiénes juegan". */
+  .rondasInput{ width:100%; text-align:center; font-size:1.4rem; font-family:'Chakra Petch',sans-serif; font-weight:700;
+    background:var(--bg); border:1px solid var(--card-border); border-radius:12px; color:var(--fg); padding:12px; }
+  #finTxt{ white-space:pre-line; font-size:1.1rem; }
+  /* player */
+  #progreso{ color:var(--fg-muted); font-size:.85rem; margin-bottom:6px; }
+  #turnoNombre{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.15rem;
+    text-align:center; margin:6px 0 14px; min-height:1.4em; }
+  /* ---------- la tarjeta del personaje (diseño aprobado, oct-2026) ---------- */
+  .flipwrap{ position:relative; width:100%; }
+
+  #tarjeta{ width:100%; border-radius:22px; padding:14px; display:flex; flex-direction:column;
+    gap:12px; cursor:pointer; border:2px solid transparent;
+    background:linear-gradient(var(--card),var(--card)) padding-box,
+               linear-gradient(135deg,var(--coral),var(--teal)) border-box;
+    box-shadow:0 18px 50px rgba(0,0,0,.5), 0 0 30px rgba(47,217,199,.10); }
+
+  .foto{ width:100%; aspect-ratio:1/1; border-radius:16px;
+    background:linear-gradient(135deg,#2b2144,var(--bg-2)); border:1px dashed var(--card-border);
+    display:flex; flex-direction:column; gap:6px; align-items:center; justify-content:center;
+    color:var(--fg-muted); }
+  .foto span{ font-size:3rem; opacity:.5; } .foto small{ font-size:.72rem; }
+  .foto img{ width:100%; height:100%; object-fit:cover; border-radius:16px; display:block; }
+
+  .nombre{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.55rem; text-align:center;
+    background:linear-gradient(90deg,var(--coral),var(--teal)); -webkit-background-clip:text;
+    background-clip:text; color:transparent; width:fit-content; align-self:center; }
+
+  .info{ display:flex; flex-direction:column; gap:10px;
+    max-height:min(38dvh, 290px); overflow-y:auto; padding-right:6px; }
+  .bloque b{ display:block; font-family:'Chakra Petch',sans-serif; font-size:.66rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--fg-muted); margin-bottom:3px; }
+  .bloque p{ margin:0; font-size:.9rem; line-height:1.5; color:var(--fg); }
+  .bloque.accion{ border-left:2px solid var(--teal); padding-left:9px; }
+  .bloque.accion p{ color:#c9f6ef; }
+  /* La variante especial: SOLO texto, marcado para que no se confunda con los
+     cuatro bloques de la tarjeta. Vive DENTRO de la carta, así se voltea con ella. */
+  #blqueEspecial{ border:1px solid var(--teal); border-radius:12px;
+    background:rgba(47,217,199,.10); padding:10px 12px; text-align:left; }
+  #blqueEspecial b{ display:block; font-family:'Chakra Petch',sans-serif; font-size:.66rem;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--teal); margin-bottom:4px; }
+  #blqueEspecial p{ margin:0; font-size:.88rem; line-height:1.5; color:#c9f6ef; }
+
+  #reverso{ position:absolute; inset:0; border-radius:22px; cursor:pointer; display:none;
+    overflow:hidden; border:2px solid transparent;
+    background:linear-gradient(var(--bg-2),var(--bg-2)) padding-box,
+               linear-gradient(135deg,var(--coral),var(--teal)) border-box;
+    box-shadow:0 18px 50px rgba(0,0,0,.5); }
+
+  .tile{ position:absolute; inset:0; z-index:0;
+    background-image:url(../icon-512.png); background-repeat:repeat; background-position:center;
+    background-size:64px 64px; opacity:.17; }
+
+  .velo{ position:absolute; inset:0; z-index:0;
+    background:radial-gradient(circle at 50% 42%, rgba(47,217,199,.22), rgba(18,14,28,.66) 68%); }
+
+  .contenido{ position:absolute; inset:0; z-index:1; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:14px; color:var(--fg-muted); }
+  .marca{ width:34%; max-width:150px; border-radius:22px;
+    filter:drop-shadow(0 12px 30px rgba(0,0,0,.6)); }
+  .marcaTxt{ font-family:'Chakra Petch',sans-serif; font-size:.72rem; letter-spacing:.28em;
+    text-transform:uppercase; color:#eae6f6; }
+  #reverso small{ font-size:.78rem; text-align:center; padding:0 24px; color:#d9d2ee; }
+  #tarjetaVacio{ color:var(--fg-muted); font-size:.85rem; text-align:center; padding:22px; }
+  .filaBotones{ display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; }
+  /* Igual que en Encuentros: el aviso de turno ajeno va en un RECUADRO, no
+     suelto. Al ponerlo con display:flex hay que apagar/encender con "flex"
+     (y no con "block"), porque si no manda el estilo de linea y no se centra. */
+  #esperaTurno{ font-family:'Chakra Petch',sans-serif; font-size:1.9rem; font-weight:700;
+    text-align:center; line-height:1.45; color:var(--fg-muted);
+    margin:22px 0; padding:38px 24px; width:100%;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, #2b2144, var(--card));
+    border:1px solid var(--card-border); border-radius:24px;
+    box-shadow:0 14px 44px rgba(0,0,0,.45), 0 0 34px rgba(47,217,199,.12); }
+  #resultados{ width:100%; background:var(--card); border:1px solid var(--card-border);
+    border-radius:16px; padding:16px; margin:14px 0; text-align:left; font-size:.95rem; line-height:1.7; }
+  #resultados b{ font-family:'Chakra Petch',sans-serif; }
+  #finMsg{ font-size:1.1rem; text-align:center; margin:20px 0; }
+  /* ---------- sala: quien espera / quien juega ---------- */
+  #salaPanel{ display:none; grid-template-columns:1fr 1fr; gap:10px; width:100%; margin-top:10px; }
+  #salaPanel.ver{ display:grid; }
+  .salaCaja{ background:var(--bg-2); border:1px solid var(--card-border); border-radius:14px;
+    padding:12px 13px; text-align:left; min-width:0; }
+  .salaCaja h4{ font-family:'Chakra Petch',sans-serif; font-size:.72rem; font-weight:700;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--fg-muted); margin:0 0 9px;
+    display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .salaCaja h4 b{ color:var(--teal); font-size:.95rem; letter-spacing:0; }
+  /* El que espera va en coral (es a quien hay que entrar), el que juega en turquesa. */
+  #salaPanel .salaCaja:first-child h4 b{ color: var(--coral); }
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chip{ font-family:'Chakra Petch',sans-serif; font-size:.82rem; font-weight:600;
+    border:1px solid var(--card-border); border-radius:999px; padding:4px 10px;
+    color:var(--fg); background:var(--card); word-break:break-word; }
+  .chip.yo{ border-color:var(--teal); color:var(--teal); }
+  .chip.inv{ border-style:dashed; color:var(--fg-muted); }
+  .chip.vacio{ border:none; background:none; color:var(--fg-muted); font-weight:500; padding-left:0; }
+  @media (max-width:420px){ #salaPanel{ grid-template-columns:1fr; } }
+  .modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:60;
+    align-items:center; justify-content:center; padding:20px; }
+  .modal .caja{ max-width:380px; border:1px solid var(--teal); border-radius:18px; padding:22px 20px;
+    text-align:center; margin:0; }
+  /* El aviso de fin va SIN fondo y SINCRONIZANDO los toques: los fuegos de
+     fondo.js (z-index 70) se ven completos, la caja opaca queda encima para que
+     se lea, y el resto de la pantalla deja pasar el toque que lanza mas fuegos. */
+  #modalFin{ z-index:80; background:transparent; pointer-events:none; }
+  #modalFin .caja{ pointer-events:auto; }
+</style>
+</head>
+<body>
+
+<!-- Este juego esta en el catalogo de JUEGOS (no en Experiencias), asi que el
+     "← Volver" tiene que abrir ESA subpantalla y no la de experiencias en pareja.
+     En las pantallas de adentro (config) el boton no navega: se atrapa el clic
+     y se regresa a la anterior, como en Encuentros. -->
+<a class="back" id="lnkInicio" href="../index.html#juegos">← Volver</a>
+<button id="btnCfg" aria-label="Configurar">⚙️</button>
+
+<div class="eyebrow">Cada quien su personaje</div>
+
+<!-- ============ BLOQUEO (sin acceso) ============ -->
+<div class="vista" id="vistaBloqueo">
+  <h1>Acceso 🔒</h1>
+  <p class="desc">Juego de Roles no está activado en tu menú. Pídelo en Centro de Adquisiciones y al aprobarse aparece solo.</p>
+  <button class="btnPri" id="btnTienda">Ir a Centro de Adquisiciones</button>
+  <button class="btnSec" id="btnRevisar">Ya lo pedí, revisar acceso</button>
+  <button class="btnSec" id="btnTengo">Tengo código</button>
+  <textarea id="licCodigo" style="display:none;width:100%;border-radius:12px;border:1px solid var(--card-border);background:var(--card);color:var(--fg);padding:12px;font-size:.8rem;min-height:90px;" placeholder="Pega tu código aquí"></textarea>
+  <button class="btnPri" id="btnValidar" style="display:none">Validar y entrar</button>
+  <div id="licMsg"></div>
+</div>
+
+<!-- ============ INICIO (admin prepara) ============ -->
+<div class="vista" id="vistaInicio">
+  <h1>Juego de Roles</h1>
+  <p class="desc">Cada quien recibe sus personajes</p>
+  <div class="caja">
+    <div class="cajaTitulo">¿Quiénes juegan?</div>
+    <button class="btnPri" id="btnSolo" style="margin-top:10px;">Jugar solo</button>
+    <button class="btnPri" id="btnPareja">Jugar con Pareja</button>
+    <button class="btnPri" id="btnMulti" style="margin-bottom:0;">Multijugador</button>
+  </div>
+  <div class="caja">
+    <div class="cajaTitulo">Número de rondas</div>
+    <input type="number" id="rondas" class="rondasInput" min="2" max="50" value="3" inputmode="numeric">
+  </div>
+  <div class="caja">
+    <div class="cajaTitulo">Modo</div>
+    <div class="tabs" style="margin-top:10px;">
+      <button class="tab" id="tabNormal">Normal</button>
+      <button class="tab" id="tabEspejo">Espejo</button>
+      <button class="tab" id="tabSeleccionar">Seleccionar</button>
+    </div>
+    <div id="descModo" style="font-size:.78rem;color:var(--fg-muted);margin-top:10px;"></div>
+  </div>
+  <!-- El interruptor de Especial va ABAJO DE TODO (decisión de Fredy, oct-2026).
+       No es un modo: se prende encima de cualquiera de los tres. -->
+  <div class="caja">
+    <div class="cajaTitulo">Especial</div>
+    <label class="opModo" style="margin-top:10px;">
+      <input type="checkbox" id="chkEspecial">
+      <span>Sacar una variante especial en algunas rondas</span>
+    </label>
+    <div id="cajaEspecial" style="display:none; margin-top:10px;">
+      <div class="cajaTitulo" style="font-size:.7rem;margin-bottom:4px;">¿Cuántas veces?</div>
+      <input type="number" id="inpEspecial" class="rondasInput" min="1" max="50" value="1" inputmode="numeric">
+      <div id="espNota" style="font-size:.72rem;color:var(--fg-muted);margin-top:8px;"></div>
+    </div>
+    <div id="espAviso" style="font-size:.78rem;color:var(--coral);margin-top:10px;"></div>
+  </div>
+</div>
+
+<!-- ============ SELECCIÓN DE TARJETAS (modo "seleccionar") ============ -->
+<div class="vista" id="vistaSeleccion">
+  <h1>Elijan sus tarjetas</h1>
+  <p class="desc" id="selDesc">Cada quien marca sus tarjetas.</p>
+  <div class="tabs" id="selTabs"></div>
+  <div id="selCuenta" style="margin-top:12px;"></div>
+  <div class="tablaBox" id="selBox" style="margin-top:10px;"></div>
+  <button class="btnPri" id="btnSelJugar" style="display:none; margin-top:12px;">Jugar ▶</button>
+  <button class="btnSec" id="btnSelVolver" style="margin-top:8px;">‹ Volver</button>
+</div>
+
+<!-- ============ ESPERA (pareja / invitado) ============ -->
+<div class="vista" id="vistaEspera">
+  <h1>Juego de Roles</h1>
+  <p class="desc" id="esperaDesc">Esperando a que el anfitrión inicie la partida…</p>
+  <button class="btnSec" id="btnEsperaRefrescar">Volver a revisar</button>
+</div>
+
+<!-- ============ PLAYER ============ -->
+<div class="vista" id="vistaPlayer">
+  <h1 id="plTitulo">Juego de Roles</h1>
+  <div id="progreso"></div>
+  <div id="turnoNombre"></div>
+  <div id="tarjetaVacio" style="display:none">Ya no te quedan tarjetas.</div>
+  <div class="flipwrap" id="flipwrap" style="display:none">
+    <div id="tarjeta">
+      <div class="foto" id="fotoPersonaje"><span>🖼️</span><small>Imagen del personaje</small></div>
+      <div class="nombre" id="nombrePersonaje"></div>
+      <div id="blqueEspecial" style="display:none">
+        <b>Variante especial</b>
+        <p id="txtEspecial"></p>
+      </div>
+      <div class="info" id="infoTarjeta">
+        <div class="bloque"><b>Situación</b><p id="txtSituacion"></p></div>
+        <div class="bloque"><b>Atractivo</b><p id="txtGancho"></p></div>
+        <div class="bloque"><b>Derechos</b><p id="txtDerechos"></p></div>
+        <div class="bloque accion"><b>Acción</b><p id="txtSiQuiero"></p></div>
+      </div>
+    </div>
+    <div id="reverso">
+      <div class="tile"></div>
+      <div class="velo"></div>
+      <div class="contenido">
+        <img class="marca" src="../icon-512.png" alt="Icono de la app">
+        <div class="marcaTxt">Juego de Roles</div>
+        <small>Toca para revelar el personaje</small>
+      </div>
+    </div>
+  </div>
+  <button class="btnPri" id="btnSig" style="display:none; margin-top:14px;">Siguiente</button>
+  <div id="esperaTurno" style="display:none"></div>
+  <div id="finMsg" style="display:none">¡Gracias por jugar!</div>
+  <button class="btnSec" id="btnSaltar" style="display:none">Saltar turno</button>
+  <div class="filaBotones">
+    <button class="btnSec" id="btnTerminar" style="display:none">Pausar y Salir</button>
+    <button class="btnSec" id="btnQR" style="display:none">QR Invita a Alguien</button>
+    <button class="btnSec" id="btnTerminarPartida" style="display:none">Terminar Partida</button>
+    <button class="btnSec" id="btnAgregarInv" style="display:none">➕ Agregar invitado</button>
+  </div>
+
+  <!-- Quién sigue esperando afuera y quién ya está jugando. Solo aparece en
+       partida compartida: en un solo celular no hay a quién esperar. -->
+  <div id="salaPanel">
+    <div class="salaCaja">
+      <h4>En la espera <b id="esperaCount">0</b></h4>
+      <div class="chips" id="esperaLista"></div>
+    </div>
+    <div class="salaCaja">
+      <h4>En el juego <b id="juegoCount">0</b></h4>
+      <div class="chips" id="juegoLista"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CONFIG (engrane: personajes, contrapartes y especiales) ============ -->
+<div class="vista" id="vistaConfig">
+  <h1>Configurar</h1>
+  <p class="desc" id="descCfg">Tus personajes y sus contrapartes.</p>
+  <div class="tabs">
+    <button class="tab" id="tabLado">Personajes</button>
+    <button class="tab" id="tabEsp">Especiales</button>
+  </div>
+  <!-- El administrador ve los dos lados (para dejar todo listo desde un solo
+       celular). Los demás usuarios del grupo ven solo el suyo. -->
+  <div id="cajaCambiarLado" style="display:none; margin-top:8px;">
+    <button class="btnSec" id="btnCambiarLado">Ver los del otro</button>
+  </div>
+  <div class="tabs" id="subTabs" style="display:none; margin-top:10px;">
+    <button class="tab" id="subU">Personajes</button>
+    <button class="tab" id="subC">Contrapartes</button>
+  </div>
+  <input class="buscar" id="buscarOpt" type="text" placeholder="🔍 Buscar personaje..." autocomplete="off" style="margin-top:12px;">
+  <div class="tablaBox" id="tablaBox"></div>
+  <div class="filaAdd" style="margin-top:12px;">
+    <input id="inpNueva" placeholder="Nuevo personaje" maxlength="80">
+    <button id="btnAdd">+</button>
+  </div>
+  <button class="btnSec" id="btnPegar">Pegar lista completa</button>
+  <div class="pegarBox" id="pegarBox" style="display:none">
+    <textarea id="pegarTa" placeholder="Un personaje por línea (o un arreglo JSON)."></textarea>
+    <button class="btnPri" id="btnPegarOk" style="margin-top:8px;">Agregar a la lista</button>
+  </div>
+  <!-- Avisos de correspondencia. SOLO avisan: nunca bloquean. -->
+  <div id="cfgAvisos" style="display:none; width:100%; margin-top:12px; padding:11px 13px; border:1px solid var(--coral); border-radius:12px; background:rgba(255,106,92,.08); font-size:.78rem; color:var(--fg-muted);"></div>
+  <div id="msg"></div>
+</div>
+
+<!-- ============ DETALLE DEL PERSONAJE ============ -->
+<div class="modal" id="modalPersonaje">
+  <div class="caja">
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.15rem;" id="pjTitulo">Nuevo personaje</div>
+    <div style="margin-top:14px;">
+      <label class="pjCampo" for="pjPersonaje">Nombre</label>
+      <input class="pjInput" id="pjPersonaje" maxlength="80" placeholder="El Fotógrafo">
+      <label class="pjCampo" for="pjSituacion">Situación</label>
+      <textarea class="pjInput" id="pjSituacion" placeholder="Dónde están y qué está pasando."></textarea>
+      <label class="pjCampo" for="pjGancho">Atractivo</label>
+      <textarea class="pjInput" id="pjGancho" placeholder="Qué es lo que te llama la atención."></textarea>
+      <label class="pjCampo" for="pjDerechos">Derechos</label>
+      <textarea class="pjInput" id="pjDerechos" placeholder="Qué puede hacerte el otro."></textarea>
+      <label class="pjCampo" for="pjSiQuiero">Acción</label>
+      <textarea class="pjInput" id="pjSiQuiero" placeholder="Lo que este personaje propone."></textarea>
+      <label class="pjCampo" for="pjImagen">Imagen (por enlace)</label>
+      <input class="pjInput" id="pjImagen" placeholder="https://…">
+      <!-- El campo "par" es de las CONTRAPARTES: en un personaje normal no
+           aplica y se esconde. La caja nace oculta. -->
+      <div id="pjFilaPar" style="display:none;">
+        <label class="pjCampo" for="pjPar">Contraparte de</label>
+        <select class="pjInput" id="pjPar"></select>
+      </div>
+      <div style="font-size:.72rem;color:var(--fg-muted);text-align:left;">Identificador: <b id="pjId" style="color:var(--fg);">1</b> · se asigna solo, no se escribe.</div>
+    </div>
+    <button class="btnPri" id="btnPjGuardar" style="margin-top:14px;">Guardar</button>
+    <button class="btnSec" id="btnPjBorrar" style="display:none">Borrar este personaje</button>
+    <button class="btnSec" id="btnPjNo">Cancelar</button>
+  </div>
+</div>
+
+<!-- ============ CONTINUAR ============ -->
+<div class="modal" id="vistaSeguir">
+  <div class="caja">
+    <h1 id="sgTitulo" style="font-size:1.3rem;">¿Continuar partida anterior?</h1>
+    <p class="desc" id="sgDesc" style="max-width:none;"></p>
+    <button class="btnPri" id="btnContinuar">Continuar →</button>
+    <button class="btnSec" id="btnNueva">Partida nueva</button>
+  </div>
+</div>
+
+<!-- ============ GRACIA ============ -->
+<div class="modal" id="modalGracia">
+  <div class="caja">
+    <div style="font-size:.95rem;line-height:1.5;">Su acceso venció 🥺 pero hoy no les arruinamos su juego 💛 les obsequiamos este último acceso</div>
+    <div style="font-size:.75rem;color:var(--fg-muted);margin-top:10px;text-align:right;">Solicite su acceso en<br>Centro de Adquisiciones</div>
+    <button class="btnPri" id="btnGraciaOk" style="margin-top:14px;">Aceptar</button>
+  </div>
+</div>
+
+<!-- ============ PAUSA ============ -->
+<div class="modal" id="modalPausa">
+  <div class="caja">
+    <div style="font-size:.95rem;line-height:1.5;">El anfitrión pausó la partida. Cuando la retome, podrás volver a unirte.</div>
+    <button class="btnPri" id="btnPausaOk" style="margin-top:14px;">Aceptar</button>
+  </div>
+</div>
+
+<!-- ============ FIN ============ -->
+<div class="modal" id="modalFin">
+  <div class="caja">
+    <div id="finTxt">¡Gracias por jugar!</div>
+    <button class="btnPri" id="btnFinOk" style="margin-top:14px;">Aceptar</button>
+  </div>
+</div>
+
+<!-- ============ UNIRSE ============ -->
+<div class="modal" id="modalUnir">
+  <div class="caja">
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.15rem;">¿Quieres jugar? ¿Unirte?</div>
+    <div id="unirDesc" style="font-size:.9rem;color:var(--fg-muted);margin:10px 0 0;"></div>
+    <button class="btnPri" id="btnUnirme" style="margin-top:16px;">Unirme →</button>
+    <button class="btnSec" id="btnUnirNo">Ahora no</button>
+  </div>
+</div>
+
+<!-- ============ SOLO: NO SE USA =============
+     Se quitó porque "Jugar solo" se queda EN DESARROLLO (decisión de Fredy,
+     oct-2026): el botón avisa y no arranca. Antes había aquí una ventana para
+     elegir de qué lado se jugaba. Si algún día se activa, se recupera del
+     juego original (`Opciones/index.html`). -->
+
+<!-- ============ MODO: un celular / cada quien ============ -->
+<div class="modal" id="modalModo">
+  <div class="caja">
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.15rem;">¿Cómo van a Jugar?</div>
+    <button class="btnPri" id="btnModoLocal" style="margin-top:14px;">Un solo Celular</button>
+    <button class="btnPri" id="btnModoComp">Cada quien en el suyo</button>
+    <button class="btnSec" id="btnModoNo">Cancelar</button>
+  </div>
+</div>
+
+<!-- ============ AGREGAR INVITADO (a media partida) ============ -->
+<div class="modal" id="modalAgregar">
+  <div class="caja">
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.3rem;">Agregar invitado</div>
+    <div style="font-size:.82rem;color:var(--fg-muted);margin:8px 0 0;">Entrará a partir de la siguiente ronda.</div>
+    <div id="listaAgregar" style="margin-top:14px;"></div>
+    <button class="btnSec" id="btnAgregarNo">Cancelar</button>
+  </div>
+</div>
+
+<!-- ============ INVITADO ESCOGIENDO SUS TARJETAS (modo seleccionar) ============ -->
+<div class="modal" id="modalMeterInv">
+  <div class="caja">
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.2rem;" id="miTitulo">Agregar invitado</div>
+    <div style="font-size:.85rem;color:var(--fg-muted);margin-top:8px;" id="miDesc"></div>
+    <div id="miCuenta">Esperando…</div>
+    <button class="btnPri" id="btnMeterInv" style="display:none; margin-top:14px;">Meterlo a la partida</button>
+    <button class="btnSec" id="btnMeterNo">Cancelar</button>
+  </div>
+</div>
+
+<!-- ============ CÓDIGO QR (para registrar invitados sin salir) ============ -->
+<div class="modal" id="modalQR">
+  <div class="caja">
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.2rem;">Código QR</div>
+    <div style="font-size:.82rem;color:var(--fg-muted);margin:8px 0 12px;">Que lo escanee quien quiera entrar como invitado.</div>
+    <div id="qrCajaJuego" style="background:#fff;padding:12px;border-radius:14px;display:none;justify-content:center;margin:0 auto 12px;width:fit-content;"></div>
+    <div id="qrMsg" style="font-size:.82rem;color:var(--rojo);min-height:18px;"></div>
+    <button class="btnSec" id="btnQRNo">Cerrar</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, onSnapshot, query, where, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import firebaseConfigBase from "../firebase-config.js";
+import { resolverFirebase, cargarUsuarios, leerConfigGuardada } from "../config.js";
+import { verificarCodigo, verificarFirma } from "../taquilla.js";
+import { miProyecto, appTaq, leerLicencias, guardarLicencia, quitarLicencia, tengoAcceso, escucharItem } from "../acceso.js";
+import { publicarInvitacion, retirarInvitacion, pausarInvitacion } from "../invitado.js";
+import { encenderFuegos, apagarFuegos } from "../fuegos.js";
+import { confirmar, aviso } from "../confirmar.js";
+import { montarFavor } from "../favor.js";
+try{ montarFavor(); }catch(e){}
+
+function mezclar(a){
+  const x = (a || []).slice();
+  for(let i = x.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [x[i], x[j]] = [x[j], x[i]];
+  }
+  return x;
+}
+function sinDuplicados(arr){
+  const vistos = new Set();
+  const out = [];
+  (arr || []).forEach(t=>{
+    const s = String(t == null ? "" : t).trim();
+    if(!s) return;
+    const k = s.toLowerCase();
+    if(vistos.has(k)) return;
+    vistos.add(k);
+    out.push(s);
+  });
+  return out;
+}
+// La lista completa se pega de dos formas, una por pestaña:
+//   · personajes/contrapartes -> parsePegadoPersonajes (JSON de objetos o texto)
+//   · especiales              -> parsePegadoTextos
+// Las dos viven con el engrane, más abajo.
+
+const firebaseConfig = resolverFirebase(firebaseConfigBase);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const ITEM_ID = "roles";
+const JUEGO_INV = "roles";
+
+function personajesRef(){ return doc(db, "personajesJuego", "actual"); }
+function sesionRef(){ return doc(db, "sesionRoles", "actual"); }
+
+function mostrarGracia(){ document.getElementById("modalGracia").style.display = "flex"; }
+document.getElementById("btnGraciaOk").onclick = ()=>{ document.getElementById("modalGracia").style.display = "none"; };
+
+document.getElementById("btnTienda").onclick = ()=>{ location.href = "../Tienda/?sec=juegos"; };
+document.getElementById("btnRevisar").onclick = async (e)=>{
+  licMsg("");
+  e.target.disabled = true;
+  try{ await entrar(); } finally{ e.target.disabled = false; }
+};
+let stopEscucha = null;
+function escucharAprobacion(){
+  stopEscucha = escucharItem(ITEM_ID, {
+    revocado(){ ver("vistaBloqueo", false); licMsg("Acceso revocado por el desarrollador."); },
+    aprobado(){ entrar(); }
+  });
+}
+document.getElementById("btnTengo").onclick = ()=>{
+  document.getElementById("licCodigo").style.display = "block";
+  document.getElementById("btnValidar").style.display = "block";
+};
+document.getElementById("btnValidar").onclick = async ()=>{
+  licMsg("");
+  const cod = document.getElementById("licCodigo").value;
+  const pay = await verificarCodigo(cod);
+  if(pay && pay.item === ITEM_ID && pay.para === miProyecto()){ guardarLicencia(ITEM_ID, cod); entrar(); return; }
+  const pf = await verificarFirma(cod);
+  if(pf && pf.item === ITEM_ID && pf.para === miProyecto()){ guardarLicencia(ITEM_ID, cod); entrar(); return; }
+  licMsg("Código inválido o vencido.");
+};
+function licMsg(t){ document.getElementById("licMsg").textContent = t || ""; }
+
+// ---------- identidad ----------
+let miUsuario = null;
+let usuariosLista = [];
+let miId = "anon";
+let esAdminFlag = false;
+let esInvitadoFlag = false;
+function leerQuienSoy(){
+  try{ return JSON.parse(localStorage.getItem("appPareja_quienSoy") || "null"); }catch(e){ return null; }
+}
+async function cargarIdentidad(){
+  try{ usuariosLista = await cargarUsuarios(db, getDoc, doc, []); }catch(e){ usuariosLista = []; }
+  if(!Array.isArray(usuariosLista)) usuariosLista = [];
+  const yo = leerQuienSoy();
+  miUsuario = (yo && usuariosLista.find(u=>u.id === yo.id)) || yo || null;
+  miId = (miUsuario && miUsuario.id) || "anon";
+  esAdminFlag = !!(miUsuario && miUsuario.admin);
+  esInvitadoFlag = !!(miUsuario && miUsuario.invitado);
+  pintarSalidas();
+}
+function pintarSalidas(){
+  try{
+    const v = document.querySelector(".vista.ver");
+    const enJuego = !!(v && v.id === "vistaPlayer");
+    document.getElementById("lnkInicio").style.display = (enJuego || esInvitadoFlag) ? "none" : "";
+  }catch(e){}
+}
+function nombreAdmin(){
+  const a = usuariosLista.find(u=>u.admin);
+  return (a && a.nombre) || "el anfitrión";
+}
+// A = administrador, B = pareja (el primer usuario que no es admin ni invitado).
+function nombreLado(lado){
+  try{
+    const u = usuariosLista.find(x=> x && (lado === "A" ? x.admin : (!x.admin && !x.invitado)));
+    if(u && u.nombre) return u.nombre;
+  }catch(e){}
+  return "Lado " + lado;
+}
+function nombreCabeza(id){
+  const c = (estado && estado.cabezas || []).find(x=>x.id === id) || (sesionActual && (sesionActual.cabezas || []).find(x=>x.id === id));
+  return (c && c.nombre) || "alguien";
+}
+function construirCabezas(){
+  const adm = usuariosLista.find(u=>u.admin);
+  const out = [];
+  usuariosLista.forEach(u=>{
+    if(u.invitado){
+      const lado = (adm && u.conQuien === adm.id) ? "A" : "B";
+      out.push({ id: u.id, nombre: u.nombre || "Invitado", lado, admin: false, invitado: true, conQuien: u.conQuien || null });
+    }else{
+      out.push({ id: u.id, nombre: u.nombre || "", lado: u.admin ? "A" : "B", admin: !!u.admin, invitado: false });
+    }
+  });
+  return out;
+}
+
+// ---------- contenido: personajes (Firebase, no JSON) ----------
+// FASE 1. U1/U2 = los personajes que personifica el usuario 1 y el usuario 2;
+// C1/C2 = las contrapartes de cada uno; ESP = variantes especiales, que son
+// COMUNES a los dos. El campo `par` de una contraparte es el `id` del normal
+// del mismo dueño al que corresponde.
+let personajes = { U1: [], U2: [], C1: [], C2: [], ESP: [] };
+let idSiguiente = 1;
+
+function listaSegura(k){ return Array.isArray(personajes[k]) ? personajes[k] : []; }
+
+async function cargarPersonajes(){
+  try{
+    const sd = await getDoc(personajesRef());
+    if(sd.exists()){
+      const d = sd.data();
+      ["U1","U2","C1","C2"].forEach(k=>{ personajes[k] = Array.isArray(d[k]) ? d[k].slice() : []; });
+      personajes.ESP = Array.isArray(d.ESP) ? d.ESP.slice() : [];
+      let max = 0;
+      ["U1","U2","C1","C2"].forEach(k=>{
+        listaSegura(k).forEach(p=>{ const n = parseInt(p && p.id, 10); if(n > max) max = n; });
+      });
+      idSiguiente = max + 1;
+    }
+  }catch(e){}
+}
+async function guardarPersonajes(){
+  try{
+    await setDoc(personajesRef(), {
+      U1: personajes.U1, U2: personajes.U2, C1: personajes.C1, C2: personajes.C2,
+      ESP: personajes.ESP, actualizadoEn: serverTimestamp()
+    }, { merge: true });
+  }catch(e){}
+}
+
+// Los tres modos base (decidido por Fredy, oct-2026). "especial" NO es un modo:
+// es un interruptor encima de cualquiera de estos tres, y llega en la FASE 5.
+const MODO_NORMAL = "normal";
+const MODO_ESPEJO = "espejo";
+const MODO_SELECCIONAR = "seleccionar";
+let modoBaseCfg = MODO_NORMAL;
+const DESC_MODO = {
+  "normal": "Cada quien juega con los personajes de su propia lista.",
+  "espejo": "Cada quien juega con la contraparte de su propio personaje.",
+  "seleccionar": "Cada quien escoge a mano las tarjetas con las que quiere jugar."
+};
+// De dónde sale la lista de un jugador, según el modo.
+//   normal      -> U1 / U2
+//   espejo      -> C1 / C2   (las contrapartes)
+//   seleccionar -> U + C del mismo dueño (las dos, porque se escogen a mano)
+function listaDeLado(lado, modoBase){
+  const n = (lado === "A") ? "1" : "2";
+  if(modoBase === MODO_ESPEJO) return listaSegura("C" + n);
+  if(modoBase === MODO_SELECCIONAR) return listaSegura("U" + n).concat(listaSegura("C" + n));
+  return listaSegura("U" + n);
+}
+
+// ---------- estado del juego ----------
+// `listas` ya no guarda texto: guarda la COLA DE TARJETAS que a cada quien le
+// falta, y cada carta es el objeto `personaje` completo. Ya no existen `pares`
+// ni `eliminadas`: aquí no se elige nada, se lee y se pasa.
+let estado = null;   // { cabezas, listas, orden, turno, ronda, rondas, terminada }
+let jugando = false;
+let jugandoCompartido = false;
+// soyHost: mando en la partida EN CURSO (puedo pausar/terminar/saltar/agregar).
+// Se pone al iniciar, al reanudar como anfitrión, o al entrar a una partida mía.
+let soyHost = false;
+let modoLocal = false;
+let modoJuego = "multi";
+let unCelular = false;
+let ladoSolo = "A";
+let sesionActual = null;
+let sesionUnsub = null;
+let sesionIniciada = false;
+let sidMostrado = null;
+let finMostrado = false;
+let terminoLaPartida = false;
+const entrarDirecto = (()=>{
+  try{ return new URLSearchParams(location.search).get("entrar") === "1"; }catch(e){ return false; }
+})();
+
+function soyCabeza(d){ return !!(d && Array.isArray(d.cabezas) && d.cabezas.some(c=>c.id === miId)); }
+
+function iniciarEstado(cabezasIn, pools){
+  const listas = {};
+  cabezasIn.forEach(c=>{ listas[c.id] = (pools[c.id] || []).slice(); });
+  const orden = mezclar(cabezasIn.map(c=>c.id));
+  return { cabezas: cabezasIn, listas, orden, turno: 0, ronda: 1, terminada: false };
+}
+// Elige el siguiente turno entre los que aun tienen tarjetas.
+// Al dar la vuelta se revuelve el orden (turnos aleatorios, no fijos).
+function siguienteTurno(d){
+  const alive = id => (d.listas[id] || []).length > 0;
+  const vivos = d.cabezas.map(c=>c.id).filter(alive);
+  if(!vivos.length) return { fin: true, nuevaRonda: false };
+  let o = Array.isArray(d.orden) ? d.orden.slice() : [];
+  let t = d.turno || 0;
+  for(let step = 1; step <= o.length; step++){
+    const nt = (t + step) % o.length;
+    if(nt <= t){ return { orden: mezclar(vivos), turno: 0, fin: false, nuevaRonda: true }; }
+    if(o[nt] && alive(o[nt])) return { orden: o, turno: nt, fin: false, nuevaRonda: false };
+  }
+  return { orden: mezclar(vivos), turno: 0, fin: false, nuevaRonda: true };
+}
+// Aplica el avance: se quita la tarjeta jugada y pasa el turno. Quien se queda
+// sin tarjetas sale del ciclo; si se quedan TODOS sin tarjetas, se acabó.
+function avanzarTarjeta(d, headId){
+  d.listas[headId] = (d.listas[headId] || []).slice();
+  d.listas[headId].shift();
+  const sig = siguienteTurno(d);
+  if(sig.fin){ d.terminada = true; return; }
+  d.orden = sig.orden;
+  d.turno = sig.turno;
+  if(sig.nuevaRonda) d.ronda = (d.ronda || 1) + 1;
+}
+
+// ---------- licencia / arranque de pantalla ----------
+async function entrar(){
+  let ok = false;
+  try{ ok = await tengoAcceso(ITEM_ID); }catch(e){ ok = false; }
+  if(!ok && esInvitadoFlag) ok = true; // invitado juega con el acceso del anfitrión
+  if(ok){
+    modoLocal = (typeof navigator !== "undefined" && navigator.onLine === false);
+    // La pareja (no invitado) tambien tiene su pantalla de inicio y puede jugar
+    // por su cuenta, como el administrador. El invitado sigue esperando.
+    if(!esInvitadoFlag){
+      if(esAdminFlag && modoLocal){ try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){} }
+      await cargarPersonajes();
+      pintarInicio();
+      ver("vistaInicio", false);
+    }else{
+      ver("vistaEspera", false);
+      chequearPartidaEspera();
+    }
+    try{ escucharSesion(); }catch(e){}
+    try{ escucharSeleccion(); }catch(e){}
+    return;
+  }
+  // cortesía única si venció
+  try{
+    const lic = leerLicencias()[ITEM_ID];
+    if(lic){
+      const pay = await verificarFirma(lic);
+      if(pay && pay.item === ITEM_ID && pay.para === miProyecto() && pay.vence && Date.now() > pay.vence){
+        const tdb = getFirestore(appTaq());
+        const snap = await getDocs(query(collection(tdb, "solicitudes"), where("para", "==", miProyecto())));
+        let docGracia = null;
+        snap.forEach(dd=>{
+          const s = dd.data();
+          if(s.item !== ITEM_ID) return;
+          if(String(s.email || "").trim().toLowerCase() !== String(pay.email || "").trim().toLowerCase()) return;
+          if(s.estado !== "aprobado" || s.graciaUsada !== false) return;
+          docGracia = { id: dd.id };
+        });
+        if(docGracia){
+          try{ await setDoc(doc(tdb, "solicitudes", docGracia.id), { graciaUsada: true, graciaFecha: serverTimestamp() }, { merge: true }); }catch(e){}
+          if(!esInvitadoFlag){ await cargarPersonajes(); pintarInicio(); ver("vistaInicio", false); } else { ver("vistaEspera", false); }
+          mostrarGracia();
+          return;
+        }
+      }
+    }
+  }catch(e){}
+  ver("vistaBloqueo", false);
+  escucharAprobacion();
+}
+
+function pintarInicio(){
+  pintarModo();
+  pintarEspecial();
+}
+// Las tres pestañas del modo base.
+function pintarModo(){
+  [["tabNormal", MODO_NORMAL], ["tabEspejo", MODO_ESPEJO], ["tabSeleccionar", MODO_SELECCIONAR]].forEach(par=>{
+    document.getElementById(par[0]).classList.toggle("activo", modoBaseCfg === par[1]);
+  });
+  document.getElementById("descModo").textContent = DESC_MODO[modoBaseCfg] || "";
+}
+document.getElementById("tabNormal").onclick = ()=>{ modoBaseCfg = MODO_NORMAL; pintarModo(); };
+document.getElementById("tabEspejo").onclick = ()=>{ modoBaseCfg = MODO_ESPEJO; pintarModo(); };
+document.getElementById("tabSeleccionar").onclick = ()=>{ modoBaseCfg = MODO_SELECCIONAR; pintarModo(); };
+// Botones de modo: cada uno abre su ventana y de ahi arranca la partida.
+let modoPendiente = "multi";
+// "Jugar solo" se queda EN DESARROLLO (decisión de Fredy): avisa y no arranca.
+document.getElementById("btnSolo").onclick = ()=>{ aviso("Jugar solo todavía no está disponible."); };
+document.getElementById("btnPareja").onclick = ()=>{ modoPendiente = "pareja"; conPendiente(()=>{ abrirModal("modalModo"); }); };
+document.getElementById("btnMulti").onclick = ()=>{ modoPendiente = "multi"; conPendiente(()=>{ abrirModal("modalModo"); }); };
+document.getElementById("btnModoLocal").onclick = ()=>{ cerrarModal("modalModo"); preparar(modoPendiente, null, true); };
+document.getElementById("btnModoComp").onclick = ()=>{ cerrarModal("modalModo"); preparar(modoPendiente, null, false); };
+document.getElementById("btnModoNo").onclick = ()=>{ cerrarModal("modalModo"); };
+
+// ---------- modo ESPECIAL (interruptor, NO es un modo) ----------
+// Se prende encima de cualquiera de los tres modos base. Al arrancar se sortean
+// K rondas DISTINTAS y en cada una un jugador, y se guardan en la sesión para
+// que todos los celulares vean lo mismo.
+function especialPendido(){ return !!document.getElementById("chkEspecial").checked; }
+function especialK(){
+  const n = parseInt(document.getElementById("inpEspecial").value, 10);
+  return isNaN(n) ? 1 : n;
+}
+function pintarEspecial(){
+  const caja = document.getElementById("cajaEspecial");
+  caja.style.display = especialPendido() ? "block" : "none";
+  const R = Math.max(2, Math.min(50, parseInt(document.getElementById("rondas").value, 10) || 2));
+  const K = especialK();
+  const nota = document.getElementById("espNota");
+  // OJO: se llama `avisoEl` y NO `aviso`. Con el nombre `aviso` tapaba la
+  // función `aviso()` que se importa de confirmar.js, y cualquier aviso que se
+  // agregara aquí dentro tronaba.
+  const avisoEl = document.getElementById("espAviso");
+  avisoEl.textContent = "";
+  if(!especialPendido()){
+    nota.textContent = "";
+    return;
+  }
+  // Máximo una variante por ronda: K no puede pasar de R.
+  if(K > R){
+    nota.textContent = "Máximo una por ronda: con " + R + " rondas, el máximo es " + R + ".";
+    nota.style.color = "var(--coral)";
+  }else if(K < 1){
+    nota.textContent = "Tiene que ser al menos 1.";
+    nota.style.color = "var(--coral)";
+  }else{
+    nota.textContent = "En " + K + " de las " + R + " rondas, a alguien le toca una variante.";
+    nota.style.color = "var(--fg-muted)";
+  }
+  if(!listaSegura("ESP").length){
+    avisoEl.textContent = "No tienes variantes especiales. Agrégalas en el engrane ⚙️, pestaña Especiales.";
+  }
+}
+document.getElementById("chkEspecial").addEventListener("change", pintarEspecial);
+document.getElementById("inpEspecial").addEventListener("input", pintarEspecial);
+document.getElementById("rondas").addEventListener("input", pintarEspecial);
+// Elige K rondas DISTINTAS al azar y, en cada una, un jugador que juegue esa
+// ronda (que son todos: todos empiezan con R tarjetas y juegan R rondas).
+function repartirEspeciales(cabezasIn, R, K){
+  const textos = sinDuplicados(listaSegura("ESP").map(x=> String(x == null ? "" : x)));
+  if(!textos.length || !cabezasIn.length) return [];
+  const total = Math.max(1, Math.min(K, R));
+  const todas = [];
+  for(let i = 1; i <= R; i++) todas.push(i);
+  const rondas = mezclar(todas).slice(0, total);
+  const out = [];
+  rondas.forEach(r=>{
+    const c = mezclar(cabezasIn)[0];
+    out.push({ ronda: r, jugador: c.id, texto: textos[Math.floor(Math.random() * textos.length)] });
+  });
+  return out;
+}
+function cargarEstado(d){
+  estado = {
+    cabezas: Array.isArray(d.cabezas) ? d.cabezas : [],
+    listas: d.listas || {},
+    orden: Array.isArray(d.orden) ? d.orden.slice() : [],
+    turno: d.turno || 0,
+    rondas: d.rondas || 0,
+    ronda: d.ronda || 1,
+    modo: d.modoBase || "normal",
+    especiales: Array.isArray(d.especiales) ? d.especiales : [],
+    terminada: !!d.terminada
+  };
+  // "Quiénes juegan" se lee de la SESIÓN, no de la pantalla de inicio. Hace
+  // falta para quien SE UNE a una partida ajena: sin esto, su `modoJuego` se
+  // quedaba en el valor por omisión ("multi") y en una partida de Pareja le
+  // salía el panel de la sala, que es solo de Multijugador.
+  if(d.modoJuego) modoJuego = d.modoJuego;
+  if(typeof d.unCelular === "boolean") unCelular = d.unCelular;
+}
+// ¿Le toca una variante especial a este jugador en esta ronda?
+function especialDe(ronda, jugador){
+  const lista = (estado && Array.isArray(estado.especiales)) ? estado.especiales : [];
+  return lista.find(x=> x && x.jugador === jugador && Number(x.ronda) === Number(ronda)) || null;
+}
+function sanearSesion(d){
+  if(!d || !Array.isArray(d.cabezas) || !Array.isArray(d.orden) || !d.orden.length) return d;
+  // Solo el anfitrion es autoritativo: los demas NO reescriben las cabezas del
+  // documento. Asi un invitado con la lista desactualizada no borra a otro.
+  if(d.hostUid !== miId) return d;
+  const validos = new Set(usuariosLista.map(u=>u && u.id).filter(Boolean));
+  const fuera = d.cabezas.filter(c=>!validos.has(c.id));
+  if(!fuera.length) return d;
+  const ordenNuevo = d.orden.filter(id=>validos.has(id));
+  if(!ordenNuevo.length) return d;
+  const alive = id => ((d.listas && d.listas[id]) || []).length > 0;
+  let turnoViejo = d.turno || 0;
+  let siguiente = null;
+  for(let i = turnoViejo; i < d.orden.length; i++){
+    if(validos.has(d.orden[i]) && alive(d.orden[i])){ siguiente = d.orden[i]; break; }
+  }
+  if(!siguiente) siguiente = ordenNuevo.find(alive) || ordenNuevo[0];
+  const turnoNuevo = Math.max(0, ordenNuevo.indexOf(siguiente));
+  d.cabezas = d.cabezas.filter(c=>validos.has(c.id));
+  d.orden = ordenNuevo;
+  d.turno = turnoNuevo;
+  const borrar = {};
+  fuera.forEach(c=>{ borrar[c.id] = null; });
+  try{
+    setDoc(sesionRef(), {
+      cabezas: d.cabezas, orden: d.orden, turno: turnoNuevo,
+      listas: borrar, actualizadaEn: serverTimestamp()
+    }, { merge: true });
+  }catch(e){}
+  return d;
+}
+// Respaldo: si la escucha en vivo no llega (o se pierde), al entrar o con
+// "Volver a revisar" se mira la partida directamente y se ofrece unirse.
+async function chequearPartidaEspera(){
+  const el = document.getElementById("esperaDesc");
+  const yo = (miUsuario && miUsuario.nombre) || miId || "?";
+  const pon = (t)=>{ try{ if(el) el.textContent = t; }catch(e){} };
+  try{
+    const sd = await getDoc(sesionRef());
+    if(!sd.exists()){ pon("Sin partida en curso. (Tú: " + yo + ")"); return; }
+    const d = sd.data();
+    if(!d || !d.activa || d.terminada){ pon("Sin partida en curso. (Tú: " + yo + ")"); return; }
+    sesionActual = d;
+    if(d.hostUid === miId) return;
+    if(soyCabeza(d)){
+      document.getElementById("unirDesc").textContent = d.reanudada
+        ? ((d.hostNombre || "El anfitrión") + " retomó la partida. Puedes continuar donde van.")
+        : ((d.hostNombre || "El anfitrión") + " inició Juego de Roles.");
+      abrirModal("modalUnir");
+    }else{
+      const nombres = (d.cabezas || []).map(c=>c.nombre).join(", ");
+      pon("Hay partida de " + (d.hostNombre || "el anfitrión") + ", pero no estás en la lista. Participantes: " + nombres + ". Tú: " + yo + ".");
+    }
+  }catch(e){
+    pon("No se pudo revisar la partida. (" + (e && e.message ? e.message : "error") + ")");
+  }
+}
+function escucharSesion(){
+  if(sesionIniciada) return;
+  sesionIniciada = true;
+  try{
+    sesionUnsub = onSnapshot(sesionRef(), (snap)=>{
+      try{
+        const d = snap.exists() ? snap.data() : null;
+        if(d && d.activa && soyCabeza(d)){
+          sanearSesion(d);
+          sesionActual = d;
+          finMostrado = false;
+          if(jugando && !jugandoCompartido) return;
+          if(d.pausada && d.hostUid !== miId){
+            if(jugando){ jugando = false; abrirModal("modalPausa"); }
+            return;
+          }
+          if(jugando){ cargarEstado(d); pintarPaso(); return; }
+          if(d.sid === sidMostrado) return;
+          sidMostrado = d.sid;
+          if(d.hostUid !== miId){
+            if(entrarDirecto && soyCabeza(d)){ entrarAlJuego(d); return; }
+            document.getElementById("unirDesc").textContent = d.reanudada
+              ? ((d.hostNombre || "El anfitrión") + " retomó la partida. Puedes continuar donde van.")
+              : ((d.hostNombre || "El anfitrión") + " inició Juego de Roles.");
+            abrirModal("modalUnir");
+          }
+        }else{
+          if(jugando && !jugandoCompartido) return;
+          if(d && d.terminada && jugando && soyCabeza(d) && !finMostrado){
+            finMostrado = true;
+            cargarEstado(d);
+            pintarPaso();
+            jugando = false;
+if(d.porAdmin){
+               abrirFin("El anfitrión acabó la partida.");
+             }else{
+               finPartida();
+             }
+            return;
+          }
+          if(jugando){ jugando = false; entrar(); }
+        }
+      }catch(e){}
+    }, ()=>{});
+  }catch(e){}
+}
+async function siguienteSesion(){
+  let termino = false, fallo = false;
+  try{
+    await runTransaction(db, async (tx)=>{
+      const ref = sesionRef();
+      const snap = await tx.get(ref);
+      if(!snap.exists()) return;
+      const d = snap.data();
+      if(!d.activa) return;
+      if(!d.orden || d.orden[d.turno || 0] !== miId) return;
+      avanzarTarjeta(d, miId);
+      if(d.terminada) termino = true;
+      tx.update(ref, {
+        listas: d.listas,
+        orden: d.orden, turno: d.turno,
+        ronda: d.ronda || 1,
+        activa: !d.terminada, terminada: !!d.terminada,
+        actualizadaEn: serverTimestamp()
+      });
+    });
+  }catch(e){ fallo = true; }
+  // Regla de la casa: un botón que escribe avisa cuando falla. Antes se tragaba
+  // el error y "Siguiente" se quedaba muerto sin decir nada.
+  if(fallo){ try{ aviso("No se pudo pasar la tarjeta. Revisa conexión."); }catch(x){} return; }
+  if(termino){ terminoLaPartida = true; }
+  if(terminoLaPartida){ terminoLaPartida = false; try{ await retirarInvitacion(JUEGO_INV); }catch(e){} }
+}
+async function saltarTurno(){
+  const d = sesionActual;
+  if(!d || !d.activa || d.hostUid !== miId){ aviso("Solo el anfitrión puede saltar un turno."); return; }
+  const deQuien = nombreCabeza((d.orden || [])[d.turno || 0]);
+  if(d.orden[d.turno || 0] === miId){ pintarPaso(); return; }
+  const saltar = await confirmar({
+    aviso: true,
+    titulo: "¿Saltar el turno de " + deQuien + "?",
+    texto: "Esa persona pierde su turno y el juego sigue con el siguiente.",
+    ok: "Saltar turno"
+  });
+  if(!saltar) return;
+  let termino = false, fallo = false;
+  try{
+    await runTransaction(db, async (tx)=>{
+      const ref = sesionRef();
+      const snap = await tx.get(ref);
+      if(!snap.exists()) return;
+      const s = snap.data();
+      if(!s.activa || s.hostUid !== miId) return;
+      if(!s.orden || !s.orden.length) return;
+      if(s.orden[s.turno || 0] === miId) return;
+      const sig = siguienteTurno(s);
+      if(sig.fin){
+        termino = true;
+        tx.update(ref, { activa: false, terminada: true, turno: 0, actualizadaEn: serverTimestamp() });
+        return;
+      }
+      const ronda = sig.nuevaRonda ? ((s.ronda || 1) + 1) : (s.ronda || 1);
+      tx.update(ref, { orden: sig.orden, turno: sig.turno, ronda, actualizadaEn: serverTimestamp() });
+    });
+  }catch(e){ fallo = true; }
+  if(fallo){ try{ aviso("No se pudo saltar el turno. Revisa conexión."); }catch(x){} return; }
+  if(termino){ try{ await retirarInvitacion(JUEGO_INV); }catch(e){} }
+}
+const JUEGO_TITULO = "Juego de Roles";
+function anunciarInvitacion(sid, cabezasIn, hostNombre){
+  try{
+    publicarInvitacion({
+      juego: JUEGO_INV,
+      titulo: JUEGO_TITULO,
+      icono: "🎭",
+      ruta: "Roles",
+      hostUid: miId,
+      hostNombre: hostNombre || "",
+      participantes: (cabezasIn || []).map(c=>c && c.id).filter(Boolean),
+      sesion: "sesionRoles/actual",
+      sid: sid || ""
+    });
+  }catch(e){}
+}
+async function cerrarSesion(){
+  try{ await setDoc(sesionRef(), { activa: false, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+  await retirarInvitacion(JUEGO_INV);
+}
+
+// ---------- player ----------
+// ¿Mando en la partida en curso? (pausar/terminar/saltar/agregar invitado)
+function esAnfitrion(){ return soyHost; }
+// ¿Se puede invitar a alguien en la partida que se está jugando?
+// SOLO en Multijugador. En Pareja el encuentro es de los dos, y en Solo juega
+// una sola persona: en los dos casos no hay a quien meter, asi que el QR,
+// "Agregar invitado" y el panel de la sala no se muestran. Da igual si se
+// juega en un solo celular o cada quien en el suyo.
+function modoAdmiteInvitados(){ return modoJuego === "multi"; }
+function mostrarBotonesAdmin(){
+  const host = esAnfitrion();
+  const dsp = host ? "" : "none";
+  try{ document.getElementById("btnTerminar").style.display = dsp; }catch(e){}
+  try{ document.getElementById("btnTerminarPartida").style.display = dsp; }catch(e){}
+  const invita = host && modoAdmiteInvitados();
+  try{ document.getElementById("btnQR").style.display = invita ? "" : "none"; }catch(e){}
+  if(!host){ try{ document.getElementById("btnSaltar").style.display = "none"; }catch(e){} }
+  // "Agregar invitado": solo el anfitrion, solo en multijugador y con juego vivo.
+  // Se muestra siempre (aunque no haya invitados disponibles: la ventana avisa).
+  try{
+    const dis = invita && jugando && estado && !estado.terminada;
+    document.getElementById("btnAgregarInv").style.display = dis ? "" : "none";
+  }catch(e){}
+}
+// ---------- sala: quien espera y quien esta jugando ----------
+// "En el juego" son las cabezas de la partida (los que ya tienen turno).
+// "En la espera" son los usuarios del grupo que todavia NO entran: los que se
+// registraron despues de que empezo el juego. Solo tiene sentido en Multijugador.
+function pintarSala(){
+  const panel = document.getElementById("salaPanel");
+  if(!panel) return;
+  // Se lee de `estado`, que es el espejo en memoria de la partida: funciona
+  // igual en un solo celular (que no escribe sesion en Firebase) y en compartido.
+  const activa = !!(jugando && modoAdmiteInvitados());
+  panel.classList.toggle("ver", activa);
+  if(!activa) return;
+
+  const cabezas = (estado && Array.isArray(estado.cabezas) && estado.cabezas.length)
+    ? estado.cabezas
+    : ((sesionActual && Array.isArray(sesionActual.cabezas)) ? sesionActual.cabezas : []);
+
+  const dentro = new Set(cabezas.map(c=> c && c.id).filter(Boolean));
+  const armando = (u)=>({
+    nombre: (u && u.nombre) || "Invitado",
+    yo: !!(u && u.id === miId),
+    inv: !!(u && u.invitado)
+  });
+
+  const enJuego = cabezas.map(armando);
+  const enEspera = (Array.isArray(usuariosLista) ? usuariosLista : []).filter(u=> u && u.id && !dentro.has(u.id)).map(armando);
+
+  document.getElementById("juegoCount").textContent = enJuego.length;
+  document.getElementById("esperaCount").textContent = enEspera.length;
+
+  const llenar = (destinoId, arr)=>{
+    const destino = document.getElementById(destinoId);
+    if(!destino) return;
+    destino.innerHTML = "";
+    if(!arr.length){
+      const v = document.createElement("span");
+      v.className = "chip vacio";
+      v.textContent = "Nadie";
+      destino.appendChild(v);
+      return;
+    }
+    arr.forEach(it=>{
+      const s = document.createElement("span");
+      s.className = "chip" + (it.yo ? " yo" : "") + (it.inv ? " inv" : "");
+      s.textContent = it.nombre + (it.yo ? " (tú)" : "") + (it.inv ? " · invitado" : "");
+      destino.appendChild(s);
+    });
+  };
+  llenar("juegoLista", enJuego);
+  llenar("esperaLista", enEspera);
+}
+// ---------- la tarjeta y el volteo ----------
+// Boca abajo por omision (decidido por Fredy, oct-2026): al empezar el turno se
+// ve el reverso y se revela tocando la carta. Tocar otra vez la tapa, para
+// poder pasar el celular sin que el otro la lea.
+let bocaAbajo = true, ignoraClick = false, tScroll = null;
+let cartaActual = null;
+
+function voltear(){ bocaAbajo = !bocaAbajo; pintarVolteo(); }
+function pintarVolteo(){
+  const tarjeta = document.getElementById("tarjeta");
+  const reverso = document.getElementById("reverso");
+  if(bocaAbajo){
+    // `visibility` y no `display`: asi el frente sigue definindo el alto y el
+    // reverso (`inset:0`) queda EXACTAMENTE del mismo tamaño.
+    tarjeta.style.visibility = "hidden";
+    reverso.style.display = "block";
+  }else{
+    tarjeta.style.visibility = "visible";
+    reverso.style.display = "none";
+  }
+}
+// Se llama en CADA repintado, asi que SOLO toca el interruptor cuando la
+// tarjeta cambia de verdad. Si no, cualquier repintado (por ejemplo, lo que
+// llega del otro telefono) volveria a tapar la carta que se esta leyendo.
+function resetCarta(nueva){
+  pintarVolteo();
+  if(cartaActual === nueva) return;
+  cartaActual = nueva;
+  bocaAbajo = true;   // cada turno arranca boca abajo
+  pintarVolteo();
+}
+function pintarFoto(p){
+  const foto = document.getElementById("fotoPersonaje");
+  const url = (p && p.imagen) ? String(p.imagen).trim() : "";
+  if(url){
+    foto.innerHTML = "";
+    const img = document.createElement("img");
+    img.alt = "Imagen del personaje";
+    img.onerror = ()=>{ pintarFoto({}); };   // si el enlace falla, el marcador
+    img.src = url;
+    foto.appendChild(img);
+    return;
+  }
+  foto.innerHTML = "";
+  const s = document.createElement("span");
+  s.textContent = "🖼️";
+  const sm = document.createElement("small");
+  sm.textContent = "Imagen del personaje";
+  foto.appendChild(s); foto.appendChild(sm);
+}
+function pintarTarjeta(p, esp){
+  document.getElementById("nombrePersonaje").textContent = (p && p.personaje) || "";
+  document.getElementById("txtSituacion").textContent = (p && p.situacion) || "";
+  document.getElementById("txtGancho").textContent = (p && p.gancho) || "";
+  document.getElementById("txtDerechos").textContent = (p && p.derechos) || "";
+  document.getElementById("txtSiQuiero").textContent = (p && p.si_quieres) || "";
+  pintarFoto(p);
+  const bloque = document.getElementById("blqueEspecial");
+  if(esp){
+    bloque.style.display = "block";
+    document.getElementById("txtEspecial").textContent = esp.texto || "";
+  }else{
+    bloque.style.display = "none";
+    document.getElementById("txtEspecial").textContent = "";
+  }
+}
+function pintarPaso(){
+  const d = estado;
+  const flipwrap = document.getElementById("flipwrap");
+  const vacio = document.getElementById("tarjetaVacio");
+  const btnSig = document.getElementById("btnSig");
+  const espera = document.getElementById("esperaTurno");
+  const turnoNombre = document.getElementById("turnoNombre");
+  const fin = document.getElementById("finMsg");
+  const prog = document.getElementById("progreso");
+  const btnSaltar = document.getElementById("btnSaltar");
+  // La sala se repinta en cada pasada, antes de los cortes: asi se apaga sola
+  // cuando ya no se esta jugando.
+  try{ pintarSala(); }catch(e){}
+  // Los botones de anfitrion tambien se refrescan aqui, en CADA pasada. Antes
+  // solo se recalculaban al entrar a la partida, asi que si alguien abria la
+  // pantalla de juego sin pasar por ahi, o le cambiaba el turno de anfitrion a
+  // media partida, se le quedaban "Pausar y Salir" y "Terminar Partida" a la
+  // vista aunque no fuera el anfitrion (lo reporto Fredy, oct-2026). Va antes
+  // del corte de "no se esta jugando" porque al pausar los botones NO deben
+  // desaparecer: al reanudar tienen que volver.
+  try{ mostrarBotonesAdmin(); }catch(e){}
+  if(!jugando || !d){ return; }
+  if(d.terminada){
+    flipwrap.style.display = "none";
+    vacio.style.display = "none";
+    btnSig.style.display = "none";
+    espera.style.display = "none";
+    turnoNombre.textContent = "";
+    prog.textContent = "";
+    fin.style.display = "block";
+    mostrarBotonesAdmin();
+    try{ btnSaltar.style.display = "none"; }catch(e){}
+    return;
+  }
+  fin.style.display = "none";
+  const cur = d.orden[d.turno] || "";
+  const cola = d.listas[cur] || [];
+  const p = cola[0] || null;
+  const soy = !jugandoCompartido || cur === miId;
+  const nombre = nombreCabeza(cur);
+  // La ronda es `d.ronda`, que la lleva el juego. Antes se calculaba restando
+  // las tarjetas que le quedan al jugador, y eso mentía con un invitado que
+  // entra a media partida: él trae menos tarjetas y el número salía corrido.
+  prog.textContent = (d.rondas ? ("Ronda " + (d.ronda || 1) + " de " + d.rondas) : ("Turno " + ((d.turno || 0) + 1)));
+  if(soy && p){
+    flipwrap.style.display = "block";
+    vacio.style.display = "none";
+    btnSig.style.display = "block";
+    pintarTarjeta(p, especialDe(d.ronda, cur));
+    // Cada turno empieza boca abajo (y solo si la tarjeta cambia).
+    resetCarta(cur + ":" + (p.id || ""));
+    espera.style.display = "none";
+    turnoNombre.textContent = (jugandoCompartido ? "Tu turno" : "Turno de " + nombre);
+    try{ btnSaltar.style.display = "none"; }catch(e){}
+  }else if(soy && !p){
+    // Es el turno de alguien que ya se quedo sin tarjetas: no hay nada que ver.
+    flipwrap.style.display = "none";
+    vacio.style.display = "block";
+    btnSig.style.display = "none";
+    espera.style.display = "none";
+    turnoNombre.textContent = "Turno de " + nombre;
+    try{ btnSaltar.style.display = esAnfitrion() ? "" : "none"; }catch(e){}
+  }else{
+    flipwrap.style.display = "none";
+    vacio.style.display = "none";
+    btnSig.style.display = "none";
+    espera.style.display = "flex";
+    espera.textContent = "Turno de " + nombre + "…";
+    turnoNombre.textContent = "";
+    try{
+      btnSaltar.style.display = esAnfitrion() ? "" : "none";
+      btnSaltar.textContent = "Saltar turno de " + nombre;
+    }catch(e){}
+  }
+}
+// ---------- fin de partida: fuegos + aviso ----------
+// Todos los caminos de "se acabo" pasan por aqui, sin importar el modo:
+// se juego en un celular o compartido, se acabo sola o la termino el anfitrion.
+function abrirFin(texto){
+  try{ document.getElementById("finTxt").textContent = texto; }catch(e){}
+  try{ encenderFuegos(); }catch(e){}
+  abrirModal("modalFin");
+}
+function finPartida(){
+  abrirFin("¡Gracias por jugar!");
+}
+async function siguiente(){
+  if(!estado || estado.terminada || !jugando) return;
+  const cur = estado.orden[estado.turno];
+  if(!cur) return;
+  if(jugandoCompartido){
+    if(cur !== miId) return;
+    await siguienteSesion();
+  }else{
+    avanzarTarjeta(estado, cur);
+    pintarPaso();
+    if(estado.terminada && !finMostrado){ finMostrado = true; finPartida(); }
+  }
+}
+document.getElementById("btnSig").onclick = ()=>{ siguiente(); };
+document.getElementById("btnSaltar").onclick = ()=>{ saltarTurno(); };
+
+// ---------- el volteo ----------
+// Al deslizar la info se marca, para que el clic de salida no voltee la carta.
+document.getElementById("infoTarjeta").addEventListener("scroll", function(){
+  ignoraClick = true;
+  clearTimeout(tScroll);
+  tScroll = setTimeout(function(){ ignoraClick = false; }, 320);
+});
+// Toca CUALQUIER parte de la carta para voltear (respetando el scroll).
+document.getElementById("tarjeta").addEventListener("click", function(){ if(ignoraClick) return; voltear(); });
+document.getElementById("reverso").onclick = function(){ voltear(); };
+
+// ---------- agregar invitado a media partida ----------
+// El que entra NO juega la ronda en curso: se agrega a las cabezas y a las
+// listas, pero NO al orden actual. Cuando la ronda da la vuelta, el orden se
+// revuelve con todos los que siguen vivos y ahi entra. Su lista trae tantas
+// tarjetas como rondas le falten (R - ronda), asi termina junto con los demas.
+// Quién todavía NO está en la partida. En Multijugador todas las cabezas entran
+// desde el arranque, así que lo que sale aquí es gente que se registró después.
+function disponiblesInvitados(){
+  const ids = new Set(((estado && estado.cabezas) || []).map(c=>c && c.id));
+  return (usuariosLista || []).filter(u=> u && u.id && !ids.has(u.id));
+}
+function abrirAgregar(){
+  const box = document.getElementById("listaAgregar");
+  box.innerHTML = "";
+  const dis = disponiblesInvitados();
+  if(!dis.length){
+    const p = document.createElement("div");
+    p.style.cssText = "font-size:.85rem;color:var(--fg-muted);";
+    p.textContent = "No hay nadie por agregar. Pide el QR para registrar a alguien.";
+    box.appendChild(p);
+  }
+  dis.forEach(u=>{
+    const b = document.createElement("button");
+    b.className = "btnPri";
+    b.textContent = u.nombre || "Invitado";
+    b.onclick = ()=>{ cerrarModal("modalAgregar"); agregarInvitado(u.id); };
+    box.appendChild(b);
+  });
+  abrirModal("modalAgregar");
+}
+// El modo base con el que ARRANCO esta partida (no el de la pantalla de
+// inicio: puede que se haya armado con otro distinto).
+function modoBaseDePartida(){
+  if(estado && estado.modo) return estado.modo;
+  if(sesionActual && sesionActual.modoBase) return sesionActual.modoBase;
+  return MODO_NORMAL;
+}
+async function agregarInvitado(id){
+  const cab = construirCabezas().find(c=>c.id === id);
+  if(!cab) return;
+  const mb = modoBaseDePartida();
+  const R = (estado && estado.rondas) || 0;
+  const ronda = (estado && estado.ronda) || 1;
+  const restantes = R - ronda;   // empieza la ronda siguiente
+  if(restantes < 1){ aviso("Ya no quedan rondas para que entre."); return; }
+  // En modo "seleccionar" no se reparte solo: él mismo escoge sus tarjetas.
+  if(mb === MODO_SELECCIONAR){ pedirCartasInvitado(cab, restantes); return; }
+  // Su lista es la del lado con el que juega (`conQuien` ya viene resuelto), y
+  // depende del modo: en Espejo son las contrapartes, no los personajes.
+  const fuente = listaDeLado(cab.lado, mb);
+  if(!fuente.length){ aviso("La lista de ese lado está vacía."); return; }
+  // Se revuelve POR INVITADO: si entran dos, no reciben las mismas cartas.
+  const deck = mezclar(fuente);
+  const pool = [];
+  for(let i = 0; i < restantes; i++) pool.push(deck[i % deck.length]);
+  const nuevo = { id: cab.id, nombre: cab.nombre || "Invitado", lado: cab.lado, admin: false, invitado: !!cab.invitado, conQuien: cab.conQuien || null };
+  if(jugandoCompartido){
+    let fallo = false;
+    try{
+      await runTransaction(db, async (tx)=>{
+        const ref = sesionRef();
+        const snap = await tx.get(ref);
+        if(!snap.exists()) return;
+        const d = snap.data();
+        if(!d.activa || d.terminada) return;
+        if((d.cabezas || []).some(c=>c.id === nuevo.id)) return;
+        const cabezas = (d.cabezas || []).concat([nuevo]);
+        const listas = Object.assign({}, d.listas || {}); listas[nuevo.id] = pool;
+        tx.update(ref, { cabezas, listas, actualizadaEn: serverTimestamp() });
+      });
+    }catch(e){ fallo = true; }
+    if(fallo){ aviso("No se pudo agregar al invitado. Revisa conexión."); return; }
+    // Volver a publicar la invitacion para que su sala le muestre "Entrar".
+    const cabs = ((estado && estado.cabezas) || []);
+    const part = cabs.some(c=>c.id === nuevo.id) ? cabs : cabs.concat([nuevo]);
+    anunciarInvitacion(sidMostrado, part, (miUsuario && miUsuario.nombre) || nombreAdmin());
+  }else{
+    estado.cabezas = (estado.cabezas || []).concat([nuevo]);
+    estado.listas[nuevo.id] = pool;
+    pintarPaso();
+  }
+}
+document.getElementById("btnAgregarInv").onclick = ()=>{ abrirAgregar(); };
+document.getElementById("btnAgregarNo").onclick = ()=>{ cerrarModal("modalAgregar"); };
+
+// ---------- agregar invitado en modo SELECCIONAR ----------
+// Aquí no se le reparte nada: se le encarece que **él** escoja sus tarjetas,
+// y eso es lo que forma su `listas`. Se reparte con el mismo documento de la
+// selección, pero con `modo:"agregar"`:
+//   · el INVITADO ve su lista y marca (escribe su `sel[id]`)
+//   · el ANFITRIÓN ve un contador y, cuando esté completo, "Meterlo"
+// Nadie más escribe ese documento.
+let meterInv = null;      // { id, nombre, lado, necesidad } — solo en el anfitrión
+let selEsAgregado = false;   // "estoy en la selección porque me están agregando"
+
+async function pedirCartasInvitado(cab, necesidad){
+  if(listaDeLado(cab.lado, MODO_SELECCIONAR).length < necesidad){
+    aviso("A " + (cab.nombre || "ese invitado") + " no le alcanzan personajes para " + necesidad + " rondas.");
+    return;
+  }
+  meterInv = { id: cab.id, nombre: cab.nombre || "Invitado", lado: cab.lado, necesidad: necesidad };
+  const selInicial = {};
+  selInicial[cab.id] = [];
+  try{
+    await setDoc(seleccionRef(), {
+      activa: true, modo: "agregar", agregar: meterInv, sel: selInicial,
+      // El `sid` es para que el invitado que se salga no vuelva a caer aquí.
+      sid: String(Date.now()) + Math.random().toString(36).slice(2, 6),
+      anfitrionUid: miId, anfitrionNombre: (miUsuario && miUsuario.nombre) || nombreAdmin(),
+      actualizadaEn: serverTimestamp()
+    });
+  }catch(e){
+    meterInv = null;
+    try{ aviso("No se pudo pedir la selección. Revisa conexión."); }catch(x){}
+    return;
+  }
+  abrirMeterInvitado();
+}
+function abrirMeterInvitado(){
+  if(!meterInv) return;
+  document.getElementById("miTitulo").textContent = meterInv.nombre;
+  document.getElementById("miDesc").textContent =
+    "Le encargamos que escoja " + meterInv.necesidad + " tarjetas de las suyas. En cuanto termine, se enciende el botón.";
+  document.getElementById("miCuenta").textContent = "Esperando…";
+  document.getElementById("btnMeterInv").style.display = "none";
+  abrirModal("modalMeterInv");
+}
+function pintarMeterInvitado(d){
+  if(!meterInv) return;
+  const n = ((d && d.sel && d.sel[meterInv.id]) || []).length;
+  const falta = meterInv.necesidad - n;
+  const el = document.getElementById("miCuenta");
+  el.innerHTML = "";
+  const b = document.createElement("b");
+  b.style.color = (falta > 0) ? "var(--coral)" : "var(--teal)";
+  b.textContent = (falta > 0) ? ("Le faltan " + falta + " tarjetas.") : "Ya escojió todas.";
+  el.appendChild(b);
+  document.getElementById("btnMeterInv").style.display = (falta <= 0) ? "block" : "none";
+}
+async function meterInvitado(){
+  if(!meterInv) return;
+  const cab = construirCabezas().find(c=> c.id === meterInv.id);
+  if(!cab){ meterInv = null; return; }
+  const pool = selPoolDe(cab);
+  const marcas = ((selDoc && selDoc.sel && selDoc.sel[meterInv.id]) || []).slice();
+  const tarjetas = marcas.map(id=>{
+    const hit = pool.find(x=> x.p.id === id);
+    return hit ? hit.p : null;
+  }).filter(Boolean);
+  if(tarjetas.length !== meterInv.necesidad){ aviso("Faltan tarjetas."); return; }
+  const nuevo = { id: cab.id, nombre: cab.nombre || "Invitado", lado: cab.lado,
+                  admin: false, invitado: !!cab.invitado, conQuien: cab.conQuien || null };
+  meterInv = null;
+  cerrarModal("modalMeterInv");
+  try{ await setDoc(seleccionRef(), { activa: false, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+  if(jugandoCompartido){
+    let fallo = false;
+    try{
+      await runTransaction(db, async (tx)=>{
+        const ref = sesionRef();
+        const snap = await tx.get(ref);
+        if(!snap.exists()) return;
+        const d = snap.data();
+        if(!d.activa || d.terminada) return;
+        if((d.cabezas || []).some(c=> c.id === nuevo.id)) return;
+        const cabezas = (d.cabezas || []).concat([nuevo]);
+        const listas = Object.assign({}, d.listas || {}); listas[nuevo.id] = tarjetas;
+        tx.update(ref, { cabezas, listas, actualizadaEn: serverTimestamp() });
+      });
+    }catch(e){ fallo = true; }
+    if(fallo){ aviso("No se pudo meter al invitado. Revisa conexión."); return; }
+    const cabs = ((estado && estado.cabezas) || []);
+    const part = cabs.some(c=> c.id === nuevo.id) ? cabs : cabs.concat([nuevo]);
+    anunciarInvitacion(sidMostrado, part, (miUsuario && miUsuario.nombre) || nombreAdmin());
+  }else{
+    estado.cabezas = (estado.cabezas || []).concat([nuevo]);
+    estado.listas[nuevo.id] = tarjetas;
+  }
+  pintarPaso();
+}
+document.getElementById("btnMeterInv").onclick = ()=>{ meterInvitado(); };
+document.getElementById("btnMeterNo").onclick = ()=>{
+  meterInv = null;
+  cerrarModal("modalMeterInv");
+  try{ setDoc(seleccionRef(), { activa: false, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+};
+// Mostrar el QR del anfitrion para registrar invitados sin salir del juego.
+document.getElementById("btnQR").onclick = ()=>{
+  const g = leerConfigGuardada();
+  const caja = document.getElementById("qrCajaJuego");
+  const msg = document.getElementById("qrMsg");
+  msg.textContent = "";
+  caja.innerHTML = "";
+  if(!g || !g.firebase){
+    caja.style.display = "none";
+    msg.textContent = "No se encontró la configuración.";
+    abrirModal("modalQR");
+    return;
+  }
+  caja.style.display = "flex";
+  try{
+    new QRCode(caja, {
+      text: JSON.stringify({ firebase: g.firebase, telegram: g.telegram || null }),
+      width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M
+    });
+  }catch(e){ caja.style.display = "none"; msg.textContent = "No se pudo generar."; }
+  abrirModal("modalQR");
+};
+document.getElementById("btnQRNo").onclick = ()=>{ cerrarModal("modalQR"); };
+
+// ---------- comenzar ----------
+function construirCabezasModo(modo, ladoSoloElegido){
+  if(modo === "solo") return [{ id: miId, nombre: (miUsuario && miUsuario.nombre) || "", lado: ladoSoloElegido, admin: true, invitado: false }];
+  if(modo === "pareja") return construirCabezas().filter(c=>!c.invitado);
+  return construirCabezas();
+}
+// Reparte R tarjetas por jugador desde su lista. Sin repetir si alcanza; si no,
+// se permite repetir (lo más parejo posible entre los del mismo lado).
+function repartirTarjetas(cabezasIn, fuente, R){
+  const porLado = { A: [], B: [] };
+  cabezasIn.forEach(c=>{ porLado[c.lado].push(c.id); });
+  const pools = {};
+  ["A","B"].forEach(lado=>{
+    const lista = ((lado === "A") ? fuente.A : fuente.B) || [];
+    const ids = porLado[lado];
+    if(!ids.length) return;
+    const need = ids.length * R;
+    if(lista.length >= need){
+      const deck = mezclar(lista);
+      ids.forEach((id, k)=>{ pools[id] = deck.slice(k * R, k * R + R); });
+    }else{
+      ids.forEach(id=>{
+        const deck = mezclar(lista);
+        const out = [];
+        for(let i = 0; i < R; i++) out.push(deck[i % deck.length]);
+        pools[id] = out;
+      });
+    }
+  });
+  return pools;
+}
+// Lo que se hace al apretar "Un solo Celular" / "Cada quien en el suyo".
+// Primero se revisa que haya contenido suficiente; si el modo es "seleccionar",
+// en vez de repartir va a la pantalla de selección (T3.2 / T3.3).
+async function preparar(modo, ladoSoloElegido, unCelularFlag){
+  await cargarPersonajes();
+  try{
+    const arr = await cargarUsuarios(db, getDoc, doc, usuariosLista);
+    if(Array.isArray(arr) && arr.length) usuariosLista = arr;
+  }catch(e){}
+  const R = Math.max(2, Math.min(50, parseInt(document.getElementById("rondas").value, 10) || 2));
+  const cabezasIn = construirCabezasModo(modo, ladoSoloElegido);
+  const mb = modoBaseCfg;
+  const faltan = cabezasIn.filter(c=> listaDeLado(c.lado, mb).length < 2);
+  if(faltan.length){ aviso("Cada lista necesita al menos 2 personajes. Configúralos en el engrane ⚙️."); return; }
+  let maxR = 50;
+  new Set(cabezasIn.map(c=>c.lado)).forEach(l=>{ maxR = Math.min(maxR, listaDeLado(l, mb).length); });
+  if(R > maxR){ aviso("El número de rondas no puede pasar de " + maxR + " (lo que tiene la lista más corta)."); return; }
+  if(!revisarEspecial(R)) return;
+  if(mb === MODO_SELECCIONAR){
+    if(unCelularFlag) abrirSeleccionLocal(cabezasIn, R);
+    else abrirSeleccionCompartida(cabezasIn, R);
+    return;
+  }
+  await iniciar(modo, ladoSoloElegido, unCelularFlag);
+}
+// El interruptor de Especial: "no está prendido" siempre pasa. Con el
+// interruptor prendido se revisa que K quepa (1 a R) y que haya variantes.
+// Devuelve `false` si no se puede seguir.
+function revisarEspecial(R){
+  if(!especialPendido()) return true;
+  const K = especialK();
+  if(K < 1){ aviso("¿Cuántas veces? tiene que ser al menos 1."); return false; }
+  if(K > R){ aviso("No puede haber más de " + R + " variantes: máximo una por ronda."); return false; }
+  if(!listaSegura("ESP").length){ aviso("No tienes variantes especiales. Agrégalas en el engrane ⚙️, pestaña Especiales."); return false; }
+  return true;
+}
+async function iniciar(modo, ladoSoloElegido, unCelularFlag, poolsListos){
+  // Se guarda el modo y el "un solo celular": de eso depende que se muestren el
+  // QR, "Agregar invitado" y el panel de la sala (solo en Multijugador).
+  modoJuego = modo;
+  unCelular = !!unCelularFlag;
+  await cargarPersonajes();
+  // Lista de usuarios fresca, para no arrancar sin un invitado recien agregado.
+  try{
+    const arr = await cargarUsuarios(db, getDoc, doc, usuariosLista);
+    if(Array.isArray(arr) && arr.length) usuariosLista = arr;
+  }catch(e){}
+  const R = Math.max(2, Math.min(50, parseInt(document.getElementById("rondas").value, 10) || 2));
+  const cabezasIn = poolsListos ? selCabezas.slice() : construirCabezasModo(modo, ladoSoloElegido);
+  const mb = modoBaseCfg;
+  // Con el reparto ya hecho (modo seleccionar) no hay nada que revisar: la
+  // pantalla de selección ya dejó R tarjetas a cada quien.
+  if(!poolsListos){
+    const faltan = cabezasIn.filter(c=> listaDeLado(c.lado, mb).length < 2);
+    if(faltan.length){ aviso("Cada lista necesita al menos 2 personajes. Configúralos en el engrane ⚙️."); return; }
+    let maxR = 50;
+    new Set(cabezasIn.map(c=>c.lado)).forEach(l=>{ maxR = Math.min(maxR, listaDeLado(l, mb).length); });
+    if(R > maxR){ aviso("El número de rondas no puede pasar de " + maxR + " (lo que tiene la lista más corta)."); return; }
+  }
+  const quiereCompartido = (modo !== "solo") && !unCelularFlag;
+  const compartido = quiereCompartido && !modoLocal;
+  if(quiereCompartido && modoLocal){ try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){} }
+  jugandoCompartido = compartido;
+  const pools = poolsListos || repartirTarjetas(cabezasIn, { A: listaDeLado("A", mb), B: listaDeLado("B", mb) }, R);
+  const d = iniciarEstado(cabezasIn, pools);
+  const sid = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+  // El Especial se sortea UNA vez, al arrancar, y se guarda en la sesión: así
+  // todos los celulares ven lo mismo. Si nadie lo prendió, va apagado.
+  const quiereEspecial = especialPendido();
+  const especiales = quiereEspecial ? repartirEspeciales(cabezasIn, R, especialK()) : [];
+  const nueva = Object.assign({}, d, {
+    activa: true, pausada: false, terminada: false, porAdmin: false, sid,
+    hostUid: miId, hostNombre: (miUsuario && miUsuario.nombre) || nombreAdmin(),
+    modoJuego: modo, modoBase: mb, unCelular: !!unCelularFlag,
+    especial: quiereEspecial, especialK: quiereEspecial ? Math.min(especialK(), R) : 0,
+    especiales: especiales,
+    rondas: R, ladoSolo: ladoSoloElegido || null,
+    empezadaEn: serverTimestamp(), actualizadaEn: serverTimestamp()
+  });
+  cargarEstado(nueva);
+  jugando = true;
+  finMostrado = false;
+  sidMostrado = sid;
+  if(compartido){
+    try{ await setDoc(sesionRef(), nueva); }
+    catch(e){ try{ aviso("No se pudo iniciar. Revisa conexión."); }catch(x){} }
+    anunciarInvitacion(sid, cabezasIn, nueva.hostNombre);
+  }else{
+    try{ await cerrarSesion(); }catch(e){}
+  }
+  document.getElementById("plTitulo").textContent = JUEGO_TITULO;
+  soyHost = true;
+  cartaActual = null;   // partida nueva: la primera tarjeta arranca boca abajo
+  mostrarBotonesAdmin();
+  ver("vistaPlayer");
+  pintarPaso();
+}
+
+// ---------- pausar / terminar ----------
+document.getElementById("btnTerminar").onclick = async ()=>{
+  if(!esAnfitrion()){ aviso("Pausar la partida es cosa del anfitrión."); return; }
+  jugando = false;
+  if(jugandoCompartido){
+    try{ await setDoc(sesionRef(), { pausada: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+    await pausarInvitacion(JUEGO_INV, true);
+  }
+  pintarPaso();
+  entrar();
+};
+document.getElementById("btnTerminarPartida").onclick = async ()=>{
+  if(!esAnfitrion()){ aviso("Terminar la partida es cosa del anfitrión."); return; }
+  jugando = false;
+  if(jugandoCompartido){
+    try{ await setDoc(sesionRef(), { activa: false, terminada: true, porAdmin: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+    await retirarInvitacion(JUEGO_INV);
+  }
+  pintarPaso();
+  entrar();
+};
+
+// ---------- modo SELECCIONAR: elegir las tarjetas a mano ----------
+// Es el unico punto donde `listas` NO sale de repartirTarjetas(): aqui cada
+// quien marca exactamente R tarjetas de su propia lista (U + C de su lado).
+let selCabezas = [];      // las cabezas de esta partida
+let selR = 3;             // R
+let selTab = 0;           // cuya pestaña se ve (solo en un celular)
+let selLocal = {};        // { idCabeza: [idPersonaje] }  (solo en un celular)
+let selDoc = null;        // el doc compartido `seleccionRoles/actual`
+let selCompartida = false;
+let selSoyHost = false;
+let selUnsub = null;
+// Con qué arrancó esta selección. Hace falta recordarlo porque `iniciar()` lo
+// necesita después: si no, "un solo celular" creaba una partida COMPARTIDA
+// (escribía la sesión y publicaba invitación sin que nadie lo hubiera pedido).
+let selUnCelular = false;
+let selModo = "pareja";   // pareja | multi (quiénes juegan)
+// Si alguien sale de la selección, no se le vuelve a meter. Se recuerda el `sid`
+// que abandonó: una selección NUEVA trae otro `sid`, así que esa sí lo vuelve a
+// llamar. Sin esto, un doc viejo que se quedó `activa` atrapaba al teléfono en
+// la pantalla de selección cada vez que se recargaba.
+let selSalioSid = null;
+function seleccionRef(){ return doc(db, "seleccionRoles", "actual"); }
+function selEsCompartida(){ return !!selCompartida; }
+// De donde se leen las marcas: el doc compartido, o la memoria del celular.
+function selFuente(){ return selEsCompartida() ? (selDoc || {}) : { sel: selLocal }; }
+function selMarcosDe(id){ return (selFuente().sel || {})[id] || []; }
+// El pool de un jugador: sus normales y sus contrapartes, con su etiqueta.
+function selPoolDe(cab){
+  const n = (cab.lado === "A") ? "1" : "2";
+  return listaSegura("U" + n).map(p=> ({ p: p, c: false }))
+         .concat(listaSegura("C" + n).map(p=> ({ p: p, c: true })));
+}
+function selTodosListos(){
+  return selCabezas.length > 0 && selCabezas.every(c=> selMarcosDe(c.id).length === selR);
+}
+
+function pintarSeleccion(){
+  const tabs = document.getElementById("selTabs");
+  tabs.innerHTML = "";
+  selCabezas.forEach((c, i)=>{
+    const b = document.createElement("button");
+    b.className = "tab" + (i === selTab ? " activo" : "");
+    b.textContent = c.nombre || "Invitado";
+    b.onclick = ()=>{ selTab = i; pintarSeleccion(); };
+    tabs.appendChild(b);
+  });
+  const cab = selCabezas[selTab];
+  if(!cab) return;
+  document.getElementById("selDesc").textContent =
+    "Marca exactamente " + selR + " tarjetas para " + (cab.nombre || "cada quien") + ". Toca la casilla.";
+
+  const marcados = selMarcosDe(cab.id);
+  const box = document.getElementById("selBox");
+  box.innerHTML = "";
+  selPoolDe(cab).forEach(it=>{
+    const fila = document.createElement("div");
+    fila.className = "filaSel";
+    const chk = document.createElement("input");
+    chk.type = "checkbox";
+    chk.checked = marcados.indexOf(it.p.id) >= 0;
+    chk.onchange = ()=>{ cambiarMarca(cab, it.p.id, chk.checked); };
+    const nom = document.createElement("span");
+    nom.className = "selNombre";
+    nom.textContent = it.p.personaje || "(sin nombre)";
+    const tag = document.createElement("span");
+    tag.className = "selTag" + (it.c ? " c" : "");
+    tag.textContent = it.c ? "Contraparte" : "Normal";
+    fila.appendChild(chk); fila.appendChild(nom); fila.appendChild(tag);
+    box.appendChild(fila);
+  });
+  if(!box.children.length){
+    const v = document.createElement("div");
+    v.className = "vacio";
+    v.textContent = "No hay nada en esta lista. Configúralo en el engrane ⚙️.";
+    box.appendChild(v);
+  }
+
+  const cuenta = document.getElementById("selCuenta");
+  cuenta.innerHTML = "";
+  selCabezas.forEach((c, i)=>{
+    if(i) cuenta.appendChild(document.createTextNode(" · "));
+    const b = document.createElement("b");
+    const n = selMarcosDe(c.id).length;
+    b.style.color = (n === selR) ? "var(--teal)" : "var(--coral)";
+    b.textContent = (c.nombre || "Invitado") + " " + n + "/" + selR;
+    cuenta.appendChild(b);
+  });
+
+  // El botón de jugar SOLO existe cuando todos tienen sus R **y** quien mira
+  // es quien inició: los demás no tienen nada que apretar aqui.
+  const btn = document.getElementById("btnSelJugar");
+  btn.style.display = (selTodosListos() && selSoyHost) ? "block" : "none";
+}
+async function cambiarMarca(cab, idPersonaje, marcado){
+  const actual = selMarcosDe(cab.id).slice();
+  const k = actual.indexOf(idPersonaje);
+  if(marcado){
+    if(k >= 0) return;                                  // ya estaba
+    if(actual.length >= selR){
+      aviso("Solo puedes marcar " + selR + " tarjetas.");
+      pintarSeleccion();
+      return;
+    }
+    actual.push(idPersonaje);
+  }else{
+    if(k < 0) return;
+    actual.splice(k, 1);
+  }
+  if(selEsCompartida()){
+    const out = Object.assign({}, (selDoc && selDoc.sel) || {});
+    out[cab.id] = actual;
+    selDoc.sel = out;
+    try{ await setDoc(seleccionRef(), { sel: out, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+  }else{
+    selLocal[cab.id] = actual;
+  }
+  pintarSeleccion();
+}
+// ---- un solo celular: todo en memoria, nadie escribe ----
+async function abrirSeleccionLocal(cabezasIn, R){
+  selCabezas = cabezasIn.slice();
+  selR = R; selTab = 0;
+  selDoc = null; selCompartida = false; selSoyHost = true;
+  selUnCelular = true;
+  selModo = modoPendiente || "pareja";
+  selLocal = {};
+  selCabezas.forEach(c=>{ selLocal[c.id] = []; });
+  pintarSeleccion();
+  ver("vistaSeleccion");
+}
+// ---- cada quien en el suyo: cada telefono escribe SU `sel[id]` ----
+async function abrirSeleccionCompartida(cabezasIn, R){
+  selCabezas = cabezasIn.slice();
+  selR = R; selTab = 0;
+  selSoyHost = true;
+  selCompartida = true;
+  selUnCelular = false;
+  selModo = modoPendiente || "pareja";
+  const selInicial = {};
+  selCabezas.forEach(c=>{ selInicial[c.id] = []; });
+  selDoc = { sel: selInicial, activa: true,
+             sid: String(Date.now()) + Math.random().toString(36).slice(2, 6),
+             hostUid: miId, hostNombre: (miUsuario && miUsuario.nombre) || nombreAdmin(),
+             rondas: selR, cabezas: selCabezas, modo: selModo };
+  try{
+    await setDoc(seleccionRef(), {
+      activa: true, sid: selDoc.sid, hostUid: miId,
+      hostNombre: (miUsuario && miUsuario.nombre) || nombreAdmin(),
+      rondas: selR, cabezas: selCabezas, sel: selInicial, modo: selModo,
+      actualizadaEn: serverTimestamp()
+    });
+  }catch(e){ try{ aviso("No se pudo iniciar la selección. Revisa conexión."); }catch(x){} }
+  pintarSeleccion();
+  ver("vistaSeleccion");
+  escucharSeleccion();
+}
+// Arranca la partida con lo que la gente marcó.
+async function arrancarSeleccion(){
+  // Candado: el botón se ve para todos cuando ya están listos, pero solo quien
+  // inició la selección la arranca.
+  if(selEsCompartida() && !selSoyHost){ aviso("Solo quien inició la selección puede empezar."); return; }
+  const pools = {};
+  selCabezas.forEach(c=>{
+    const pool = selPoolDe(c);
+    pools[c.id] = selMarcosDe(c.id).map(id=>{
+      const hit = pool.find(x=> x.p.id === id);
+      return hit ? hit.p : null;
+    }).filter(Boolean);
+  });
+  if(selCabezas.some(c=> (pools[c.id] || []).length !== selR)){ aviso("Faltan tarjetas por escoger."); return; }
+  if(selEsCompartida()){
+    try{ await setDoc(seleccionRef(), { activa: false, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+  }
+  // Ojo: se usan `selModo` y `selUnCelular` (lo que se eligió al armar la
+  // selección), NO los globales de la pantalla de inicio: pueden haber cambiado.
+  await iniciar(selModo || "pareja", null, selUnCelular, pools);
+}
+// Escucha la seleccion compartida: cada telefono ve SU lista y escribe SU
+// `sel[id]`; el anfitrion ve los contadores de todos y habilita "Jugar".
+function escucharSeleccion(){
+  if(selUnsub) return;
+  try{
+    selUnsub = onSnapshot(seleccionRef(), (snap)=>{
+      try{
+        const d = snap.exists() ? snap.data() : null;
+        if(!d || !d.activa){
+          // Se apago: si era un "agregar", se cierra lo que estuviera abierto.
+          if(d && meterInv){ meterInv = null; cerrarModal("modalMeterInv"); }
+          if(selEsAgregado){
+            selEsAgregado = false;
+            selDoc = null;
+            selCompartida = false;
+            try{
+              const el = document.getElementById("esperaDesc");
+              if(el) el.textContent = "Ya puedes entrar a la partida, o esperar a que el anfitrión agregue a alguien más.";
+            }catch(e){}
+            ver("vistaEspera");
+          }
+          return;
+        }
+        const primera = !selDoc;   // se lee ANTES de asignar `selDoc` (abajo)
+        selDoc = d;
+        selCompartida = true;
+
+        // Si ya salió de ESTA selección, no se le vuelve a meter. Va aquí, antes
+        // de las dos ramas, porque también aplica al "agregar": si el invitado
+        // se sale, no debe caer otra vez en la pantalla de selección.
+        if(d.sid && d.sid === selSalioSid) return;
+
+        // ---- rama "agregar": un invitado está escogiendo sus tarjetas ----
+        if(d.modo === "agregar"){
+          const a = d.agregar || {};
+          if(a.id === miId){
+            // Soy el invitado: veo MI lista y marco.
+            selEsAgregado = true;
+            selSoyHost = false;
+            selR = a.necesidad || 1;
+            selTab = 0;
+            selCabezas = [{ id: a.id, nombre: a.nombre || "Invitado", lado: a.lado || "B", invitado: true }];
+            pintarSeleccion();
+            if(!document.getElementById("vistaSeleccion").classList.contains("ver")) ver("vistaSeleccion");
+          }else if(meterInv && a.id === meterInv.id){
+            pintarMeterInvitado(d);
+          }
+          return;
+        }
+        if(selEsAgregado){ selEsAgregado = false; }
+
+        // ---- rama "elegir": la selección de antes de empezar ----
+        if(!Array.isArray(d.cabezas) || !d.cabezas.some(c=> c.id === miId)) return;
+        if(jugando) return;   // ya esta en la partida: no se regresa
+        selR = d.rondas || selR;
+        if(d.modo) selModo = d.modo;
+        selCabezas = d.cabezas;
+        selSoyHost = (d.hostUid === miId);
+        if(d.sel) selLocal = Object.assign({}, d.sel);
+        // La primera vez, se abre en la pestaña de uno mismo.
+        if(primera){
+          const i = selCabezas.findIndex(c=> c && c.id === miId);
+          if(i >= 0) selTab = i;
+        }
+        // Solo se cambia de vista si el usuario no esta en otra parte.
+        const v = document.querySelector(".vista.ver");
+        const vId = v ? v.id : "";
+        pintarSeleccion();
+        if(vId === "vistaInicio" || vId === "vistaEspera" || vId === "vistaSeleccion") ver("vistaSeleccion");
+      }catch(e){}
+    }, ()=>{});
+  }catch(e){}
+}
+document.getElementById("btnSelJugar").onclick = ()=>{ arrancarSeleccion(); };
+document.getElementById("btnSelVolver").onclick = ()=>{
+  // Se recuerda ESTA selección para no volver a caer en ella (ver `selSalioSid`).
+  if(selDoc && selDoc.sid) selSalioSid = selDoc.sid;
+  // Quien la inició, la apaga para todos. Los demás solo se salen: el doc es de
+  // él, no de quien se va (y si era el invitado al que iban a meter, el
+  // anfitrión puede meterlo igual, con lo que ya alcanzó a marcar).
+  if(selEsCompartida() && selSoyHost){
+    try{ setDoc(seleccionRef(), { activa: false, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+  }
+  selEsAgregado = false;
+  ver(vistaDeInicio());
+};
+
+// ---------- continuar / unir ----------
+function seguirEncima(titulo, desc){
+  document.getElementById("sgTitulo").textContent = titulo;
+  document.getElementById("sgDesc").textContent = desc;
+  abrirModal("vistaSeguir");
+}
+function seguirFuera(){ cerrarModal("vistaSeguir"); }
+let accionPendiente = null;
+// Si hay una partida a medias del anfitrion, ofrece continuarla antes de la
+// accion elegida (abrir la ventana de modo). Si elige "Partida nueva", corre la
+// accion guardada.
+async function conPendiente(accion){
+  let pend = false;
+  try{
+    const sd = await getDoc(sesionRef());
+    if(sd.exists()){
+      const d = sd.data();
+      if(d && d.activa && !d.terminada && d.hostUid === miId) pend = true;
+    }
+  }catch(e){}
+  if(pend){
+    accionPendiente = accion;
+    seguirEncima("¿Continuar partida anterior?", "Había una partida a medias. ¿La retomas?");
+  }else{
+    accion();
+  }
+}
+async function continuarPartida(){
+  seguirFuera();
+  let d = sesionActual;
+  if(!d){ try{ const sd = await getDoc(sesionRef()); d = sd.exists() ? sd.data() : null; }catch(e){} }
+  if(!d || !Array.isArray(d.cabezas)) return;
+  jugando = true;
+  modoLocal = false;
+  jugandoCompartido = true;
+  soyHost = true;
+  try{
+    const nsid = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+    sidMostrado = nsid;
+    await setDoc(sesionRef(), { sid: nsid, reanudada: true, activa: true, pausada: false, actualizadaEn: serverTimestamp() }, { merge: true });
+    anunciarInvitacion(nsid, (d && d.cabezas) || [], d && d.hostNombre);
+  }catch(e){}
+  cargarEstado(sanearSesion(d));
+  ver("vistaPlayer");
+  mostrarBotonesAdmin();
+  pintarPaso();
+}
+document.getElementById("btnContinuar").onclick = ()=>{ continuarPartida(); };
+document.getElementById("btnNueva").onclick = async ()=>{
+  seguirFuera();
+  if(!esAnfitrion()){ aviso("Quien inicia o renueva la partida es el anfitrión."); return; }
+  try{ await cerrarSesion(); }catch(e){}
+  jugando = false;
+  if(accionPendiente){ const f = accionPendiente; accionPendiente = null; f(); return; }
+  await cargarPersonajes();
+  pintarInicio();
+  ver("vistaInicio");
+};
+function entrarAlJuego(d){
+  if(!d || !d.activa || !soyCabeza(d)) return;
+  jugando = true;
+  modoLocal = false;
+  jugandoCompartido = true;
+  soyHost = !!(d && d.hostUid === miId);
+  cargarEstado(sanearSesion(d));
+  ver("vistaPlayer");
+  mostrarBotonesAdmin();
+  pintarPaso();
+}
+document.getElementById("btnUnirme").onclick = ()=>{
+  const d = sesionActual;
+  cerrarModal("modalUnir");
+  entrarAlJuego(d);
+};
+document.getElementById("btnUnirNo").onclick = ()=>{ cerrarModal("modalUnir"); };
+
+// ---------- pausa / fin (avisos) ----------
+document.getElementById("btnPausaOk").onclick = ()=>{
+  cerrarModal("modalPausa");
+  if(esInvitadoFlag){ location.replace("../Diablitos/"); return; }
+  entrar();
+};
+document.getElementById("btnFinOk").onclick = async ()=>{
+  if(esInvitadoFlag){ apagarFuegos(); await salirModoInvitado(); return; }
+  try{ apagarFuegos(); }catch(e){}
+  cerrarModal("modalFin");
+  jugando = false;
+  entrar();
+};
+async function salirModoInvitado(){
+  try{
+    let yo = null;
+    try{ yo = JSON.parse(localStorage.getItem("appPareja_quienSoy") || "null"); }catch(e){}
+    if(yo && yo.invitado){
+      const ref = doc(db, "config", "ajustes");
+      const snap = await getDoc(ref);
+      const arr = (snap.exists() && Array.isArray(snap.data().usuarios)) ? snap.data().usuarios : [];
+      await setDoc(ref, { usuarios: arr.filter(v=>v.id !== yo.id), actualizadoEn: serverTimestamp() }, { merge: true });
+    }
+  }catch(e){}
+  try{
+    const resp = JSON.parse(localStorage.getItem("invitado_respaldo") || "null");
+    if(resp){
+      const priv = localStorage.getItem("taquilla_priv");
+      localStorage.clear();
+      if(priv) localStorage.setItem("taquilla_priv", priv);
+      Object.keys(resp).forEach(k=>{ try{ localStorage.setItem(k, resp[k]); }catch(e){} });
+      localStorage.removeItem("invitado_respaldo");
+    }
+  }catch(e){}
+  location.replace("../");
+}
+
+// ---------- engrane: personajes, contrapartes y especiales ----------
+function abrirModal(id){ document.getElementById(id).style.display = "flex"; }
+function cerrarModal(id){ document.getElementById(id).style.display = "none"; }
+
+// El engrane muestra SOLO el lado de quien lo está usando. El administrador
+// tiene un botón para ver el otro (así deja todo listo desde un solo celular);
+// los demás usuarios del grupo no lo ven y no tocan el contenido del otro.
+let ladoCfg = "1";     // "1" = usuario 1 (administrador), "2" = usuario 2
+let subCfg = "U";      // "U" = personajes, "C" = contrapartes
+let enEspeciales = false;
+let filtroCfg = "";
+
+function puedeVerOtroLado(){ return !!esAdminFlag; }
+function miLado(){ return puedeVerOtroLado() ? ((ladoCfg === "2") ? "2" : "1") : "2"; }
+function nombreDeLado(n){ return nombreLado(n === "1" ? "A" : "B"); }
+// La lista que se está viendo ahora mismo: "U1","U2","C1","C2" o "ESP".
+function claveCfg(){ return enEspeciales ? "ESP" : (subCfg + miLado()); }
+function limpiarFiltro(){ filtroCfg = ""; document.getElementById("buscarOpt").value = ""; }
+
+// ¿Ya hay uno con ese nombre en esta lista? (no se repiten, como en el juego original)
+function yaExiste(clave, nombre){
+  const n = String(nombre || "").trim().toLowerCase();
+  if(!n) return false;
+  return listaSegura(clave).some(p=> String((p && p.personaje) || "").trim().toLowerCase() === n);
+}
+// Un identificador que no esté usado en ninguna de las cuatro listas.
+function idLibre(id){
+  let n = id;
+  while(["U1","U2","C1","C2"].some(k=> listaSegura(k).some(p=> p && p.id === n))) n++;
+  return n;
+}
+
+// ---------- pegar lista completa ----------
+// Acepta un arreglo JSON de objetos (los 8 campos) o texto, uno por línea.
+function parsePegadoPersonajes(texto){
+  const t = String(texto || "").trim();
+  if(!t) return [];
+  if(t[0] === "["){
+    try{
+      const d = JSON.parse(t);
+      if(Array.isArray(d)) return d;
+    }catch(e){}
+  }
+  return sinDuplicados(t.split(/\r?\n/)).map(s=>({ personaje: s }));
+}
+// En Especiales acepta cadenas (una por línea) u objetos {texto}.
+function parsePegadoTextos(texto){
+  const t = String(texto || "").trim();
+  if(!t) return [];
+  if(t[0] === "["){
+    try{
+      const d = JSON.parse(t);
+      if(Array.isArray(d)) return sinDuplicados(d.map(x=> (x && typeof x === "object") ? (x.texto || "") : x));
+    }catch(e){}
+  }
+  return sinDuplicados(t.split(/\r?\n/));
+}
+// Normaliza lo que venga del pegado a un personaje completo. El `id` se
+// respeta si viene, pero nunca se repite; si no viene, se asigna el siguiente.
+function personajeDe(x){
+  const o = (x && typeof x === "object") ? x : { personaje: String(x || "") };
+  const nombre = String(o.personaje || o.nombre || "").trim();
+  if(!nombre) return null;
+  const pedido = parseInt(o.id, 10);
+  const id = pedido ? idLibre(pedido) : idSiguiente;
+  if(id >= idSiguiente) idSiguiente = id + 1;
+  const par = parseInt(o.par, 10);
+  return {
+    id: id,
+    par: isNaN(par) ? null : par,
+    personaje: nombre,
+    situacion: String(o.situacion || ""),
+    gancho: String(o.gancho || ""),
+    derechos: String(o.derechos || ""),
+    si_quieres: String(o.si_quieres || ""),
+    imagen: String(o.imagen || "")
+  };
+}
+
+// ---------- agregar ----------
+async function agregarPersonaje(nombre){
+  const clave = claveCfg();
+  const s = String(nombre || "").trim();
+  if(!s || yaExiste(clave, s)) return null;
+  if(!Array.isArray(personajes[clave])) personajes[clave] = [];
+  const p = { id: idSiguiente++, par: null, personaje: s,
+              situacion:"", gancho:"", derechos:"", si_quieres:"", imagen:"" };
+  personajes[clave].push(p);
+  await guardarPersonajes();
+  return p;
+}
+async function agregarEspecial(texto){
+  const s = String(texto || "").trim();
+  if(!s) return false;
+  if(!Array.isArray(personajes.ESP)) personajes.ESP = [];
+  if(personajes.ESP.some(t=> String(t).trim().toLowerCase() === s.toLowerCase())) return false;
+  personajes.ESP.push(s);
+  await guardarPersonajes();
+  return true;
+}
+async function agregarDesdeInput(){
+  const inp = document.getElementById("inpNueva");
+  if(enEspeciales){
+    const s = (inp.value || "").trim();
+    if(!s) return;
+    const ok = await agregarEspecial(s);
+    if(!ok){ aviso("Esa variante ya está en la lista."); inp.value = ""; return; }
+    inp.value = ""; limpiarFiltro(); pintarCfg();
+    return;
+  }
+  const clave = claveCfg();
+  const p = await agregarPersonaje(inp.value);
+  if(!p){
+    if((inp.value || "").trim()) aviso("Ese personaje ya está en la lista.");
+    inp.value = "";
+    return;
+  }
+  inp.value = "";
+  limpiarFiltro();
+  pintarCfg();
+  // Se abre el detalle para completar lo demás: la fila sola solo trae el nombre.
+  abrirDetalle(clave, personajes[clave].length - 1);
+}
+
+// ---------- pintar ----------
+function filaVariante(i, txt){
+  const fila = document.createElement("div");
+  fila.className = "filaOpt";
+  const inp = document.createElement("input");
+  inp.className = "optTexto";
+  inp.value = txt;
+  inp.maxLength = 200;
+  const guardarEdit = async ()=>{
+    const s = (inp.value || "").trim();
+    if(!s){ inp.value = txt; return; }
+    if(s !== txt){ personajes.ESP[i] = s; await guardarPersonajes(); }
+  };
+  inp.addEventListener("blur", guardarEdit);
+  inp.addEventListener("keydown", (e)=>{ if(e.key === "Enter") inp.blur(); });
+  const x = document.createElement("button");
+  x.className = "optX";
+  x.textContent = "✕";
+  // El ✕ no borra de una: pregunta primero.
+  x.onclick = async ()=>{
+    const ok = await confirmar({
+      aviso: true,
+      titulo: "¿Borrar esta variante?",
+      texto: "No se puede deshacer.",
+      ok: "Borrar"
+    });
+    if(!ok) return;
+    personajes.ESP.splice(i, 1);
+    await guardarPersonajes();
+    pintarCfg();
+  };
+  fila.appendChild(inp); fila.appendChild(x);
+  return fila;
+}
+function filaPersonaje(i, p, clave){
+  const fila = document.createElement("div");
+  fila.className = "filaOpt";
+  const caja = document.createElement("div");
+  caja.className = "optVer";
+  caja.textContent = p.personaje || "(sin nombre)";
+  caja.onclick = ()=>{ abrirDetalle(clave, i); };
+  fila.appendChild(caja);
+  // En contrapartes se ve a cuál personaje pertenece (o que falta asignarla).
+  if(clave.charAt(0) === "C"){
+    const base = listaSegura("U" + clave.charAt(1)).find(x=> x && x.id === p.par);
+    const h = document.createElement("span");
+    h.className = "hint" + (base ? "" : " mal");
+    h.textContent = base ? ("de " + base.personaje) : "sin contraparte";
+    fila.appendChild(h);
+  }
+  const ed = document.createElement("button");
+  ed.className = "optX edit";
+  ed.textContent = "✎";
+  ed.onclick = ()=>{ abrirDetalle(clave, i); };
+  fila.appendChild(ed);
+  return fila;
+}
+function pintarCfg(){
+  const clave = claveCfg();
+  document.getElementById("tabLado").textContent = nombreDeLado(miLado());
+  document.getElementById("tabLado").classList.toggle("activo", !enEspeciales);
+  document.getElementById("tabEsp").classList.toggle("activo", enEspeciales);
+
+  const puede = puedeVerOtroLado();
+  document.getElementById("cajaCambiarLado").style.display = (!enEspeciales && puede) ? "block" : "none";
+  if(!enEspeciales && puede){
+    document.getElementById("btnCambiarLado").textContent = "Ver los de " + nombreDeLado(miLado() === "1" ? "2" : "1");
+  }
+  document.getElementById("subTabs").style.display = enEspeciales ? "none" : "flex";
+  document.getElementById("subU").classList.toggle("activo", !enEspeciales && subCfg === "U");
+  document.getElementById("subC").classList.toggle("activo", !enEspeciales && subCfg === "C");
+
+  document.getElementById("descCfg").textContent = enEspeciales
+    ? "Variantes que se pueden soltar en cualquier ronda de cualquiera de los dos."
+    : (nombreDeLado(miLado()) + ": " + (subCfg === "U"
+        ? "los personajes que vas a personificar."
+        : "las contrapartes, cada una atada a un personaje."));
+  const inp = document.getElementById("inpNueva");
+  inp.placeholder = enEspeciales ? "Nueva variante" : "Nuevo personaje";
+  inp.maxLength = enEspeciales ? 200 : 80;
+  document.getElementById("buscarOpt").placeholder = enEspeciales ? "🔍 Buscar variante..." : "🔍 Buscar personaje...";
+  document.getElementById("pegarTa").placeholder = enEspeciales
+    ? "Una variante por línea."
+    : "Un personaje por línea (o un arreglo JSON).";
+  document.getElementById("btnPegarOk").textContent = enEspeciales ? "Agregar variantes" : "Agregar a la lista";
+
+  const box = document.getElementById("tablaBox");
+  box.innerHTML = "";
+  const filtro = (filtroCfg || "").trim().toLowerCase();
+  if(enEspeciales){
+    listaSegura("ESP").forEach((txt, i)=>{
+      if(filtro && String(txt).toLowerCase().indexOf(filtro) < 0) return;
+      box.appendChild(filaVariante(i, txt));
+    });
+  }else{
+    listaSegura(clave).forEach((p, i)=>{
+      if(filtro && String((p && p.personaje) || "").toLowerCase().indexOf(filtro) < 0) return;
+      box.appendChild(filaPersonaje(i, p, clave));
+    });
+  }
+  if(!box.children.length){
+    const vacio = document.createElement("div");
+    vacio.className = "vacio";
+    vacio.textContent = filtro ? "Sin resultados."
+      : (enEspeciales ? "Sin variantes todavía. Agrega o pega abajo."
+                     : "Sin personajes todavía. Agrega o pega abajo.");
+    box.appendChild(vacio);
+  }
+  pintarAvisosCfg();
+  document.getElementById("msg").textContent = "";
+}
+
+// ---------- avisos de correspondencia (Opción A) ----------
+// SOLO avisan: nunca bloquean ni impiden jugar.
+//   · una contraparte sin `par`, o con un `par` que no existe en la lista de su dueño
+//   · un personaje normal sin contraparte, o con más de una
+function avisosCorrespondencia(){
+  const out = [];
+  const normales = {
+    "1": new Set(listaSegura("U1").map(p=> p && p.id)),
+    "2": new Set(listaSegura("U2").map(p=> p && p.id))
+  };
+  ["C1","C2"].forEach(k=>{
+    const dueno = k.charAt(1);
+    listaSegura(k).forEach(c=>{
+      if(c.par === null || c.par === undefined){
+        out.push("“" + c.personaje + "” todavía no tiene contraparte asignada.");
+      }else if(!normales[dueno].has(c.par)){
+        out.push("“" + c.personaje + "” apunta a un personaje que no está en la lista de " + nombreDeLado(dueno) + ".");
+      }
+    });
+  });
+  ["1","2"].forEach(n=>{
+    const usados = {};
+    listaSegura("C" + n).forEach(c=>{
+      if(c.par === null || c.par === undefined) return;
+      (usados[c.par] = usados[c.par] || []).push(c.personaje);
+    });
+    listaSegura("U" + n).forEach(p=>{
+      const cu = usados[p.id] || [];
+      if(!cu.length) out.push("“" + p.personaje + "” no tiene contraparte.");
+      else if(cu.length > 1) out.push("“" + p.personaje + "” tiene " + cu.length + " contrapartes.");
+    });
+  });
+  return out;
+}
+function pintarAvisosCfg(){
+  const box = document.getElementById("cfgAvisos");
+  const avisos = avisosCorrespondencia();
+  if(!avisos.length){ box.style.display = "none"; box.innerHTML = ""; return; }
+  box.innerHTML = "";
+  const t = document.createElement("div");
+  t.style.cssText = "font-family:'Chakra Petch',sans-serif;font-size:.72rem;color:var(--coral);margin-bottom:6px;";
+  t.textContent = "REVISAR CONTRAPARTES";
+  box.appendChild(t);
+  avisos.forEach(a=>{
+    const d = document.createElement("div");
+    d.style.cssText = "margin:2px 0;";
+    d.textContent = "· " + a;
+    box.appendChild(d);
+  });
+  box.style.display = "block";
+}
+
+// ---------- detalle del personaje ----------
+// Los 8 campos. El `id` se muestra pero no se escribe; el `par` sale de un
+// desplegable con los normales del mismo dueño (C1 ↔ U1, C2 ↔ U2).
+let detalle = null;   // { clave, i }  — i = -1 cuando es uno nuevo
+function llenarSelectPar(valor){
+  const sel = document.getElementById("pjPar");
+  const dueno = detalle.clave.charAt(1);
+  sel.innerHTML = "";
+  const ninguna = document.createElement("option");
+  ninguna.value = "";
+  ninguna.textContent = "— sin asignar —";
+  sel.appendChild(ninguna);
+  listaSegura("U" + dueno).forEach(n=>{
+    const o = document.createElement("option");
+    o.value = String(n.id);
+    o.textContent = (n.personaje || "(sin nombre)") + "   (#" + n.id + ")";
+    sel.appendChild(o);
+  });
+  sel.value = (valor === null || valor === undefined) ? "" : String(valor);
+}
+function abrirDetalle(clave, i){
+  const p = (i >= 0) ? listaSegura(clave)[i] : null;
+  detalle = { clave: clave, i: i };
+  document.getElementById("pjTitulo").textContent = p ? "Editar personaje" : "Nuevo personaje";
+  document.getElementById("pjId").textContent = p ? String(p.id) : String(idSiguiente);
+  document.getElementById("pjPersonaje").value = p ? (p.personaje || "") : "";
+  document.getElementById("pjSituacion").value = p ? (p.situacion || "") : "";
+  document.getElementById("pjGancho").value = p ? (p.gancho || "") : "";
+  document.getElementById("pjDerechos").value = p ? (p.derechos || "") : "";
+  document.getElementById("pjSiQuiero").value = p ? (p.si_quieres || "") : "";
+  document.getElementById("pjImagen").value = p ? (p.imagen || "") : "";
+  // `par` solo aplica a las contrapartes.
+  document.getElementById("pjFilaPar").style.display = (clave.charAt(0) === "C") ? "block" : "none";
+  llenarSelectPar(p ? p.par : null);
+  // El botón de borrar solo existe si hay algo que borrar.
+  document.getElementById("btnPjBorrar").style.display = (i >= 0) ? "block" : "none";
+  abrirModal("modalPersonaje");
+}
+function cerrarDetalle(){ detalle = null; cerrarModal("modalPersonaje"); }
+async function guardarDetalle(){
+  if(!detalle) return;
+  const nombre = (document.getElementById("pjPersonaje").value || "").trim();
+  if(!nombre){ aviso("El personaje necesita un nombre."); return; }
+  const clave = detalle.clave;
+  if(!Array.isArray(personajes[clave])) personajes[clave] = [];
+  const parRaw = document.getElementById("pjPar").value;
+  const i = detalle.i;
+  const p = {
+    id: (i >= 0) ? listaSegura(clave)[i].id : idSiguiente++,
+    par: (clave.charAt(0) === "C" && parRaw !== "") ? parseInt(parRaw, 10) : null,
+    personaje: nombre,
+    situacion: (document.getElementById("pjSituacion").value || "").trim(),
+    gancho: (document.getElementById("pjGancho").value || "").trim(),
+    derechos: (document.getElementById("pjDerechos").value || "").trim(),
+    si_quieres: (document.getElementById("pjSiQuiero").value || "").trim(),
+    imagen: (document.getElementById("pjImagen").value || "").trim()
+  };
+  if(i >= 0) personajes[clave][i] = p;
+  else personajes[clave].push(p);
+  cerrarDetalle();
+  await guardarPersonajes();
+  pintarCfg();
+}
+async function borrarDetalle(){
+  if(!detalle || detalle.i < 0){ cerrarDetalle(); return; }
+  const clave = detalle.clave;
+  const p = listaSegura(clave)[detalle.i];
+  const ok = await confirmar({
+    aviso: true,
+    titulo: "¿Borrar a " + (p.personaje || "este personaje") + "?",
+    texto: "Se borra de la lista y no se puede deshacer.",
+    ok: "Borrar"
+  });
+  if(!ok) return;
+  personajes[clave].splice(detalle.i, 1);
+  cerrarDetalle();
+  await guardarPersonajes();
+  pintarCfg();
+}
+
+// ---------- pegar ----------
+async function pegarLista(){
+  const ta = document.getElementById("pegarTa");
+  if(enEspeciales){
+    const textos = parsePegadoTextos(ta.value);
+    if(!textos.length){ aviso("No se encontró ninguna variante."); return; }
+    if(!Array.isArray(personajes.ESP)) personajes.ESP = [];
+    let n = 0;
+    textos.forEach(x=>{
+      const s = String(x || "").trim();
+      if(!s) return;
+      if(personajes.ESP.some(v=> String(v).trim().toLowerCase() === s.toLowerCase())) return;
+      personajes.ESP.push(s); n++;
+    });
+    ta.value = "";
+    await guardarPersonajes();
+    limpiarFiltro(); pintarCfg();
+    aviso(n ? ("Se agregaron " + n + " variante(s).") : "No se agregó nada: ya estaban todas.");
+    return;
+  }
+  const clave = claveCfg();
+  const crudos = parsePegadoPersonajes(ta.value);
+  if(!crudos.length){ aviso("No se encontró ningún personaje."); return; }
+  if(!Array.isArray(personajes[clave])) personajes[clave] = [];
+  let n = 0;
+  crudos.forEach(x=>{
+    const p = personajeDe(x);
+    if(!p || yaExiste(clave, p.personaje)) return;
+    // En contrapartes, si el pegado no trae `par` se deja sin asignar: lo avisa
+    // la caja de abajo y se ata desde el detalle.
+    personajes[clave].push(p); n++;
+  });
+  ta.value = "";
+  await guardarPersonajes();
+  limpiarFiltro(); pintarCfg();
+  aviso(n ? ("Se agregaron " + n + " personaje(s).") : "No se agregó nada: ya estaban todos.");
+}
+
+// ---------- eventos del engrane ----------
+document.getElementById("tabLado").onclick = ()=>{ enEspeciales = false; limpiarFiltro(); pintarCfg(); };
+document.getElementById("tabEsp").onclick = ()=>{ enEspeciales = true; limpiarFiltro(); pintarCfg(); };
+document.getElementById("subU").onclick = ()=>{ subCfg = "U"; limpiarFiltro(); pintarCfg(); };
+document.getElementById("subC").onclick = ()=>{ subCfg = "C"; limpiarFiltro(); pintarCfg(); };
+document.getElementById("btnCambiarLado").onclick = ()=>{ ladoCfg = (miLado() === "1") ? "2" : "1"; limpiarFiltro(); pintarCfg(); };
+document.getElementById("buscarOpt").addEventListener("input", (e)=>{ filtroCfg = e.target.value; pintarCfg(); });
+document.getElementById("btnAdd").onclick = ()=>{ agregarDesdeInput(); };
+document.getElementById("inpNueva").addEventListener("keydown", (e)=>{ if(e.key === "Enter") agregarDesdeInput(); });
+document.getElementById("btnPegar").onclick = ()=>{
+  const b = document.getElementById("pegarBox");
+  b.style.display = (b.style.display === "none") ? "block" : "none";
+};
+document.getElementById("btnPegarOk").onclick = ()=>{ pegarLista(); };
+document.getElementById("btnPjGuardar").onclick = ()=>{ guardarDetalle(); };
+document.getElementById("btnPjBorrar").onclick = ()=>{ borrarDetalle(); };
+document.getElementById("btnPjNo").onclick = ()=>{ cerrarDetalle(); };
+
+async function abrirCfg(){
+  await cargarPersonajes();
+  ladoCfg = esAdminFlag ? "1" : "2";
+  subCfg = "U";
+  enEspeciales = false;
+  limpiarFiltro();
+  document.getElementById("pegarBox").style.display = "none";
+  document.getElementById("pegarTa").value = "";
+  document.getElementById("inpNueva").value = "";
+  pintarCfg();
+  ver("vistaConfig");
+}
+document.getElementById("btnCfg").onclick = ()=>{ abrirCfg(); };
+
+// ---------- navegación ----------
+function ver(id, guardar){
+  document.querySelectorAll(".vista").forEach(v=>v.classList.remove("ver"));
+  document.getElementById(id).classList.add("ver");
+  try{ document.getElementById("btnCfg").style.display = (id === "vistaInicio") ? "block" : "none"; }catch(e){}
+  pintarSalidas();
+  if(guardar !== false){ try{ history.pushState({ v: id }, ""); }catch(e){} }
+  window.scrollTo(0, 0);
+}
+// El invitado NO tiene pantalla de inicio: la suya es la de espera. Que el
+// botón atrás del celular lo mande al menú sería enseñarle lo que no debe ver.
+function vistaDeInicio(){ return esInvitadoFlag ? "vistaEspera" : "vistaInicio"; }
+let reponiendo = false;
+window.addEventListener("popstate", ()=>{
+  if(reponiendo){ reponiendo = false; return; }
+  const enJuego = jugando && document.getElementById("vistaPlayer").classList.contains("ver");
+  if(enJuego){ reponiendo = true; try{ history.go(1); }catch(e){ reponiendo = false; } return; }
+  if(selEsAgregado){ reponiendo = true; try{ history.go(1); }catch(e){ reponiendo = false; } return; }
+  ver(vistaDeInicio(), false);
+});
+try{ history.replaceState({ v: "vistaInicio" }, ""); }catch(e){}
+document.getElementById("lnkInicio").addEventListener("click", (e)=>{
+  const v = document.querySelector(".vista.ver");
+  const id = v ? v.id : "";
+  // En las pantallas de adentro el enlace NO navega: se regresa a la anterior.
+  if(id === "vistaConfig"){ e.preventDefault(); entrar(); return; }
+  if(id === "vistaSeleccion"){ e.preventDefault(); document.getElementById("btnSelVolver").onclick(); return; }
+});
+document.getElementById("btnEsperaRefrescar").onclick = ()=>{ entrar(); };
+
+// ---------- grupo (mantiene la lista de usuarios al día) ----------
+// Igual que Encuentros: si alguien se agrega o se va mientras hay partida, la
+// lista se actualiza en vivo. Sin esto, un telefono con la lista vieja podia
+// borrar del documento a un invitado valido (no debe haber limite de invitados).
+function escucharGrupo(){
+  try{
+    onSnapshot(doc(db, "config", "ajustes"), (snap)=>{
+      try{
+        const arr = (snap.exists() && Array.isArray(snap.data().usuarios)) ? snap.data().usuarios : [];
+        if(!Array.isArray(arr) || !arr.length) return;
+        const antes = usuariosLista.map(u=>u && u.id).join(",");
+        usuariosLista = arr;
+        if(antes === arr.map(u=>u && u.id).join(",")) return;
+        if(jugandoCompartido && sesionActual && sesionActual.activa && jugando){
+          sanearSesion(sesionActual);
+          cargarEstado(sesionActual);
+          pintarPaso();
+        }
+      }catch(e){}
+    }, ()=>{});
+  }catch(e){}
+}
+
+// ---------- arranque ----------
+// Respaldo: mientras el acompañante/invitado espera, se revisa la partida cada
+// pocos segundos (por si la escucha en vivo se cayo y no aviso).
+setInterval(()=>{
+  try{
+    const v = document.querySelector(".vista.ver");
+    if(!v || v.id !== "vistaEspera" || jugando) return;
+    if(document.getElementById("modalUnir").style.display === "flex") return;
+    chequearPartidaEspera();
+  }catch(e){}
+}, 4000);
+(async ()=>{
+  try{ await cargarIdentidad(); }catch(e){}
+  try{ mostrarBotonesAdmin(); }catch(e){}
+  try{ escucharGrupo(); }catch(e){}
+  try{ await entrar(); }
+  catch(e){
+    try{ console.error("Roles arranque:", e); }catch(x){}
+    try{ if(!esInvitadoFlag){ await cargarPersonajes(); pintarInicio(); ver("vistaInicio", false); } else { ver("vistaEspera", false); } }catch(x){}
+    try{ escucharSesion(); }catch(x){}
+  }
+})();
+</script>
+
+</body>
+</html>
