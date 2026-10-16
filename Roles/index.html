@@ -45,6 +45,10 @@
     font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1rem; color:var(--bg);
     background:linear-gradient(90deg, var(--coral), var(--teal)); }
   .btnPri:active{ transform:scale(.97); }
+  /* Deshabilitado: se usa en "Siguiente" mientras la carta esta boca abajo
+     (no se puede pasar sin haber visto la carta). Se ve apagado, pero el
+     boton NO desaparece: asi la pantalla no salta. */
+  .btnPri:disabled{ opacity:.45; }
   .btnSec{ width:100%; padding:12px; background:none; border:none; cursor:pointer;
     color:var(--fg-muted); font-size:.9rem; text-decoration:underline; }
   #msg, #licMsg{ min-height:20px; font-size:.85rem; color:var(--rojo); margin:6px 0; text-align:center; }
@@ -256,9 +260,12 @@
   <p class="desc">Diviértete más</p>
   <div class="caja">
     <div class="cajaTitulo">¿Cómo vas a jugar hoy?</div>
-    <button class="btnPri" id="btnSolo" style="margin-top:10px;">Jugar solo</button>
-    <button class="btnPri" id="btnPareja">Jugar con Pareja</button>
-    <button class="btnPri" id="btnMulti" style="margin-bottom:0;">Multijugador</button>
+    <!-- Los dos modos de quiénes juegan van en el mismo renglón. "Jugar solo"
+         se quitó (decisión de Fredy, oct-2026). -->
+    <div class="filaBotones" style="margin-top:10px;">
+      <button class="btnPri" id="btnPareja" style="margin-bottom:0;">Jugar con Pareja</button>
+      <button class="btnPri" id="btnMulti" style="margin-bottom:0;">Multijugador</button>
+    </div>
   </div>
   <div class="caja">
     <div class="cajaTitulo">Número de rondas</div>
@@ -271,7 +278,7 @@
       <button class="tab" id="tabEspejo">Espejo</button>
       <button class="tab" id="tabSeleccionar">Seleccionar</button>
     </div>
-    <div id="descModo" style="font-size:.78rem;color:var(--fg-muted);margin-top:10px;"></div>
+    <div id="descModo" style="font-size:.78rem;color:var(--fg-muted);margin-top:10px;text-align:center;"></div>
   </div>
   <!-- El interruptor de Especial va ABAJO DE TODO (decisión de Fredy, oct-2026).
        No es un modo: se prende encima de cualquiera de los tres. -->
@@ -709,8 +716,8 @@ const MODO_SELECCIONAR = "seleccionar";
 let modoBaseCfg = MODO_NORMAL;
 const DESC_MODO = {
   "normal": "",
-  "espejo": "Cada quien juega con la contraparte de su propio personaje.",
-  "seleccionar": "Cada quien escoge a mano las tarjetas con las que quiere jugar."
+  "espejo": "Juega con el Espejo/Contraparte de tu personaje.",
+  "seleccionar": "Selecciona tus personajes favoritos."
 };
 // De dónde sale la lista de un jugador, según el modo.
 //   normal      -> U1 / U2
@@ -736,7 +743,6 @@ let soyHost = false;
 let modoLocal = false;
 let modoJuego = "multi";
 let unCelular = false;
-let ladoSolo = "A";
 let sesionActual = null;
 let sesionUnsub = null;
 let sesionIniciada = false;
@@ -860,8 +866,7 @@ document.getElementById("tabSeleccionar").onclick = ()=>{ modoBaseCfg = MODO_SEL
 document.getElementById("btnIrCfg").onclick = ()=>{ abrirCfg(); };
 // Botones de modo: cada uno abre su ventana y de ahi arranca la partida.
 let modoPendiente = "multi";
-// "Jugar solo" se queda EN DESARROLLO (decisión de Fredy): avisa y no arranca.
-document.getElementById("btnSolo").onclick = ()=>{ aviso("Jugar solo todavía no está disponible."); };
+// Quiénes juegan: Pareja o Multijugador. "Jugar solo" se quitó (oct-2026).
 document.getElementById("btnPareja").onclick = ()=>{ modoPendiente = "pareja"; conPendiente(()=>{ abrirModal("modalModo"); }); };
 document.getElementById("btnMulti").onclick = ()=>{ modoPendiente = "multi"; conPendiente(()=>{ abrirModal("modalModo"); }); };
 document.getElementById("btnModoLocal").onclick = ()=>{ cerrarModal("modalModo"); preparar(modoPendiente, null, true); };
@@ -1081,17 +1086,28 @@ async function siguienteSesion(){
   if(terminoLaPartida){ terminoLaPartida = false; try{ await retirarInvitacion(JUEGO_INV); }catch(e){} }
 }
 async function saltarTurno(){
-  const d = sesionActual;
-  if(!d || !d.activa || d.hostUid !== miId){ aviso("Solo el anfitrión puede saltar un turno."); return; }
-  const deQuien = nombreCabeza((d.orden || [])[d.turno || 0]);
-  if(d.orden[d.turno || 0] === miId){ pintarPaso(); return; }
+  // Funciona en los DOS modos. Antes solo miraba la sesion compartida, asi que
+  // en "un solo celular" el boton salia pero no hacia nada (avisaba "solo el
+  // anfitrion"). Lo reporto Fredy.
+  if(!jugando || !estado || estado.terminada) return;
+  if(!esAnfitrion()){ aviso("Saltar un turno es cosa del anfitrión."); return; }
+  const quien = estado.orden[estado.turno];
+  if(!quien || quien === miId){ pintarPaso(); return; }
+  const deQuien = nombreCabeza(quien);
   const saltar = await confirmar({
     aviso: true,
     titulo: "¿Saltar el turno de " + deQuien + "?",
-    texto: "Esa persona pierde su turno y el juego sigue con el siguiente.",
+    texto: "Esa persona pierde su turno y esa tarjeta; la partida sigue con el siguiente.",
     ok: "Saltar turno"
   });
   if(!saltar) return;
+  if(!jugandoCompartido){
+    // Un solo celular: se hace en memoria, igual que "Siguiente".
+    avanzarTarjeta(estado, quien);
+    pintarPaso();
+    if(estado.terminada && !finMostrado){ finMostrado = true; finPartida(); }
+    return;
+  }
   let termino = false, fallo = false;
   try{
     await runTransaction(db, async (tx)=>{
@@ -1099,17 +1115,21 @@ async function saltarTurno(){
       const snap = await tx.get(ref);
       if(!snap.exists()) return;
       const s = snap.data();
-      if(!s.activa || s.hostUid !== miId) return;
+      if(!s.activa || s.terminada || s.hostUid !== miId) return;
       if(!s.orden || !s.orden.length) return;
-      if(s.orden[s.turno || 0] === miId) return;
-      const sig = siguienteTurno(s);
-      if(sig.fin){
-        termino = true;
-        tx.update(ref, { activa: false, terminada: true, turno: 0, actualizadaEn: serverTimestamp() });
-        return;
-      }
-      const ronda = sig.nuevaRonda ? ((s.ronda || 1) + 1) : (s.ronda || 1);
-      tx.update(ref, { orden: sig.orden, turno: sig.turno, ronda, actualizadaEn: serverTimestamp() });
+      const q = s.orden[s.turno || 0];
+      if(!q || q === miId) return;
+      // SE LE QUITA LA TARJETA: el turno se quema. Asi la partida sigue siendo
+      // de R rondas y termina cuando debe. Antes se le dejaba la tarjeta, la
+      // ronda se pasaba de R y la partida no acababa (lo reporto Fredy, y en
+      // compartido "se desfasaban los turnos").
+      avanzarTarjeta(s, q);
+      if(s.terminada) termino = true;
+      tx.update(ref, {
+        listas: s.listas, orden: s.orden, turno: s.turno, ronda: s.ronda || 1,
+        activa: !s.terminada, terminada: !!s.terminada,
+        actualizadaEn: serverTimestamp()
+      });
     });
   }catch(e){ fallo = true; }
   if(fallo){ try{ aviso("No se pudo saltar el turno. Revisa conexión."); }catch(x){} return; }
@@ -1231,6 +1251,10 @@ function pintarVolteo(){
     tarjeta.style.visibility = "visible";
     reverso.style.display = "none";
   }
+  // NO se puede pasar a la siguiente sin haber visto la carta: mientras este
+  // boca abajo, "Siguiente" queda apagado (no se oculta, para que la pantalla
+  // no salte).
+  try{ document.getElementById("btnSig").disabled = bocaAbajo; }catch(e){}
 }
 // Se llama en CADA repintado, asi que SOLO toca el interruptor cuando la
 // tarjeta cambia de verdad. Si no, cualquier repintado (por ejemplo, lo que
@@ -1601,8 +1625,8 @@ document.getElementById("btnQR").onclick = ()=>{
 document.getElementById("btnQRNo").onclick = ()=>{ cerrarModal("modalQR"); };
 
 // ---------- comenzar ----------
-function construirCabezasModo(modo, ladoSoloElegido){
-  if(modo === "solo") return [{ id: miId, nombre: (miUsuario && miUsuario.nombre) || "", lado: ladoSoloElegido, admin: true, invitado: false }];
+// Solo quedan dos: pareja (los dos usuarios) y multi (con invitados).
+function construirCabezasModo(modo){
   if(modo === "pareja") return construirCabezas().filter(c=>!c.invitado);
   return construirCabezas();
 }
@@ -1690,7 +1714,7 @@ async function iniciar(modo, ladoSoloElegido, unCelularFlag, poolsListos){
     new Set(cabezasIn.map(c=>c.lado)).forEach(l=>{ maxR = Math.min(maxR, listaDeLado(l, mb).length); });
     if(R > maxR){ aviso("El número de rondas no puede pasar de " + maxR + " (lo que tiene la lista más corta)."); return; }
   }
-  const quiereCompartido = (modo !== "solo") && !unCelularFlag;
+  const quiereCompartido = !unCelularFlag;
   const compartido = quiereCompartido && !modoLocal;
   if(quiereCompartido && modoLocal){ try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){} }
   jugandoCompartido = compartido;
@@ -1766,12 +1790,21 @@ let selUnsub = null;
 // necesita después: si no, "un solo celular" creaba una partida COMPARTIDA
 // (escribía la sesión y publicaba invitación sin que nadie lo hubiera pedido).
 let selUnCelular = false;
+// En "cada quien en el suyo" el telefono marca SOLO su propia lista (su lado).
+// En "un solo celular" salen todas las pestañas, porque hay que armar la de los
+// dos en el mismo aparato.
+let selSoloMia = false;
 let selModo = "pareja";   // pareja | multi (quiénes juegan)
 // Si alguien sale de la selección, no se le vuelve a meter. Se recuerda el `sid`
 // que abandonó: una selección NUEVA trae otro `sid`, así que esa sí lo vuelve a
 // llamar. Sin esto, un doc viejo que se quedó `activa` atrapaba al teléfono en
 // la pantalla de selección cada vez que se recargaba.
 let selSalioSid = null;
+// El `sid` de la seleccion que YA acepte entrar. Sirve para que, en modo
+// Seleccionar, primero se pregunte si quiere jugar y hasta despues vea las
+// tarjetas: nadie escoge si no va a jugar (lo pidio Fredy).
+let selSidAceptado = null;
+let selInvitando = false;   // la ventana de "unirse" que se esta mostrando es la de la seleccion
 function seleccionRef(){ return doc(db, "seleccionRoles", "actual"); }
 function selEsCompartida(){ return !!selCompartida; }
 // De donde se leen las marcas: el doc compartido, o la memoria del celular.
@@ -1790,13 +1823,26 @@ function selTodosListos(){
 function pintarSeleccion(){
   const tabs = document.getElementById("selTabs");
   tabs.innerHTML = "";
+  // En "cada quien en el suyo" cada telefono marca SOLO lo suyo: su pestaña es
+  // la única que sale. En "un solo celular" salen todas, porque hay que armar
+  // la de los dos en el mismo aparato. (Antes salian todas siempre, asi que en
+  // cada quien en el suyo se podia marcar de la lista del otro.)
+  const visibles = [];
   selCabezas.forEach((c, i)=>{
+    if(selSoloMia && (!c || c.id !== miId)) return;
+    visibles.push(i);
+  });
+  if(visibles.length && visibles.indexOf(selTab) < 0) selTab = visibles[0];
+  visibles.forEach(i=>{
+    const c = selCabezas[i];
     const b = document.createElement("button");
     b.className = "tab" + (i === selTab ? " activo" : "");
     b.textContent = c.nombre || "Invitado";
     b.onclick = ()=>{ selTab = i; pintarSeleccion(); };
     tabs.appendChild(b);
   });
+  // Con una sola pestaña no hace falta la fila.
+  tabs.style.display = (visibles.length > 1) ? "flex" : "none";
   const cab = selCabezas[selTab];
   if(!cab) return;
   document.getElementById("selDesc").textContent =
@@ -1875,6 +1921,7 @@ async function abrirSeleccionLocal(cabezasIn, R){
   selR = R; selTab = 0;
   selDoc = null; selCompartida = false; selSoyHost = true;
   selUnCelular = true;
+  selSoloMia = false;   // un solo celular: salen las pestañas de todos
   selModo = modoPendiente || "pareja";
   selLocal = {};
   selCabezas.forEach(c=>{ selLocal[c.id] = []; });
@@ -1888,6 +1935,7 @@ async function abrirSeleccionCompartida(cabezasIn, R){
   selSoyHost = true;
   selCompartida = true;
   selUnCelular = false;
+  selSoloMia = true;    // cada quien en el suyo: cada telefono marca solo lo suyo
   selModo = modoPendiente || "pareja";
   const selInicial = {};
   selCabezas.forEach(c=>{ selInicial[c.id] = []; });
@@ -1895,6 +1943,7 @@ async function abrirSeleccionCompartida(cabezasIn, R){
              sid: String(Date.now()) + Math.random().toString(36).slice(2, 6),
              hostUid: miId, hostNombre: (miUsuario && miUsuario.nombre) || nombreAdmin(),
              rondas: selR, cabezas: selCabezas, modo: selModo };
+  selSidAceptado = selDoc.sid;   // quien la arma ya "acepto": no se le pregunta
   try{
     await setDoc(seleccionRef(), {
       activa: true, sid: selDoc.sid, hostUid: miId,
@@ -1964,8 +2013,9 @@ function escucharSeleccion(){
         if(d.modo === "agregar"){
           const a = d.agregar || {};
           if(a.id === miId){
-            // Soy el invitado: veo MI lista y marco.
+            // Soy el invitado: veo MI lista y marco (solo la mia).
             selEsAgregado = true;
+            selSoloMia = true;
             selSoyHost = false;
             selR = a.necesidad || 1;
             selTab = 0;
@@ -1982,11 +2032,22 @@ function escucharSeleccion(){
         // ---- rama "elegir": la selección de antes de empezar ----
         if(!Array.isArray(d.cabezas) || !d.cabezas.some(c=> c.id === miId)) return;
         if(jugando) return;   // ya esta en la partida: no se regresa
+        selSoloMia = true;    // es en el suyo: cada telefono marca solo lo suyo
         selR = d.rondas || selR;
         if(d.modo) selModo = d.modo;
         selCabezas = d.cabezas;
         selSoyHost = (d.hostUid === miId);
         if(d.sel) selLocal = Object.assign({}, d.sel);
+        // PRIMERO se le pregunta si entra; hasta que acepte NO ve la selección.
+        // Asi nadie escoge tarjetas si no va a jugar (lo pidió Fredy): antes le
+        // salía la ventana de "unirse" al final, después de escoger.
+        if(!selSoyHost && d.sid !== selSidAceptado){
+          selInvitando = true;
+          document.getElementById("unirDesc").textContent =
+            (d.hostNombre || "El anfitrión") + " quiere jugar Juego de Roles. ¿Entras a escoger tus personajes?";
+          abrirModal("modalUnir");
+          return;
+        }
         // La primera vez, se abre en la pestaña de uno mismo.
         if(primera){
           const i = selCabezas.findIndex(c=> c && c.id === miId);
@@ -2087,9 +2148,26 @@ function entrarAlJuego(d){
 document.getElementById("btnUnirme").onclick = ()=>{
   const d = sesionActual;
   cerrarModal("modalUnir");
+  // Si la ventana era la de la SELECCIÓN (no la de una partida), se entra a
+  // escoger tarjetas; la partida todavía no existe.
+  if(selInvitando){
+    selInvitando = false;
+    if(selDoc && selDoc.sid) selSidAceptado = selDoc.sid;
+    pintarSeleccion();
+    ver("vistaSeleccion");
+    return;
+  }
   entrarAlJuego(d);
 };
-document.getElementById("btnUnirNo").onclick = ()=>{ cerrarModal("modalUnir"); };
+document.getElementById("btnUnirNo").onclick = ()=>{
+  // Si dijo "ahora no" a la SELECCIÓN, se recuerda para no volver a preguntarle
+  // por esa misma (una nueva trae otro `sid`).
+  if(selInvitando){
+    selInvitando = false;
+    if(selDoc && selDoc.sid) selSalioSid = selDoc.sid;
+  }
+  cerrarModal("modalUnir");
+};
 
 // ---------- pausa / fin (avisos) ----------
 document.getElementById("btnPausaOk").onclick = ()=>{

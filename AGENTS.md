@@ -133,6 +133,12 @@ inicio de `GUIA.md`). **Que no vuelva a pasar:**
 - **Lo que solo se puede ver en el celular de Fredy o en su base real, se le pasa
   a él de una vez**, diciendo qué mirar y por qué. No se simula, y no se le manda
   una lista larga de tareas.
+- **Trampa conocida (oct-2026):** si se abre una página con Chrome sin ventana
+  (`--virtual-time-budget`), **los `setTimeout` NO se disparan** cuando hay una
+  petición de red pendiente (el SDK de Firebase la deja abierta y el reloj
+  virtual se detiene). Se perdieron 3 intentos con eso. Para probar algo después
+  de que cargue, hay que meter la llamada **sin temporizador**, justo después
+  del punto que interesa.
 
 ## Reglas de la casa
 

@@ -86,7 +86,7 @@ eliminación: cada persona recibe **una tarjeta por ronda** y las juega todas.
 | **Seleccionar personajes** | Se pregunta **Número de rondas (R)**; cada quien marca **exactamente R**. Arranca solo cuando **todos** tienen R |
 | **Seleccionar: qué se muestra** | Las listas muestran **normales y contrapartes** (persona 1 elige de `U1`+`C1`; persona 2 de `U2`+`C2`), con una etiqueta de cuál es cada una |
 | **Reparto** | **Normal/Espejo:** se reparten R tarjetas al azar de la lista del lado (sin repetir si alcanza; si no, se permite repetir). **Seleccionar:** R tarjetas elegidas a mano |
-| **Botón "Jugar solo"** | Se queda **EN DESARROLLO**: al tocarlo, sale el aviso `aviso("…en desarrollo")` (no arranca partida) |
+| **Botón "Jugar solo"** | ~~EN DESARROLLO~~ **QUITADO del todo (oct-2026).** Ya no existe el botón. Quedan **solo dos**: `Jugar con Pareja` y `Multijugador`, **en el mismo renglón** |
 | **La carta empieza BOCA ABAJO** | En cada turno sale primero el **reverso** (mosaico del icono) y se revela **tocando la carta**. Tocar otra vez la tapa, para poder pasar el celular sin que el otro la lea. Decidido por Fredy (oct-2026) |
 | **"Jugar con Pareja"** | Uno a uno; **se esconden** QR/"Agregar invitado"/panel (solo salen en Multijugador). Siguen pausar/terminar y "un celular / cada quien el suyo" |
 | **Multijugador** | Todo lo de invitados |
@@ -892,18 +892,21 @@ Nada se ha visto en un navegador. En concreto falta confirmar:
 
 ### La pantalla de inicio: el orden que confirmaste
 
-**No es el del plan.** Fredy lo confirmingó así el oct-2026:
+**No es el del plan.** Fredy lo confirmó así el oct-2026:
 
 ```
-¿QUIÉNES JUEGAN?
-  [Jugar solo]  [Jugar con Pareja]  [Multijugador]
+¿CÓMO VAS A JUGAR HOY?
+  [Jugar con Pareja]  [Multijugador]      ← los dos en el mismo renglón
 
 NÚMERO DE RONDAS
         ( 3 )            ← tamaño MEDIANO
 
 MODO
   [ Normal ] [ Espejo ] [ Seleccionar ]
-  (una frase que explica qué hace ese modo)
+  (una frase centrada que explica qué hace ese modo)
+
+ESPECIAL
+  [ ] Ponle un toque personal a tu juego
 ```
 
 > El plan (sección 10) ponía el orden al revés. **Manda esto.** El interruptor
@@ -914,7 +917,7 @@ MODO
 |---|---|
 | **Rondas más chicas** | `.rondasInput` pasó de `2.2rem` a **`1.4rem`**, porque ya no es lo más importante de la pantalla (arriba está "quiénes juegan"). Es una excepción a la tabla de medidas de `AGENTS.md`, **pedida por Fredy** |
 | **Se quitó la clase `.cajaBotones`** | Era el recuadro al 66% de ancho que usaba solo la caja de "quiénes juegan". Con los tres recuadros del mismo ancho se veía raro |
-| **"Jugar solo" ya no abre ventana** | Avisa `aviso("Jugar solo todavía no está disponible.")` y **no** arranca. Se borró `#modalSolo` con sus tres botones; quedó un comentario en el HTML que dice dónde está el original |
+| **"Jugar solo" ya no abre ventana** | Avisa `aviso("Jugar solo todavía no está disponible.")` y **no** arranca. Se borró `#modalSolo` con sus tres botones; quedó un comentario en el HTML que dice dónde está el original. **(Hoy el botón ya no existe: se quitó del todo en la sección 24.)** |
 | **Aparece una descripción del modo** | `#descModo`, una frase que cambia con la pestaña: normal / espejo / seleccionar |
 
 ### Los tres modos, y de dónde sale cada lista
@@ -1230,8 +1233,9 @@ Nada del código. Solo la prueba en vivo (T6.4).
 - [ ] **C2** Tocar la carta: se voltea. **Tocar otra vez: se tapa.**
 - [ ] **C3** Con un texto largo, **deslizar la info** y verificar que la carta
       **NO** se voltea sola al soltar.
-- [ ] **C4** Aprieta **Siguiente** varias rondas. Debe cambiar de jugador y las
-      rondas deben ir Rotary.
+- [ ] **C4** Aprieta **Siguiente** varias rondas. Debe cambiar de jugador y la ronda avanza.
+      **Ojo:** con la carta **boca abajo**, "Siguiente" tiene que estar **apagado** (no deja pasar).
+
 - [ ] **C5** Jugar **completo**, hasta el final: **fuegos + "¡Gracias por jugar!"**.
 - [ ] **C6** El **reverso** debe medir **exactamente** lo mismo que la cara de
       adelante (ni una rayita más).
@@ -1258,9 +1262,11 @@ Nada del código. Solo la prueba en vivo (T6.4).
       en la misma ronda**, y le toca **al jugador de esa ronda**.
 - [ ] **E5** La variante sale en la tarjeta, marcada, y **se voltea con ella**.
 
-### F. "Jugar solo"
+### F. La pantalla de inicio
 
-- [ ] **F1** Aprieta "Jugar solo": **avisa** y **no arranca nada**.
+- [x] **F1** ~~Aprieta "Jugar solo": avisa y no arranca nada.~~ **El botón ya no
+      existe** (se quitó, sección 24). Ahora en la caja de arriba solo salen
+      **Jugar con Pareja** y **Multijugador**, en el mismo renglón.
 
 ### G. Multijugador e invitados (lo que más necesita dos celulares)
 
@@ -1560,6 +1566,119 @@ puede aprobar (o acusar) un archivo que ya no existe.
   archivo nuevo sí estaba cargado.
 - Dije que `../` funcionaba igual con y sin `index.html`. **Falso:** con el
   nombre del archivo, `..` no sube.
+
+---
+
+## 24. La segunda prueba en vivo (oct-2026)
+
+> Fredy probó el carrito, las invitaciones y los submenús: **todo bien**. Y
+> encontró **tres bugs** en la partida y **un orden** que estaba al revés. Los
+> cuatro están corregidos.
+
+### 1. "Saltar turno" no hacía nada (y en compartido desfasaba)
+
+Eran **dos cosas** en la misma función:
+
+| | |
+|---|---|
+| **No funcionaba en "un solo celular"** | `saltarTurno()` leía `sesionActual`, que **en un solo celular no existe** (no hay sesión en Firebase). Así que el botón se veía (en la pantalla del anfitrión, cuando el turno es de otro) pero al tocarlo salía *"Solo el anfitrión puede saltar un turno"*. **Ahora funciona en los dos modos**: en un solo celular mueve `estado` en memoria, igual que "Siguiente" |
+| **En compartido se desfasaba y no terminaba** | Saltar turno **le dejaba la tarjeta** al jugador. Como la partida acaba cuando todos se quedan sin tarjetas, cada salto pedía **un turno de más**: la ronda se pasaba de R, el marcador decía *"Ronda 5 de 4"* y la partida no acababa cuando debía |
+
+**La regla que quedó: saltar turno QUEMA la tarjeta de esa persona.** Su turno
+se pierde *con* tarjeta, no solo el turno. Así la partida sigue siendo de R
+rondas y termina cuando tiene que terminar. La ventana de confirmación ya lo
+dice: *"Esa persona pierde su turno y esa tarjeta"*.
+
+Se reusa **`avanzarTarjeta()`** (el mismo que usa "Siguiente"), así que el salto
+y el paso normal no pueden comportarse distinto.
+
+### 2. Se podía dar "Siguiente" sin voltear la tarjeta
+
+No había ninguna condición que lo impidiera. **Ahora, mientras la carta está boca
+abajo, "Siguiente" queda apagado** (`disabled` + opacidad).
+
+Se apaga, **no se esconde**: si desapareciera, la pantalla saltaría de lugar al
+voltear. El estado se sincroniza en `pintarVolteo()`, que ya se llama en cada
+repintado y en cada volteo.
+
+### 3. En Seleccionar, el orden estaba al revés
+
+Antes: los dos **escogían** tarjetas, el anfitrión apretaba Jugar, y **entonces**
+a la pareja le salía "¿Unirse?". *"Si no quiere jugar, para qué escoge tarjetas"*
+(Fredy).
+
+**Ahora es al revés:** cuando el anfitrión arma la selección, al otro teléfono le
+sale la ventana **"¿Entras a escoger tus personajes?"** con Unirme / Ahora no, y
+**hasta que acepta no ve la selección**. Si dice "Ahora no", no se le vuelve a
+preguntar por esa misma (se recuerda el `sid`; una selección nueva sí lo llama).
+
+| Variable | Para qué |
+|---|---|
+| `selSidAceptado` | El `sid` de la selección que ya acepté. Quien la arma queda como aceptada |
+| `selInvitando` | Marca que la ventana abierta es la de la **selección** (y no la de una partida), para que "Unirme" lleve a escoger tarjetas |
+
+### 4. Lo que se decidió NO tocar
+
+**Las invitaciones se quedan como están.** Fredy preguntó si convenía que el
+aviso le llegara a la pareja en cualquier pantalla de la app; al ver lo que
+costaba (meter el aviso en todas las páginas, con más código repetido) **decidió
+dejarlo así**: el aviso vive en la pantalla del juego.
+
+### 5. En Seleccionar, cada quien podía marcar de la lista del otro
+
+**Lo reportó Fredy:** en modo Seleccionar (pareja **o** multijugador) salían las
+pestañas de **todos** en **todos** los teléfonos, así que cada quien podía
+marcar tarjetas del otro. Tenía que ser cada quien de la suya.
+
+**El arreglo:** en **"cada quien en el suyo"** el teléfono muestra **solo su
+pestaña** (`selSoloMia`), y por lo tanto **solo puede escribir sus propias
+marcas**. En **"un solo celular"** sí salen todas, porque hay que armar la de
+los dos en el mismo aparato. Si hay una sola pestaña, la fila de pestañas se
+esconde.
+
+**Los invitados quedan bien solos:** su `lado` se calcula por `conQuien` (quien
+los invitó) en `construirCabezas()`, así que un invitado del usuario 1 escoge de
+`U1`+`C1` y uno del usuario 2 de `U2`+`C2`.
+
+Los **contadores** siguen mostrando a todos ("Ana 0/2 · Luis 0/2"): el anfitrión
+necesita ver cómo van los demás para saber cuándo se enciende "Jugar".
+
+### Pendiente de probar (otra vez, lo que solo se ve con dos celulares)
+
+- Saltar turno en **compartido**: que el salto no desfase y que la partida
+  **termine** cuando toca.
+- Saltar turno en **un solo celular** (en la pantalla del anfitrión, cuando el
+  turno es de la otra persona).
+- Que **no** deje dar "Siguiente" sin voltear, y que al voltear se encienda.
+  - En **Seleccionar**: que la pareja reciba el "¿Entras?" **antes** de escoger, y
+    que al decir "Ahora no" no se le repita.
+
+---
+
+## 25. La pantalla de inicio, pulida (oct-2026)
+
+Pedido de Fredy, antes de seguir probando:
+
+| Cambio | Detalle |
+|---|---|
+| **Se quitó "Jugar solo"** | Ya no existe el botón. Se fueron con él: su `onclick`, el aviso de "en desarrollo" y la rama `modo === "solo"` de `construirCabezasModo()`. También se quitó la variable suelta `ladoSolo`, que nadie leía |
+| **Pareja y Multijugador en el mismo renglón** | Con `filaBotones` (la clase de dos columnas que ya existía en el propio juego para los botones del anfitrión). No se inventaron medidas |
+| **Textos de los modos** | `Espejo` → *"Juega con el Espejo/Contraparte de tu personaje."* · `Seleccionar` → *"Selecciona tus personajes favoritos."* (se corrigió la ortografía) |
+| **Las dos frases van centradas** | `#descModo` con `text-align:center` |
+
+**Y quedó más limpio de lo que parece:** `quiereCompartido` ya no necesita
+preguntar por `"solo"`, porque ese modo no puede llegar. Ojo, la **variable**
+`ladoSolo` que sigue en la sesión (`sesionRoles/actual`) es otra cosa: es un
+campo del documento, y se deja como está.
+
+### Un glitch que apareció de paso
+
+Al correr `revisar.py` dentro de un comando encadenado salió **`EXIT=2`** una vez
+y luego 0 tres veces seguidas. Se revisó: **el chequeo está bien**; el `2` venía
+de mi propio comando encadenado, no de `revisar.py`. Para que un resultado no
+engañe: **`revisar.py` se corre solo**, no pegado a otros comandos.
+
+
 
 
 

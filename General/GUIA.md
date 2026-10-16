@@ -1283,8 +1283,10 @@ secciones del Centro, y de ahí se entra a ver todo el catálogo.
   Engrane ⚙️ con **una pestaña por usuario** (no cinco): cada quien solo ve su
   lado y el administrador tiene un botón para ver el del otro; dentro, dos
   sub-pestañas Personajes / Contrapartes; y una tercera, **Especiales**, que es
-  común. "Jugar solo" **no arranca**: avisa. El detalle del modelo y de las tres
-  colecciones está en **`General/Modelo-Datos.md`**, sección **1b**.
+    común. En la pantalla de inicio hay **solo dos** botones —**Jugar con Pareja**
+    y **Multijugador**, en el mismo renglón— y una caja **Especial** abajo de todo
+    con el interruptor "Ponle un toque personal a tu juego". El detalle del modelo y de las tres
+    colecciones está en **`General/Modelo-Datos.md`**, sección **1b**.
 - **Quién puede iniciar partida (Encuentros y Elecciones Peligrosas, oct-2026):**
   la pantalla de inicio la ve **cualquier usuario que no sea invitado** (el
   administrador **y** la pareja), cada quien con su **propia identidad**. Antes
