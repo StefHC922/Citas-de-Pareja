@@ -1302,11 +1302,13 @@ secciones del Centro, y de ahí se entra a ver todo el catálogo.
     (`asegurarPersonajes()`).
   - **"Pegar lista completa" es tolerante, pero NO adivina.** Acepta: un arreglo
     JSON, un objeto suelto, **un pedazo de arreglo sin los corchetes** (`{...}, {...},`
-    — con o sin la coma final), el formato envuelto (`{"U1":[...]}`) y texto, uno
-    por línea. Y si el JSON está **mal escrito, avisa y no pega nada**. Antes, si
-    el texto no empezaba con `[`, se caía a "un renglón = un personaje" **en
-    silencio** y metía cada línea como un personaje, con todo el texto como nombre
-    (le pasó a Fredy al pegar los personajes de un usuario en Contrapartes).
+    — con o sin la coma final), el formato envuelto (`{"U1":[...]}`), **comillas
+    tipográficas** (`“ ”`) y texto, uno por línea. Y si el JSON está **mal escrito,
+    avisa y no pega nada**, con la **pista del navegador** (que trae **la línea y
+    la columna** del error), para poder arreglarlo a mano. Antes, si el texto no
+    empezaba con `[`, se caía a "un renglón = un personaje" **en silencio** y
+    metía cada línea como un personaje, con todo el texto como nombre (le pasó a
+    Fredy al pegar los personajes de un usuario en Contrapartes).
   - **Cada quien escoge solo de su lado**: en "cada quien en el suyo" el teléfono
     muestra **solo su pestaña** (y por eso solo puede escribir sus marcas); en "un
     solo celular" salen todas. El lado del invitado sale de `conQuien`.

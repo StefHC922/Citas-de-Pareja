@@ -2332,21 +2332,37 @@ function idLibre(id){
 //     le paso a Fredy: cada renglon entro como un personaje),
 //   · un arreglo al que le sobra la ULTIMA coma: "[{...},{...},]".
 // Devuelve null si no se pudo leer como JSON.
+// El ultimo error de JSON.parse. Trae la POSICION (linea y columna), que es lo
+// que hace falta para encontrar el error a mano. Se guarda el PRIMERO (el del
+// texto tal cual lo pegaron), no el de los intentos de tolerancia.
+let errorJSON = "";
 function leerJSONPegado(t){
-  try{ return JSON.parse(t); }catch(e){}
+  errorJSON = "";
+  const probar = (texto)=>{
+    try{ return { v: JSON.parse(texto) }; }
+    catch(e){ if(!errorJSON) errorJSON = String((e && e.message) || e); return null; }
+  };
+  let r = probar(t); if(r) return r.v;
   // 2) Comillas "tipograficas" (" " y ' ') en vez de rectas. Es lo que pasa al
   //    escribir el JSON en una app de notas o de mensajes, y es la causa mas
   //    comun de un JSON que "se ve bien" y no se puede leer.
-  let q = t.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
-  if(q !== t){ try{ return JSON.parse(q); }catch(e){} }
+  const q = t.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+  if(q !== t){ r = probar(q); if(r) return r.v; }
   const sinComa = q.replace(/,\s*$/, "");
   if(q[0] === "{"){                                   // pedazo de arreglo
-    try{ return JSON.parse("[" + sinComa + "]"); }catch(e){}
+    r = probar("[" + sinComa + "]"); if(r) return r.v;
   }
   if(q[0] === "["){                                   // arreglo con coma de mas
-    try{ return JSON.parse(q.replace(/,\s*\]\s*$/, "]")); }catch(e){}
+    r = probar(q.replace(/,\s*\]\s*$/, "]")); if(r) return r.v;
   }
   return null;
+}
+// El aviso de "el JSON esta mal", con la pista de donde. Si el navegador da la
+// posicion, se muestra; si no, se dice nada mas que esta mal.
+function avisoJSONMalo(){
+  aviso("El JSON está mal escrito y no se pudo leer, así que no se agregó nada."
+        + (errorJSON ? "\n\nPista del navegador:\n" + errorJSON : "")
+        + "\n\nRevisa comas y comillas.");
 }
 // Acepta: un arreglo JSON de objetos (los 8 campos) o de textos, un solo objeto,
 // un objeto que traiga el arreglo adentro (ej. {"U1":[...]}), o texto, uno por
@@ -2360,7 +2376,7 @@ function parsePegadoPersonajes(texto){
   if(t[0] === "[" || t[0] === "{"){
     const d = leerJSONPegado(t);
     if(d === null){
-      aviso("El JSON está mal escrito y no se pudo leer, así que no se agregó nada. Revisa comas y comillas.");
+      avisoJSONMalo();
       return null;
     }
     if(Array.isArray(d)) return d;
@@ -2383,7 +2399,7 @@ function parsePegadoTextos(texto){
   if(t[0] === "[" || t[0] === "{"){
     const d = leerJSONPegado(t);
     if(d === null){
-      aviso("El JSON está mal escrito y no se pudo leer, así que no se agregó nada. Revisa comas y comillas.");
+      avisoJSONMalo();
       return null;
     }
     if(Array.isArray(d)) return sinDuplicados(d.map(x=> (x && typeof x === "object") ? (x.texto || "") : x));
