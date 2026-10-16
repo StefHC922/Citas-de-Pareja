@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -228,23 +228,6 @@
 </style>
 </head>
 <body>
-
-<!-- ============ MEDIDOR TEMPORAL ============
-     NO arregla nada: sirve para ver EN LA PANTALLA hasta dónde llega el
-     arranque. Se quita en cuanto se sepa la causa. -->
-<div id="diag" style="position:fixed;left:0;right:0;bottom:0;z-index:100000;background:#1a1428;border-top:1px solid #322a4a;color:#a599c7;font:11px/1.35 monospace;padding:6px 8px;white-space:pre-wrap;">DIAG: el JavaScript NO ha corrido todavía.</div>
-<script>
-window.addEventListener("error", function(ev){
-  var b = document.getElementById("diag");
-  if(b){ b.style.background = "#3a1020"; b.style.color = "#ffd7de"; b.style.borderTopColor = "#ff5c7a";
-    b.textContent = "DIAG ERROR: " + (ev.message || "") + "\n" + (ev.filename || "") + ":" + (ev.lineno || "") + "\n" + ((ev.error && ev.error.stack) || ""); }
-});
-window.addEventListener("unhandledrejection", function(ev){
-  var b = document.getElementById("diag");
-  if(b){ b.style.background = "#3a1020"; b.style.color = "#ffd7de"; b.style.borderTopColor = "#ff5c7a";
-    b.textContent = "DIAG PROMESA RECHAZADA: " + (ev.reason && (ev.reason.stack || ev.reason.message || ev.reason)); }
-});
-</script>
 
 <!-- Este juego esta en el catalogo de JUEGOS (no en Experiencias), asi que el
      "← Volver" tiene que abrir ESA subpantalla y no la de experiencias en pareja.
@@ -539,9 +522,6 @@ window.addEventListener("unhandledrejection", function(ev){
 </div>
 
 <script type="module">
-// ---- MEDIDOR TEMPORAL (se quita al terminar el diagnostico) ----
-function diag(t){ try{ const b = document.getElementById("diag"); if(b) b.textContent = "DIAG: " + t; }catch(e){} }
-diag("modulo OK (los imports resolvieron)");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs, onSnapshot, query, where, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "../firebase-config.js";
@@ -794,10 +774,8 @@ function avanzarTarjeta(d, headId){
 
 // ---------- licencia / arranque de pantalla ----------
 async function entrar(){
-  diag("entrar() empezo");
   let ok = false;
   try{ ok = await tengoAcceso(ITEM_ID); }catch(e){ ok = false; }
-  diag("acceso = " + ok + " · invitado = " + esInvitadoFlag);
   if(!ok && esInvitadoFlag) ok = true; // invitado juega con el acceso del anfitrión
   if(ok){
     modoLocal = (typeof navigator !== "undefined" && navigator.onLine === false);
@@ -810,9 +788,7 @@ async function entrar(){
       // parecia que no habia cargado nada. Lo reporto Fredy en la primera
       // prueba en vivo; el contenido se refresca solo en cuanto llega.
       pintarInicio();
-      diag("inicio pintado · encendiendo vistaInicio");
       ver("vistaInicio", false);
-      diag("LISTO: vistaInicio encendida");
       cargarPersonajes().then(()=>{ try{ pintarInicio(); }catch(e){} }, ()=>{});
     }else{
       ver("vistaEspera", false);
@@ -852,7 +828,6 @@ async function entrar(){
     }
   }catch(e){}
   ver("vistaBloqueo", false);
-  diag("sin licencia: se encendio vistaBloqueo (Acceso)");
   escucharAprobacion();
 }
 
@@ -2656,14 +2631,6 @@ setInterval(()=>{
     try{ if(!esInvitadoFlag){ pintarInicio(); ver("vistaInicio", false); } else { ver("vistaEspera", false); } }catch(x){}
     try{ escucharSesion(); }catch(x){}
   }
-  // Red de seguridad: pase lo que pase, NUNCA se deja la pantalla en blanco.
-  // Si algo fallo y ninguna vista quedo encendida, se enciende una. Asi, si hay
-  // un error, se ve una pantalla (y se puede leer la consola) en vez de nada.
-  try{
-    if(!document.querySelector(".vista.ver")){
-      document.getElementById(vistaDeInicio()).classList.add("ver");
-    }
-  }catch(x){}
 })();
 </script>
 

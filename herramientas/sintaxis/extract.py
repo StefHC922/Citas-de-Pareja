@@ -6,6 +6,15 @@ REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 OUT = r"C:\Users\Fred\AppData\Local\Temp\opencode\extracted"
 os.makedirs(OUT, exist_ok=True)
 
+# Se limpia la carpeta antes de sacar nada. Si no, un .js de una corrida vieja
+# se queda y `revisar.py` lo sigue revisando como si fuera el actual: da un
+# conteo equivocado y puede "aprobar" (o acusar) algo que ya no existe.
+# Ya paso el oct-2026 con `roles_2.js`, que sobro cuando un HTML paso de tener
+# dos <script> a uno.
+for _f in os.listdir(OUT):
+    if _f.endswith(".js"):
+        os.remove(os.path.join(OUT, _f))
+
 targets = [
     ("Encuentros/index.html", "encuentros"),
     ("Citas/index.html", "citas"),

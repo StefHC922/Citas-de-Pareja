@@ -1467,6 +1467,101 @@ volcado.
 - Si volviera a pasar, hay que abrir la consola del navegador (F12 → Console) y
   leer el error: eso dice la causa exacta, y el código ya no lo esconde.
 
+---
+
+## 23. LA CAUSA REAL del blanco: la dirección (oct-2026)
+
+> Lo encontró **Fredy**, con la consola abierta. Esta sección existe para que
+> nadie vuelva a perder el tiempo aquí.
+
+### Qué decía la consola
+
+```
+Failed to load resource: 404   /Citas-de-Pareja/Roles/acceso.js
+Failed to load resource: 404   /Citas-de-Pareja/Roles/config.js
+Failed to load resource: 404   /Citas-de-Pareja/Roles/invitado.js
+... (los ocho módulos, más icon-512.png y favicon)
+```
+
+**El navegador buscaba los módulos DENTRO de `/Roles/`**, no en la raíz.
+
+### Por qué
+
+Los `import` del juego son `../acceso.js`, `../config.js`, etc. Ese `../` **solo
+sube a la raíz si la dirección es la CARPETA**:
+
+| Dirección | A dónde va `../acceso.js` | Resultado |
+|---|---|---|
+| `.../Citas-de-Pareja/Roles/` | `/Citas-de-Pareja/acceso.js` | ✅ existe |
+| `.../Citas-de-Pareja/Roles/index.html` | `/Citas-de-Pareja/Roles/acceso.js` | ❌ 404 |
+
+Con la dirección larga, `..` **no sube**: quita `index.html` y se queda dentro de
+`/Roles/`. Entonces **los ocho archivos dan 404, el módulo no carga, y la pantalla
+queda en blanco** —con el engrane muerto, porque su código vive en ese módulo.
+
+**Por eso `Opciones` sí entraba:** su dirección termina en `/Opciones/`. El menú
+arma el enlace así (`index.html:607`), con la ruta **como carpeta**:
+
+```js
+a.href = /\.html?$/i.test(p.ruta || "") ? p.ruta : (p.ruta || "") + "/";
+```
+
+### El campo `Ruta` del pack tiene que decir exactamente `Roles`
+
+| Si dice | El enlace queda | Resultado |
+|---|---|---|
+| `Roles` | `/Roles/` | ✅ |
+| `Roles/` | `/Roles//` | ❌ |
+| `Roles/index.html` | `/Roles/index.html` | ❌ |
+| `Roles/Roles` | `/Roles/Roles/` | ❌ |
+
+**Los tres malos dan EXACTAMENTE los mismos 404.**
+
+### Los blindajes se QUITARON (decisión de Fredy, oct-2026)
+
+Durante el diagnóstico se agregaron tres cosas, y **Fredy pidió quitarlas para
+dejar el código limpio**. **Ya no están:**
+
+| Se quitó | Qué hacía |
+|---|---|
+| El **medidor** en pantalla | Mostraba hasta dónde llegaba el arranque |
+| El **aviso de carga** | Un recuadro que salía si los archivos no bajaban |
+| El **auto-arreglo de la dirección** | Si entrabas como `.../Roles/index.html`, te pasaba a `.../Roles/` |
+| La **red de seguridad** del arranque | Encendía una pantalla si ninguna quedaba encendida |
+
+**Consecuencia que hay que tener presente:** si el campo `Ruta` del pack vuelve a
+quedar mal, el juego se verá **otra vez en blanco, sin decir nada** (los `import`
+dan 404, el módulo no carga, y el engrane queda muerto). **El código ya no lo
+avisa.** Si vuelve a pasar, la causa está en esta sección: revisa el `Ruta`.
+
+**Lo que SÍ se dejó (porque es arreglo, no parche):** pintar la pantalla **antes**
+de esperar a Firebase, en `entrar()` y en `abrirCfg()`. Ver la sección 22.
+
+### Y de paso: un defecto del verificador
+
+`herramientas/sintaxis/extract.py` **no limpiaba su carpeta de salida**, así que
+un `.js` de una corrida vieja se quedaba y `revisar.py` lo seguía revisando como
+si fuera el actual. Con eso, el conteo salía en **23** en vez de **22** (sobraba
+`roles_2.js`, de cuando el HTML tenía dos `<script>`). **Corregido:** ahora
+`extract.py` borra los `.js` de la carpeta antes de extraer. Si no, el chequeo
+puede aprobar (o acusar) un archivo que ya no existe.
+
+### Y una regla que sale de aquí
+
+> **Un juego nuevo NO puede depender de que la dirección traiga la diagonal
+> final.** El `../` de sus `import` depende de eso, y un `Ruta` mal escrito en el
+> Panel lo rompe todo **sin un solo error de JavaScript** — solo 404 y pantalla
+> en blanco. La causa costó dos rondas de diagnóstico; el aviso de carga ya
+> existe para que la próxima vez se vea de inmediato.
+
+### Lo que estaba mal en MI diagnóstico
+
+- Dije que "la caché" lo explicaba. **Falso:** el medidor apareció, así que el
+  archivo nuevo sí estaba cargado.
+- Dije que `../` funcionaba igual con y sin `index.html`. **Falso:** con el
+  nombre del archivo, `..` no sube.
+
+
 
 
 
