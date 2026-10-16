@@ -183,6 +183,18 @@
     <button class="btnPri" id="btnPareja">Jugar con Pareja</button>
     <button class="btnPri" id="btnMulti" style="margin-bottom:0;">Multijugador</button>
   </div>
+  <!-- Registrar invitados SIN tener que entrar a la partida: aquí mismo, antes
+       de elegir. Es el mismo botón (y el mismo QR) que está dentro del juego. -->
+  <button class="btnSec" id="btnQRInicio" type="button" style="margin-top:14px;">QR Invita a Alguien</button>
+  <!-- Remate de la pantalla. Es un BOTON (no un enlace): al tocarlo abre el
+       engrane de esta misma pantalla. El degradado va SOLO en el texto, porque
+       con background-clip:text el emoji tambien sale transparente. -->
+  <button class="btnSec" id="btnIrCfg" type="button" style="margin-top:16px; font-size:.8rem; text-decoration:none; padding:6px;">
+    <span style="display:inline-block; font-family:'Chakra Petch',sans-serif; font-weight:600;
+      background:linear-gradient(90deg, var(--coral), var(--teal)); -webkit-background-clip:text;
+      background-clip:text; color:transparent;">Personaliza tu experiencia en...</span>
+    <span>⚙️</span>
+  </button>
 </div>
 
 <!-- ============ ESPERA (pareja / invitado) ============ -->
@@ -587,9 +599,12 @@ async function entrar(){
     // por su cuenta, como el administrador. El invitado sigue esperando.
     if(!esInvitadoFlag){
       if(esAdminFlag && modoLocal){ try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){} }
-      await cargarOpciones();
+      // PRIMERO se pinta, DESPUES se carga la lista. Al reves, la pantalla se
+      // quedaba en BLANCO todo el rato que tardara Firebase (mismo arreglo que
+      // se hizo en Roles/, oct-2026). Se refresca sola en cuanto llega.
       pintarInicio();
       ver("vistaInicio", false);
+      cargarOpciones().then(()=>{ try{ pintarInicio(); }catch(e){} }, ()=>{});
     }else{
       ver("vistaEspera", false);
       chequearPartidaEspera();
@@ -613,12 +628,16 @@ async function entrar(){
           if(s.estado !== "aprobado" || s.graciaUsada !== false) return;
           docGracia = { id: dd.id };
         });
-        if(docGracia){
-          try{ await setDoc(doc(tdb, "solicitudes", docGracia.id), { graciaUsada: true, graciaFecha: serverTimestamp() }, { merge: true }); }catch(e){}
-          if(!esInvitadoFlag){ await cargarOpciones(); pintarInicio(); ver("vistaInicio", false); } else { ver("vistaEspera", false); }
-          mostrarGracia();
-          return;
-        }
+          if(docGracia){
+            try{ await setDoc(doc(tdb, "solicitudes", docGracia.id), { graciaUsada: true, graciaFecha: serverTimestamp() }, { merge: true }); }catch(e){}
+            if(!esInvitadoFlag){
+              pintarInicio();
+              ver("vistaInicio", false);
+              cargarOpciones().then(()=>{ try{ pintarInicio(); }catch(e){} }, ()=>{});
+            } else { ver("vistaEspera", false); }
+            mostrarGracia();
+            return;
+          }
       }
     }
   }catch(e){}
@@ -1089,7 +1108,10 @@ async function agregarInvitado(id){
 document.getElementById("btnAgregarInv").onclick = ()=>{ abrirAgregar(); };
 document.getElementById("btnAgregarNo").onclick = ()=>{ cerrarModal("modalAgregar"); };
 // Mostrar el QR del anfitrion para registrar invitados sin salir del juego.
-document.getElementById("btnQR").onclick = ()=>{
+// Es UNA sola funcion y la usan los dos botones: el de la partida (`btnQR`) y
+// el de la pantalla de inicio (`btnQRInicio`), para no tener el mismo codigo
+// dos veces. (Mismo patron que en Roles/, oct-2026.)
+function abrirQR(){
   const g = leerConfigGuardada();
   const caja = document.getElementById("qrCajaJuego");
   const msg = document.getElementById("qrMsg");
@@ -1109,7 +1131,9 @@ document.getElementById("btnQR").onclick = ()=>{
     });
   }catch(e){ caja.style.display = "none"; msg.textContent = "No se pudo generar."; }
   abrirModal("modalQR");
-};
+}
+document.getElementById("btnQR").onclick = ()=>{ abrirQR(); };
+document.getElementById("btnQRInicio").onclick = ()=>{ abrirQR(); };
 document.getElementById("btnQRNo").onclick = ()=>{ cerrarModal("modalQR"); };
 
 // ---------- comenzar ----------
@@ -1418,6 +1442,9 @@ async function abrirCfg(){
   ver("vistaConfig");
 }
 document.getElementById("btnCfg").onclick = ()=>{ abrirCfg(); };
+// El remate de abajo ("Personaliza tu experiencia en... ⚙️") lleva al engrane
+// de ESTA pantalla. Es lo mismo que apretar el engrane de arriba.
+document.getElementById("btnIrCfg").onclick = ()=>{ abrirCfg(); };
 
 // ---------- navegación ----------
 function ver(id, guardar){
@@ -1483,8 +1510,8 @@ setInterval(()=>{
   try{ escucharGrupo(); }catch(e){}
   try{ await entrar(); }
   catch(e){
-    try{ console.error("Opciones arranque:", e); }catch(x){}
-    try{ if(!esInvitadoFlag){ await cargarOpciones(); pintarInicio(); ver("vistaInicio", false); } else { ver("vistaEspera", false); } }catch(x){}
+      try{ console.error("Opciones arranque:", e); }catch(x){}
+      try{ if(!esInvitadoFlag){ pintarInicio(); ver("vistaInicio", false); } else { ver("vistaEspera", false); } }catch(x){}
     try{ escucharSesion(); }catch(x){}
   }
 })();

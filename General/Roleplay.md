@@ -1774,6 +1774,22 @@ demostró que **cuando hay contenido, la lista del invitado se pinta bien y solo
 con su lado**. Lo que no se puede probar desde aquí es que el invitado **lea** su
 base (eso necesita tu Firebase y dos celulares).
 
+### 5. El invitado se salía de la pantalla de selección
+
+**Lo reportó Fredy:** estando el invitado en la selección, si aprieta el **botón
+de regresar del celular** cae en la pantalla de espera (la del botón "Volver a
+revisar"). **No debería moverse de ahí**, igual que cuando la partida ya empezó.
+
+**El arreglo, en dos partes:**
+
+| | |
+|---|---|
+| El botón "atrás" del celular | `popstate` ahora **bloquea** también cuando está encendida la pantalla de **selección** (antes solo bloqueaba durante el juego y en el caso del invitado agregado a media partida) |
+| El "‹ Volver" de esa pantalla | Se le **oculta al invitado** (`esInvitadoFlag`), igual que el "← Volver" de arriba. Los demás sí lo ven, para poder cancelar la selección |
+
+Así el invitado queda **encerrado** en la selección (regla de la casa: el
+invitado no tiene salida), y el anfitrión conserva su manera de salir.
+
 
 
 

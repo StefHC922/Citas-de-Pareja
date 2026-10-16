@@ -1953,6 +1953,9 @@ function pintarSeleccion(){
   // es quien inició: los demás no tienen nada que apretar aqui.
   const btn = document.getElementById("btnSelJugar");
   btn.style.display = (selTodosListos() && selSoyHost) ? "block" : "none";
+  // El INVITADO no tiene salida (regla de la casa): no se le muestra el "‹ Volver".
+  // Los demás sí lo ven, para poder cancelar la selección.
+  try{ document.getElementById("btnSelVolver").style.display = esInvitadoFlag ? "none" : ""; }catch(e){}
 }
 async function cambiarMarca(cab, idPersonaje, marcado){
   const actual = selMarcosDe(cab.id).slice();
@@ -2752,7 +2755,11 @@ window.addEventListener("popstate", ()=>{
   if(reponiendo){ reponiendo = false; return; }
   const enJuego = jugando && document.getElementById("vistaPlayer").classList.contains("ver");
   if(enJuego){ reponiendo = true; try{ history.go(1); }catch(e){ reponiendo = false; } return; }
-  if(selEsAgregado){ reponiendo = true; try{ history.go(1); }catch(e){ reponiendo = false; } return; }
+  // En la pantalla de SELECCIÓN tampoco se sale con el botón del celular: es un
+  // paso de la partida que está armándose. Se bloquea igual que durante el
+  // juego; para salir está el "‹ Volver" de la pantalla (que el invitado no ve).
+  const enSeleccion = document.getElementById("vistaSeleccion").classList.contains("ver");
+  if(enSeleccion || selEsAgregado){ reponiendo = true; try{ history.go(1); }catch(e){ reponiendo = false; } return; }
   ver(vistaDeInicio(), false);
 });
 try{ history.replaceState({ v: "vistaInicio" }, ""); }catch(e){}

@@ -27,6 +27,10 @@ targets = [
     ("Retos/centro.html", "centro"),
     ("Diablitos/index.html", "diablitos"),
     ("Roles/index.html", "roles"),
+    # Opciones/ se agrego en oct-2026: no estaba y por eso NUNCA se revisaba de
+    # sintaxis (el plan de Roles ya lo tenia anotado como pendiente). Se agrego
+    # al tocarlo para meterle el QR y el remate del engrane.
+    ("Opciones/index.html", "opciones"),
 ]
 
 pat = re.compile(r'<script([^>]*)>(.*?)</script>', re.S | re.I)

@@ -1287,6 +1287,19 @@ secciones del Centro, y de ahí se entra a ver todo el catálogo.
     y **Multijugador**, en el mismo renglón— y una caja **Especial** abajo de todo
     con el interruptor "Ponle un toque personal a tu juego". El detalle del modelo y de las tres
     colecciones está en **`General/Modelo-Datos.md`**, sección **1b**.
+- **El QR y el remate del engrane, en la pantalla de inicio (oct-2026):** en
+  **`Roles/` y en `Opciones/`** la pantalla de inicio ahora trae, abajo de todo,
+  un botón **"QR Invita a Alguien"** y el remate **"Personaliza tu experiencia
+  en... ⚙️"** (que **abre el engrane de esa misma pantalla**). Sirve para
+  registrar invitados **sin tener que entrar a la partida**. El QR es **una sola
+  función** (`abrirQR()`), la usan el botón de adentro del juego y el del inicio:
+  no está copiada. **"Agregar invitado" NO se puso ahí**: en el inicio todavía no
+  hay partida, y los invitados ya registrados entran solos.
+- **Y `Opciones/` tenía el mismo defecto del blanco (oct-2026):** esperaba a
+  Firebase **antes** de pintar (`await cargarOpciones()`), así que la pantalla se
+  quedaba vacía mientras cargaba. Se le aplicó el **mismo arreglo que a `Roles/`**:
+  primero se pinta, después se carga, y se refresca sola. **`Opciones/` se agregó
+  a `extract.py`** (no estaba: nunca se revisaba de sintaxis).
 - **Quién puede iniciar partida (Encuentros y Elecciones Peligrosas, oct-2026):**
   la pantalla de inicio la ve **cualquier usuario que no sea invitado** (el
   administrador **y** la pareja), cada quien con su **propia identidad**. Antes
