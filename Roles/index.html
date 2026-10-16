@@ -277,7 +277,7 @@
        No es un modo: se prende encima de cualquiera de los tres. -->
   <div class="caja">
     <div class="cajaTitulo">Especial</div>
-    <label class="opModo" style="margin-top:10px;">
+    <label class="opModo" style="margin-top:10px; justify-content:center;">
       <input type="checkbox" id="chkEspecial">
       <span>Ponle un toque personal a tu juego</span>
     </label>
@@ -288,14 +288,15 @@
     </div>
     <div id="espAviso" style="font-size:.78rem;color:var(--coral);margin-top:10px;"></div>
   </div>
-  <!-- Remate de la pantalla. El degradado va SOLO en el texto: el icono se pone
-       aparte, porque con background-clip:text el emoji tambien sale transparente. -->
-  <div style="text-align:center; margin-top:16px; font-size:.8rem;">
+  <!-- Remate de la pantalla. Es un BOTON (no un enlace): al tocarlo abre el
+       engrane de esta misma pantalla. El degradado va SOLO en el texto, porque
+       con background-clip:text el emoji tambien sale transparente. -->
+  <button class="btnSec" id="btnIrCfg" type="button" style="margin-top:16px; font-size:.8rem; text-decoration:none; padding:6px;">
     <span style="display:inline-block; font-family:'Chakra Petch',sans-serif; font-weight:600;
       background:linear-gradient(90deg, var(--coral), var(--teal)); -webkit-background-clip:text;
       background-clip:text; color:transparent;">Personaliza tu experiencia en...</span>
     <span>⚙️</span>
-  </div>
+  </button>
 </div>
 
 <!-- ============ SELECCIÓN DE TARJETAS (modo "seleccionar") ============ -->
@@ -854,6 +855,9 @@ function pintarModo(){
 document.getElementById("tabNormal").onclick = ()=>{ modoBaseCfg = MODO_NORMAL; pintarModo(); };
 document.getElementById("tabEspejo").onclick = ()=>{ modoBaseCfg = MODO_ESPEJO; pintarModo(); };
 document.getElementById("tabSeleccionar").onclick = ()=>{ modoBaseCfg = MODO_SELECCIONAR; pintarModo(); };
+// El remate de abajo ("Personaliza tu experiencia en... ⚙️") lleva al engrane
+// de ESTA pantalla. Es lo mismo que apretar el engrane de arriba.
+document.getElementById("btnIrCfg").onclick = ()=>{ abrirCfg(); };
 // Botones de modo: cada uno abre su ventana y de ahi arranca la partida.
 let modoPendiente = "multi";
 // "Jugar solo" se queda EN DESARROLLO (decisión de Fredy): avisa y no arranca.

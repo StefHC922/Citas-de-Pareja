@@ -111,6 +111,29 @@ se atora, **dilo de inmediato** y di qué harás en su lugar.
 **Prefiere menos pruebas y más rápido** antes que una prueba atascada. El valor de
 probarla no justifica el rato perdido.
 
+## Que las pruebas no se coman la sesión (regla dura, oct-2026)
+
+**El trabajo es escribir código, no probarlo.** Ya pasó una vez: se acumularon
+arneses y scripts de prueba, cada cambio disparaba corridas largas, y las
+sesiones se acababan en pruebas en vez de en avance. Se borraron (ver la nota al
+inicio de `GUIA.md`). **Que no vuelva a pasar:**
+
+- **No se deja NINGÚN arnés en el repo.** Ni scripts, ni carpetas, ni páginas de
+  prueba. Lo de probar vive en `Temp\opencode` y se borra al terminar. Si de
+  verdad tiene que ir dentro del repo (porque sus `import` son relativos), se
+  crea, se usa y **se borra en la misma sesión**, y se avisa.
+- **La única prueba automática es `revisar.py`.** Tarda un segundo: se corre
+  después de cada cambio, siempre.
+- **Una sola inspección visual por cambio, y solo si el aspecto importa** (un
+  diseño nuevo, algo que se ve raro). Nunca para comprobar un texto.
+- **No se repite una prueba que ya falló.** Dos intentos por forma de probar y se
+  suelta: se anota como pendiente y se sigue (ya lo dice la sección de arriba).
+- **Si un tema se vuelve caro de comprobar, se avisa ANTES de gastar**, no
+  después.
+- **Lo que solo se puede ver en el celular de Fredy o en su base real, se le pasa
+  a él de una vez**, diciendo qué mirar y por qué. No se simula, y no se le manda
+  una lista larga de tareas.
+
 ## Reglas de la casa
 
 1. Si la decision es de producto (que se ve, quien puede salir, que pasa al
