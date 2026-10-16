@@ -1746,6 +1746,34 @@ todos los usuarios). O sea, ese botón no tendría nada que hacer; **Fredy estuv
 de acuerdo**. Se queda dentro de la partida, que es donde sí sirve: meter a
 alguien que llegó tarde.
 
+### 4. La lista del invitado salía VACÍA
+
+**Lo reportó Fredy:** la invitación ya le llega al invitado y entra, pero **la
+lista para escoger sale vacía** ("No hay nada en esta lista. Configúralo en el
+engrane ⚙️").
+
+**La causa:** en `entrar()`, la carga del contenido (`cargarPersonajes()`) estaba
+**solo en la rama de los que NO son invitados**. El invitado entra directo a la
+sala y **nunca leía `personajesJuego/actual`**, así que su `personajes` estaba
+vacío y la lista no tenía nada que pintar.
+
+> Ojo: **el criterio del lado sí estaba bien.** El lado del invitado sale de
+> `cab.lado`, que el anfitrión escribe según quién lo invitó (`conQuien`). El
+> problema era solo que no había contenido que mostrar.
+
+**El arreglo, en tres partes:**
+
+| | |
+|---|---|
+| El invitado también carga el contenido | `entrar()` ahora llama `cargarPersonajes()` en la rama del invitado |
+| Y no se dibuja la selección sin contenido | `asegurarPersonajes()`: se espera a que esté cargado antes de `pintarSeleccion()`, en las tres entradas a la selección (aceptar la invitación, el invitado agregado a media partida, y la rama de "elegir") |
+| La bandera `contenidoListo` | Evita volver a leer lo mismo. Si la primera lectura falla, se reintenta |
+
+**Verificado hasta donde se puede sin tu base:** la captura de la sección 24 ya
+demostró que **cuando hay contenido, la lista del invitado se pinta bien y solo
+con su lado**. Lo que no se puede probar desde aquí es que el invitado **lea** su
+base (eso necesita tu Firebase y dos celulares).
+
 
 
 

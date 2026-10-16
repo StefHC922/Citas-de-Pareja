@@ -692,6 +692,12 @@ let idSiguiente = 1;
 
 function listaSegura(k){ return Array.isArray(personajes[k]) ? personajes[k] : []; }
 
+// ¿Ya se leyeron los personajes de la base? El invitado tambien los necesita:
+// sin esto, su pantalla de seleccion salia VACIA ("No hay nada en esta lista"),
+// porque la carga vivia solo en la rama de los que no son invitados. Lo
+// reporto Fredy.
+let contenidoListo = false;
+
 async function cargarPersonajes(){
   try{
     const sd = await getDoc(personajesRef());
@@ -705,7 +711,14 @@ async function cargarPersonajes(){
       });
       idSiguiente = max + 1;
     }
+    contenidoListo = true;
   }catch(e){}
+}
+// Se asegura de que el contenido este cargado antes de dibujar algo que dependa
+// de el (la pantalla de seleccion, sobre todo).
+async function asegurarPersonajes(){
+  if(contenidoListo) return;
+  await cargarPersonajes();
 }
 async function guardarPersonajes(){
   try{
@@ -817,6 +830,9 @@ async function entrar(){
     }else{
       ver("vistaEspera", false);
       chequearPartidaEspera();
+      // El invitado TAMBIEN necesita el contenido: si le toca escoger tarjetas
+      // (seleccion), la lista sale de aqui.
+      cargarPersonajes();
     }
     try{ escucharSesion(); }catch(e){}
     try{ escucharSeleccion(); }catch(e){}
@@ -2041,7 +2057,7 @@ async function arrancarSeleccion(){
 function escucharSeleccion(){
   if(selUnsub) return;
   try{
-    selUnsub = onSnapshot(seleccionRef(), (snap)=>{
+    selUnsub = onSnapshot(seleccionRef(), async (snap)=>{
       try{
         const d = snap.exists() ? snap.data() : null;
         if(!d || !d.activa){
@@ -2079,6 +2095,7 @@ function escucharSeleccion(){
             selR = a.necesidad || 1;
             selTab = 0;
             selCabezas = [{ id: a.id, nombre: a.nombre || "Invitado", lado: a.lado || "B", invitado: true }];
+            await asegurarPersonajes();   // sin esto, la lista salia vacia
             pintarSeleccion();
             if(!document.getElementById("vistaSeleccion").classList.contains("ver")) ver("vistaSeleccion");
           }else if(meterInv && a.id === meterInv.id){
@@ -2115,6 +2132,7 @@ function escucharSeleccion(){
         // Solo se cambia de vista si el usuario no esta en otra parte.
         const v = document.querySelector(".vista.ver");
         const vId = v ? v.id : "";
+        await asegurarPersonajes();   // la lista sale de aqui
         pintarSeleccion();
         if(vId === "vistaInicio" || vId === "vistaEspera" || vId === "vistaSeleccion") ver("vistaSeleccion");
       }catch(e){}
@@ -2207,7 +2225,7 @@ function entrarAlJuego(d){
   mostrarBotonesAdmin();
   pintarPaso();
 }
-document.getElementById("btnUnirme").onclick = ()=>{
+document.getElementById("btnUnirme").onclick = async ()=>{
   const d = sesionActual;
   cerrarModal("modalUnir");
   // Si la ventana era la de la SELECCIÓN (no la de una partida), se entra a
@@ -2217,6 +2235,7 @@ document.getElementById("btnUnirme").onclick = ()=>{
     if(selDoc && selDoc.sid) selSidAceptado = selDoc.sid;
     // Ya acepté: cuando la partida arranque, entro directo (sin preguntar otra vez).
     selYaEntre = true;
+    await asegurarPersonajes();   // sin esto, la lista salia vacia
     pintarSeleccion();
     ver("vistaSeleccion");
     return;
