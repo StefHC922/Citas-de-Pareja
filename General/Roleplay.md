@@ -1387,5 +1387,86 @@ errores de lógica, de nombres y de conexiones, pero **no** puede ver si algo se
 ve bien, si un botón responde al dedo, ni si Firestore acepta la escritura. Eso
 es la sección 19.
 
+---
+
+## 22. Primer hallazgo de la prueba en vivo (oct-2026)
+
+> **Lo reportó Fredy en su primera prueba:** *"cuando entro a Juego de Roles no me
+> despliega nada en pantalla y el botón engrane no funciona; oprimí Volver y ya
+> desplegó la pantalla"*. **Ya está corregido.**
+
+### Qué pasaba
+
+`entrar()` hacía, en este orden:
+
+```
+await cargarPersonajes();   ← llama a Firebase y ESPERA
+pintarInicio();
+ver("vistaInicio");         ← hasta aquí, la pantalla estaba EN BLANCO
+```
+
+**La pantalla no se pintaba hasta que Firebase contestaba.** En el celular, la
+primera conexión tarda unos segundos, así que se veía el vacío y parecía que
+nada servía.
+
+Y el engrane pasaba lo mismo: `abrirCfg()` también hacía
+`await cargarPersonajes()` antes de pintar. Entonces pasaba esto:
+
+1. Abres el juego: pantalla en blanco, esperando a Firebase.
+2. Tocas el engrane: `abrirCfg()` también se pone a esperar.
+3. Las dos esperas terminan **casi al mismo tiempo**: se abre el engrane, y un
+   instante después `entrar()` remata con `ver("vistaInicio")` y **te saca del
+   engrane**. Por eso parecía que el engrane no servía.
+4. Si vuelves a tocar el engrane, ya funciona (Firebase ya contestó).
+
+### El arreglo (y es una regla, no un parche)
+
+**Primero se pinta, después se carga.** Se invirtió el orden en los tres
+lugares: `entrar()`, la cortesía, y `abrirCfg()`. El contenido se carga **en
+paralelo** y la pantalla se refresca sola en cuanto llega:
+
+```js
+pintarInicio();
+ver("vistaInicio", false);                                   // ya se ve
+cargarPersonajes().then(()=>{ try{ pintarInicio(); }catch(e){} });   // refresca
+```
+
+**Regla que sale de aquí, y aplica a cualquier pantalla nueva:**
+> **Nunca se espera a Firebase para pintar.** Si la pantalla depende de una
+> lectura, se pinta primero con lo que haya en memoria y se refresca cuando
+> llegue. Esperar deja al usuario viendo la nada, y peor: si toca algo mientras
+> tanto, el `ver()` que llega tarde le tira encima la pantalla y cree que su
+> botón no sirve.
+
+### Y una red de seguridad
+
+Al final del arranque se agregó:
+
+```js
+// Pase lo que pase, NUNCA se deja la pantalla en blanco.
+if(!document.querySelector(".vista.ver")){
+  document.getElementById(vistaDeInicio()).classList.add("ver");
+}
+```
+
+Si algo falla, **se ve una pantalla** (y entonces se puede abrir la consola y
+leer el error) en vez de nada. Un error con pantalla en blanco es casi imposible
+de diagnosticar.
+
+### Lo que NO se pudo hacer para diagnosticar esto
+
+Se intentó **3 veces** sacar el error con Chrome y Edge sin ventana (`--dump-dom`),
+sirviendo el repo por HTTP: **las 3 devolvieron vacío**. Es exactamente lo que
+avisa `GUIA.md` de por qué se retiró el arnés de Chrome. Ahí se paró, como manda
+la regla de la casa. Por eso el arreglo salió de **leer el código**, no de un
+volcado.
+
+### Pendiente de confirmar
+
+- Que ya **no** se quede en blanco y que el engrane abra **a la primera**.
+- Si volviera a pasar, hay que abrir la consola del navegador (F12 → Console) y
+  leer el error: eso dice la causa exacta, y el código ya no lo esconde.
+
+
 
 

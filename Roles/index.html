@@ -783,9 +783,13 @@ async function entrar(){
     // por su cuenta, como el administrador. El invitado sigue esperando.
     if(!esInvitadoFlag){
       if(esAdminFlag && modoLocal){ try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){} }
-      await cargarPersonajes();
+      // PRIMERO se pinta, DESPUES se carga el contenido. Al reves (como estaba)
+      // la pantalla se quedaba en BLANCO todo el rato que tardara Firebase, y
+      // parecia que no habia cargado nada. Lo reporto Fredy en la primera
+      // prueba en vivo; el contenido se refresca solo en cuanto llega.
       pintarInicio();
       ver("vistaInicio", false);
+      cargarPersonajes().then(()=>{ try{ pintarInicio(); }catch(e){} }, ()=>{});
     }else{
       ver("vistaEspera", false);
       chequearPartidaEspera();
@@ -812,7 +816,11 @@ async function entrar(){
         });
         if(docGracia){
           try{ await setDoc(doc(tdb, "solicitudes", docGracia.id), { graciaUsada: true, graciaFecha: serverTimestamp() }, { merge: true }); }catch(e){}
-          if(!esInvitadoFlag){ await cargarPersonajes(); pintarInicio(); ver("vistaInicio", false); } else { ver("vistaEspera", false); }
+          if(!esInvitadoFlag){
+            pintarInicio();
+            ver("vistaInicio", false);
+            cargarPersonajes().then(()=>{ try{ pintarInicio(); }catch(e){} }, ()=>{});
+          } else { ver("vistaEspera", false); }
           mostrarGracia();
           return;
         }
@@ -2532,7 +2540,10 @@ document.getElementById("btnPjBorrar").onclick = ()=>{ borrarDetalle(); };
 document.getElementById("btnPjNo").onclick = ()=>{ cerrarDetalle(); };
 
 async function abrirCfg(){
-  await cargarPersonajes();
+  // Se pinta YA y despues se refresca. Al reves, el engrane se sentia "muerto"
+  // todo el rato que tardara Firebase en contestar (lo reporto Fredy, oct-2026).
+  // Al arrancar la app ya se cargó el contenido, asi que casi siempre la
+  // primera pintada ya sale completa.
   ladoCfg = esAdminFlag ? "1" : "2";
   subCfg = "U";
   enEspeciales = false;
@@ -2542,6 +2553,7 @@ async function abrirCfg(){
   document.getElementById("inpNueva").value = "";
   pintarCfg();
   ver("vistaConfig");
+  try{ await cargarPersonajes(); pintarCfg(); }catch(e){}
 }
 document.getElementById("btnCfg").onclick = ()=>{ abrirCfg(); };
 
@@ -2616,9 +2628,17 @@ setInterval(()=>{
   try{ await entrar(); }
   catch(e){
     try{ console.error("Roles arranque:", e); }catch(x){}
-    try{ if(!esInvitadoFlag){ await cargarPersonajes(); pintarInicio(); ver("vistaInicio", false); } else { ver("vistaEspera", false); } }catch(x){}
+    try{ if(!esInvitadoFlag){ pintarInicio(); ver("vistaInicio", false); } else { ver("vistaEspera", false); } }catch(x){}
     try{ escucharSesion(); }catch(x){}
   }
+  // Red de seguridad: pase lo que pase, NUNCA se deja la pantalla en blanco.
+  // Si algo fallo y ninguna vista quedo encendida, se enciende una. Asi, si hay
+  // un error, se ve una pantalla (y se puede leer la consola) en vez de nada.
+  try{
+    if(!document.querySelector(".vista.ver")){
+      document.getElementById(vistaDeInicio()).classList.add("ver");
+    }
+  }catch(x){}
 })();
 </script>
 
