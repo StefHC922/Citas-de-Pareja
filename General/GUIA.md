@@ -146,6 +146,7 @@ el módulo, es una sola vez.
 | `escucharItem(item, hooks)` | Escucha **un** item. `hooks.revocado()` / `hooks.aprobado()`. Devuelve la función para cancelar |
 | `escucharCatalogo(hooks)` | Revisa **todo** el catálogo. `hooks.cambio(licencias)` |
 | `graciasDisponibles()` | Mapa `"item\|email"` → `true` de cortesías sin usar |
+| `nuevosSinPedir(packs)` | Mapa `{idDelPack: true}` de lo que está **nuevo Y sin pedir**. Ver *El aviso de "nuevo"* |
 
 ##### Decisión de diseño: los nombres
 
@@ -1138,6 +1139,46 @@ cinco veces.
 "Invitar" del Chat y un reto de la IA.
 
 ---
+
+### El aviso de "nuevo" (oct-2026)
+
+**Dos lugares** avisan de que hay algo nuevo, y los dos usan **el mismo
+criterio**, que vive en **un solo lugar** (`acceso.js` → `nuevosSinPedir()`):
+
+| Dónde | Qué se ve |
+|---|---|
+| El **carrito** del menú principal (la 🛒 de arriba a la derecha) | Un **punto rojo** |
+| Las **secciones del Centro** (Experiencias / Juegos / Extras) | La pastilla **`NUEVO`** en la esquina de su botón |
+
+**Y el criterio son DOS condiciones juntas**, no una (decisión de Fredy):
+
+1. el pack trae **fecha "Nuevo" viva** (`nuevoHasta` > hoy, se pone en el Panel), **y**
+2. **todavía no se ha pedido**: no hay solicitud suya en estado `pendiente` ni
+   `aprobado`.
+
+Así que **el aviso se apaga** cuando falla cualquiera de las dos: si se vence la
+fecha (aunque no lo hayas pedido) o si ya lo pediste (aunque siga la fecha).
+Una solicitud **revocada o negada NO cuenta**: eso se puede volver a pedir, así
+que el aviso puede reaparecer.
+
+**Lo que NO se hace, a propósito:** no se meten fichas de lo que no tienes dentro
+de los submenús del menú (Experiencias / Juegos / Retos). Se probó y se descartó:
+llenaría los submenús de cosas ajenas. **Los submenús siguen mostrando solo lo
+que ya tienes**; lo nuevo sin pedir se ve **solo** en el carrito y en las
+secciones del Centro, y de ahí se entra a ver todo el catálogo.
+
+#### Notas de implementación
+
+- El **criterio vive en `acceso.js`**, no copiado en cada página: lo importan
+  `index.html` (el menú) y `Tienda/index.html` (el Centro). Si algún día cambia,
+  **se cambia en un solo lado**.
+- El punto del carrito lo pone `renderPacksDeVerdad()` (en `index.html`), y la
+  pastilla de las secciones la pone `marcarSecNuevas()` (en `Tienda/index.html`).
+- Los dos nacen **apagados**: el punto es una clase (`conNuevo`) y la pastilla se
+  crea con JavaScript. Nada se ve si no hay algo nuevo.
+- **Pendiente de probar en vivo:** el punto rojo del carrito no se pudo ver desde
+  el entorno (el menú no se dibuja sin una configuración real). La pastilla de
+  las secciones **sí** se comprobó con una captura.
 
 ### Notas de mantenimiento
 

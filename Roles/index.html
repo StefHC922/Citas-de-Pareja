@@ -236,7 +236,7 @@
 <a class="back" id="lnkInicio" href="../index.html#juegos">← Volver</a>
 <button id="btnCfg" aria-label="Configurar">⚙️</button>
 
-<div class="eyebrow">Cada quien su personaje</div>
+<div class="eyebrow">SE ALGUIEN MAS...</div>
 
 <!-- ============ BLOQUEO (sin acceso) ============ -->
 <div class="vista" id="vistaBloqueo">
@@ -253,9 +253,9 @@
 <!-- ============ INICIO (admin prepara) ============ -->
 <div class="vista" id="vistaInicio">
   <h1>Juego de Roles</h1>
-  <p class="desc">Cada quien recibe sus personajes</p>
+  <p class="desc">Diviértete más</p>
   <div class="caja">
-    <div class="cajaTitulo">¿Quiénes juegan?</div>
+    <div class="cajaTitulo">¿Cómo vas a jugar hoy?</div>
     <button class="btnPri" id="btnSolo" style="margin-top:10px;">Jugar solo</button>
     <button class="btnPri" id="btnPareja">Jugar con Pareja</button>
     <button class="btnPri" id="btnMulti" style="margin-bottom:0;">Multijugador</button>
@@ -279,14 +279,22 @@
     <div class="cajaTitulo">Especial</div>
     <label class="opModo" style="margin-top:10px;">
       <input type="checkbox" id="chkEspecial">
-      <span>Sacar una variante especial en algunas rondas</span>
+      <span>Ponle un toque personal a tu juego</span>
     </label>
     <div id="cajaEspecial" style="display:none; margin-top:10px;">
       <div class="cajaTitulo" style="font-size:.7rem;margin-bottom:4px;">¿Cuántas veces?</div>
       <input type="number" id="inpEspecial" class="rondasInput" min="1" max="50" value="1" inputmode="numeric">
-      <div id="espNota" style="font-size:.72rem;color:var(--fg-muted);margin-top:8px;"></div>
+      <div id="espNota" style="font-size:.72rem;color:var(--fg-muted);margin-top:8px;text-align:center;"></div>
     </div>
     <div id="espAviso" style="font-size:.78rem;color:var(--coral);margin-top:10px;"></div>
+  </div>
+  <!-- Remate de la pantalla. El degradado va SOLO en el texto: el icono se pone
+       aparte, porque con background-clip:text el emoji tambien sale transparente. -->
+  <div style="text-align:center; margin-top:16px; font-size:.8rem;">
+    <span style="display:inline-block; font-family:'Chakra Petch',sans-serif; font-weight:600;
+      background:linear-gradient(90deg, var(--coral), var(--teal)); -webkit-background-clip:text;
+      background-clip:text; color:transparent;">Personaliza tu experiencia en...</span>
+    <span>⚙️</span>
   </div>
 </div>
 
@@ -368,18 +376,19 @@
 <div class="vista" id="vistaConfig">
   <h1>Configurar</h1>
   <p class="desc" id="descCfg">Tus personajes y sus contrapartes.</p>
-  <div class="tabs">
-    <button class="tab" id="tabLado">Personajes</button>
-    <button class="tab" id="tabEsp">Especiales</button>
-  </div>
-  <!-- El administrador ve los dos lados (para dejar todo listo desde un solo
-       celular). Los demás usuarios del grupo ven solo el suyo. -->
-  <div id="cajaCambiarLado" style="display:none; margin-top:8px;">
-    <button class="btnSec" id="btnCambiarLado">Ver los del otro</button>
+  <!-- Arriba: una pestaña por usuario. El administrador ve las dos (y con eso
+       cambia de lado); los demás usuarios del grupo solo ven la suya. -->
+  <div class="tabs" id="tabsLado">
+    <button class="tab" id="tabLado1">Usuario 1</button>
+    <button class="tab" id="tabLado2" style="display:none">Usuario 2</button>
   </div>
   <div class="tabs" id="subTabs" style="display:none; margin-top:10px;">
     <button class="tab" id="subU">Personajes</button>
     <button class="tab" id="subC">Contrapartes</button>
+  </div>
+  <!-- Especiales va aparte y centrado: es COMUN a los dos, no es un lado. -->
+  <div style="width:100%; margin-top:10px; text-align:center;">
+    <button class="tab" id="tabEsp" style="width:auto; padding-left:22px; padding-right:22px;">Especiales</button>
   </div>
   <input class="buscar" id="buscarOpt" type="text" placeholder="🔍 Buscar personaje..." autocomplete="off" style="margin-top:12px;">
   <div class="tablaBox" id="tablaBox"></div>
@@ -698,7 +707,7 @@ const MODO_ESPEJO = "espejo";
 const MODO_SELECCIONAR = "seleccionar";
 let modoBaseCfg = MODO_NORMAL;
 const DESC_MODO = {
-  "normal": "Cada quien juega con los personajes de su propia lista.",
+  "normal": "",
   "espejo": "Cada quien juega con la contraparte de su propio personaje.",
   "seleccionar": "Cada quien escoge a mano las tarjetas con las que quiere jugar."
 };
@@ -2298,15 +2307,19 @@ function filaPersonaje(i, p, clave){
 }
 function pintarCfg(){
   const clave = claveCfg();
-  document.getElementById("tabLado").textContent = nombreDeLado(miLado());
-  document.getElementById("tabLado").classList.toggle("activo", !enEspeciales);
+  // Las dos pestañas de arriba son los usuarios. El administrador ve las dos (y
+  // con eso cambia de lado); los demás usuarios del grupo solo la suya.
+  const puede = puedeVerOtroLado();
+  const b1 = document.getElementById("tabLado1");
+  const b2 = document.getElementById("tabLado2");
+  b1.textContent = nombreDeLado("1");
+  b2.textContent = nombreDeLado("2");
+  b1.style.display = (puede || miLado() === "1") ? "" : "none";
+  b2.style.display = (puede || miLado() === "2") ? "" : "none";
+  b1.classList.toggle("activo", !enEspeciales && miLado() === "1");
+  b2.classList.toggle("activo", !enEspeciales && miLado() === "2");
   document.getElementById("tabEsp").classList.toggle("activo", enEspeciales);
 
-  const puede = puedeVerOtroLado();
-  document.getElementById("cajaCambiarLado").style.display = (!enEspeciales && puede) ? "block" : "none";
-  if(!enEspeciales && puede){
-    document.getElementById("btnCambiarLado").textContent = "Ver los de " + nombreDeLado(miLado() === "1" ? "2" : "1");
-  }
   document.getElementById("subTabs").style.display = enEspeciales ? "none" : "flex";
   document.getElementById("subU").classList.toggle("activo", !enEspeciales && subCfg === "U");
   document.getElementById("subC").classList.toggle("activo", !enEspeciales && subCfg === "C");
@@ -2522,11 +2535,11 @@ async function pegarLista(){
 }
 
 // ---------- eventos del engrane ----------
-document.getElementById("tabLado").onclick = ()=>{ enEspeciales = false; limpiarFiltro(); pintarCfg(); };
+document.getElementById("tabLado1").onclick = ()=>{ ladoCfg = "1"; enEspeciales = false; limpiarFiltro(); pintarCfg(); };
+document.getElementById("tabLado2").onclick = ()=>{ ladoCfg = "2"; enEspeciales = false; limpiarFiltro(); pintarCfg(); };
 document.getElementById("tabEsp").onclick = ()=>{ enEspeciales = true; limpiarFiltro(); pintarCfg(); };
 document.getElementById("subU").onclick = ()=>{ subCfg = "U"; limpiarFiltro(); pintarCfg(); };
 document.getElementById("subC").onclick = ()=>{ subCfg = "C"; limpiarFiltro(); pintarCfg(); };
-document.getElementById("btnCambiarLado").onclick = ()=>{ ladoCfg = (miLado() === "1") ? "2" : "1"; limpiarFiltro(); pintarCfg(); };
 document.getElementById("buscarOpt").addEventListener("input", (e)=>{ filtroCfg = e.target.value; pintarCfg(); });
 document.getElementById("btnAdd").onclick = ()=>{ agregarDesdeInput(); };
 document.getElementById("inpNueva").addEventListener("keydown", (e)=>{ if(e.key === "Enter") agregarDesdeInput(); });

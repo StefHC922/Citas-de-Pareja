@@ -78,6 +78,12 @@
     padding:8px 10px; border-radius:12px;
   }
   .menu-btn:active{ color: var(--fg); background: var(--card); }
+  /* Punto rojo del carrito: adentro hay algo NUEVO que todavía no pides.
+     El "conNuevo" lo pone renderPacksDeVerdad(). */
+  .menu-btn.conNuevo::after{
+    content:""; position:absolute; top:2px; right:2px; width:10px; height:10px;
+    border-radius:50%; background:var(--rojo); box-shadow:0 0 0 2px var(--bg);
+  }
   /* ---------- identidad ---------- */
   #pantallaUsuario{ display:none; width:100%; max-width:380px; flex-direction:column; align-items:center; text-align:center; }
   #pantallaUsuario h1{ margin-bottom:10px; }
@@ -443,7 +449,7 @@ import {
   resolverFirebase, guardarUsuariosLocal, leerUsuariosLocal, cargarUsuarios
 } from "./config.js";
 // Lógica de licencias compartida con el resto de la app (ver acceso.js).
-import { miProyecto, appTaq, leerLicencias, graciasDisponibles, escucharCatalogo } from "./acceso.js";
+import { miProyecto, appTaq, leerLicencias, graciasDisponibles, escucharCatalogo, nuevosSinPedir } from "./acceso.js";
 import { confirmar } from "./confirmar.js";
 // Chorro de pegamento: cae en el submenú de Experiencias si alguien se queda
 // mirando la pantalla sin hacer nada. Va en su propio modulo (y no metido en el
@@ -753,6 +759,12 @@ async function renderPacksDeVerdad(){
   }
   if(juegos) btnJ.style.display = "";
   if(retos) btnX.style.display = "";
+  // Punto rojo en el carrito: avisa que adentro hay algo NUEVO sin pedir
+  // (fecha "Nuevo" viva Y sin solicitud). El criterio vive en acceso.js.
+  try{
+    const nuevos = await nuevosSinPedir(packs);
+    document.getElementById("menuBtn").classList.toggle("conNuevo", Object.keys(nuevos).length > 0);
+  }catch(e){}
 }
 // Quita del menú en ese momento si revocan. La escucha vive en acceso.js;
 // aquí solo se redibuja el menú cuando cambian los códigos.
