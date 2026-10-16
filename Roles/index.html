@@ -2325,27 +2325,74 @@ function idLibre(id){
 }
 
 // ---------- pegar lista completa ----------
-// Acepta un arreglo JSON de objetos (los 8 campos) o texto, uno por línea.
+// Lee el texto pegado como JSON, siendo TOLERANTE con las dos formas en que de
+// verdad se copia:
+//   · tal cual (arreglo u objeto),
+//   · un PEDAZO de arreglo, sin los corchetes: "{...}, {...}," (esto fue lo que
+//     le paso a Fredy: cada renglon entro como un personaje),
+//   · un arreglo al que le sobra la ULTIMA coma: "[{...},{...},]".
+// Devuelve null si no se pudo leer como JSON.
+function leerJSONPegado(t){
+  try{ return JSON.parse(t); }catch(e){}
+  // 2) Comillas "tipograficas" (" " y ' ') en vez de rectas. Es lo que pasa al
+  //    escribir el JSON en una app de notas o de mensajes, y es la causa mas
+  //    comun de un JSON que "se ve bien" y no se puede leer.
+  let q = t.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+  if(q !== t){ try{ return JSON.parse(q); }catch(e){} }
+  const sinComa = q.replace(/,\s*$/, "");
+  if(q[0] === "{"){                                   // pedazo de arreglo
+    try{ return JSON.parse("[" + sinComa + "]"); }catch(e){}
+  }
+  if(q[0] === "["){                                   // arreglo con coma de mas
+    try{ return JSON.parse(q.replace(/,\s*\]\s*$/, "]")); }catch(e){}
+  }
+  return null;
+}
+// Acepta: un arreglo JSON de objetos (los 8 campos) o de textos, un solo objeto,
+// un objeto que traiga el arreglo adentro (ej. {"U1":[...]}), o texto, uno por
+// linea.
+// OJO (arreglado oct-2026): si EMPIEZA como JSON y esta MAL escrito, NO se cae a
+// "un renglon por personaje" en silencio. Se avisa y no se pega nada. Devuelve
+// `null` cuando el JSON estaba mal, para que quien llama no vuelva a avisar.
 function parsePegadoPersonajes(texto){
   const t = String(texto || "").trim();
   if(!t) return [];
-  if(t[0] === "["){
-    try{
-      const d = JSON.parse(t);
-      if(Array.isArray(d)) return d;
-    }catch(e){}
+  if(t[0] === "[" || t[0] === "{"){
+    const d = leerJSONPegado(t);
+    if(d === null){
+      aviso("El JSON está mal escrito y no se pudo leer, así que no se agregó nada. Revisa comas y comillas.");
+      return null;
+    }
+    if(Array.isArray(d)) return d;
+    if(typeof d === "object"){
+      // Un objeto con UN arreglo adentro (ej. {"U1":[...]}): se usa ese arreglo.
+      const conArreglo = Object.keys(d).filter(k=> Array.isArray(d[k]));
+      if(conArreglo.length === 1) return d[conArreglo[0]];
+      return [d];   // es un solo personaje
+    }
+    aviso("Lo que pegaste no es una lista de personajes.");
+    return null;
   }
   return sinDuplicados(t.split(/\r?\n/)).map(s=>({ personaje: s }));
 }
-// En Especiales acepta cadenas (una por línea) u objetos {texto}.
+// En Especiales acepta cadenas (una por linea) u objetos {texto}. Mismo cuidado:
+// si empieza como JSON y esta mal, se avisa y no se pega nada.
 function parsePegadoTextos(texto){
   const t = String(texto || "").trim();
   if(!t) return [];
-  if(t[0] === "["){
-    try{
-      const d = JSON.parse(t);
-      if(Array.isArray(d)) return sinDuplicados(d.map(x=> (x && typeof x === "object") ? (x.texto || "") : x));
-    }catch(e){}
+  if(t[0] === "[" || t[0] === "{"){
+    const d = leerJSONPegado(t);
+    if(d === null){
+      aviso("El JSON está mal escrito y no se pudo leer, así que no se agregó nada. Revisa comas y comillas.");
+      return null;
+    }
+    if(Array.isArray(d)) return sinDuplicados(d.map(x=> (x && typeof x === "object") ? (x.texto || "") : x));
+    if(typeof d === "object"){
+      const conArreglo = Object.keys(d).filter(k=> Array.isArray(d[k]));
+      if(conArreglo.length === 1) return sinDuplicados(d[conArreglo[0]].map(x=> (x && typeof x === "object") ? (x.texto || "") : x));
+      return [String(d.texto || "")];
+    }
+    return null;
   }
   return sinDuplicados(t.split(/\r?\n/));
 }
@@ -2669,6 +2716,7 @@ async function pegarLista(){
   const ta = document.getElementById("pegarTa");
   if(enEspeciales){
     const textos = parsePegadoTextos(ta.value);
+    if(textos === null) return;   // el JSON estaba mal: ya se avisó
     if(!textos.length){ aviso("No se encontró ninguna variante."); return; }
     if(!Array.isArray(personajes.ESP)) personajes.ESP = [];
     let n = 0;
@@ -2686,6 +2734,7 @@ async function pegarLista(){
   }
   const clave = claveCfg();
   const crudos = parsePegadoPersonajes(ta.value);
+  if(crudos === null) return;   // el JSON estaba mal: ya se avisó
   if(!crudos.length){ aviso("No se encontró ningún personaje."); return; }
   if(!Array.isArray(personajes[clave])) personajes[clave] = [];
   let n = 0;

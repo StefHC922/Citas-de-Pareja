@@ -1287,6 +1287,54 @@ secciones del Centro, y de ahí se entra a ver todo el catálogo.
     y **Multijugador**, en el mismo renglón— y una caja **Especial** abajo de todo
     con el interruptor "Ponle un toque personal a tu juego". El detalle del modelo y de las tres
     colecciones está en **`General/Modelo-Datos.md`**, sección **1b**.
+  **Reglas que salieron de las pruebas en vivo (oct-2026) — no romper:**
+  - **Saltar turno QUEMA la tarjeta** de esa persona: pierde el turno *con*
+    tarjeta. Si solo se le saltara el turno, la partida pediría turnos de más, la
+    ronda se pasaría de R y **no terminaría**. Usa el mismo `avanzarTarjeta()` que
+    "Siguiente", para que un salto y un paso normal no puedan comportarse distinto.
+  - **No se puede dar "Siguiente" con la carta boca abajo.** El botón se ve
+    apagado y, al tocarlo, sale un aviso discreto (*"Voltea la carta para poder
+    seguir."*). No se **deshabilita**: un botón deshabilitado no avisa nada.
+  - **El invitado no sale de la pantalla de selección**: se le oculta el "‹ Volver"
+    y el botón atrás del celular queda bloqueado, igual que durante el juego.
+  - **El invitado también carga el contenido** (`cargarPersonajes()`); si no, su
+    lista de selección sale **vacía**. Y no se dibuja la selección sin contenido
+    (`asegurarPersonajes()`).
+  - **"Pegar lista completa" es tolerante, pero NO adivina.** Acepta: un arreglo
+    JSON, un objeto suelto, **un pedazo de arreglo sin los corchetes** (`{...}, {...},`
+    — con o sin la coma final), el formato envuelto (`{"U1":[...]}`) y texto, uno
+    por línea. Y si el JSON está **mal escrito, avisa y no pega nada**. Antes, si
+    el texto no empezaba con `[`, se caía a "un renglón = un personaje" **en
+    silencio** y metía cada línea como un personaje, con todo el texto como nombre
+    (le pasó a Fredy al pegar los personajes de un usuario en Contrapartes).
+  - **Cada quien escoge solo de su lado**: en "cada quien en el suyo" el teléfono
+    muestra **solo su pestaña** (y por eso solo puede escribir sus marcas); en "un
+    solo celular" salen todas. El lado del invitado sale de `conQuien`.
+  - **Mientras se escoge, el aviso de la sala apunta al documento de la
+    SELECCIÓN** (`sesion:"seleccionRoles/actual"` **con el mismo `sid`**), no a la
+    partida. Hace falta porque durante la selección **todavía no hay partida**, y
+    la sala exige que el documento apuntado esté `activa`. Al cancelar se
+    **retira** el aviso; al arrancar, lo reemplaza el de la partida. **Y quien
+    acaba de escoger no recibe "¿Unirse?" otra vez** (`selYaEntre`): entra directo.
+  - **El diseño de la carta vive en el código** (`Roles/index.html`, el CSS de
+    `#tarjeta` y `#reverso`): no se copia aquí para que no se separe de la
+    realidad. Lo que **no** se ve en el CSS: las etiquetas visibles son
+    **SITUACIÓN / ATRACTIVO / DERECHOS / ACCIÓN** y los campos **no** se renombran
+    (siguen siendo `situacion`, `gancho`, `derechos`, `si_quieres`); el **mosaico
+    va solo en el reverso**; y el **emoji del remate va FUERA** del degradado,
+    porque con `background-clip:text` el emoji también sale transparente.
+- **Trampa de la dirección de un juego (oct-2026) — costó dos rondas de
+  diagnóstico:** los juegos importan los módulos de la raíz con `../acceso.js` y
+  compañía. Eso **solo funciona si la dirección es la CARPETA** (`/Roles/`). Si se
+  abre como `/Roles/index.html`, el `..` **no sube**: quita el nombre del archivo
+  y se queda dentro de `/Roles/`, así que **los ocho imports dan 404, el módulo no
+  carga y la pantalla queda en blanco con todos los botones muertos** — y **sin un
+  solo error de JavaScript** (por eso no se veía la causa). La causa típica es el
+  campo **`Ruta`** del pack mal escrito en el Panel: tiene que ser **`Roles`** a
+  secas, **sin** diagonal y **sin** `index.html` (con `Roles/` el enlace queda
+  `/Roles//`; con `Roles/index.html`, se abre el archivo). Un fallo de carga de
+  módulo **no lo ve `window.onerror`**: hay que escuchar el `error` del elemento
+  `<script>`.
 - **El QR y el remate del engrane, en la pantalla de inicio (oct-2026):** en
   **`Roles/` y en `Opciones/`** la pantalla de inicio ahora trae, abajo de todo,
   un botón **"QR Invita a Alguien"** y el remate **"Personaliza tu experiencia
