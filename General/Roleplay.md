@@ -1678,6 +1678,74 @@ y luego 0 tres veces seguidas. Se revisó: **el chequeo está bien**; el `2` ven
 de mi propio comando encadenado, no de `revisar.py`. Para que un resultado no
 engañe: **`revisar.py` se corre solo**, no pegado a otros comandos.
 
+---
+
+## 26. La tercera prueba en vivo (oct-2026)
+
+### 1. "Siguiente" con la carta boca abajo: hacía falta el aviso
+
+Estaba **deshabilitado** (no pasaba, correcto), pero un botón deshabilitado **no
+avisa nada**: el usuario toca y no pasa nada, sin saber por qué.
+
+**Ahora el botón NO se deshabilita** (si no, el toque no daría ninguna pista):
+- se ve **apagado** (opacidad .55) mientras la carta está boca abajo, y
+- al tocarlo sale debajo un aviso discreto: *"Voltea la carta para poder seguir."*
+- al voltear, el aviso se quita y el botón se ve normal.
+
+Verificado con captura (carta boca abajo + botón apagado + el aviso).
+
+### 2. En Seleccionar, al invitado NUNCA le llegaba la invitación
+
+**Lo reportó Fredy:** en modos Seleccionar + Multijugador, la invitación no le
+llegaba al invitado — ni al que ya estaba antes, ni al que se agrega a media
+partida. En su pantalla el anfitrión sí veía el contador ("Le faltan 1 tarjetas"),
+pero el invitado nunca podía entrar a escoger.
+
+**La causa:** durante la selección **todavía no hay partida**, y el aviso de la
+sala (`invitaciones/roles`) apunta a un documento de partida que debe estar
+`activa`. Como **no se publicaba ningún aviso**, el invitado no tenía ni carta en
+su sala ni forma de abrir la pantalla de selección. El aviso solo se publicaba al
+arrancar la partida — o sea, **al final**: el orden al revés.
+
+**El arreglo:** mientras dura la selección **se publica el aviso apuntando al
+documento de la SELECCIÓN** (`sesion:"seleccionRoles/actual"` con el **mismo
+`sid`**), así el filtro de la sala lo acepta:
+
+| Cuándo | Qué se publica |
+|---|---|
+| El anfitrión empieza la selección compartida | El aviso, con todos los cabezas como `participantes` |
+| Se le pide a un invitado a media partida | El aviso, con **ese** invitado en `participantes` |
+| Se cancela la selección (`‹ Volver` / `Cancelar`) | Se **retira** el aviso, para no dejar la carta pegada |
+| Arranca la partida | `iniciar()` lo reemplaza por el aviso de la **partida** |
+
+**Y un cabo suelto del mismo tema:** al que acababa de escoger sus tarjetas le
+salía **"¿Unirse?"** al arrancar la partida, porque quien entra por la sala
+(`?entrar=1`) sí entra directo, pero quien ya estaba adentro no. Se agregó
+`selYaEntre`: el que aceptó la selección entra directo, sin que se le pregunte
+otra vez. *(Ese era exactamente el "orden al revés" que Fredy reportó antes.)*
+
+**Pendiente de probar:** esto **solo se ve con dos celulares** (un invitado real).
+Lo que hay que mirar: que al invitado le salga la carta **"Juego de Roles"** en su
+sala mientras el anfitrión escoge, que al entrar le salga **"¿Entras a escoger
+tus personajes?"**, y que al arrancar la partida **no** le vuelva a preguntar.
+
+### 3. El QR también en la pantalla de inicio
+
+**Lo pidió Fredy** para ahorrar navegación: para registrar a un invitado había que
+entrar a la partida, porque el botón del QR vivía solo adentro.
+
+**Ahora el QR está también en la pantalla de inicio**, arriba del remate
+("Personaliza tu experiencia en... ⚙️"). **Es el mismo QR y la misma función**:
+se sacó `abrirQR()` y la usan los dos botones (`btnQR` en la partida y
+`btnQRInicio` en el inicio). No hay código duplicado.
+
+**"Agregar invitado" NO se puso ahí, y se preguntó antes de hacerlo.** En la
+pantalla de inicio **todavía no hay partida** a la que agregar, y los invitados
+que ya están registrados **entran solos** al empezar (los cabezas se arman con
+todos los usuarios). O sea, ese botón no tendría nada que hacer; **Fredy estuvo
+de acuerdo**. Se queda dentro de la partida, que es donde sí sirve: meter a
+alguien que llegó tarde.
+
 
 
 

@@ -295,6 +295,11 @@
     </div>
     <div id="espAviso" style="font-size:.78rem;color:var(--coral);margin-top:10px;"></div>
   </div>
+  <!-- Registrar invitados SIN tener que entrar a la partida: aquí mismo, antes
+       de elegir. Es el mismo botón (y el mismo QR) que está dentro del juego.
+       "Agregar invitado" NO va aquí: en el inicio todavía no hay partida, y los
+       invitados que ya están registrados entran solos al empezar. -->
+  <button class="btnSec" id="btnQRInicio" type="button" style="margin-top:14px;">QR Invita a Alguien</button>
   <!-- Remate de la pantalla. Es un BOTON (no un enlace): al tocarlo abre el
        engrane de esta misma pantalla. El degradado va SOLO en el texto, porque
        con background-clip:text el emoji tambien sale transparente. -->
@@ -356,6 +361,9 @@
     </div>
   </div>
   <button class="btnPri" id="btnSig" style="display:none; margin-top:14px;">Siguiente</button>
+  <!-- Aviso discreto: sale SOLO si toca "Siguiente" con la carta boca abajo.
+       Nace oculto (regla de la casa). -->
+  <div id="avisoVoltea" style="display:none; font-size:.78rem; color:var(--fg-muted); text-align:center; margin-top:8px;">Voltea la carta para poder seguir.</div>
   <div id="esperaTurno" style="display:none"></div>
   <div id="finMsg" style="display:none">¡Gracias por jugar!</div>
   <button class="btnSec" id="btnSaltar" style="display:none">Saltar turno</button>
@@ -1032,7 +1040,11 @@ function escucharSesion(){
           if(d.sid === sidMostrado) return;
           sidMostrado = d.sid;
           if(d.hostUid !== miId){
-            if(entrarDirecto && soyCabeza(d)){ entrarAlJuego(d); return; }
+            // Si vengo de la SELECCIÓN (o entré con ?entrar=1), ya estoy dentro:
+            // no se me vuelve a preguntar. Antes, al que acababa de escoger sus
+            // tarjetas le salía "¿unirse?" justo después: el orden al revés que
+            // reportó Fredy.
+            if(entrarDirecto || selYaEntre){ selYaEntre = false; entrarAlJuego(d); return; }
             document.getElementById("unirDesc").textContent = d.reanudada
               ? ((d.hostNombre || "El anfitrión") + " retomó la partida. Puedes continuar donde van.")
               : ((d.hostNombre || "El anfitrión") + " inició Juego de Roles.");
@@ -1251,10 +1263,14 @@ function pintarVolteo(){
     tarjeta.style.visibility = "visible";
     reverso.style.display = "none";
   }
-  // NO se puede pasar a la siguiente sin haber visto la carta: mientras este
-  // boca abajo, "Siguiente" queda apagado (no se oculta, para que la pantalla
-  // no salte).
-  try{ document.getElementById("btnSig").disabled = bocaAbajo; }catch(e){}
+  // NO se puede pasar a la siguiente sin haber visto la carta. El boton NO se
+  // deshabilita (si no, tocarlo no daria ninguna pista): se apaga un poco y, si
+  // lo tocan, sale el aviso. Al voltear, se quita.
+  try{
+    const b = document.getElementById("btnSig");
+    b.style.opacity = bocaAbajo ? ".55" : "";
+    if(!bocaAbajo) document.getElementById("avisoVoltea").style.display = "none";
+  }catch(e){}
 }
 // Se llama en CADA repintado, asi que SOLO toca el interruptor cuando la
 // tarjeta cambia de verdad. Si no, cualquier repintado (por ejemplo, lo que
@@ -1323,6 +1339,9 @@ function pintarPaso(){
   // desaparecer: al reanudar tienen que volver.
   try{ mostrarBotonesAdmin(); }catch(e){}
   if(!jugando || !d){ return; }
+  // El aviso de "voltea la carta" se limpia en cada repintado; el toque en
+  // "Siguiente" lo vuelve a encender si hace falta.
+  try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
   if(d.terminada){
     flipwrap.style.display = "none";
     vacio.style.display = "none";
@@ -1400,7 +1419,14 @@ async function siguiente(){
     if(estado.terminada && !finMostrado){ finMostrado = true; finPartida(); }
   }
 }
-document.getElementById("btnSig").onclick = ()=>{ siguiente(); };
+document.getElementById("btnSig").onclick = ()=>{
+  // Con la carta boca abajo NO se pasa: sale un aviso discreto y no avanza.
+  if(bocaAbajo){
+    try{ document.getElementById("avisoVoltea").style.display = "block"; }catch(e){}
+    return;
+  }
+  siguiente();
+};
 document.getElementById("btnSaltar").onclick = ()=>{ saltarTurno(); };
 
 // ---------- el volteo ----------
@@ -1517,11 +1543,13 @@ async function pedirCartasInvitado(cab, necesidad){
   meterInv = { id: cab.id, nombre: cab.nombre || "Invitado", lado: cab.lado, necesidad: necesidad };
   const selInicial = {};
   selInicial[cab.id] = [];
+  // El `sid` es para que el invitado que se salga no vuelva a caer aquí, y
+  // también para que la sala sepa que este aviso es de ESTA selección.
+  const sidSel = String(Date.now()) + Math.random().toString(36).slice(2, 6);
   try{
     await setDoc(seleccionRef(), {
       activa: true, modo: "agregar", agregar: meterInv, sel: selInicial,
-      // El `sid` es para que el invitado que se salga no vuelva a caer aquí.
-      sid: String(Date.now()) + Math.random().toString(36).slice(2, 6),
+      sid: sidSel,
       anfitrionUid: miId, anfitrionNombre: (miUsuario && miUsuario.nombre) || nombreAdmin(),
       actualizadaEn: serverTimestamp()
     });
@@ -1530,6 +1558,18 @@ async function pedirCartasInvitado(cab, necesidad){
     try{ aviso("No se pudo pedir la selección. Revisa conexión."); }catch(x){}
     return;
   }
+  // Aviso en la sala, para que el invitado pueda ENTRAR a escoger. Sin esto no
+  // le llegaba nunca: durante la selección todavía no hay partida, así que el
+  // aviso apunta al documento de la SELECCIÓN (con su mismo `sid`). Lo reportó
+  // Fredy.
+  try{
+    await publicarInvitacion({
+      juego: JUEGO_INV, titulo: JUEGO_TITULO, icono: "🎭", ruta: "Roles",
+      hostUid: miId, hostNombre: (miUsuario && miUsuario.nombre) || nombreAdmin(),
+      participantes: [cab.id],
+      sesion: "seleccionRoles/actual", sid: sidSel
+    });
+  }catch(e){}
   abrirMeterInvitado();
 }
 function abrirMeterInvitado(){
@@ -1599,9 +1639,14 @@ document.getElementById("btnMeterNo").onclick = ()=>{
   meterInv = null;
   cerrarModal("modalMeterInv");
   try{ setDoc(seleccionRef(), { activa: false, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+  // Se quita el aviso de la sala del invitado.
+  try{ retirarInvitacion(JUEGO_INV); }catch(e){}
 };
 // Mostrar el QR del anfitrion para registrar invitados sin salir del juego.
-document.getElementById("btnQR").onclick = ()=>{
+// Es UNA sola funcion y la usan los dos botones: el de la partida (`btnQR`) y
+// el de la pantalla de inicio (`btnQRInicio`), para no tener el mismo codigo
+// dos veces.
+function abrirQR(){
   const g = leerConfigGuardada();
   const caja = document.getElementById("qrCajaJuego");
   const msg = document.getElementById("qrMsg");
@@ -1621,7 +1666,9 @@ document.getElementById("btnQR").onclick = ()=>{
     });
   }catch(e){ caja.style.display = "none"; msg.textContent = "No se pudo generar."; }
   abrirModal("modalQR");
-};
+}
+document.getElementById("btnQR").onclick = ()=>{ abrirQR(); };
+document.getElementById("btnQRInicio").onclick = ()=>{ abrirQR(); };
 document.getElementById("btnQRNo").onclick = ()=>{ cerrarModal("modalQR"); };
 
 // ---------- comenzar ----------
@@ -1805,6 +1852,7 @@ let selSalioSid = null;
 // tarjetas: nadie escoge si no va a jugar (lo pidio Fredy).
 let selSidAceptado = null;
 let selInvitando = false;   // la ventana de "unirse" que se esta mostrando es la de la seleccion
+let selYaEntre = false;     // acabo de entrar desde una seleccion: no me pregunten otra vez
 function seleccionRef(){ return doc(db, "seleccionRoles", "actual"); }
 function selEsCompartida(){ return !!selCompartida; }
 // De donde se leen las marcas: el doc compartido, o la memoria del celular.
@@ -1952,6 +2000,17 @@ async function abrirSeleccionCompartida(cabezasIn, R){
       actualizadaEn: serverTimestamp()
     });
   }catch(e){ try{ aviso("No se pudo iniciar la selección. Revisa conexión."); }catch(x){} }
+  // Aviso en la sala: durante la selección TODAVÍA no hay partida, así que el
+  // aviso apunta al documento de la SELECCIÓN (con su mismo `sid`). Sin esto,
+  // al invitado no le llegaba nunca y no tenía forma de entrar a escoger.
+  try{
+    await publicarInvitacion({
+      juego: JUEGO_INV, titulo: JUEGO_TITULO, icono: "🎭", ruta: "Roles",
+      hostUid: miId, hostNombre: (miUsuario && miUsuario.nombre) || nombreAdmin(),
+      participantes: selCabezas.map(c=> c && c.id).filter(Boolean),
+      sesion: "seleccionRoles/actual", sid: selDoc.sid
+    });
+  }catch(e){}
   pintarSeleccion();
   ver("vistaSeleccion");
   escucharSeleccion();
@@ -2071,6 +2130,9 @@ document.getElementById("btnSelVolver").onclick = ()=>{
   // anfitrión puede meterlo igual, con lo que ya alcanzó a marcar).
   if(selEsCompartida() && selSoyHost){
     try{ setDoc(seleccionRef(), { activa: false, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+    // También se retira el aviso de la sala: si no, el invitado se queda con la
+    // carta de una selección que ya se canceló.
+    try{ retirarInvitacion(JUEGO_INV); }catch(e){}
   }
   selEsAgregado = false;
   ver(vistaDeInicio());
@@ -2153,6 +2215,8 @@ document.getElementById("btnUnirme").onclick = ()=>{
   if(selInvitando){
     selInvitando = false;
     if(selDoc && selDoc.sid) selSidAceptado = selDoc.sid;
+    // Ya acepté: cuando la partida arranque, entro directo (sin preguntar otra vez).
+    selYaEntre = true;
     pintarSeleccion();
     ver("vistaSeleccion");
     return;
