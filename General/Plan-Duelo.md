@@ -909,6 +909,10 @@ escrito, no algo verificado**.
 - Pausar, terminar, reanudar, salir y volver.
 - Continuar una partida de **un solo celular** (pausar, volver, y que salga
   "Continuar / Partida nueva"; "Partida nueva" descarta la guardada).
+- Los cinco ajustes del 17-oct: checkbox de solo lectura visible, invitado en
+  la **misma ronda** en Duelo/Juntos, mensajes de fase y "Toca para revelar"
+  con degradado, encabezado "modalidad · quiénes" arriba de la ronda, y
+  **"contra [contraparte]"** en las cartas del Duelo.
 - Fin con fuegos y "¡Gracias por jugar!".
 - **Los tres modos viejos siguen funcionando** (Clásico, Cambia de Bando,
   Seleccionar): es la regresión más importante, porque se tocaron sus funciones.
@@ -1248,6 +1252,25 @@ que pide el JS existe en el HTML.
   para que la carta de dos caras de Juntos salga bien al reanudar sin conexión.
   **Falta probarlo en el celular** (pausar, volver, continuar, y que "Partida
   nueva" descarte la guardada).
+
+- **17-oct-2026 — Cinco ajustes de la prueba en vivo (los pidió Fredy).**
+  1. **Checkbox de solo lectura visible** en la selección del Duelo: se cambió
+     el nativo por uno propio (teal con check oscuro) porque el deshabilitado
+     pintaba el check blanco sobre blanco.
+  2. **Invitado en Duelo/Juntos** entra en la **misma ronda**: `agregarInvitado`
+     toma `dueloPares.slice(ronda - 1)` y permite entrar hasta la última ronda.
+     En **Turnos** sigue entrando a la siguiente (`slice(ronda)`), porque no
+     tiene turno en la actual.
+  3. **Mensajes de fase** (`#faseDuelo`) con letra más grande y degradado
+     coral→turquesa; igual el "Toca para revelar el personaje" del reverso.
+  4. **Encabezado del reproductor:** `#modoPartida` ("Juntos/Turnos · Pareja/
+     Multijugador") **arriba** de `#progreso` ("Ronda X de R"). En los otros
+     modos queda oculto.
+  5. **"contra [contraparte]"** debajo del personaje en las cartas del Duelo:
+     `#contraPersonaje` en la carta normal y `.contraDuelo` en las dos caras;
+     `contraDeRonda()` decide quién es el otro según el lado y la ronda.
+  `revisar.py` en verde (23 archivos); `<div>`/`</div>` 115/115; sin ids
+  duplicados; todos los ids del JS existen. **Falta verlo en el celular.**
 
 **Resumen de las 6 fases:** el código del Duelo está completo en `Roles/index.html`
 y `revisar.py` pasa. **Lo que falta es probarlo** (sección de arriba). No se

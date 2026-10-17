@@ -56,6 +56,20 @@
   .filaSel{ display:flex; gap:10px; align-items:center; margin-bottom:6px;
     border:1px solid var(--card-border); background:var(--card); border-radius:10px; padding:10px; }
   .filaSel input{ flex:0 0 auto; width:auto; accent-color:var(--teal); }
+  /* Checkbox propio: el nativo DESHABILITADO pintaba el check blanco sobre
+     blanco y no se veía en la selección del Duelo (solo lectura). Ahora el
+     marcado es teal con el check oscuro, habilitado o no. */
+  .filaSel input[type="checkbox"]{
+    -webkit-appearance:none; appearance:none;
+    width:20px; height:20px; margin:0; border:1.5px solid var(--teal);
+    border-radius:6px; background:transparent; position:relative; cursor:pointer;
+  }
+  .filaSel input[type="checkbox"]:checked{
+    background-color:var(--teal);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23120e1c' d='M6.2 11.4 3 8.2l1.2-1.2 2 2 5-5 1.2 1.2z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:center; background-size:14px 14px;
+  }
+  .filaSel input[type="checkbox"]:disabled{ opacity:1; cursor:default; }
   .filaSel .selNombre{ flex:1; min-width:0; font-size:.85rem; }
   .selTag{ flex:0 0 auto; font-family:'Chakra Petch',sans-serif; font-size:.62rem; font-weight:600;
     letter-spacing:.1em; text-transform:uppercase; color:var(--fg-muted);
@@ -132,6 +146,9 @@
     background:var(--bg); border:1px solid var(--card-border); border-radius:12px; color:var(--fg); padding:12px; }
   #finTxt{ white-space:pre-line; font-size:1.1rem; }
   /* player */
+  #modoPartida{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:.78rem;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--teal);
+    text-align:center; margin-bottom:2px; }
   #progreso{ color:var(--fg-muted); font-size:.85rem; margin-bottom:6px; }
   #turnoNombre{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.15rem;
     text-align:center; margin:6px 0 14px; min-height:1.4em; }
@@ -164,6 +181,12 @@
   .nombre{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.45rem; text-align:center;
     background:linear-gradient(90deg,var(--coral),var(--teal)); -webkit-background-clip:text;
     background-clip:text; color:transparent; width:fit-content; align-self:center; }
+
+  /* "contra [contraparte]" debajo del personaje, SOLO en las cartas del Duelo.
+     En los otros modos el elemento nace oculto y `pintarTarjeta()` lo apaga. */
+  #contraPersonaje, .contraDuelo{ font-family:'Chakra Petch',sans-serif; font-size:.8rem;
+    color:var(--fg-muted); text-align:center; margin-top:-2px; }
+  #contraPersonaje b, .contraDuelo b{ color:var(--teal); }
 
   /* La info ocupa lo que sobre de la carta y se desliza sola (ya no manda un
      alto fijo de 290px, que era lo otro que la hacia muy alta). */
@@ -203,7 +226,11 @@
     filter:drop-shadow(0 12px 30px rgba(0,0,0,.6)); }
   .marcaTxt{ font-family:'Chakra Petch',sans-serif; font-size:.72rem; letter-spacing:.28em;
     text-transform:uppercase; color:#eae6f6; }
-  #reverso small{ font-size:.78rem; text-align:center; padding:0 24px; color:#d9d2ee; }
+  #reverso small{ font-size:.9rem; text-align:center; padding:0 24px;
+    font-family:'Chakra Petch',sans-serif; font-weight:600;
+    background:linear-gradient(90deg,var(--coral),var(--teal));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    width:fit-content; max-width:100%; align-self:center; }
   #tarjetaVacio{ color:var(--fg-muted); font-size:.85rem; text-align:center; padding:22px; }
   .filaBotones{ display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; }
   /* Igual que en Encuentros: el aviso de turno ajeno va en un RECUADRO, no
@@ -369,17 +396,21 @@
 <!-- ============ PLAYER ============ -->
 <div class="vista" id="vistaPlayer">
   <h1 id="plTitulo">Juego de Roles</h1>
+  <!-- En Duelo: modalidad + quiénes juegan ("Juntos · Pareja"). Va ARRIBA de la
+       ronda. En los otros modos nace/queda oculto. (Fredy, 17-oct-2026.) -->
+  <div id="modoPartida"></div>
   <div id="progreso"></div>
   <div id="turnoNombre"></div>
   <!-- Indicador de FASE del duelo "Juntos" (no de turno): los tres textos son los
        mismos en un celular y en compartida, y por eso funciona igual en las dos.
        Nace oculto: en Turnos y en los otros modos no se usa. -->
-  <div id="faseDuelo" style="display:none;font-size:.8rem;color:var(--fg-muted);text-align:center;margin-top:8px;"></div>
+  <div id="faseDuelo" style="display:none;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1rem;line-height:1.35;text-align:center;margin-top:8px;width:fit-content;max-width:100%;align-self:center;background:linear-gradient(90deg,var(--coral),var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent;"></div>
   <div id="tarjetaVacio" style="display:none">Ya no te quedan tarjetas.</div>
   <div class="flipwrap" id="flipwrap" style="display:none">
     <div id="tarjeta">
       <div class="foto" id="fotoPersonaje"><span>🖼️</span><small>Imagen del personaje</small></div>
       <div class="nombre" id="nombrePersonaje"></div>
+      <div id="contraPersonaje" style="display:none;"></div>
       <div id="blqueEspecial" style="display:none">
         <b>Variante picante</b>
         <p id="txtEspecial"></p>
@@ -1570,8 +1601,24 @@ function pintarFotoEn(el, p){
   el.appendChild(s); el.appendChild(sm);
 }
 function pintarFoto(p){ pintarFotoEn(document.getElementById("fotoPersonaje"), p); }
-function pintarTarjeta(p, esp){
+function pintarTarjeta(p, esp, contra){
   document.getElementById("nombrePersonaje").textContent = (p && p.personaje) || "";
+  // En Duelo, debajo del personaje va "contra [la contraparte del otro]".
+  // En los otros modos `contra` viene nulo y el elemento se apaga.
+  const contraEl = document.getElementById("contraPersonaje");
+  if(contraEl){
+    if(contra && contra.personaje){
+      contraEl.style.display = "block";
+      contraEl.textContent = "";
+      contraEl.appendChild(document.createTextNode("contra "));
+      const cb = document.createElement("b");
+      cb.textContent = contra.personaje;
+      contraEl.appendChild(cb);
+    }else{
+      contraEl.style.display = "none";
+      contraEl.textContent = "";
+    }
+  }
   document.getElementById("txtSituacion").textContent = (p && p.situacion) || "";
   document.getElementById("txtGancho").textContent = (p && p.gancho) || "";
   document.getElementById("txtDerechos").textContent = (p && p.derechos) || "";
@@ -1601,7 +1648,7 @@ function especialDeLado(ronda, lado){
 }
 // Una cara. Se construye con `createElement` y `textContent` porque TODO el texto
 // viene de Firebase: nunca `innerHTML` con datos de la base.
-function pintarCaraDuelo(cont, p, esp, etiqueta){
+function pintarCaraDuelo(cont, p, esp, etiqueta, contra){
   if(!cont) return;
   cont.innerHTML = "";
   const tag = document.createElement("div");
@@ -1617,6 +1664,16 @@ function pintarCaraDuelo(cont, p, esp, etiqueta){
   nom.className = "nombre";
   nom.textContent = (p && p.personaje) || "";
   cont.appendChild(nom);
+  // Debajo del personaje: la contraparte que está jugando el otro.
+  if(contra && contra.personaje){
+    const c = document.createElement("div");
+    c.className = "contraDuelo";
+    c.appendChild(document.createTextNode("contra "));
+    const cb = document.createElement("b");
+    cb.textContent = contra.personaje;
+    c.appendChild(cb);
+    cont.appendChild(c);
+  }
   if(esp){
     const bloque = document.createElement("div");
     bloque.className = "bloqueEsp";
@@ -1644,10 +1701,12 @@ function pintarCaraDuelo(cont, p, esp, etiqueta){
 // Pinta las dos caras de la pareja k y arranca mostrando el original.
 function pintarDueloPar(par, ronda){
   const lado = dueloLadoDePartida() || "A";
+  const original = buscarPersonaje(par && par.o);
+  const contraparte = buscarPersonaje(par && par.c);
   pintarCaraDuelo(document.getElementById("tarjetaDueloA"),
-    buscarPersonaje(par && par.o), especialDeLado(ronda, lado), "Original");
+    original, especialDeLado(ronda, lado), "Original", contraparte);
   pintarCaraDuelo(document.getElementById("tarjetaDueloB"),
-    buscarPersonaje(par && par.c), especialDeLado(ronda, otroLadoDuelo(lado)), "Contraparte");
+    contraparte, especialDeLado(ronda, otroLadoDuelo(lado)), "Contraparte", original);
   caraDuelo = 0;   // cada ronda abre en el original
   mostrarCaraDuelo();
 }
@@ -1674,6 +1733,8 @@ function pintarPasoDueloJuntos(d){
   const fin = document.getElementById("finMsg");
   const prog = document.getElementById("progreso");
   const duelCard = document.getElementById("tarjetaDuelo");
+  // En Juntos no hay turno: la línea de turno no se usa y no debe dejar hueco.
+  turnoNombre.style.display = "none";
   if(d.terminada){
     flipwrap.style.display = "none";
     vacio.style.display = "none";
@@ -1681,6 +1742,7 @@ function pintarPasoDueloJuntos(d){
     espera.style.display = "none";
     turnoNombre.textContent = "";
     prog.textContent = "";
+    try{ document.getElementById("modoPartida").style.display = "none"; }catch(e){}
     fin.style.display = "block";
     try{ document.getElementById("faseDuelo").style.display = "none"; }catch(e){}
     try{ duelCard.style.display = "none"; }catch(e){}
@@ -1690,7 +1752,8 @@ function pintarPasoDueloJuntos(d){
   }
   fin.style.display = "none";
   prog.textContent = "Ronda " + (d.ronda || 1) + " de " + (d.rondas || 1);
-  turnoNombre.textContent = "Juntos";
+  // La modalidad ("Juntos · Pareja") ya se pinta ARRIBA, en `#modoPartida`.
+  turnoNombre.textContent = "";
   espera.style.display = "none";
   try{ document.getElementById("btnSaltar").style.display = "none"; }catch(e){}
   // ---- un SOLO celular: una sola carta de dos caras para todo el grupo ----
@@ -1718,7 +1781,7 @@ function pintarPasoDueloJuntos(d){
   if(p){
     flipwrap.style.display = "block";
     vacio.style.display = "none";
-    pintarTarjeta(p, especialDe(d.ronda, miId));
+    pintarTarjeta(p, especialDe(d.ronda, miId), contraDeRonda(miId, d.ronda));
     // OJO: la ronda va en la llave. Si no, al cambiar de ronda la carta se
     // quedaría destapada de la anterior (el turno no cambia, cambia la ronda).
     resetCarta(miId + ":" + (d.ronda || 1) + ":" + (p.id || ""));
@@ -1750,12 +1813,16 @@ function pintarPaso(){
   // desaparecer: al reanudar tienen que volver.
   try{ mostrarBotonesAdmin(); }catch(e){}
   if(!jugando || !d){ return; }
+  // "Juntos · Pareja" / "Turnos · Multijugador", arriba de la ronda.
+  try{ pintarModoPartida(); }catch(e){}
   // El aviso de "voltea la carta" se limpia en cada repintado; el toque en
   // "Siguiente" lo vuelve a encender si hace falta.
   try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
   // La rama del duelo "Juntos" va DESPUÉS de los cortes de arriba (así tolera que
   // `jugando` sea falso o no haya partida) y se lleva el repintado.
   if(dueloEsJuntos()){ pintarPasoDueloJuntos(d); return; }
+  // Juntos lo ocultó; en Turnos y en los otros modos la línea de turno sí se usa.
+  try{ turnoNombre.style.display = ""; }catch(e){}
   // En los demás modos el indicador de fase y la carta de dos caras no se usan:
   // se apagan aquí para que no queden restos de una partida de duelo anterior.
   try{ pintarFaseDuelo(); }catch(e){}
@@ -1767,6 +1834,7 @@ function pintarPaso(){
     espera.style.display = "none";
     turnoNombre.textContent = "";
     prog.textContent = "";
+    try{ document.getElementById("modoPartida").style.display = "none"; }catch(e){}
     fin.style.display = "block";
     mostrarBotonesAdmin();
     try{ btnSaltar.style.display = "none"; }catch(e){}
@@ -1786,7 +1854,7 @@ function pintarPaso(){
     flipwrap.style.display = "block";
     vacio.style.display = "none";
     btnSig.style.display = "block";
-    pintarTarjeta(p, especialDe(d.ronda, cur));
+    pintarTarjeta(p, especialDe(d.ronda, cur), contraDeRonda(cur, d.ronda));
     // Cada turno empieza boca abajo (y solo si la tarjeta cambia).
     resetCarta(cur + ":" + (p.id || ""));
     espera.style.display = "none";
@@ -1949,10 +2017,12 @@ document.getElementById("tarjetaDuelo").addEventListener("click", function(){
 });
 
 // ---------- agregar invitado a media partida ----------
-// El que entra NO juega la ronda en curso: se agrega a las cabezas y a las
-// listas, pero NO al orden actual. Cuando la ronda da la vuelta, el orden se
-// revuelve con todos los que siguen vivos y ahi entra. Su lista trae tantas
-// tarjetas como rondas le falten (R - ronda), asi termina junto con los demas.
+// TURNOS: el que entra NO juega la ronda en curso. Se agrega a las cabezas y a
+// las listas, pero NO al orden actual; cuando la ronda da la vuelta, el orden se
+// revuelve con todos los que siguen vivos y ahí entra. Su lista trae las rondas
+// que faltan (R - ronda) y termina junto con los demás.
+// JUNTOS: no hay turnos, así que entra en la MISMA ronda que se está jugando y
+// recibe la pareja actual + las que restan (ver `agregarInvitado`).
 // Quién todavía NO está en la partida. En Multijugador todas las cabezas entran
 // desde el arranque, así que lo que sale aquí es gente que se registró después.
 function disponiblesInvitados(){
@@ -2006,26 +2076,56 @@ function ladoDeCabeza(id){
        || ((sesionActual && sesionActual.cabezas) || []).find(x=> x && x.id === id);
   return (c && c.lado) || null;
 }
+// Línea de arriba del reproductor, SOLO en Duelo: "Juntos · Pareja" o
+// "Turnos · Multijugador". En los otros modos se oculta.
+function pintarModoPartida(){
+  const el = document.getElementById("modoPartida");
+  if(!el) return;
+  if(!esModoDuelo()){ el.style.display = "none"; el.textContent = ""; return; }
+  el.style.display = "block";
+  const modalidad = dueloEsJuntos() ? "Juntos" : "Turnos";
+  const quienes = (modoJuego === "multi") ? "Multijugador" : "Pareja";
+  el.textContent = modalidad + " · " + quienes;
+}
+// La contraparte que está jugando el otro usuario en la ronda actual. Se pinta
+// debajo del personaje SOLO en las cartas del Duelo ("contra ...").
+function contraDeRonda(headId, ronda){
+  if(!esModoDuelo()) return null;
+  const pares = (estado && Array.isArray(estado.dueloPares)) ? estado.dueloPares : [];
+  const par = pares[(ronda || 1) - 1];
+  if(!par) return null;
+  const lado = ladoDeCabeza(headId);
+  if(!lado) return null;
+  const ladoOriginal = (estado && estado.dueloLado) || dueloLadoDePartida();
+  return buscarPersonaje(lado === ladoOriginal ? par.c : par.o);
+}
 async function agregarInvitado(id){
   const cab = construirCabezas().find(c=>c.id === id);
   if(!cab) return;
   const mb = modoBaseDePartida();
   const R = (estado && estado.rondas) || 0;
   const ronda = (estado && estado.ronda) || 1;
-  const restantes = R - ronda;   // empieza la ronda siguiente
-  if(restantes < 1){ aviso("Ya no quedan rondas para que entre."); return; }
+  // En Duelo/Juntos NO hay turnos: el invitado puede entrar en la MISMA ronda
+  // que se está jugando. En Turnos entra a la siguiente (no tiene turno en la
+  // ronda en curso). (Decisión de Fredy, 17-oct-2026.)
+  const esDueloJuntos = (mb === MODO_DUELO && dueloModalidadDePartida() === "juntos");
+  const restantes = R - ronda;   // Turnos: rondas que faltan después de esta
+  if(esDueloJuntos ? (ronda > R) : (restantes < 1)){
+    aviso("Ya no quedan rondas para que entre."); return;
+  }
   // En modo "seleccionar" no se reparte solo: él mismo escoge sus tarjetas.
   if(mb === MODO_SELECCIONAR){ pedirCartasInvitado(cab, restantes); return; }
   // Lo que le va a llegar al invitado: su cola de cartas, YA en orden.
   let pool = [];
   if(mb === MODO_DUELO){
     // En DUELO no se reparte una lista al azar: se le dan las PAREJAS que faltan,
-    // en orden. Entra a partir de la SIGUIENTE ronda, así que se toman desde
-    // `ronda` (que es de 1 en 1) hacia adelante: la pareja k de su lado.
+    // en orden. En JUNTOS empieza en la pareja que se está jugando (para que
+    // entre alineado); en TURNOS, en la siguiente (no juega la ronda en curso).
     // Su lado sale de `conQuien` (ya viene resuelto en `construirCabezas`).
     const pares = (estado && Array.isArray(estado.dueloPares)) ? estado.dueloPares : [];
     const ladoDuelo = (estado && estado.dueloLado) || "A";
-    pool = pares.slice(ronda)
+    const desde = esDueloJuntos ? (ronda - 1) : ronda;
+    pool = pares.slice(desde)
       .map(par=> buscarPersonaje(cab.lado === ladoDuelo ? (par && par.o) : (par && par.c)))
       .filter(Boolean);
   }else{

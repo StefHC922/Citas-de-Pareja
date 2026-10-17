@@ -1378,6 +1378,20 @@ ver con el nombre de los modos.
     copia local **no manda invitación ni se expone a nadie**, y se borra al
     empezar una partida nueva, al dar "Terminar Partida" o al aceptar el fin.
     (17-oct-2026)
+  - **La selección del Duelo en solo lectura** (la pareja y los invitados ven,
+    no marcan) usa un **checkbox propio**: teal con check oscuro, también
+    deshabilitado. El nativo pintaba el check blanco sobre blanco y no se veía.
+  - **Invitado a media partida en Duelo/Juntos:** entra en la **misma ronda** que
+    se está jugando y recibe la pareja actual + las que restan. En **Turnos**
+    sigue entrando a la ronda siguiente (no tiene turno en la actual).
+  - **Mensajes de fase del Duelo** (`#faseDuelo`) y el **"Toca para revelar el
+    personaje"** del reverso van con letra más grande y degradado coral→turquesa.
+  - **Arriba del reproductor del Duelo** va la modalidad y quiénes juegan
+    ("Juntos · Pareja" / "Turnos · Multijugador") y **debajo** "Ronda X de R".
+    Antes estaba al revés y no decía Pareja/Multijugador.
+  - **Cartas del Duelo:** debajo del personaje dicen **"contra [la contraparte]"**.
+    En la carta de dos caras, cada cara muestra a la del otro. En los otros modos
+    ese texto no sale. (17-oct-2026)
   - **El invitado también carga el contenido** (`cargarPersonajes()`); si no, su
     lista de selección sale **vacía**. Y no se dibuja la selección sin contenido
     (`asegurarPersonajes()`).
