@@ -1425,6 +1425,25 @@ ver con el nombre de los modos.
     empezaba con `[`, se caía a "un renglón = un personaje" **en silencio** y
     metía cada línea como un personaje, con todo el texto como nombre (le pasó a
     Fredy al pegar los personajes de un usuario en Contrapartes).
+  - **"Exportar lista" descarga la lista que se está viendo (17-oct-2026).** Va
+    **pareado con "Pegar lista completa"**, en la misma línea de dos botones al
+    final del engrane (`#btnExportar`, función `exportarLista()`). **NO va en la
+    esquina superior derecha**: ahí vive el "‹ Volver" y en toda la app hay **un
+    solo botón por esquina** (ver `AGENTS.md`, regla 1f). Exporta **lo que se
+    tiene seleccionado en ese momento** — la pestaña de usuario + la sub-pestaña
+    (Personajes / Contrapartes), o **Variantes Picantes** — y en esa pestaña el
+    texto se renombra solo ("Exportar variantes"). Tres reglas:
+    - **Lo que se exporta es un arreglo pelado**, el mismo formato que acepta
+      "Pegar lista completa": el archivo se puede volver a pegar tal cual.
+    - **No le hace caso al buscador.** El buscador es para buscar, no para
+      achicar un respaldo: si respetara el filtro, un archivo que dice "todos los
+      personajes" podría salir con la mitad y nadie lo notaría.
+    - El nombre del archivo sale del **nombre real del usuario**
+      (`limpiarParaArchivo()` lo limpia de `/ \ : * ? " < > |` y le acorta los
+      espacios, porque el nombre viene de la base y un `/` rompería la descarga;
+      si queda vacío cae a `usuario1` / `usuario2`). Ejemplo:
+      `roles-Fredy-personajes.json`.
+    Con lista vacía **no baja nada**: avisa con `aviso()`.
   - **Las contrapartes van CRUZADAS** (decisión de Fredy, oct-2026): la lista de
     contrapartes de un usuario son las contrapartes de los personajes **del otro**.
     O sea, **`C1` ↔ `U2`** y **`C2` ↔ `U1`**. Por eso el desplegable "Contraparte

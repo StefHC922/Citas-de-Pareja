@@ -502,7 +502,13 @@
     <input id="inpNueva" placeholder="Nuevo personaje" maxlength="80">
     <button id="btnAdd">+</button>
   </div>
-  <button class="btnSec" id="btnPegar">Pegar lista completa</button>
+  <!-- Importar y exportar van en la MISMA línea, pareados. "Exportar" NO va en la
+       esquina superior derecha porque ahí vive el "‹ Volver": en toda la app hay un
+       solo botón por esquina (AGENTS.md, regla 1f). -->
+  <div class="filaBotones">
+    <button class="btnSec" id="btnPegar">Pegar lista completa</button>
+    <button class="btnSec" id="btnExportar">Exportar lista</button>
+  </div>
   <div class="pegarBox" id="pegarBox" style="display:none">
     <textarea id="pegarTa" placeholder="Un personaje por línea (o un arreglo JSON)."></textarea>
     <button class="btnPri" id="btnPegarOk" style="margin-top:8px;">Agregar a la lista</button>
@@ -3710,6 +3716,7 @@ function pintarCfg(){
     ? "Una variante por línea."
     : "Un personaje por línea (o un arreglo JSON).";
   document.getElementById("btnPegarOk").textContent = enEspeciales ? "Agregar variantes" : "Agregar a la lista";
+  document.getElementById("btnExportar").textContent = enEspeciales ? "Exportar variantes" : "Exportar lista";
 
   const box = document.getElementById("tablaBox");
   box.innerHTML = "";
@@ -3915,6 +3922,54 @@ async function pegarLista(){
   aviso(n ? ("Se agregaron " + n + " personaje(s).") : "No se agregó nada: ya estaban todos.");
 }
 
+// ---------- exportar ----------
+// Baja un archivo .json con la lista que se está VIENDO ahora mismo: la pestaña
+// de usuario + la sub-pestaña (Personajes / Contrapartes), o Variantes Picantes.
+// NO depende del buscador: el buscador es para buscar, no para achicar el
+// respaldo. Si no, un archivo que dice "todos los personajes" podría salir con
+// la mitad y nadie lo notaría.
+// El archivo es un arreglo pelado, el mismo formato que acepta "Pegar lista
+// completa": lo que se exporta se puede volver a pegar tal cual.
+function limpiarParaArchivo(s){
+  // Deja solo lo que un nombre de archivo aguanta. El nombre del usuario viene
+  // de la base, y un "/" o un ":" ahí rompería la descarga.
+  return String(s || "")
+    .replace(/[\\/:*?"<>|\u0000-\u001f]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .slice(0, 40);
+}
+function nombreArchivoExport(){
+  if(enEspeciales) return "roles-variantes-picantes.json";
+  return "roles-" + (limpiarParaArchivo(nombreDeLado(miLado())) || ("usuario" + miLado()))
+       + (subCfg === "U" ? "-personajes" : "-contrapartes") + ".json";
+}
+function exportarLista(){
+  const lista = listaSegura(claveCfg()).slice();   // copia: lo que se descarga
+  if(!lista.length){                                // no se toca el original
+    aviso(enEspeciales ? "No hay ninguna variante en esta lista." : "No hay ningún personaje en esta lista.");
+    return;
+  }
+  const texto = JSON.stringify(lista, null, 2);
+  const nombre = nombreArchivoExport();
+  try{
+    const blob = new Blob([texto], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nombre;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    // El enlace se va con el archivo pintado: sin esto se queda un <a> suelto
+    // en el cuerpo y la URL nunca se libera.
+    setTimeout(function(){ URL.revokeObjectURL(url); if(a && a.parentNode) a.parentNode.removeChild(a); }, 2000);
+    aviso("Se descargó " + nombre + " (" + lista.length + " en total).");
+  }catch(e){
+    aviso("No se pudo crear el archivo en este navegador.");
+  }
+}
+
 // ---------- eventos del engrane ----------
 document.getElementById("tabLado1").onclick = ()=>{ ladoCfg = "1"; enEspeciales = false; limpiarFiltro(); pintarCfg(); };
 document.getElementById("tabLado2").onclick = ()=>{ ladoCfg = "2"; enEspeciales = false; limpiarFiltro(); pintarCfg(); };
@@ -3929,6 +3984,7 @@ document.getElementById("btnPegar").onclick = ()=>{
   b.style.display = (b.style.display === "none") ? "block" : "none";
 };
 document.getElementById("btnPegarOk").onclick = ()=>{ pegarLista(); };
+document.getElementById("btnExportar").onclick = ()=>{ exportarLista(); };
 document.getElementById("btnPjGuardar").onclick = ()=>{ guardarDetalle(); };
 document.getElementById("btnPjBorrar").onclick = ()=>{ borrarDetalle(); };
 document.getElementById("btnPjNo").onclick = ()=>{ cerrarDetalle(); };
