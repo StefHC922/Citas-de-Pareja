@@ -258,6 +258,22 @@
 <div class="vista" id="vistaInicio">
   <h1>Juego de Roles</h1>
   <p class="desc">Diviértete más</p>
+  <!-- El orden de las tres cajas de arriba (decisión de Fredy, oct-2026):
+       primero el NÚMERO DE RONDAS, luego el MODO DE JUEGO, y hasta atrás
+       con QUIÉNES JUEGAN. Antes iba al revés y se veía mal el dinámica. -->
+  <div class="caja">
+    <div class="cajaTitulo">Número de rondas</div>
+    <input type="number" id="rondas" class="rondasInput" min="2" max="50" value="3" inputmode="numeric">
+  </div>
+  <div class="caja">
+    <div class="cajaTitulo">Elige Tu Modo de Juego</div>
+    <div class="tabs" style="margin-top:10px;">
+      <button class="tab" id="tabNormal">Clásico</button>
+      <button class="tab" id="tabEspejo">Cambia de Bando</button>
+      <button class="tab" id="tabSeleccionar">Seleccionar</button>
+    </div>
+    <div id="descModo" style="font-size:.78rem;color:var(--fg-muted);margin-top:10px;text-align:center;"></div>
+  </div>
   <div class="caja">
     <div class="cajaTitulo">¿Cómo vas a jugar hoy?</div>
     <!-- Los dos modos de quiénes juegan van en el mismo renglón. "Jugar solo"
@@ -267,23 +283,10 @@
       <button class="btnPri" id="btnMulti" style="margin-bottom:0;">Multijugador</button>
     </div>
   </div>
+  <!-- Las variantes NO son un modo: se prenden encima de cualquiera de los tres
+       (decisión de Fredy, oct-2026). Van después de las otras cajas. -->
   <div class="caja">
-    <div class="cajaTitulo">Número de rondas</div>
-    <input type="number" id="rondas" class="rondasInput" min="2" max="50" value="3" inputmode="numeric">
-  </div>
-  <div class="caja">
-    <div class="cajaTitulo">Modo</div>
-    <div class="tabs" style="margin-top:10px;">
-      <button class="tab" id="tabNormal">Normal</button>
-      <button class="tab" id="tabEspejo">Espejo</button>
-      <button class="tab" id="tabSeleccionar">Seleccionar</button>
-    </div>
-    <div id="descModo" style="font-size:.78rem;color:var(--fg-muted);margin-top:10px;text-align:center;"></div>
-  </div>
-  <!-- El interruptor de Especial va ABAJO DE TODO (decisión de Fredy, oct-2026).
-       No es un modo: se prende encima de cualquiera de los tres. -->
-  <div class="caja">
-    <div class="cajaTitulo">Especial</div>
+    <div class="cajaTitulo">Variantes Picantes, Te atreves ?</div>
     <label class="opModo" style="margin-top:10px; justify-content:center;">
       <input type="checkbox" id="chkEspecial">
       <span>Ponle un toque personal a tu juego</span>
@@ -340,7 +343,7 @@
       <div class="foto" id="fotoPersonaje"><span>🖼️</span><small>Imagen del personaje</small></div>
       <div class="nombre" id="nombrePersonaje"></div>
       <div id="blqueEspecial" style="display:none">
-        <b>Variante especial</b>
+        <b>Variante picante</b>
         <p id="txtEspecial"></p>
       </div>
       <div class="info" id="infoTarjeta">
@@ -404,7 +407,7 @@
   </div>
   <!-- Especiales va aparte y centrado: es COMUN a los dos, no es un lado. -->
   <div style="width:100%; margin-top:10px; text-align:center;">
-    <button class="tab" id="tabEsp" style="width:auto; padding-left:22px; padding-right:22px;">Especiales</button>
+    <button class="tab" id="tabEsp" style="width:auto; padding-left:22px; padding-right:22px;">Variantes Picantes</button>
   </div>
   <input class="buscar" id="buscarOpt" type="text" placeholder="🔍 Buscar personaje..." autocomplete="off" style="margin-top:12px;">
   <div class="tablaBox" id="tablaBox"></div>
@@ -736,8 +739,8 @@ const MODO_ESPEJO = "espejo";
 const MODO_SELECCIONAR = "seleccionar";
 let modoBaseCfg = MODO_NORMAL;
 const DESC_MODO = {
-  "normal": "",
-  "espejo": "Contrapartes",
+  "normal": "Interpreta, Aprovecha y ......",
+  "espejo": "La Lealtad y las Intenciones Cambian de Bando",
   "seleccionar": "Selecciona tus personajes favoritos."
 };
 // De dónde sale la lista de un jugador, según el modo.
@@ -933,7 +936,7 @@ function pintarEspecial(){
     nota.style.color = "var(--fg-muted)";
   }
   if(!listaSegura("ESP").length){
-    avisoEl.textContent = "No tienes variantes especiales. Agrégalas en el engrane ⚙️, pestaña Especiales.";
+    avisoEl.textContent = "No tienes variantes especiales. Agrégalas en el engrane ⚙️, pestaña Variantes Picantes.";
   }
 }
 document.getElementById("chkEspecial").addEventListener("change", pintarEspecial);
@@ -1751,7 +1754,7 @@ function revisarEspecial(R){
   const K = especialK();
   if(K < 1){ aviso("¿Cuántas veces? tiene que ser al menos 1."); return false; }
   if(K > R){ aviso("No puede haber más de " + R + " variantes: máximo una por ronda."); return false; }
-  if(!listaSegura("ESP").length){ aviso("No tienes variantes especiales. Agrégalas en el engrane ⚙️, pestaña Especiales."); return false; }
+  if(!listaSegura("ESP").length){ aviso("No tienes variantes especiales. Agrégalas en el engrane ⚙️, pestaña Variantes Picantes."); return false; }
   return true;
 }
 async function iniciar(modo, ladoSoloElegido, unCelularFlag, poolsListos){
