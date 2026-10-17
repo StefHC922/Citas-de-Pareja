@@ -336,7 +336,7 @@
     <div class="cajaTitulo">Variantes Picantes, Te atreves ?</div>
     <label class="opModo" style="margin-top:10px; justify-content:center;">
       <input type="checkbox" id="chkEspecial">
-      <span>Ponle un toque personal a tu juego</span>
+      <span style="color:var(--coral);">Ponle un toque personal a tu juego</span>
     </label>
     <div id="cajaEspecial" style="display:none; margin-top:10px;">
       <div class="cajaTitulo" style="font-size:.7rem;margin-bottom:4px;">¿Cuántas veces?</div>
@@ -396,7 +396,7 @@
 <!-- ============ PLAYER ============ -->
 <div class="vista" id="vistaPlayer">
   <h1 id="plTitulo">Juego de Roles</h1>
-  <!-- En Duelo: modalidad + quiénes juegan ("Juntos · Pareja"). Va ARRIBA de la
+  <!-- En Duelo: modo de juego + modalidad ("Pareja · Juntos"). Va ARRIBA de la
        ronda. En los otros modos nace/queda oculto. (Fredy, 17-oct-2026.) -->
   <div id="modoPartida"></div>
   <div id="progreso"></div>
@@ -1090,18 +1090,10 @@ document.getElementById("btnIrCfg").onclick = ()=>{ abrirCfg(); };
 // Botones de modo: cada uno abre su ventana y de ahi arranca la partida.
 let modoPendiente = "multi";
 // Quiénes juegan: Pareja o Multijugador. "Jugar solo" se quitó (oct-2026).
-// En DUELO el que arma es el ADMINISTRADOR de la app (decisión de Fredy,
-// 17-oct-2026), no el anfitrión ocasional: si la pareja lo intenta, se le avisa
-// y no se abre nada. El resto de modos los puede iniciar cualquiera.
-function bloqueaDueloSinAdmin(){
-  if(modoBaseCfg === MODO_DUELO && !esAdminFlag){
-    aviso("El Duelo lo arma el administrador.");
-    return true;
-  }
-  return false;
-}
-document.getElementById("btnPareja").onclick = ()=>{ if(bloqueaDueloSinAdmin()) return; modoPendiente = "pareja"; conPendiente(()=>{ abrirModal("modalModo"); }); };
-document.getElementById("btnMulti").onclick = ()=>{ if(bloqueaDueloSinAdmin()) return; modoPendiente = "multi"; conPendiente(()=>{ abrirModal("modalModo"); }); };
+// Cualquiera de los dos puede iniciar CUALQUIER modo (incluido Duelo): el que
+// inicia es el anfitrión de esa partida y es el que marca en la selección.
+document.getElementById("btnPareja").onclick = ()=>{ modoPendiente = "pareja"; conPendiente(()=>{ abrirModal("modalModo"); }); };
+document.getElementById("btnMulti").onclick = ()=>{ modoPendiente = "multi"; conPendiente(()=>{ abrirModal("modalModo"); }); };
 document.getElementById("btnModoLocal").onclick = ()=>{
   cerrarModal("modalModo");
   // El duelo pregunta una cosa más (de quién son las cartas y cómo se juega) en
@@ -1131,7 +1123,6 @@ function pintarModalDuelo(){
   b.classList.toggle("activo", dueloLadoPendiente === "B");
 }
 function abrirModalDuelo(){
-  if(!esAdminFlag){ aviso("El Duelo lo arma el administrador."); return; }
   dueloLadoPendiente = "A";
   pintarModalDuelo();
   abrirModal("modalDuelo");
@@ -1752,7 +1743,7 @@ function pintarPasoDueloJuntos(d){
   }
   fin.style.display = "none";
   prog.textContent = "Ronda " + (d.ronda || 1) + " de " + (d.rondas || 1);
-  // La modalidad ("Juntos · Pareja") ya se pinta ARRIBA, en `#modoPartida`.
+  // La modalidad ("Pareja · Juntos") ya se pinta ARRIBA, en `#modoPartida`.
   turnoNombre.textContent = "";
   espera.style.display = "none";
   try{ document.getElementById("btnSaltar").style.display = "none"; }catch(e){}
@@ -1768,7 +1759,7 @@ function pintarPasoDueloJuntos(d){
     // otro que hay que hacer (voltear para ver la contraparte), no "voltea tu carta".
     const f = document.getElementById("faseDuelo");
     f.style.display = "block";
-    f.textContent = "Una cara es el original; voltéenla para ver la contraparte.";
+    f.textContent = "Voltéala para ver la contraparte.";
     // El anfitrión es quien tiene el teléfono, así que él avanza.
     btnSig.style.display = esAnfitrion() ? "block" : "none";
     return;
@@ -1813,7 +1804,7 @@ function pintarPaso(){
   // desaparecer: al reanudar tienen que volver.
   try{ mostrarBotonesAdmin(); }catch(e){}
   if(!jugando || !d){ return; }
-  // "Juntos · Pareja" / "Turnos · Multijugador", arriba de la ronda.
+  // "Pareja · Juntos" / "Multijugador · Turnos", arriba de la ronda.
   try{ pintarModoPartida(); }catch(e){}
   // El aviso de "voltea la carta" se limpia en cada repintado; el toque en
   // "Siguiente" lo vuelve a encender si hace falta.
@@ -2076,8 +2067,8 @@ function ladoDeCabeza(id){
        || ((sesionActual && sesionActual.cabezas) || []).find(x=> x && x.id === id);
   return (c && c.lado) || null;
 }
-// Línea de arriba del reproductor, SOLO en Duelo: "Juntos · Pareja" o
-// "Turnos · Multijugador". En los otros modos se oculta.
+// Línea de arriba del reproductor, SOLO en Duelo: "Pareja · Juntos" o
+// "Multijugador · Turnos". En los otros modos se oculta.
 function pintarModoPartida(){
   const el = document.getElementById("modoPartida");
   if(!el) return;
@@ -2085,7 +2076,9 @@ function pintarModoPartida(){
   el.style.display = "block";
   const modalidad = dueloEsJuntos() ? "Juntos" : "Turnos";
   const quienes = (modoJuego === "multi") ? "Multijugador" : "Pareja";
-  el.textContent = modalidad + " · " + quienes;
+  // Primero el modo de juego (Pareja/Multijugador) y luego la modalidad
+  // (Turnos/Juntos), como lo pidió Fredy.
+  el.textContent = quienes + " · " + modalidad;
 }
 // La contraparte que está jugando el otro usuario en la ronda actual. Se pinta
 // debajo del personaje SOLO en las cartas del Duelo ("contra ...").
@@ -2380,8 +2373,6 @@ async function preparar(modo, opcionesDuelo, unCelularFlag){
 // R quepa en ellas. Lo que NO se hace aquí son las revisiones de `listaDeLado`,
 // porque en duelo el reparto sale de las parejas, no de las listas sueltas.
 async function prepararDuelo(modo, opcionesDuelo, unCelularFlag, R){
-  // Red de seguridad (los botones ya lo revisan): el Duelo lo arma el admin.
-  if(!esAdminFlag){ aviso("El Duelo lo arma el administrador."); return; }
   const lado = (opcionesDuelo && opcionesDuelo.lado) || "";
   const modalidad = (opcionesDuelo && opcionesDuelo.modalidad) || "";
   if((lado !== "A" && lado !== "B") || (modalidad !== "turnos" && modalidad !== "juntos")) return;
@@ -2581,13 +2572,18 @@ function limpiarFiltroSel(){
 // La lista es de UN lado y sale FILTRADA (los que no tienen contraparte no se
 // ven). Los dos contadores salen del MISMO arreglo de marcados, así que nunca se
 // descuadran: siempre van iguales.
+// Nombre de quien inició la selección, para el texto que ve el otro ("X marca").
+function nombreHostSeleccion(){
+  if(selDoc && selDoc.hostNombre) return selDoc.hostNombre;
+  return "El anfitrión";
+}
 function pintarSeleccionDuelo(){
   const tabs = document.getElementById("selTabs");
   tabs.innerHTML = "";
   tabs.style.display = "none";   // en duelo no hay pestañas: la lista es una sola
   const otro = otroLadoDuelo(selLadoDuelo);
   document.getElementById("selDesc").textContent =
-    (esAdminFlag ? "Marca" : (nombreAdmin() + " marca")) + " exactamente " +
+    (selSoyHost ? "Marca" : (nombreHostSeleccion() + " marca")) + " exactamente " +
     selR + " tarjetas de " + nombreLado(selLadoDuelo) + ". " +
     nombreLado(otro) + " juega las contrapartes.";
 
@@ -2601,10 +2597,9 @@ function pintarSeleccionDuelo(){
     const chk = document.createElement("input");
     chk.type = "checkbox";
     chk.checked = selDueloIds.indexOf(it.o.id) >= 0;
-    // En duelo SOLO marca el ADMINISTRADOR de la app (no el anfitrión ocasional):
-    // la pareja y los invitados ven la lista y cómo sube el contador, pero la
-    // casilla no se mueve.
-    chk.disabled = !esAdminFlag;
+    // En duelo marca SOLO quien inició la selección (el anfitrión de esa
+    // partida): los demás ven la lista y cómo sube el contador, sin marcar.
+    chk.disabled = !selSoyHost;
     chk.onchange = ()=>{ cambiarMarcaDuelo(it.o.id, chk.checked); };
     const nom = document.createElement("span");
     nom.className = "selNombre";
@@ -2634,18 +2629,18 @@ function pintarSeleccionDuelo(){
     cuenta.appendChild(b);
   });
 
-  // "Jugar" solo cuando llegaron a R y quien mira es el ADMINISTRADOR.
+  // "Jugar" solo cuando llegaron a R y quien mira es quien inició la selección.
   const btn = document.getElementById("btnSelJugar");
-  btn.style.display = (esAdminFlag && n === selR) ? "block" : "none";
+  btn.style.display = (selSoyHost && n === selR) ? "block" : "none";
   // El "Volver" de abajo se ocultó: el de ARRIBA A LA DERECHA es el bueno (ese
   // enlace llama a la función de este botón). Se deja la línea en "none".
   try{ document.getElementById("btnSelVolver").style.display = "none"; }catch(e){}
   try{ document.getElementById("selNota").style.display = "block"; }catch(e){}
-  // "Sorpréndeme": solo lo ve el administrador, que es el único que marca.
-  try{ document.getElementById("btnSelAzar").style.display = esAdminFlag ? "" : "none"; }catch(e){}
+  // "Sorpréndeme": solo lo ve quien marca (el anfitrión de la selección).
+  try{ document.getElementById("btnSelAzar").style.display = selSoyHost ? "" : "none"; }catch(e){}
 }
 async function cambiarMarcaDuelo(id, marcado){
-  if(!esAdminFlag) return;   // en duelo solo marca el administrador de la app
+  if(!selSoyHost) return;   // en duelo solo marca quien inició la selección
   const k = selDueloIds.indexOf(id);
   if(marcado){
     if(k >= 0) return;                                  // ya estaba
@@ -2668,7 +2663,7 @@ async function cambiarMarcaDuelo(id, marcado){
 // "Sorpréndeme, elige por mí": toma R parejas AL AZAR del lado elegido y las
 // deja marcadas. El orden al azar es el orden de las rondas. Solo el admin.
 async function elegirAzarDuelo(){
-  if(!esAdminFlag) return;
+  if(!selSoyHost) return;
   const disp = paresDisponibles(selLadoDuelo);
   if(disp.length < selR){ aviso("No hay suficientes personajes con contraparte."); return; }
   limpiarFiltroSel();   // que se vean los que salgan
@@ -2900,12 +2895,11 @@ async function abrirSeleccionCompartida(cabezasIn, R){
 }
 // Arranca la partida con lo que la gente marcó.
 async function arrancarSeleccion(){
+  // Candado: solo quien inició la selección la arranca (aplica a Duelo y a la
+  // selección normal). Como el que inicia es el que marca, el otro no arranca.
+  if(selEsCompartida() && !selSoyHost){ aviso("Solo quien inició la selección puede empezar."); return; }
   // ---- DUELO: se reparte por PAREJAS, no por listas ----
   if(selDuelo){
-    // En Duelo arranca el ADMINISTRADOR de la app, que es el único que marca.
-    // Puede no ser quien inició la selección: por eso NO se aplica aquí el
-    // candado de "solo el que la inició".
-    if(selEsCompartida() && !esAdminFlag){ aviso("El Duelo lo arma el administrador."); return; }
     if(selDueloIds.length !== selR){ aviso("Faltan tarjetas por escoger."); return; }
     const pares = [];
     for(let i = 0; i < selDueloIds.length; i++){
@@ -2927,8 +2921,6 @@ async function arrancarSeleccion(){
     });
     return;
   }
-  // Candado de la selección NORMAL: solo quien la inició la arranca.
-  if(selEsCompartida() && !selSoyHost){ aviso("Solo quien inició la selección puede empezar."); return; }
   const pools = {};
   selCabezas.forEach(c=>{
     const pool = selPoolDe(c);

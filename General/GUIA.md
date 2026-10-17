@@ -1328,8 +1328,10 @@ ver con el nombre de los modos.
   tiene **cuatro caminos** según se juegue con pareja o en multijugador, y en un
   celular o cada quien en el suyo. Lo que se guarda en la sesión: `modoBase:"duelo"`,
   `dueloLado`, `dueloModalidad` y **`dueloPares[]`** (las parejas en orden de
-  ronda). En la pantalla de escogimiento del duelo **solo marca el administrador**:
-  la pareja y los invitados ven la lista y el contador, pero no marcan. "Saltar
+  ronda). En la pantalla de escogimiento del duelo **solo marca el anfitrión**
+  (quien inicia la partida): la pareja y los invitados ven la lista y el
+  contador, pero no marcan. Cualquiera de los dos puede iniciar, también el
+  Duelo; el que inicia es el anfitrión. "Saltar
   turno" **no existe** en duelo. **El detalle completo de las cuatro ramas, el
   modelo de datos y las cuatro funciones del reparto están en
   `General/duelos.md`** — ese es el archivo que se lee, no esta nota. Cómo se
@@ -1386,8 +1388,10 @@ ver con el nombre de los modos.
     sigue entrando a la ronda siguiente (no tiene turno en la actual).
   - **Mensajes de fase del Duelo** (`#faseDuelo`) y el **"Toca para revelar el
     personaje"** del reverso van con letra más grande y degradado coral→turquesa.
-  - **Arriba del reproductor del Duelo** va la modalidad y quiénes juegan
-    ("Juntos · Pareja" / "Turnos · Multijugador") y **debajo** "Ronda X de R".
+  - **"Ponle un toque personal a tu juego"** (la etiqueta del interruptor de
+    Variantes Picantes) va en **coral** (`var(--coral)`), para que resalte.
+  - **Arriba del reproductor del Duelo** va el **modo de juego y la modalidad**
+    ("Pareja · Juntos" / "Multijugador · Turnos") y **debajo** "Ronda X de R".
     Antes estaba al revés y no decía Pareja/Multijugador.
   - **Cartas del Duelo:** debajo del personaje dicen **"contra [la contraparte]"**.
     En la carta de dos caras, cada cara muestra a la del otro. En los otros modos

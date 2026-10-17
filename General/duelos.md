@@ -12,6 +12,11 @@
 > **Lo que sigue es el diseño**, acordado por Fredy, y se deja como referencia de
 > **por qué** está hecho así. **Cómo se construyó, qué se apartó del plan y qué
 > falta está en `General/Plan-Duelo.md`** (ese es el archivo de trabajo).
+>
+> **Nota (17-oct-2026):** en este archivo, "administrador" (y "ADMINISTRADOR")
+> significa el **anfitrión de esa partida**, o sea **quien la inicia**, no el
+> usuario `admin` de la app. Cualquiera de los dos puede iniciar, también el
+> Duelo; el que inicia es el que marca y controla la partida.
 
 El detalle del juego base (`Roles/`) está en la entrada de `Roles/` en
 `General/GUIA.md`. Aquí solo vive el cuarto modo, que es lo único que se
@@ -83,10 +88,13 @@ En **Multijugador** la app solo reparte las cartas de cada lado entre sus
 jugadores: **quién hace duelo con quién en cada ronda es dinámica del grupo,
 no una regla de la app** (decisión de Fredy, oct-2026).
 
-### Quien lo arma es siempre el administrador
+### El anfitrión arma y marca
 
-También en "cada quien en su suyo". **El administrador marca las tarjetas**,
-aunque el lado elegido sea el de la pareja. Los demás no marcan.
+El que **inicia la partida** es el anfitrión y es el que marca las tarjetas,
+también en "cada quien en su suyo", aunque el lado elegido sea el de la pareja.
+Los demás solo ven. **Cualquiera de los dos usuarios puede iniciar** (no es cosa
+solo del usuario `admin` de la app): el que inicia manda en esa partida.
+(Decisión de Fredy, 17-oct-2026.)
 
 ### Siempre hay pantalla de escogimiento
 
@@ -303,9 +311,10 @@ Arriba va el progreso: **"Ronda 1 de 3"**.
 3. **La pantalla de escogimiento del duelo.** Lista filtrada (fuera los que no
    tienen contraparte), contadores derivados e iguales, y **todos los demás**
    (la pareja y los invitados) viendo sin poder marcar: en Duelo **solo marca
-   el administrador**. Al pie, la nota de los personajes que no se ven.
+   el anfitrión** (quien inició la partida). Al pie, la nota de los personajes
+   que no se ven.
 4. **La modalidad Juntos:** el avance por parejas con "Siguiente" del
-   administrador, y el indicador de tres fases.
+   anfitrión, y el indicador de tres fases.
 5. **La carta de dos caras** — solo para Juntos en un celular.
 
 Lo que **no** hay que tocar: el motor de turnos, el sorteo, las rondas, las
@@ -326,9 +335,9 @@ modalidades): su código no se toca.
   son intencionales; esta es una pregunta, que también abre en vez de cerrar.
 - **La selección compartida y la regla de "todos listos" ya se probaron y
   funcionan.** La diferencia del Duelo es cuál es el reparto de tareas: en los
-  otros modos cada quien marca lo suyo; **en Duelo solo marca el
-  administrador**, y la pareja y los invitados nada más ven. Ver *Quien lo
-  arma es siempre el administrador*.
+  otros modos cada quien marca lo suyo; **en Duelo solo marca el anfitrión**
+  (quien inicia la partida), y la pareja y los invitados nada más ven. Ver
+  *El anfitrión arma y marca*.
 - **Las variantes picantes sí entran**, con el mismo mecanismo de siempre:
   una sola vez al arrancar, máximo una por ronda, y le toca a una sola
   persona. Ver *Las variantes picantes*.

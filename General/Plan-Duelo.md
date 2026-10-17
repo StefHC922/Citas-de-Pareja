@@ -51,16 +51,16 @@ Seleccionar:
 
 | Tema | Decisión |
 |---|---|
-| Lado | El admin elige de quién son las cartas: usuario 1 o usuario 2. El dueño juega originales; el otro, contrapartes. |
+| Lado | El anfitrión (quien inicia) elige de quién son las cartas: usuario 1 o usuario 2. El dueño juega originales; el otro, contrapartes. |
 | Sin contraparte | No aparece ni en la selección ni en el reparto. Nota al pie: “¿No ves un personaje? Puede que todavía no tenga contraparte.” |
-| Selección | **Solo el administrador marca.** La pareja y los invitados ven y opinan, pero no marcan. |
+| Selección | **Solo marca el anfitrión (quien inicia).** La pareja y los invitados ven y opinan, pero no marcan. Cualquiera de los dos puede iniciar. |
 | Contadores | Un solo arreglo de R elegidos; los dos lados muestran el mismo número. “Jugar” se prende al llegar a R. |
 | Variantes picantes | Entran. Se sortean una vez al arrancar, máximo una por ronda, y le tocan a **una** persona. Se ven en **su** cara. |
 | “Saltar turno” | **No existe en Duelo.** Se esconde en las dos modalidades. Su código no se toca. |
 | Emparejamiento | En Pareja se conserva el orden: carta k con contraparte k. En Multijugador, quién hace duelo con quién es **dinámica del grupo**. |
 | Invitado a media partida | Recibe las tarjetas que le falten **del lado del usuario que lo invitó**. |
 | Juntos un celular | **Una sola carta de dos caras**: una cara = original; al voltearla = su contraparte. La ven todos. |
-| Juntos cada quien | Cada persona recibe su carta tapada. Todos voltean; **el administrador** aprieta “Siguiente”. |
+| Juntos cada quien | Cada persona recibe su carta tapada. Todos voltean; **el anfitrión** aprieta “Siguiente”. |
 
 ---
 
@@ -142,7 +142,7 @@ Para la selección del duelo se usa el mismo documento, con:
   modoJuego: "pareja" | "multi", // quiénes juegan (antes iba en `modo`)
   dueloLado: "A" | "B",
   dueloModalidad: "turnos" | "juntos",
-  dueloSel: [idsOriginales],     // SOLO lo escribe el administrador
+  dueloSel: [idsOriginales],     // SOLO lo escribe el anfitrión (quien inició)
   rondas: R,
   cabezas: [...],
   sid, hostUid, hostNombre,
@@ -151,7 +151,7 @@ Para la selección del duelo se usa el mismo documento, con:
 ```
 
 - El invitado/pareja **lee** `dueloSel` y ve la lista; no escribe.
-- El administrador escribe `dueloSel` con `setDoc(..., { merge:true })`.
+- El anfitrión (quien inició) escribe `dueloSel` con `setDoc(..., { merge:true })`.
 - No se usa `sel[id]` para el duelo. `sel` sigue siendo de la selección normal.
 
 ### 4.3 Invariantes que no se pueden romper
@@ -497,8 +497,8 @@ function avanzarDueloJuntosLocal(d){
   - ocultar `#flipwrap` normal y mostrar `#tarjetaDuelo`;
   - `const par = d.dueloPares[d.ronda-1]`;
   - pintar las dos caras con `pintarDueloPar(par, d.ronda)`;
-  - `#turnoNombre` = “Juntos”;
-  - `#faseDuelo` = “Una cara es el original; voltéenla para ver la contraparte.”;
+  - `#turnoNombre` vacío (la modalidad se pinta en `#modoPartida`, arriba);
+  - `#faseDuelo` = “Voltéala para ver la contraparte.”;
   - `#btnSig` visible (el anfitrión es quien tiene el teléfono);
   - `#esperaTurno` oculto.
 - **Cada quien en su celular**:
@@ -651,7 +651,7 @@ if(mb === MODO_DUELO){
 ### Fase 1 — Pestaña, modal y selección
 
 **Objetivo:** poder elegir Duelo, lado y modalidad; llegar a la selección
-filtrada; que solo el admin marque.
+  filtrada; que solo el anfitrión (quien inicia) marque.
 
 Tareas:
 
@@ -670,7 +670,7 @@ Tareas:
 - El 4.º modo se ve en 2x2 y no deforma las otras pestañas.
 - Al elegir Pareja + Duelo + un celular, se pregunta lado y modalidad.
 - La selección muestra solo personajes con contraparte.
-- Solo el admin puede marcar; la pareja/ invitados ven el contador subir.
+- Solo el anfitrión puede marcar; la pareja/ invitados ven el contador subir.
 - El contador no pasa de R; “Jugar” se prende exactamente en R.
 - La nota al pie se ve.
 - `revisar.py` pasa.
@@ -794,7 +794,7 @@ Además:
 
 - [ ] Sin contraparte: no aparece en la lista; nota al pie.
 - [ ] R = máximo de parejas; R = máximo + 1 avisa.
-- [ ] Solo el admin marca; la pareja ve el contador subir.
+- [ ] Solo el anfitrión marca; la pareja ve el contador subir.
 - [ ] Variante picante en una sola cara/ persona.
 - [ ] Invitado a media partida en las cuatro ramas.
 - [ ] Pausar, terminar, reanudar, salir y volver.
@@ -821,7 +821,7 @@ Además:
    `dueloCfg` a `iniciar`; no confiar en la pestaña activa.
 7. **La selección normal y la del duelo comparten globals.** Usar banderas
    `selDuelo*` y limpiarlas al abrir/cerrar; no reutilizar `sel[id]`.
-8. **Solo el admin escribe `dueloSel`.** Si un invitado escribe, se rompe la
+8. **Solo el anfitrión escribe `dueloSel`.** Si un invitado escribe, se rompe la
    regla y la selección se vuelve impredecible.
 9. **No usar `innerHTML` con datos de Firebase.** `pintarCaraDuelo` debe usar
    `textContent` (nombres, situaciones, etc. vienen de la base).
@@ -840,10 +840,10 @@ Además:
     quita: `dueloPasando` (no dos transacciones a la vez) y `rondaEsperada`
     (no avanzar dos veces si la pantalla todavía no se enteró). Sin el segundo,
     dos toques seguidos se saltaban una pareja.
-15. **Quién marca en Duelo.** Es el **usuario `admin`** (`esAdminFlag`), no el
-    anfitrión de la partida. No volver a `selSoyHost` en la pantalla de
-    escogimiento: si la pareja inicia el duelo en su teléfono, no debe poder
-    marcar ni arrancar.
+15. **Quién marca en Duelo.** Es el **anfitrión**, o sea **quien inicia la
+    partida** (`selSoyHost`), sea el admin o la pareja. **No volver al candado
+    de `esAdminFlag`**: cualquier usuario no invitado puede iniciar, como en los
+    demás modos. `esAdminFlag` manda solo en el engrane/contenido.
 
 ---
 
@@ -851,7 +851,7 @@ Además:
 
 - Las 8 combinaciones de la matriz pasan en vivo.
 - No hay “Saltar turno” en Duelo.
-- La selección es solo del admin; los demás ven sin marcar.
+- La selección es solo del anfitrión (quien inicia); los demás ven sin marcar.
 - Sin contraparte no aparece; nota al pie.
 - La contraparte correcta es siempre la cruzada (`par`).
 - Turnos usa el motor actual sin cambios.
@@ -903,7 +903,7 @@ escrito, no algo verificado**.
 
 - Sin contraparte: que no aparezca en la lista y que se vea la nota al pie.
 - R = máximo de parejas, y R = máximo + 1 (que avise con el número).
-- Solo el admin marca; la pareja ve el contador subir y su casilla no se mueve.
+- Solo el anfitrión marca; la pareja ve el contador subir y su casilla no se mueve.
 - Variante picante en una sola cara (Juntos un celular) o en una sola persona.
 - Invitado a media partida en las cuatro ramas (que termine con los demás).
 - Pausar, terminar, reanudar, salir y volver.
@@ -911,7 +911,7 @@ escrito, no algo verificado**.
   "Continuar / Partida nueva"; "Partida nueva" descarta la guardada).
 - Los cinco ajustes del 17-oct: checkbox de solo lectura visible, invitado en
   la **misma ronda** en Duelo/Juntos, mensajes de fase y "Toca para revelar"
-  con degradado, encabezado "modalidad · quiénes" arriba de la ronda, y
+  con degradado, encabezado "quiénes · modalidad" arriba de la ronda, y
   **"contra [contraparte]"** en las cartas del Duelo.
 - Fin con fuegos y "¡Gracias por jugar!".
 - **Los tres modos viejos siguen funcionando** (Clásico, Cambia de Bando,
@@ -1115,7 +1115,7 @@ que pide el JS existe en el HTML.
     es lo que decide a qué cara va cuando la carta es compartida.
   - `pintarPasoDueloJuntos()` ya tiene las dos ramas: la de cada quien (una carta
     normal tapada) y la de un solo celular (la carta de dos caras, sin tapa, con el
-    aviso "Una cara es el original; voltéenla para ver la contraparte.").
+    aviso "Voltéala para ver la contraparte.").
   - La rama normal de `pintarPaso` apaga `#tarjetaDuelo`, así que no quedan restos
     al volver a Turnos o a los otros modos.
   - **El modal volvió a ofrecer "Juntos" en un solo celular** (se quitó la
@@ -1271,6 +1271,18 @@ que pide el JS existe en el HTML.
      `contraDeRonda()` decide quién es el otro según el lado y la ronda.
   `revisar.py` en verde (23 archivos); `<div>`/`</div>` 115/115; sin ids
   duplicados; todos los ids del JS existen. **Falta verlo en el celular.**
+
+- **17-oct-2026 — "Quien inicia manda" en Duelo (cambia la decisión de arriba).**
+  Se quitó el candado que limitaba el Duelo al usuario `admin`: ahora **cualquiera
+  de los dos** puede iniciarlo y, como en los demás modos, **el que inicia es el
+  anfitrión y es el que marca** (`selSoyHost`), controla Pausar/Terminar/QR/
+  agregar invitado y arranca. El otro ve la selección en **solo lectura**.
+  `esAdminFlag` se quedó **solo** para el engrane/contenido. Se revirtieron
+  `bloqueaDueloSinAdmin()` y los avisos "El Duelo lo arma el administrador", y
+  los usos de `esAdminFlag` en la selección del Duelo (`chk.disabled`,
+  `cambiarMarcaDuelo`, `elegirAzarDuelo`, `btnSelJugar`, `btnSelAzar`,
+  `arrancarSeleccion`). Las entradas anteriores de esta bitácora que dicen
+  "solo el admin" quedan como **historia**; **manda esta**.
 
 **Resumen de las 6 fases:** el código del Duelo está completo en `Roles/index.html`
 y `revisar.py` pasa. **Lo que falta es probarlo** (sección de arriba). No se
