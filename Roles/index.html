@@ -664,6 +664,40 @@ const JUEGO_INV = "roles";
 function personajesRef(){ return doc(db, "personajesJuego", "actual"); }
 function sesionRef(){ return doc(db, "sesionRoles", "actual"); }
 
+// ---------- partida de UN SOLO CELULAR: se guarda en ESTE teléfono ----------
+// No es una sesión de Firebase: no se manda ninguna invitación ni se expone a
+// nadie. Sirve para que "Pausar y Salir" se pueda retomar (Continuar / Partida
+// nueva) cuando la partida se juega en un solo celular, que antes no se guardaba.
+// (Decidido por Fredy, 17-oct-2026.)
+const CLAVE_LOCAL_ROLES = "roles_partida_local";
+function guardarLocalGuardada(){
+  try{
+    if(!estado) return;
+    const payload = {
+      v: 1, guardadaEn: Date.now(),
+      hostUid: miId,
+      hostNombre: (miUsuario && miUsuario.nombre) || nombreAdmin(),
+      modoJuego: modoJuego,
+      unCelular: true,
+      estado: estado
+    };
+    localStorage.setItem(CLAVE_LOCAL_ROLES, JSON.stringify(payload));
+  }catch(e){}
+}
+function leerLocalGuardada(){
+  try{
+    const raw = localStorage.getItem(CLAVE_LOCAL_ROLES);
+    if(!raw) return null;
+    const g = JSON.parse(raw);
+    if(!g || g.v !== 1 || !g.estado || !Array.isArray(g.estado.cabezas)) return null;
+    if(g.estado.terminada) return null;
+    return g;
+  }catch(e){ return null; }
+}
+function limpiarLocalGuardada(){
+  try{ localStorage.removeItem(CLAVE_LOCAL_ROLES); }catch(e){}
+}
+
 function mostrarGracia(){ document.getElementById("modalGracia").style.display = "flex"; }
 document.getElementById("btnGraciaOk").onclick = ()=>{ document.getElementById("modalGracia").style.display = "none"; };
 
@@ -837,6 +871,17 @@ function buscarPersonaje(id){
   for(let i = 0; i < claves.length; i++){
     const hit = listaSegura(claves[i]).find(p=> p && p.id === id);
     if(hit) return hit;
+  }
+  // Respaldo: los que YA están repartidos en las colas de la partida. Hace falta
+  // al REANUDAR un "un solo celular" sin conexión, cuando las listas de contenido
+  // (`U1`/`C1`...) todavía no cargaron: en Juntos un celular la carta de dos caras
+  // busca la pareja por id y, sin esto, saldría vacía.
+  if(estado && estado.listas){
+    const heads = Object.keys(estado.listas);
+    for(let i = 0; i < heads.length; i++){
+      const hit = (estado.listas[heads[i]] || []).find(p=> p && p.id === id);
+      if(hit) return hit;
+    }
   }
   return null;
 }
@@ -2267,6 +2312,9 @@ async function iniciar(modo, ladoSoloElegido, unCelularFlag, poolsListos, dueloC
   // QR, "Agregar invitado" y el panel de la sala (solo en Multijugador).
   modoJuego = modo;
   unCelular = !!unCelularFlag;
+  // Partida nueva: cualquier partida de un solo celular que hubiera guardada
+  // queda atrás (si no, volvería a ofrecerse al terminar esta).
+  limpiarLocalGuardada();
   await cargarPersonajes();
   // Lista de usuarios fresca, para no arrancar sin un invitado recien agregado.
   try{
@@ -2344,6 +2392,10 @@ document.getElementById("btnTerminar").onclick = async ()=>{
   if(jugandoCompartido){
     try{ await setDoc(sesionRef(), { pausada: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
     await pausarInvitacion(JUEGO_INV, true);
+  }else{
+    // Un solo celular: no hay sesión de Firebase. Se guarda AQUÍ MISMO, en este
+    // teléfono, para que al volver se pueda retomar (Continuar / Partida nueva).
+    guardarLocalGuardada();
   }
   pintarPaso();
   entrar();
@@ -2351,6 +2403,7 @@ document.getElementById("btnTerminar").onclick = async ()=>{
 document.getElementById("btnTerminarPartida").onclick = async ()=>{
   if(!esAnfitrion()){ aviso("Terminar la partida es cosa del anfitrión."); return; }
   jugando = false;
+  limpiarLocalGuardada();   // se acabó a propósito: ya no hay nada que retomar
   if(jugandoCompartido){
     try{ await setDoc(sesionRef(), { activa: false, terminada: true, porAdmin: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
     await retirarInvitacion(JUEGO_INV);
@@ -2949,6 +3002,7 @@ function seguirEncima(titulo, desc){
 }
 function seguirFuera(){ cerrarModal("vistaSeguir"); }
 let accionPendiente = null;
+let continuarPendienteFn = null;   // qué hace "Continuar": la de Firebase o la local
 // Si hay una partida a medias del anfitrion, ofrece continuarla antes de la
 // accion elegida (abrir la ventana de modo). Si elige "Partida nueva", corre la
 // accion guardada.
@@ -2962,11 +3016,21 @@ async function conPendiente(accion){
     }
   }catch(e){}
   if(pend){
+    // Partida COMPARTIDA (cada quien en su celular): vive en Firebase.
+    continuarPendienteFn = continuarPartida;
     accionPendiente = accion;
     seguirEncima("¿Continuar partida anterior?", "Había una partida a medias. ¿La retomas?");
-  }else{
-    accion();
+    return;
   }
+  // Partida de UN SOLO CELULAR: vive guardada en ESTE teléfono, no en Firebase.
+  const g = leerLocalGuardada();
+  if(g && g.hostUid === miId){
+    continuarPendienteFn = ()=> continuarPartidaLocal(g);
+    accionPendiente = accion;
+    seguirEncima("¿Continuar partida anterior?", "Había una partida a medias EN ESTE CELULAR. ¿La retomas?");
+    return;
+  }
+  accion();
 }
 async function continuarPartida(){
   seguirFuera();
@@ -2988,10 +3052,37 @@ async function continuarPartida(){
   mostrarBotonesAdmin();
   pintarPaso();
 }
-document.getElementById("btnContinuar").onclick = ()=>{ continuarPartida(); };
+// Retomar la partida de UN SOLO CELULAR que se guardó en este teléfono. No toca
+// Firebase ni manda invitación: se restaura el estado tal cual y se sigue jugando
+// aquí mismo, en modo local.
+function continuarPartidaLocal(g){
+  seguirFuera();
+  if(!g || !g.estado) return;
+  jugando = true;
+  modoLocal = true;
+  jugandoCompartido = false;
+  soyHost = true;
+  modoJuego = g.modoJuego || "pareja";
+  unCelular = true;
+  estado = g.estado;
+  finMostrado = false;
+  sidMostrado = null;
+  cartaActual = null;   // la primera tarjeta arranca boca abajo
+  document.getElementById("plTitulo").textContent = JUEGO_TITULO;
+  ver("vistaPlayer");
+  mostrarBotonesAdmin();
+  pintarPaso();
+}
+document.getElementById("btnContinuar").onclick = ()=>{
+  const f = continuarPendienteFn;
+  continuarPendienteFn = null;
+  if(f){ f(); return; }
+  continuarPartida();
+};
 document.getElementById("btnNueva").onclick = async ()=>{
   seguirFuera();
   if(!esAnfitrion()){ aviso("Quien inicia o renueva la partida es el anfitrión."); return; }
+  limpiarLocalGuardada();   // "Partida nueva" también descarta la del celular
   try{ await cerrarSesion(); }catch(e){}
   jugando = false;
   if(accionPendiente){ const f = accionPendiente; accionPendiente = null; f(); return; }
@@ -3048,6 +3139,7 @@ document.getElementById("btnFinOk").onclick = async ()=>{
   try{ apagarFuegos(); }catch(e){}
   cerrarModal("modalFin");
   jugando = false;
+  limpiarLocalGuardada();   // la partida terminó: ya no hay nada que retomar
   entrar();
 };
 async function salirModoInvitado(){

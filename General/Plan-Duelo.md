@@ -907,6 +907,8 @@ escrito, no algo verificado**.
 - Variante picante en una sola cara (Juntos un celular) o en una sola persona.
 - Invitado a media partida en las cuatro ramas (que termine con los demás).
 - Pausar, terminar, reanudar, salir y volver.
+- Continuar una partida de **un solo celular** (pausar, volver, y que salga
+  "Continuar / Partida nueva"; "Partida nueva" descarta la guardada).
 - Fin con fuegos y "¡Gracias por jugar!".
 - **Los tres modos viejos siguen funcionando** (Clásico, Cambia de Bando,
   Seleccionar): es la regresión más importante, porque se tocaron sus funciones.
@@ -923,6 +925,7 @@ escrito, no algo verificado**.
 | La sala muestra al invitado a media partida | requiere dos teléfonos | `pintarSala()` |
 | La carta más baja deja "Siguiente" a la vista | requiere pantalla | `#tarjeta` / `.tarjetaCara` |
 | El buscador filtra la lista en las dos selecciones | requiere teclear | `#selBuscar` / `pintarSeleccion` |
+| Retomar una partida de un solo celular | requiere pausar y volver | `continuarPartidaLocal()` / `roles_partida_local` |
 
 **4. Lo único automático que se corrió:** `revisar.py` (sintaxis y nombres, exit 0
 en las 6 fases) y, a mano, `<div>`/`</div>` cuadran, sin `id` repetidos y todo `id`
@@ -1232,6 +1235,19 @@ que pide el JS existe en el HTML.
   (el orden al azar es el orden de las rondas), suben los dos contadores y se
   enciende "Jugar"; se puede tocar otra vez para re-sortear. En la selección
   normal no se muestra. **Falta verlo en vivo.**
+
+- **17-oct-2026 — "Un solo celular" ya se puede continuar.** Antes, "Pausar y
+  Salir" solo guardaba la partida cuando era "cada quien en su celular" (la
+  sesión de Firebase); en "un solo celular" no quedaba nada y al volver no salía
+  el aviso de continuar. Ahora, al pausar en un solo celular, el estado se guarda
+  en el **propio teléfono** (`localStorage`, clave `roles_partida_local`); al
+  volver, `conPendiente()` lo detecta y ofrece **Continuar / Partida nueva**
+  (`continuarPartidaLocal()`). Es local: no manda invitación ni se expone. Se
+  borra al empezar una partida nueva, al "Terminar Partida" y al aceptar el fin.
+  `buscarPersonaje()` tiene un respaldo que busca en las colas de la partida,
+  para que la carta de dos caras de Juntos salga bien al reanudar sin conexión.
+  **Falta probarlo en el celular** (pausar, volver, continuar, y que "Partida
+  nueva" descarte la guardada).
 
 **Resumen de las 6 fases:** el código del Duelo está completo en `Roles/index.html`
 y `revisar.py` pasa. **Lo que falta es probarlo** (sección de arriba). No se

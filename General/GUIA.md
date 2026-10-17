@@ -1371,6 +1371,13 @@ ver con el nombre de los modos.
     es el orden de las rondas), suben los dos contadores y se enciende "Jugar".
     Se puede volver a tocar para re-sortear. Solo lo ve el administrador, y es
     solo del Duelo (en la selección normal no se muestra).
+  - **"Pausar y Salir" se puede retomar.** En **"cada quien en su celular"** la
+    partida vive en `sesionRoles/actual`. En **"un solo celular"** se guarda en el
+    propio teléfono (`localStorage`, clave `roles_partida_local`) y, al volver,
+    sale "¿Continuar partida anterior?" con **Continuar / Partida nueva**. Esa
+    copia local **no manda invitación ni se expone a nadie**, y se borra al
+    empezar una partida nueva, al dar "Terminar Partida" o al aceptar el fin.
+    (17-oct-2026)
   - **El invitado también carga el contenido** (`cargarPersonajes()`); si no, su
     lista de selección sale **vacía**. Y no se dibuja la selección sin contenido
     (`asegurarPersonajes()`).
