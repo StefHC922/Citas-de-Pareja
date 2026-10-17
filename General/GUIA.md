@@ -1353,8 +1353,16 @@ ver con el nombre de los modos.
     seguir."*). No se **deshabilita**: un botón deshabilitado no avisa nada. **En el
     duelo *Juntos* esto NO aplica**: ahí el botón no se apaga, porque todos juegan
     al mismo tiempo y el anfitrión avanza cuando le parece.
+  - **La carta del personaje tiene tope de alto** (`max-height:min(56dvh,520px)`):
+    la foto es un banner 16/9 (no un cuadro) y lo que sobra de la info se desliza
+    **dentro** de la carta, para que "Siguiente" quede siempre cerca. Es la misma
+    carta en todos los modos de `Roles/` y en las dos caras del duelo. (17-oct-2026)
   - **El invitado no sale de la pantalla de selección**: se le oculta el "‹ Volver"
     y el botón atrás del celular queda bloqueado, igual que durante el juego.
+  - **La pantalla de selección tiene buscador** (`#selBuscar`, 17-oct-2026):
+    filtra la lista que se está viendo, sin mayúsculas y sin acentos ("jose"
+    encuentra a "José"). Sirve igual para la selección normal y para la del
+    Duelo, que comparten pantalla.
   - **El invitado también carga el contenido** (`cargarPersonajes()`); si no, su
     lista de selección sale **vacía**. Y no se dibuja la selección sin contenido
     (`asegurarPersonajes()`).

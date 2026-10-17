@@ -921,6 +921,8 @@ escrito, no algo verificado**.
 | La carta no se voltea al soltar el dedo después de desplazar el texto | requiere toque real | el listener de scroll de `#tarjetaDuelo` |
 | Los fuegos y el aviso de fin en las 8 ramas | requiere partida completa | `abrirFin()` |
 | La sala muestra al invitado a media partida | requiere dos teléfonos | `pintarSala()` |
+| La carta más baja deja "Siguiente" a la vista | requiere pantalla | `#tarjeta` / `.tarjetaCara` |
+| El buscador filtra la lista en las dos selecciones | requiere teclear | `#selBuscar` / `pintarSeleccion` |
 
 **4. Lo único automático que se corrió:** `revisar.py` (sintaxis y nombres, exit 0
 en las 6 fases) y, a mano, `<div>`/`</div>` cuadran, sin `id` repetidos y todo `id`
@@ -1206,6 +1208,21 @@ que pide el JS existe en el HTML.
     admin pueda arrancar aunque no sea quien inició la selección.
   - `revisar.py` en verde (exit 0, 23 archivos) después de los dos cambios. Sigue
     **pendiente la prueba en vivo**.
+
+- **17-oct-2026 — La carta bajó de alto (todas las pantallas de `Roles/`).**
+  `#tarjeta`/`.tarjetaCara` ya no pasan de `max-height:min(56dvh,520px)`; la
+  foto dejó de ser cuadrada y es un **banner 16/9** (`max-height:min(20dvh,140px)`),
+  y la info se desliza **dentro** de la carta en vez de mandar un alto fijo de
+  290px. El motivo: "Siguiente" quedaba muy abajo. Es la **misma** carta en
+  Clásico, Cambia de Bando, Seleccionar y las dos modalidades del Duelo, así que
+  aplica a todas. **Falta verlo en el celular** (sobre todo en un teléfono
+  angosto y en la carta de dos caras).
+
+- **17-oct-2026 — Buscador en la pantalla de selección.** Se agregó `#selBuscar`
+  (clase `.buscar`) arriba de la lista, con filtro sin mayúsculas ni acentos
+  (`normSel()`), y se limpia al abrir/cancelar cada selección (`limpiarFiltroSel()`).
+  Sirve para la **selección normal y la del Duelo**, que comparten pantalla.
+  Lo pidió Fredy jugando el Duelo. **Falta verlo en el celular.**
 
 **Resumen de las 6 fases:** el código del Duelo está completo en `Roles/index.html`
 y `revisar.py` pasa. **Lo que falta es probarlo** (sección de arriba). No se
