@@ -9,7 +9,7 @@
 //
 //      if(!await confirmar({
 //        aviso:true,
-//        titulo:"¿Eliminar a Ana?",
+//        titulo:"¿Eliminar a Mary?",
 //        texto:"No se puede deshacer.",
 //        ok:"Eliminar"
 //      })) return;

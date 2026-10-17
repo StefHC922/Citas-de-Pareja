@@ -164,6 +164,12 @@ inicio de `GUIA.md`). **Que no vuelva a pasar:**
    a `General/HISTORIA.md`**, no ahi. `GUIA.md` es lo que rige hoy;
    `HISTORIA.md` es el por que. Si se mezclan, `GUIA.md` se vuelve ilegible y
    este repo pierde su memoria otra vez (oct-2026).
+7. **Los ejemplos usan los nombres de verdad: la pareja es `Mary` y el
+   administrador `Fredy`.** En comentarios, documentacion y textos de ejemplo no
+   se inventan nombres (decidio Fredy, 17-oct-2026). Ojo: **eso NO es un dato
+   de la app.** El nombre real de cada quien sale de la base (`nombreLado()`), y
+   ningun nombre se hardcodea en el codigo. Ver `General/GUIA.md`, seccion de
+   decisiones.
 
 ## Estándares de tamaño (no inventar otros)
 

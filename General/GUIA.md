@@ -557,6 +557,7 @@ pantalla que escribe**, no solo la que se está tocando. `Autorizar/` era la
 | **Cambiar usuario** tiene **Volver** y al elegir regresa a **Usuarios** | Antes no se podia salir sin cambiar, y caia donde se le antojaba (oct-2026) |
 | Los titulos con degradado llevan `width:fit-content` | Sin eso el color se reparte por toda la pantalla y se ve clarito |
 | Los botones de esquina (engrane, carrito) son **solo del menu principal** | En submenus no salen. El engrane va arriba a la **izquierda** |
+| **Los ejemplos usan los nombres de verdad**: la pareja es **Mary** y el administrador **Fredy** | Decisión de Fredy (17-oct-2026). En comentarios, en la documentación y en los textos de ejemplo se ponen esos dos nombres, no nombres inventados. **OJO: esto NO son datos de la app** — el nombre real de cada quien sale de la base (`nombreLado()` → `usuariosLista`), y el respaldo es el genérico `"Lado A"` / `"Lado B"`. No se hardcodea ningún nombre en el código |
 
 ### De la forma de trabajar
 
@@ -1569,7 +1570,7 @@ import { confirmar, aviso } from "../confirmar.js";   // o "./confirmar.js" en l
 // 1) PREGUNTA: hay algo que confirmar o cancelar. Devuelve una promesa.
 if(!await confirmar({
   aviso:true,                                  // circulito ⚠️ (por omision false)
-  titulo:"¿Eliminar a Ana?",                   // la pregunta, en grande
+  titulo:"¿Eliminar a Mary?",                   // la pregunta, en grande
   texto:"No se puede deshacer.",               // la consecuencia, chica (opcional)
   ok:"Eliminar"                                // el boton de adelante
 })) return;
