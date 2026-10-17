@@ -348,8 +348,15 @@
   <!-- Solo en el modo DUELO: los personajes que no tienen contraparte no salen
        en la lista, y sin esta nota parecía un error. Nace oculta. -->
   <div id="selNota" style="display:none; font-size:.75rem; color:var(--fg-muted); text-align:center; margin-top:10px;">¿No ves un personaje? Puede que todavía no tenga contraparte.</div>
+  <!-- Azar del Duelo: elige R al azar y con eso arma las parejas (marca los
+       contadores y enciende "Jugar"). Solo el administrador lo ve, que es el
+       único que marca. Nace oculto. (17-oct-2026) -->
+  <button class="btnSec" id="btnSelAzar" style="display:none; font-size:.85rem; padding:6px; text-decoration:none; color:var(--teal);">Sorpréndeme, elige por mí</button>
   <button class="btnPri" id="btnSelJugar" style="display:none; margin-top:12px;">Jugar ▶</button>
-  <button class="btnSec" id="btnSelVolver" style="margin-top:8px;">‹ Volver</button>
+  <!-- El "Volver" de esta pantalla vive ARRIBA A LA DERECHA (el enlace de la app).
+       Este botón se queda en el DOM pero OCULTO: ese enlace de arriba llama a su
+       función para cancelar la selección. Quitarlo es de la vista, no del código. -->
+  <button class="btnSec" id="btnSelVolver" style="display:none; margin-top:8px;">‹ Volver</button>
 </div>
 
 <!-- ============ ESPERA (pareja / invitado) ============ -->
@@ -2477,9 +2484,12 @@ function pintarSeleccionDuelo(){
   // "Jugar" solo cuando llegaron a R y quien mira es el ADMINISTRADOR.
   const btn = document.getElementById("btnSelJugar");
   btn.style.display = (esAdminFlag && n === selR) ? "block" : "none";
-  // El INVITADO no tiene salida (regla de la casa), igual que en la selección normal.
-  try{ document.getElementById("btnSelVolver").style.display = esInvitadoFlag ? "none" : ""; }catch(e){}
+  // El "Volver" de abajo se ocultó: el de ARRIBA A LA DERECHA es el bueno (ese
+  // enlace llama a la función de este botón). Se deja la línea en "none".
+  try{ document.getElementById("btnSelVolver").style.display = "none"; }catch(e){}
   try{ document.getElementById("selNota").style.display = "block"; }catch(e){}
+  // "Sorpréndeme": solo lo ve el administrador, que es el único que marca.
+  try{ document.getElementById("btnSelAzar").style.display = esAdminFlag ? "" : "none"; }catch(e){}
 }
 async function cambiarMarcaDuelo(id, marcado){
   if(!esAdminFlag) return;   // en duelo solo marca el administrador de la app
@@ -2498,6 +2508,19 @@ async function cambiarMarcaDuelo(id, marcado){
   }
   if(selEsCompartida()){
     // Solo el administrador escribe `dueloSel`; los demás leen.
+    try{ await setDoc(seleccionRef(), { dueloSel: selDueloIds, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+  }
+  pintarSeleccion();
+}
+// "Sorpréndeme, elige por mí": toma R parejas AL AZAR del lado elegido y las
+// deja marcadas. El orden al azar es el orden de las rondas. Solo el admin.
+async function elegirAzarDuelo(){
+  if(!esAdminFlag) return;
+  const disp = paresDisponibles(selLadoDuelo);
+  if(disp.length < selR){ aviso("No hay suficientes personajes con contraparte."); return; }
+  limpiarFiltroSel();   // que se vean los que salgan
+  selDueloIds = mezclar(disp).slice(0, selR).map(x=> x.o.id);
+  if(selEsCompartida()){
     try{ await setDoc(seleccionRef(), { dueloSel: selDueloIds, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
   }
   pintarSeleccion();
@@ -2634,9 +2657,12 @@ function pintarSeleccion(){
   // es quien inició: los demás no tienen nada que apretar aqui.
   const btn = document.getElementById("btnSelJugar");
   btn.style.display = (selTodosListos() && selSoyHost) ? "block" : "none";
-  // El INVITADO no tiene salida (regla de la casa): no se le muestra el "‹ Volver".
-  // Los demás sí lo ven, para poder cancelar la selección.
-  try{ document.getElementById("btnSelVolver").style.display = esInvitadoFlag ? "none" : ""; }catch(e){}
+  // El "Volver" de abajo se ocultó: el de ARRIBA A LA DERECHA es el bueno (ese
+  // enlace llama a la función de este botón). Se deja la línea en "none".
+  try{ document.getElementById("btnSelVolver").style.display = "none"; }catch(e){}
+  // "Sorpréndeme" es SOLO del Duelo (necesita contrapartes): en la selección
+  // normal no se muestra.
+  try{ document.getElementById("btnSelAzar").style.display = "none"; }catch(e){}
 }
 async function cambiarMarca(cab, idPersonaje, marcado){
   const actual = selMarcosDe(cab.id).slice();
@@ -2890,6 +2916,7 @@ function escucharSeleccion(){
   }catch(e){}
 }
 document.getElementById("btnSelJugar").onclick = ()=>{ arrancarSeleccion(); };
+document.getElementById("btnSelAzar").onclick = ()=>{ elegirAzarDuelo(); };
 // El buscador filtra la lista que se está viendo. Se repinta con `pintarSeleccion`,
 // que sabe si es la selección normal o la del duelo.
 document.getElementById("selBuscar").addEventListener("input", (e)=>{

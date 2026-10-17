@@ -1224,6 +1224,15 @@ que pide el JS existe en el HTML.
   Sirve para la **selección normal y la del Duelo**, que comparten pantalla.
   Lo pidió Fredy jugando el Duelo. **Falta verlo en el celular.**
 
+- **17-oct-2026 — Selección: "Volver" de abajo oculto y botón de azar.**
+  El "‹ Volver" de abajo quedó **oculto** (`#btnSelVolver` sigue en el DOM
+  porque el enlace de arriba a la derecha llama a su función para cancelar).
+  En el Duelo, abajo de la nota, se agregó **"Sorpréndeme, elige por mí"**
+  (`#btnSelAzar`): solo lo ve el administrador; marca **R parejas al azar**
+  (el orden al azar es el orden de las rondas), suben los dos contadores y se
+  enciende "Jugar"; se puede tocar otra vez para re-sortear. En la selección
+  normal no se muestra. **Falta verlo en vivo.**
+
 **Resumen de las 6 fases:** el código del Duelo está completo en `Roles/index.html`
 y `revisar.py` pasa. **Lo que falta es probarlo** (sección de arriba). No se
 modificó nada más del repo: ni las reglas de Firebase, ni Clásico, ni Cambia de

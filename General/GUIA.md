@@ -1363,6 +1363,14 @@ ver con el nombre de los modos.
     filtra la lista que se está viendo, sin mayúsculas y sin acentos ("jose"
     encuentra a "José"). Sirve igual para la selección normal y para la del
     Duelo, que comparten pantalla.
+  - **El "Volver" de la pantalla de selección va ARRIBA A LA DERECHA**, no
+    abajo: el botón de abajo (`#btnSelVolver`) se quedó en el código pero
+    **oculto**, porque el enlace de arriba llama a su función para cancelar.
+  - **En el Duelo hay "Sorpréndeme, elige por mí"** (`#btnSelAzar`, 17-oct-2026):
+    el administrador lo toca y se marcan **R parejas al azar** (el orden al azar
+    es el orden de las rondas), suben los dos contadores y se enciende "Jugar".
+    Se puede volver a tocar para re-sortear. Solo lo ve el administrador, y es
+    solo del Duelo (en la selección normal no se muestra).
   - **El invitado también carga el contenido** (`cargarPersonajes()`); si no, su
     lista de selección sale **vacía**. Y no se dibuja la selección sin contenido
     (`asegurarPersonajes()`).
