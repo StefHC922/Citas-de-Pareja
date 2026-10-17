@@ -135,6 +135,18 @@ segundo atajo: **"Tentación sin distinciones"** (decisión de Fredy, 17-oct-202
   cada quien**: una cara es tu carta y la otra la del otro, y se voltea para verla.
 - En la sesión se guarda `dueloTentacion:true` y **no** se guarda `dueloPares`.
 
+### Esperar a la pareja antes de arrancar (solo Duelo)
+
+En **"cada quien en su celular"**, el Duelo **no arranca** hasta que la otra
+parte **entre**; mientras tanto, quien marca ve *"Esperando a que entre …"*. Si
+la pareja no entra, al intentar arrancar se pregunta y el anfitrión puede
+**"Comenzar igual"**. Se espera **solo a la pareja** (no a los invitados), y en
+**"un solo celular"** no se espera a nadie (ahí están los dos).
+
+Si alguien acepta **después** de que ya arrancó, entra **a la partida**, no a la
+selección: eso quedó arreglado el 17-oct-2026 (antes caía en la pantalla de
+selección ya muerta y quedaba atrapado).
+
 ### Las dos modalidades
 
 Se pregunta **en la misma pantalla**, una debajo de otra, para que no se sienta

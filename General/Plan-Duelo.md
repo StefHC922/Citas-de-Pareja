@@ -917,6 +917,9 @@ escrito, no algo verificado**.
   quien) reparte R por persona de `U+C` de su lado, sin "contra", y **no**
   aparece en Multijugador un celular; en Juntos un celular (Pareja) cada cara
   muestra la carta de cada quien.
+- Duelo **"cada quien"**: que **no arranque** sin la pareja, que salga
+  "Esperando a que entre …", que "Comenzar igual" funcione, y que si la pareja
+  entra después caiga **en la partida** (no en la selección).
 - Fin con fuegos y "¡Gracias por jugar!".
 - **Los tres modos viejos siguen funcionando** (Clásico, Cambia de Bando,
   Seleccionar): es la regresión más importante, porque se tocaron sus funciones.
@@ -1302,6 +1305,31 @@ que pide el JS existe en el HTML.
   el atajo se pueda usar aunque el modo normal no alcance. `revisar.py` en verde
   (23 archivos); `<div>`/`</div>` 116/116; sin ids duplicados. **Falta verlo en
   el celular.**
+
+- **17-oct-2026 — Duelo espera a la pareja (y arreglo del atrapado).**
+  1. **Arreglo del bug:** si alguien acepta la invitación **después** de que la
+     partida ya arrancó (por "Comenzar igual"), `btnUnirme` ahora lo manda **al
+     juego** y no a la selección muerta. Antes quedaba atrapado marcando cartas
+     de una selección que ya no existía.
+  2. **Espera a la pareja (solo Duelo, solo "cada quien"):** el anfitrión ve
+     `#selEspera` ("Esperando a que entre …") hasta que entra **la pareja** (no
+     los invitados). Al intentar arrancar (`Jugar`, `#btnSelTentacion`), si la
+     pareja no ha entrado, `confirmarArranqueDuelo()` pregunta y ofrece
+     **"Comenzar igual"**.
+  3. La aceptación se guarda en el doc de la selección como `acepto_<id>` (una
+     vez por `sid`, `selAceptoEscrito`), tanto al aceptar la ventana como al
+     entrar directo; el anfitrión la lee en `selDoc` (`parejaAcepto()`).
+  En "un solo celular" no se espera a nadie. `revisar.py` en verde; `<div>`/
+  `</div>` 117/117. **Falta verlo en el celular.**
+
+- **17-oct-2026 — "Sorpréndeme" también en "Seleccionar".**
+  `elegirAzarSeleccion()` marca R tarjetas al azar de `U+C` de la lista que se
+  está viendo (distintas; el pool siempre alcanza). El botón `#btnSelAzar` se
+  muestra en la selección normal (`azarOn` en `pintarSeleccion`): en "cada
+  quien" solo en la propia (`selSoloMia`), en "un solo celular" en la pestaña
+  visible. El listener del botón ahora despacha: `elegirAzarDuelo()` si es Duelo,
+  `elegirAzarSeleccion()` si no. "Tentación" sigue siendo solo del Duelo.
+  `revisar.py` en verde; `<div>`/`</div>` 117/117. **Falta verlo en el celular.**
 
 **Resumen de las 6 fases:** el código del Duelo está completo en `Roles/index.html`
 y `revisar.py` pasa. **Lo que falta es probarlo** (sección de arriba). No se

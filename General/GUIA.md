@@ -1380,6 +1380,16 @@ ver con el nombre de los modos.
       **menos Multijugador + un celular** (ahí el botón no se muestra). En Juntos
       un celular (solo Pareja) la carta de dos caras muestra la de cada quien.
     Ninguno de los dos sale en la selección normal.
+  - **"Sorpréndeme" también está en el modo "Seleccionar"** (17-oct-2026): marca
+    **R tarjetas al azar de `U+C` de la lista que se está viendo**, distintas
+    (el pool siempre alcanza). En **"cada quien"** cada teléfono solo lo hace en
+    su propia lista; en **"un solo celular"**, en la pestaña que se esté viendo.
+    "Tentación sin distinciones" sigue siendo solo del Duelo.
+  - **El Duelo "cada quien" espera a la pareja** (17-oct-2026): no arranca hasta
+    que la otra parte entra ("Esperando a que entre …"), y si no entra se puede
+    **"Comenzar igual"**. Espera **solo a la pareja**, no a los invitados, y no
+    aplica en "un solo celular". Si alguien acepta después de que ya arrancó,
+    entra **a la partida**, no a la selección muerta.
   - **"Pausar y Salir" se puede retomar.** En **"cada quien en su celular"** la
     partida vive en `sesionRoles/actual`. En **"un solo celular"** se guarda en el
     propio teléfono (`localStorage`, clave `roles_partida_local`) y, al volver,

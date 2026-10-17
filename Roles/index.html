@@ -371,6 +371,9 @@
        lista larga, marcar R tarjetas a mano era lento. (17-oct-2026) -->
   <input class="buscar" id="selBuscar" type="text" placeholder="🔍 Buscar personaje..." autocomplete="off" style="margin-top:12px;">
   <div id="selCuenta" style="margin-top:12px;"></div>
+  <!-- Duelo "cada quien": avisa si la pareja todavía no entra (solo el Duelo
+       espera; hay "Comenzar igual"). Nace oculto. (17-oct-2026) -->
+  <div id="selEspera" style="display:none; font-size:.78rem; color:var(--fg-muted); text-align:center; margin-top:6px;"></div>
   <div class="tablaBox" id="selBox" style="margin-top:10px;"></div>
   <!-- Solo en el modo DUELO: los personajes que no tienen contraparte no salen
        en la lista, y sin esta nota parecía un error. Nace oculta. -->
@@ -2575,6 +2578,7 @@ let selDuelo = false;              // ¿esta selección es la del duelo?
 let selLadoDuelo = "A";            // "A" | "B": de quién son las cartas
 let selModalidadDuelo = "turnos";  // "turnos" | "juntos"
 let selDueloIds = [];              // ids de los ORIGINALES marcados, EN ORDEN
+let selAceptoEscrito = null;       // sid en el que ya avisé "entré" (una vez por selección)
 // Si alguien sale de la selección, no se le vuelve a meter. Se recuerda el `sid`
 // que abandonó: una selección NUEVA trae otro `sid`, así que esa sí lo vuelve a
 // llamar. Sin esto, un doc viejo que se quedó `activa` atrapaba al teléfono en
@@ -2619,6 +2623,32 @@ function limpiarFiltroSel(){
 function nombreHostSeleccion(){
   if(selDoc && selDoc.hostNombre) return selDoc.hostNombre;
   return "El anfitrión";
+}
+// La PAREJA es el otro usuario base (ni el anfitrión ni un invitado). Puede no
+// existir (juego solo): en ese caso no hay a quién esperar.
+function parejaAEsperar(){
+  return (selCabezas || []).find(c=> c && !c.invitado && c.id !== miId) || null;
+}
+// ¿Ya entró la pareja? En un solo celular no hay a quién esperar (no hay doc).
+function parejaAcepto(){
+  if(!selEsCompartida()) return true;
+  const p = parejaAEsperar();
+  if(!p) return true;
+  return !!(selDoc && selDoc["acepto_" + p.id]);
+}
+// Candado SOLO del Duelo: si la pareja no ha entrado, se puede esperar o
+// "Comenzar igual". Devuelve true si se puede arrancar.
+async function confirmarArranqueDuelo(){
+  if(!selDuelo) return true;
+  if(!selEsCompartida()) return true;
+  const p = parejaAEsperar();
+  if(!p || parejaAcepto()) return true;
+  return await confirmar({
+    aviso: true,
+    titulo: (p.nombre || "Tu pareja") + " todavía no entra",
+    texto: "Puedes esperar a que entre, o comenzar igual sin ella.",
+    ok: "Comenzar igual"
+  });
 }
 function pintarSeleccionDuelo(){
   const tabs = document.getElementById("selTabs");
@@ -2671,6 +2701,19 @@ function pintarSeleccionDuelo(){
     b.textContent = par[1] + " " + n + "/" + selR;
     cuenta.appendChild(b);
   });
+
+  // Duelo "cada quien": avisar si la pareja todavía no entra (solo el Duelo espera).
+  try{
+    const espEl = document.getElementById("selEspera");
+    const p = parejaAEsperar();
+    if(selSoyHost && selEsCompartida() && p && !parejaAcepto()){
+      espEl.style.display = "block";
+      espEl.textContent = "Esperando a que entre " + (p.nombre || "tu pareja") + "… (puedes comenzar igual)";
+    }else{
+      espEl.style.display = "none";
+      espEl.textContent = "";
+    }
+  }catch(e){}
 
   // "Jugar" solo cuando llegaron a R y quien mira es quien inició la selección.
   const btn = document.getElementById("btnSelJugar");
@@ -2728,6 +2771,29 @@ async function elegirAzarDuelo(){
   }
   pintarSeleccion();
 }
+// "Sorpréndeme" en la SELECCIÓN NORMAL (modo Seleccionar): marca R tarjetas al
+// azar de la lista que se está viendo, tomadas de U+C de ESA persona. En "cada
+// quien en el suyo" cada teléfono solo marca lo suyo; en "un solo celular" el
+// que tiene el teléfono puede hacerlo en la pestaña que esté viendo. Las R salen
+// distintas (el pool siempre alcanza: `preparar` ya validó R ≤ U+C).
+async function elegirAzarSeleccion(){
+  if(selDuelo) return;   // el Duelo tiene su propio "Sorpréndeme"
+  const cab = selCabezas[selTab];
+  if(!cab) return;
+  if(selSoloMia && cab.id !== miId) return;   // en "cada quien" solo lo mío
+  const pool = selPoolDe(cab);
+  if(pool.length < selR){ aviso("No hay suficientes personajes en esta lista."); return; }
+  const ids = mezclar(pool).slice(0, selR).map(x=> x.p.id);
+  if(selEsCompartida()){
+    const out = Object.assign({}, (selDoc && selDoc.sel) || {});
+    out[cab.id] = ids;
+    selDoc.sel = out;
+    try{ await setDoc(seleccionRef(), { sel: out, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+  }else{
+    selLocal[cab.id] = ids;
+  }
+  pintarSeleccion();
+}
 // "Tentación sin distinciones": ignora por completo lo marcado. A CADA persona
 // (usuario 1 y sus invitados; usuario 2 y los suyos) le toca su propia mano de R
 // cartas al azar, tomadas de U+C de SU lado, distintas entre sí y de las de sus
@@ -2737,6 +2803,8 @@ async function elegirAzarDuelo(){
 async function elegirTentacion(){
   if(!selDuelo || !selSoyHost) return;
   if(selModo === "multi" && selUnCelular) return;
+  // No arrancar si la pareja no ha entrado (se puede "Comenzar igual").
+  if(!await confirmarArranqueDuelo()) return;
   const fuenteA = listaSegura("U1").concat(listaSegura("C1"));
   const fuenteB = listaSegura("U2").concat(listaSegura("C2"));
   const lados = new Set((selCabezas || []).map(c=> c.lado));
@@ -2887,12 +2955,15 @@ function pintarSeleccion(){
   // El "Volver" de abajo se ocultó: el de ARRIBA A LA DERECHA es el bueno (ese
   // enlace llama a la función de este botón). Se deja la línea en "none".
   try{ document.getElementById("btnSelVolver").style.display = "none"; }catch(e){}
-  // Los atajos ("Sorpréndeme" y "Tentación") son SOLO del Duelo: en la
-  // selección normal no se muestran.
+  // "Sorpréndeme" SÍ se usa en la selección normal (marca R al azar de la lista
+  // que se está viendo). "Tentación" y el aviso de espera son SOLO del Duelo.
   try{
-    document.getElementById("btnSelAzar").style.display = "none";
+    const azarOn = !selDuelo && !!selCabezas[selTab] && !(selSoloMia && selCabezas[selTab].id !== miId);
+    document.getElementById("btnSelAzar").style.display = azarOn ? "" : "none";
     document.getElementById("btnSelTentacion").style.display = "none";
-    document.getElementById("filaAzar").style.display = "none";
+    document.getElementById("filaAzar").style.display = azarOn ? "flex" : "none";
+    const espEl = document.getElementById("selEspera");
+    espEl.style.display = "none"; espEl.textContent = "";
   }catch(e){}
 }
 async function cambiarMarca(cab, idPersonaje, marcado){
@@ -2983,6 +3054,8 @@ async function arrancarSeleccion(){
   if(selEsCompartida() && !selSoyHost){ aviso("Solo quien inició la selección puede empezar."); return; }
   // ---- DUELO: se reparte por PAREJAS, no por listas ----
   if(selDuelo){
+    // No arrancar si la pareja no ha entrado (se puede "Comenzar igual").
+    if(!await confirmarArranqueDuelo()) return;
     if(selDueloIds.length !== selR){ aviso("Faltan tarjetas por escoger."); return; }
     const pares = [];
     for(let i = 0; i < selDueloIds.length; i++){
@@ -3079,6 +3152,13 @@ function escucharSeleccion(){
             abrirModal("modalUnir");
             return;
           }
+          // Avisar al anfitrión que YA entré (una sola vez por selección), para
+          // que el Duelo sepa que puede arrancar sin esperarme. Cubre también el
+          // caso de entrar sin pasar por la ventana ("?entrar=1").
+          if(!selSoyHost && d.sid !== selAceptoEscrito){
+            selAceptoEscrito = d.sid;
+            try{ setDoc(seleccionRef(), { ["acepto_" + miId]: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+          }
           // Solo se cambia de vista si el usuario no está en otra parte.
           const vd = document.querySelector(".vista.ver");
           const vdId = vd ? vd.id : "";
@@ -3144,7 +3224,7 @@ function escucharSeleccion(){
   }catch(e){}
 }
 document.getElementById("btnSelJugar").onclick = ()=>{ arrancarSeleccion(); };
-document.getElementById("btnSelAzar").onclick = ()=>{ elegirAzarDuelo(); };
+document.getElementById("btnSelAzar").onclick = ()=>{ if(selDuelo) elegirAzarDuelo(); else elegirAzarSeleccion(); };
 document.getElementById("btnSelTentacion").onclick = ()=>{ elegirTentacion(); };
 // El buscador filtra la lista que se está viendo. Se repinta con `pintarSeleccion`,
 // que sabe si es la selección normal o la del duelo.
@@ -3278,18 +3358,30 @@ function entrarAlJuego(d){
   pintarPaso();
 }
 document.getElementById("btnUnirme").onclick = async ()=>{
-  const d = sesionActual;
+  let d = sesionActual;
   cerrarModal("modalUnir");
   // Si la ventana era la de la SELECCIÓN (no la de una partida), se entra a
   // escoger tarjetas; la partida todavía no existe.
   if(selInvitando){
     selInvitando = false;
-    if(selDoc && selDoc.sid) selSidAceptado = selDoc.sid;
-    // Ya acepté: cuando la partida arranque, entro directo (sin preguntar otra vez).
-    selYaEntre = true;
-    await asegurarPersonajes();   // sin esto, la lista salia vacia
-    pintarSeleccion();
-    ver("vistaSeleccion");
+    // PRIMERO: si la partida YA existe (la otra parte arrancó antes de que yo
+    // entrara), me voy al juego. Antes caía en la selección ya muerta y quedaba
+    // atrapado. (Arreglado 17-oct-2026.)
+    if(!d || !d.activa){ try{ const sd = await getDoc(sesionRef()); d = sd.exists() ? sd.data() : null; }catch(e){} }
+    if(d && d.activa && soyCabeza(d)){ selYaEntre = false; entrarAlJuego(d); return; }
+    // Si la selección sigue viva, entro a escoger. Aviso al anfitrión que ya
+    // entré (así el Duelo puede arrancar sin esperarme).
+    if(selDoc && selDoc.activa){
+      if(selDoc.sid) selSidAceptado = selDoc.sid;
+      try{ if(selEsCompartida()) await setDoc(seleccionRef(), { ["acepto_" + miId]: true, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+      selYaEntre = true;
+      await asegurarPersonajes();   // sin esto, la lista salia vacia
+      pintarSeleccion();
+      ver("vistaSeleccion");
+      return;
+    }
+    // Ni partida ni selección viva: a esperar.
+    ver("vistaEspera");
     return;
   }
   entrarAlJuego(d);
