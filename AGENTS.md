@@ -21,6 +21,8 @@ tenia el contexto a la mano.
 | `General/IA-Acompanante.md` | `Acompanante/`: el tono de la IA, los ajustes y los retos que propone | Solo si la tarea toca `Acompanante/` o los retos de la IA |
 | `General/Campana-Pestana.md` | `pestana.js`: campana, bip y cartelito (Chat y Retos) | Solo si la tarea toca los avisos de la campana |
 | `General/Pegamento-y-Citas.md` | El pegamento, la agenda de `Citas/` y las pantallas de Actividades y Accesorios | Solo si la tarea toca esas pantallas |
+| `General/duelos.md` | El cuarto modo de `Roles/` (Duelo de seducción): las 4 ramas y sus 2 modalidades. **Construido 17-oct-2026, pendiente de la prueba en vivo** | Solo si la tarea toca el modo de duelo |
+| `General/Plan-Duelo.md` | El plan de desarrollo del Duelo: fases, funciones, modelo de datos y pruebas | Solo si la tarea es **construir** el duelo |
 | `General/Modelo-Datos.md` | Como esta guardada la base y como normalizarla | Antes de migrar datos |
 | `General/HISTORIA.md` | **El por que**: relato con fecha de cada arreglo | **Solo** en los casos de abajo |
 | `General/Plan-Favores-Express.md` | Un plan de desarrollo **que no existe todavia** | Solo si la tarea es sobre Favores Express |

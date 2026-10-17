@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -92,6 +92,11 @@
   .tab{ flex:1; padding:12px; border-radius:12px; border:1px solid var(--card-border); background:var(--card);
     color:var(--fg-muted); font-family:'Chakra Petch',sans-serif; font-weight:600; font-size:.9rem; cursor:pointer; }
   .tab.activo{ background:linear-gradient(90deg, var(--coral), var(--teal)); color:var(--bg); border-color:transparent; }
+  /* Los CUATRO modos base van en 2x2. Este estilo es SOLO de esa fila: `.tabs`
+     global NO se toca, porque la pantalla de selección y el engrane lo usan con
+     3-4 pestañas de jugadores y en rejilla se verían torcidas. */
+  .tabs.tabsModos{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .tabsModos .tab{ font-size:.82rem; padding:10px 8px; }
   .tablaBox{ width:100%; max-height:48dvh; overflow-y:auto; border:1px solid var(--card-border);
     border-radius:12px; background:var(--bg-2); padding:8px; }
   .filaOpt{ display:flex; gap:8px; align-items:center; margin-bottom:6px; }
@@ -133,7 +138,10 @@
   /* ---------- la tarjeta del personaje (diseño aprobado, oct-2026) ---------- */
   .flipwrap{ position:relative; width:100%; }
 
-  #tarjeta{ width:100%; border-radius:22px; padding:14px; display:flex; flex-direction:column;
+  /* La carta normal y las dos caras del duelo "Juntos" en un solo celular usan
+     EL MISMO diseño (no se duplican medidas): por eso el selector lleva las dos.
+     `.tarjetaCara` solo cambia lo de fuera: son dos cajas, no una con reverso. */
+  #tarjeta, .tarjetaCara{ width:100%; border-radius:22px; padding:14px; display:flex; flex-direction:column;
     gap:12px; cursor:pointer; border:2px solid transparent;
     background:linear-gradient(var(--card),var(--card)) padding-box,
                linear-gradient(135deg,var(--coral),var(--teal)) border-box;
@@ -158,12 +166,14 @@
   .bloque.accion{ border-left:2px solid var(--teal); padding-left:9px; }
   .bloque.accion p{ color:#c9f6ef; }
   /* La variante especial: SOLO texto, marcado para que no se confunda con los
-     cuatro bloques de la tarjeta. Vive DENTRO de la carta, así se voltea con ella. */
-  #blqueEspecial{ border:1px solid var(--teal); border-radius:12px;
+     cuatro bloques de la tarjeta. Vive DENTRO de la carta, así se voltea con ella.
+     `.bloqueEsp` es la MISMA cosa para las caras del duelo (que son nuevas, y por
+     eso no pueden llevar el id de la carta normal). */
+  #blqueEspecial, .bloqueEsp{ border:1px solid var(--teal); border-radius:12px;
     background:rgba(47,217,199,.10); padding:10px 12px; text-align:left; }
-  #blqueEspecial b{ display:block; font-family:'Chakra Petch',sans-serif; font-size:.66rem;
+  #blqueEspecial b, .bloqueEsp b{ display:block; font-family:'Chakra Petch',sans-serif; font-size:.66rem;
     letter-spacing:.16em; text-transform:uppercase; color:var(--teal); margin-bottom:4px; }
-  #blqueEspecial p{ margin:0; font-size:.88rem; line-height:1.5; color:#c9f6ef; }
+  #blqueEspecial p, .bloqueEsp p{ margin:0; font-size:.88rem; line-height:1.5; color:#c9f6ef; }
 
   #reverso{ position:absolute; inset:0; border-radius:22px; cursor:pointer; display:none;
     overflow:hidden; border:2px solid transparent;
@@ -267,10 +277,11 @@
   </div>
   <div class="caja">
     <div class="cajaTitulo">Elige Tu Modo de Juego</div>
-    <div class="tabs" style="margin-top:10px;">
+    <div class="tabs tabsModos" style="margin-top:10px;">
       <button class="tab" id="tabNormal">Clásico</button>
       <button class="tab" id="tabEspejo">Cambia de Bando</button>
       <button class="tab" id="tabSeleccionar">Seleccionar</button>
+      <button class="tab" id="tabDuelo">Duelo de seducción</button>
     </div>
     <div id="descModo" style="font-size:.78rem;color:var(--fg-muted);margin-top:10px;text-align:center;"></div>
   </div>
@@ -321,6 +332,9 @@
   <div class="tabs" id="selTabs"></div>
   <div id="selCuenta" style="margin-top:12px;"></div>
   <div class="tablaBox" id="selBox" style="margin-top:10px;"></div>
+  <!-- Solo en el modo DUELO: los personajes que no tienen contraparte no salen
+       en la lista, y sin esta nota parecía un error. Nace oculta. -->
+  <div id="selNota" style="display:none; font-size:.75rem; color:var(--fg-muted); text-align:center; margin-top:10px;">¿No ves un personaje? Puede que todavía no tenga contraparte.</div>
   <button class="btnPri" id="btnSelJugar" style="display:none; margin-top:12px;">Jugar ▶</button>
   <button class="btnSec" id="btnSelVolver" style="margin-top:8px;">‹ Volver</button>
 </div>
@@ -337,6 +351,10 @@
   <h1 id="plTitulo">Juego de Roles</h1>
   <div id="progreso"></div>
   <div id="turnoNombre"></div>
+  <!-- Indicador de FASE del duelo "Juntos" (no de turno): los tres textos son los
+       mismos en un celular y en compartida, y por eso funciona igual en las dos.
+       Nace oculto: en Turnos y en los otros modos no se usa. -->
+  <div id="faseDuelo" style="display:none;font-size:.8rem;color:var(--fg-muted);text-align:center;margin-top:8px;"></div>
   <div id="tarjetaVacio" style="display:none">Ya no te quedan tarjetas.</div>
   <div class="flipwrap" id="flipwrap" style="display:none">
     <div id="tarjeta">
@@ -363,6 +381,13 @@
       </div>
     </div>
   </div>
+  <!-- La carta de DOS CARAS del duelo "Juntos" en un solo celular: una cara es el
+       original y, al tocarla, aparece su contraparte cruzada. Es UN solo objeto que
+       se voltea, no dos cartas. Nace oculta: solo se usa en ese camino. -->
+  <div id="tarjetaDuelo" style="display:none;width:100%;">
+    <div class="tarjetaCara" id="tarjetaDueloA"></div>
+    <div class="tarjetaCara" id="tarjetaDueloB" style="display:none"></div>
+  </div>
   <button class="btnPri" id="btnSig" style="display:none; margin-top:14px;">Siguiente</button>
   <!-- Aviso discreto: sale SOLO si toca "Siguiente" con la carta boca abajo.
        Nace oculto (regla de la casa). -->
@@ -377,8 +402,11 @@
     <button class="btnSec" id="btnAgregarInv" style="display:none">➕ Agregar invitado</button>
   </div>
 
-  <!-- Quién sigue esperando afuera y quién ya está jugando. Solo aparece en
-       partida compartida: en un solo celular no hay a quién esperar. -->
+  <!-- Quién sigue esperando afuera y quién ya está jugando. Sale SOLO en
+       multijugador (modoAdmiteInvitados()), y da igual si se juega en un solo
+       celular o cada quien en el suyo: la regla de la casa es que en Pareja no
+       se muestra. ANTES este comentario decía que solo salía "en partida
+       compartida", lo cual no era lo que hace el código y ya no aplica. -->
   <div id="salaPanel">
     <div class="salaCaja">
       <h4>En la espera <b id="esperaCount">0</b></h4>
@@ -514,6 +542,24 @@
     <button class="btnPri" id="btnModoLocal" style="margin-top:14px;">Un solo Celular</button>
     <button class="btnPri" id="btnModoComp">Cada quien en el suyo</button>
     <button class="btnSec" id="btnModoNo">Cancelar</button>
+  </div>
+</div>
+
+<!-- ============ DUELO: de quién son las cartas y en qué modalidad ============ -->
+<!-- Sale SOLO cuando el modo base es Duelo. Se pregunta el LADO y la MODALIDAD en
+     la misma ventana, para que no se sienta como dos pasos. -->
+<div class="modal" id="modalDuelo">
+  <div class="caja">
+    <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.15rem;">Duelo de seducción</div>
+    <div style="font-size:.85rem;color:var(--fg-muted);margin:8px 0 4px;text-align:center;">¿De quién son las cartas?</div>
+    <div class="tabs" style="margin-top:10px;">
+      <button class="tab" id="dueloLadoA">Usuario 1</button>
+      <button class="tab" id="dueloLadoB">Usuario 2</button>
+    </div>
+    <div style="font-size:.85rem;color:var(--fg-muted);margin:16px 0 4px;text-align:center;">¿Cómo se juega?</div>
+    <button class="btnPri" id="dueloTurnos" style="margin-top:10px;">Turnos</button>
+    <button class="btnPri" id="dueloJuntos">Juntos</button>
+    <button class="btnSec" id="dueloNo">Cancelar</button>
   </div>
 </div>
 
@@ -732,26 +778,78 @@ async function guardarPersonajes(){
   }catch(e){}
 }
 
-// Los tres modos base (decidido por Fredy, oct-2026). "especial" NO es un modo:
-// es un interruptor encima de cualquiera de estos tres, y llega en la FASE 5.
+// Los CUATRO modos base (el cuarto, "Duelo de seducción", llegó después,
+// oct-2026). "especial" NO es un modo: es un interruptor encima de cualquiera de
+// estos cuatro, y llega en la FASE 5.
 const MODO_NORMAL = "normal";
 const MODO_ESPEJO = "espejo";
 const MODO_SELECCIONAR = "seleccionar";
+const MODO_DUELO = "duelo";
 let modoBaseCfg = MODO_NORMAL;
 const DESC_MODO = {
   "normal": "Interpreta, Aprovecha y ......",
   "espejo": "La Lealtad y las Intenciones Cambian de Bando",
-  "seleccionar": "Selecciona tus personajes favoritos."
+  "seleccionar": "Selecciona tus personajes favoritos.",
+  "duelo": "Sensualidad contra Erotismo, Quién Ganará ?"
 };
 // De dónde sale la lista de un jugador, según el modo.
 //   normal      -> U1 / U2
 //   espejo      -> C1 / C2   (las contrapartes)
 //   seleccionar -> U + C del mismo dueño (las dos, porque se escogen a mano)
+// El duelo NO pasa por aquí: reparte parejas (original + contraparte), no listas.
 function listaDeLado(lado, modoBase){
   const n = (lado === "A") ? "1" : "2";
   if(modoBase === MODO_ESPEJO) return listaSegura("C" + n);
   if(modoBase === MODO_SELECCIONAR) return listaSegura("U" + n).concat(listaSegura("C" + n));
   return listaSegura("U" + n);
+}
+
+// ---------- DUELO: el emparejamiento (original + su contraparte CRUZADA) ----------
+// En Duelo se reparten R personajes de UN SOLO lado y de cada uno se toma su
+// contraparte CRUZADA: si se tomó de U1, su contraparte está en C2; si se tomó de
+// U2, en C1. Es el mismo cruce con el que trabaja el modo Espejo: el dueño de la
+// lista juega los originales y el otro, las contrapartes.
+function otroLadoDuelo(l){ return (l === "A") ? "B" : "A"; }
+// Busca un personaje por id en las CUATRO listas de personajes.
+function buscarPersonaje(id){
+  if(id == null) return null;
+  const claves = ["U1","U2","C1","C2"];
+  for(let i = 0; i < claves.length; i++){
+    const hit = listaSegura(claves[i]).find(p=> p && p.id === id);
+    if(hit) return hit;
+  }
+  return null;
+}
+// La contraparte cruzada de un original. Tiene que ser EXACTAMENTE UNA: si hay 0
+// o hay más de 1 (es ambiguo), el personaje NO cuenta y tampoco se ve.
+function contraparteDe(idOriginal, ladoOriginal){
+  const n = (ladoOriginal === "A") ? "1" : "2";
+  const lista = listaSegura("C" + (n === "1" ? "2" : "1"));
+  const hits = lista.filter(c=> c && c.par === idOriginal);
+  return (hits.length === 1) ? hits[0] : null;
+}
+// Los personajes de un lado que SÍ tienen contraparte: es la lista de la pantalla
+// de escogimiento. Los que no la tienen, ni salen ni se cuentan.
+function paresDisponibles(lado){
+  const n = (lado === "A") ? "1" : "2";
+  return listaSegura("U" + n)
+    .map(p=> ({ o: p, c: contraparteDe(p && p.id, lado) }))
+    .filter(x=> x.o && x.c);
+}
+// Reparte las PAREJAS ya escogidas: cada cabeza recibe las R tarjetas de SU lado,
+// EN EL MISMO ORDEN que la otra, para que la carta k y su contraparte k caigan en
+// la misma ronda (en Pareja, que es donde eso importa: en Multijugador quién hace
+// duelo con quién es del grupo, no de la app).
+// Si hay varias cabezas del mismo lado, TODAS reciben la misma secuencia. Son
+// copias independientes a propósito: es lo que hace que la ronda k de un lado
+// coincida con la k del otro.
+function poolsDuelo(cabezasIn, pares, lado){
+  const porLado = {};
+  porLado[lado] = pares.map(x=> buscarPersonaje(x.o)).filter(Boolean);
+  porLado[otroLadoDuelo(lado)] = pares.map(x=> buscarPersonaje(x.c)).filter(Boolean);
+  const pools = {};
+  cabezasIn.forEach(c=>{ pools[c.id] = (porLado[c.lado] || []).slice(); });
+  return pools;
 }
 
 // ---------- estado del juego ----------
@@ -878,9 +976,10 @@ function pintarInicio(){
   pintarModo();
   pintarEspecial();
 }
-// Las tres pestañas del modo base.
+// Las CUATRO pestañas del modo base.
 function pintarModo(){
-  [["tabNormal", MODO_NORMAL], ["tabEspejo", MODO_ESPEJO], ["tabSeleccionar", MODO_SELECCIONAR]].forEach(par=>{
+  [["tabNormal", MODO_NORMAL], ["tabEspejo", MODO_ESPEJO], ["tabSeleccionar", MODO_SELECCIONAR],
+   ["tabDuelo", MODO_DUELO]].forEach(par=>{
     document.getElementById(par[0]).classList.toggle("activo", modoBaseCfg === par[1]);
   });
   document.getElementById("descModo").textContent = DESC_MODO[modoBaseCfg] || "";
@@ -888,20 +987,73 @@ function pintarModo(){
 document.getElementById("tabNormal").onclick = ()=>{ modoBaseCfg = MODO_NORMAL; pintarModo(); };
 document.getElementById("tabEspejo").onclick = ()=>{ modoBaseCfg = MODO_ESPEJO; pintarModo(); };
 document.getElementById("tabSeleccionar").onclick = ()=>{ modoBaseCfg = MODO_SELECCIONAR; pintarModo(); };
+document.getElementById("tabDuelo").onclick = ()=>{ modoBaseCfg = MODO_DUELO; pintarModo(); };
 // El remate de abajo ("Personaliza tu experiencia en... ⚙️") lleva al engrane
 // de ESTA pantalla. Es lo mismo que apretar el engrane de arriba.
 document.getElementById("btnIrCfg").onclick = ()=>{ abrirCfg(); };
 // Botones de modo: cada uno abre su ventana y de ahi arranca la partida.
 let modoPendiente = "multi";
 // Quiénes juegan: Pareja o Multijugador. "Jugar solo" se quitó (oct-2026).
-document.getElementById("btnPareja").onclick = ()=>{ modoPendiente = "pareja"; conPendiente(()=>{ abrirModal("modalModo"); }); };
-document.getElementById("btnMulti").onclick = ()=>{ modoPendiente = "multi"; conPendiente(()=>{ abrirModal("modalModo"); }); };
-document.getElementById("btnModoLocal").onclick = ()=>{ cerrarModal("modalModo"); preparar(modoPendiente, null, true); };
-document.getElementById("btnModoComp").onclick = ()=>{ cerrarModal("modalModo"); preparar(modoPendiente, null, false); };
+// En DUELO el que arma es el ADMINISTRADOR de la app (decisión de Fredy,
+// 17-oct-2026), no el anfitrión ocasional: si la pareja lo intenta, se le avisa
+// y no se abre nada. El resto de modos los puede iniciar cualquiera.
+function bloqueaDueloSinAdmin(){
+  if(modoBaseCfg === MODO_DUELO && !esAdminFlag){
+    aviso("El Duelo lo arma el administrador.");
+    return true;
+  }
+  return false;
+}
+document.getElementById("btnPareja").onclick = ()=>{ if(bloqueaDueloSinAdmin()) return; modoPendiente = "pareja"; conPendiente(()=>{ abrirModal("modalModo"); }); };
+document.getElementById("btnMulti").onclick = ()=>{ if(bloqueaDueloSinAdmin()) return; modoPendiente = "multi"; conPendiente(()=>{ abrirModal("modalModo"); }); };
+document.getElementById("btnModoLocal").onclick = ()=>{
+  cerrarModal("modalModo");
+  // El duelo pregunta una cosa más (de quién son las cartas y cómo se juega) en
+  // su propia ventana: el plan lo pide junto, no en dos pasos.
+  if(modoBaseCfg === MODO_DUELO){ dueloUnCelular = true; abrirModalDuelo(); return; }
+  preparar(modoPendiente, null, true);
+};
+document.getElementById("btnModoComp").onclick = ()=>{
+  cerrarModal("modalModo");
+  if(modoBaseCfg === MODO_DUELO){ dueloUnCelular = false; abrirModalDuelo(); return; }
+  preparar(modoPendiente, null, false);
+};
 document.getElementById("btnModoNo").onclick = ()=>{ cerrarModal("modalModo"); };
 
+// ---------- DUELO: de qué lado son las cartas y en qué modalidad ----------
+// El lado es "A" (usuario 1 / administrador) o "B" (pareja). Solo se guarda lo
+// que se está por armar: cuando ya hay partida, se lee de la sesión.
+let dueloLadoPendiente = "A";
+let dueloUnCelular = false;
+function pintarModalDuelo(){
+  // Los nombres son los de la app (no "U1"/"U2", que choca con las listas).
+  const a = document.getElementById("dueloLadoA");
+  const b = document.getElementById("dueloLadoB");
+  a.textContent = nombreLado("A");
+  b.textContent = nombreLado("B");
+  a.classList.toggle("activo", dueloLadoPendiente === "A");
+  b.classList.toggle("activo", dueloLadoPendiente === "B");
+}
+function abrirModalDuelo(){
+  if(!esAdminFlag){ aviso("El Duelo lo arma el administrador."); return; }
+  dueloLadoPendiente = "A";
+  pintarModalDuelo();
+  abrirModal("modalDuelo");
+}
+document.getElementById("dueloLadoA").onclick = ()=>{ dueloLadoPendiente = "A"; pintarModalDuelo(); };
+document.getElementById("dueloLadoB").onclick = ()=>{ dueloLadoPendiente = "B"; pintarModalDuelo(); };
+document.getElementById("dueloTurnos").onclick = ()=>{
+  cerrarModal("modalDuelo");
+  preparar(modoPendiente, { lado: dueloLadoPendiente, modalidad: "turnos" }, dueloUnCelular);
+};
+document.getElementById("dueloJuntos").onclick = ()=>{
+  cerrarModal("modalDuelo");
+  preparar(modoPendiente, { lado: dueloLadoPendiente, modalidad: "juntos" }, dueloUnCelular);
+};
+document.getElementById("dueloNo").onclick = ()=>{ cerrarModal("modalDuelo"); };
+
 // ---------- modo ESPECIAL (interruptor, NO es un modo) ----------
-// Se prende encima de cualquiera de los tres modos base. Al arrancar se sortean
+// Se prende encima de cualquiera de los cuatro modos base. Al arrancar se sortean
 // K rondas DISTINTAS y en cada una un jugador, y se guardan en la sesión para
 // que todos los celulares vean lo mismo.
 function especialPendido(){ return !!document.getElementById("chkEspecial").checked; }
@@ -968,7 +1120,13 @@ function cargarEstado(d){
     ronda: d.ronda || 1,
     modo: d.modoBase || "normal",
     especiales: Array.isArray(d.especiales) ? d.especiales : [],
-    terminada: !!d.terminada
+    terminada: !!d.terminada,
+    // DUELO: el lado cuyas cartas se repartieron, en qué modalidad y la lista de
+    // parejas EN ORDEN (el orden de `dueloPares` es el orden de las rondas).
+    // Con esto, quien entra o reanuda ve el duelo sin tocar nada más.
+    dueloLado: d.dueloLado || null,
+    dueloModalidad: d.dueloModalidad || null,
+    dueloPares: Array.isArray(d.dueloPares) ? d.dueloPares.slice() : []
   };
   // "Quiénes juegan" se lee de la SESIÓN, no de la pantalla de inicio. Hace
   // falta para quien SE UNE a una partida ajena: sin esto, su `modoJuego` se
@@ -1210,6 +1368,11 @@ function mostrarBotonesAdmin(){
     const dis = invita && jugando && estado && !estado.terminada;
     document.getElementById("btnAgregarInv").style.display = dis ? "" : "none";
   }catch(e){}
+  // En DUELO "Saltar turno" NO existe, en ninguna de las dos modalidades: un salto
+  // haría que la partida pidiera turnos de más y no terminaría (decisión de Fredy).
+  // Su código NO se toca, solo se esconde, y se esconde AQUÍ también: `pintarPaso`
+  // lo vuelve a prender en su rama normal, y sin esta línea se vería un instante.
+  if(esModoDuelo()){ try{ document.getElementById("btnSaltar").style.display = "none"; }catch(e){} }
 }
 // ---------- sala: quien espera y quien esta jugando ----------
 // "En el juego" son las cabezas de la partida (los que ya tienen turno).
@@ -1269,6 +1432,21 @@ function pintarSala(){
 let bocaAbajo = true, ignoraClick = false, tScroll = null;
 let cartaActual = null;
 
+// El indicador de FASE del duelo "Juntos". Son tres estados, y son los mismos en
+// un solo celular y en compartida, que es justo lo que hace que el texto sirva
+// para las dos formas de jugar:
+//   1) la carta tapada -> "Voltea tu carta"
+//   2) ya se ve        -> "Jugando" (el anfitrión tiene el "Siguiente")
+//   3) los demás ven   -> "Esperando a que el anfitrión avance"
+// Se repinta al voltear, porque el texto depende de `bocaAbajo`.
+function pintarFaseDuelo(){
+  const el = document.getElementById("faseDuelo");
+  if(!el) return;
+  if(!dueloEsJuntos()){ el.style.display = "none"; el.textContent = ""; return; }
+  el.style.display = "block";
+  el.textContent = bocaAbajo ? "Voltea tu carta."
+    : (esAnfitrion() ? "Jugando" : "Esperando a que el anfitrión avance.");
+}
 function voltear(){ bocaAbajo = !bocaAbajo; pintarVolteo(); }
 function pintarVolteo(){
   const tarjeta = document.getElementById("tarjeta");
@@ -1285,11 +1463,14 @@ function pintarVolteo(){
   // NO se puede pasar a la siguiente sin haber visto la carta. El boton NO se
   // deshabilita (si no, tocarlo no daria ninguna pista): se apaga un poco y, si
   // lo tocan, sale el aviso. Al voltear, se quita.
+  // En el duelo "Juntos" NO hay candado: "Siguiente" no depende del volteo, así
+  // que el botón no se apaga (el anfitrión avanza cuando le parece).
   try{
     const b = document.getElementById("btnSig");
-    b.style.opacity = bocaAbajo ? ".55" : "";
-    if(!bocaAbajo) document.getElementById("avisoVoltea").style.display = "none";
+    b.style.opacity = (!dueloEsJuntos() && bocaAbajo) ? ".55" : "";
+    if(!bocaAbajo && !dueloEsJuntos()) document.getElementById("avisoVoltea").style.display = "none";
   }catch(e){}
+  pintarFaseDuelo();
 }
 // Se llama en CADA repintado, asi que SOLO toca el interruptor cuando la
 // tarjeta cambia de verdad. Si no, cualquier repintado (por ejemplo, lo que
@@ -1301,25 +1482,29 @@ function resetCarta(nueva){
   bocaAbajo = true;   // cada turno arranca boca abajo
   pintarVolteo();
 }
-function pintarFoto(p){
-  const foto = document.getElementById("fotoPersonaje");
+// La foto vive en una caja que recibe el que llama: la usa la carta normal
+// (`#fotoPersonaje`) y también las dos caras del duelo. Solo se vacía con
+// `innerHTML = ""` (nada de Firebase), y todo el texto va con `textContent`.
+function pintarFotoEn(el, p){
+  if(!el) return;
   const url = (p && p.imagen) ? String(p.imagen).trim() : "";
   if(url){
-    foto.innerHTML = "";
+    el.innerHTML = "";
     const img = document.createElement("img");
     img.alt = "Imagen del personaje";
-    img.onerror = ()=>{ pintarFoto({}); };   // si el enlace falla, el marcador
+    img.onerror = ()=>{ pintarFotoEn(el, {}); };   // si el enlace falla, el marcador
     img.src = url;
-    foto.appendChild(img);
+    el.appendChild(img);
     return;
   }
-  foto.innerHTML = "";
+  el.innerHTML = "";
   const s = document.createElement("span");
   s.textContent = "🖼️";
   const sm = document.createElement("small");
   sm.textContent = "Imagen del personaje";
-  foto.appendChild(s); foto.appendChild(sm);
+  el.appendChild(s); el.appendChild(sm);
 }
+function pintarFoto(p){ pintarFotoEn(document.getElementById("fotoPersonaje"), p); }
 function pintarTarjeta(p, esp){
   document.getElementById("nombrePersonaje").textContent = (p && p.personaje) || "";
   document.getElementById("txtSituacion").textContent = (p && p.situacion) || "";
@@ -1335,6 +1520,148 @@ function pintarTarjeta(p, esp){
     bloque.style.display = "none";
     document.getElementById("txtEspecial").textContent = "";
   }
+}
+// ---------- DUELO "JUNTOS" en un solo celular: la carta de DOS CARAS ----------
+// Es un SOLO objeto que se voltea: una cara es el original y la otra su
+// contraparte cruzada. Aquí no hay tapa (nada que ocultar: ya se sabe que la
+// contraparte es la del otro), así que la cara se ve desde el arranque.
+let caraDuelo = 0;   // 0 = original, 1 = contraparte
+// La variante picante, buscada por LADO y no por persona: en esta rama la ve todo
+// el grupo en una sola carta, y lo que decide a qué cara va es de qué lado era el
+// personaje de la variante.
+function especialDeLado(ronda, lado){
+  const lista = (estado && estado.especiales) || [];
+  return lista.find(x=> x && Number(x.ronda) === Number(ronda) &&
+    ladoDeCabeza(x.jugador) === lado) || null;
+}
+// Una cara. Se construye con `createElement` y `textContent` porque TODO el texto
+// viene de Firebase: nunca `innerHTML` con datos de la base.
+function pintarCaraDuelo(cont, p, esp, etiqueta){
+  if(!cont) return;
+  cont.innerHTML = "";
+  const tag = document.createElement("div");
+  tag.className = "selTag";
+  tag.style.alignSelf = "center";
+  tag.textContent = etiqueta;
+  cont.appendChild(tag);
+  const foto = document.createElement("div");
+  foto.className = "foto";
+  pintarFotoEn(foto, p);
+  cont.appendChild(foto);
+  const nom = document.createElement("div");
+  nom.className = "nombre";
+  nom.textContent = (p && p.personaje) || "";
+  cont.appendChild(nom);
+  if(esp){
+    const bloque = document.createElement("div");
+    bloque.className = "bloqueEsp";
+    const b = document.createElement("b");
+    b.textContent = "Variante picante";
+    const t = document.createElement("p");
+    t.textContent = esp.texto || "";
+    bloque.appendChild(b); bloque.appendChild(t);
+    cont.appendChild(bloque);
+  }
+  const info = document.createElement("div");
+  info.className = "info";
+  [["Situación","situacion"], ["Atractivo","gancho"], ["Derechos","derechos"], ["Acción","si_quieres"]].forEach(par=>{
+    const bl = document.createElement("div");
+    bl.className = "bloque" + (par[1] === "si_quieres" ? " accion" : "");
+    const b = document.createElement("b");
+    b.textContent = par[0];
+    const t = document.createElement("p");
+    t.textContent = (p && p[par[1]]) || "";
+    bl.appendChild(b); bl.appendChild(t);
+    info.appendChild(bl);
+  });
+  cont.appendChild(info);
+}
+// Pinta las dos caras de la pareja k y arranca mostrando el original.
+function pintarDueloPar(par, ronda){
+  const lado = dueloLadoDePartida() || "A";
+  pintarCaraDuelo(document.getElementById("tarjetaDueloA"),
+    buscarPersonaje(par && par.o), especialDeLado(ronda, lado), "Original");
+  pintarCaraDuelo(document.getElementById("tarjetaDueloB"),
+    buscarPersonaje(par && par.c), especialDeLado(ronda, otroLadoDuelo(lado)), "Contraparte");
+  caraDuelo = 0;   // cada ronda abre en el original
+  mostrarCaraDuelo();
+}
+function mostrarCaraDuelo(){
+  const a = document.getElementById("tarjetaDueloA");
+  const b = document.getElementById("tarjetaDueloB");
+  if(!a || !b) return;
+  a.style.display = (caraDuelo === 0) ? "flex" : "none";
+  b.style.display = (caraDuelo === 1) ? "flex" : "none";
+}
+function voltearDuelo(){ caraDuelo = 1 - caraDuelo; mostrarCaraDuelo(); }
+// ---------- la ronda del duelo "Juntos" ----------
+// En "Juntos" la unidad es la PAREJA, no el turno: todos voltean al mismo tiempo,
+// juegan y el ANFITRIÓN aprieta "Siguiente". No hay turnos, así que `#esperaTurno`
+// no se usa y "Saltar turno" no existe.
+// Tiene dos ramas: cada quien en su celular (una carta normal por persona, tapada)
+// y un solo celular (UNA carta de dos caras que ve todo el grupo).
+function pintarPasoDueloJuntos(d){
+  const flipwrap = document.getElementById("flipwrap");
+  const vacio = document.getElementById("tarjetaVacio");
+  const btnSig = document.getElementById("btnSig");
+  const espera = document.getElementById("esperaTurno");
+  const turnoNombre = document.getElementById("turnoNombre");
+  const fin = document.getElementById("finMsg");
+  const prog = document.getElementById("progreso");
+  const duelCard = document.getElementById("tarjetaDuelo");
+  if(d.terminada){
+    flipwrap.style.display = "none";
+    vacio.style.display = "none";
+    btnSig.style.display = "none";
+    espera.style.display = "none";
+    turnoNombre.textContent = "";
+    prog.textContent = "";
+    fin.style.display = "block";
+    try{ document.getElementById("faseDuelo").style.display = "none"; }catch(e){}
+    try{ duelCard.style.display = "none"; }catch(e){}
+    try{ document.getElementById("btnSaltar").style.display = "none"; }catch(e){}
+    mostrarBotonesAdmin();
+    return;
+  }
+  fin.style.display = "none";
+  prog.textContent = "Ronda " + (d.ronda || 1) + " de " + (d.rondas || 1);
+  turnoNombre.textContent = "Juntos";
+  espera.style.display = "none";
+  try{ document.getElementById("btnSaltar").style.display = "none"; }catch(e){}
+  // ---- un SOLO celular: una sola carta de dos caras para todo el grupo ----
+  if(!jugandoCompartido){
+    flipwrap.style.display = "none";
+    vacio.style.display = "none";
+    duelCard.style.display = "block";
+    const pares = Array.isArray(d.dueloPares) ? d.dueloPares : [];
+    const par = pares[(d.ronda || 1) - 1] || null;
+    if(par) pintarDueloPar(par, d.ronda || 1);
+    // En un celular no hay tapa: la carta abre de una vez. El indicador dice lo
+    // otro que hay que hacer (voltear para ver la contraparte), no "voltea tu carta".
+    const f = document.getElementById("faseDuelo");
+    f.style.display = "block";
+    f.textContent = "Una cara es el original; voltéenla para ver la contraparte.";
+    // El anfitrión es quien tiene el teléfono, así que él avanza.
+    btnSig.style.display = esAnfitrion() ? "block" : "none";
+    return;
+  }
+  // ---- cada quien en su celular: una carta normal tapada por persona ----
+  try{ duelCard.style.display = "none"; }catch(e){}
+  // Solo el anfitrión tiene "Siguiente": los demás solo esperan.
+  btnSig.style.display = esAnfitrion() ? "block" : "none";
+  const p = (d.listas[miId] || [])[0] || null;
+  if(p){
+    flipwrap.style.display = "block";
+    vacio.style.display = "none";
+    pintarTarjeta(p, especialDe(d.ronda, miId));
+    // OJO: la ronda va en la llave. Si no, al cambiar de ronda la carta se
+    // quedaría destapada de la anterior (el turno no cambia, cambia la ronda).
+    resetCarta(miId + ":" + (d.ronda || 1) + ":" + (p.id || ""));
+  }else{
+    flipwrap.style.display = "none";
+    vacio.style.display = "block";
+  }
+  pintarFaseDuelo();
 }
 function pintarPaso(){
   const d = estado;
@@ -1361,6 +1688,13 @@ function pintarPaso(){
   // El aviso de "voltea la carta" se limpia en cada repintado; el toque en
   // "Siguiente" lo vuelve a encender si hace falta.
   try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
+  // La rama del duelo "Juntos" va DESPUÉS de los cortes de arriba (así tolera que
+  // `jugando` sea falso o no haya partida) y se lleva el repintado.
+  if(dueloEsJuntos()){ pintarPasoDueloJuntos(d); return; }
+  // En los demás modos el indicador de fase y la carta de dos caras no se usan:
+  // se apagan aquí para que no queden restos de una partida de duelo anterior.
+  try{ pintarFaseDuelo(); }catch(e){}
+  try{ document.getElementById("tarjetaDuelo").style.display = "none"; }catch(e){}
   if(d.terminada){
     flipwrap.style.display = "none";
     vacio.style.display = "none";
@@ -1400,7 +1734,7 @@ function pintarPaso(){
     btnSig.style.display = "none";
     espera.style.display = "none";
     turnoNombre.textContent = "Turno de " + nombre;
-    try{ btnSaltar.style.display = esAnfitrion() ? "" : "none"; }catch(e){}
+    try{ btnSaltar.style.display = (esAnfitrion() && !esModoDuelo()) ? "" : "none"; }catch(e){}
   }else{
     flipwrap.style.display = "none";
     vacio.style.display = "none";
@@ -1409,7 +1743,7 @@ function pintarPaso(){
     espera.textContent = "Turno de " + nombre + "…";
     turnoNombre.textContent = "";
     try{
-      btnSaltar.style.display = esAnfitrion() ? "" : "none";
+      btnSaltar.style.display = (esAnfitrion() && !esModoDuelo()) ? "" : "none";
       btnSaltar.textContent = "Saltar turno de " + nombre;
     }catch(e){}
   }
@@ -1438,7 +1772,80 @@ async function siguiente(){
     if(estado.terminada && !finMostrado){ finMostrado = true; finPartida(); }
   }
 }
+// ---------- DUELO "JUNTOS": el avance es de la PAREJA, no del turno ----------
+// Aquí la unidad ya no es el turno: se quita UNA carta de TODOS y sube la ronda
+// UNA vez. Por eso `siguienteSesion()` no sirve (mueve una sola cabeza) y hace
+// falta este avance propio.
+function avanzarDueloJuntosLocal(d){
+  const ids = (d.cabezas || []).map(c=> c.id).filter(Boolean);
+  ids.forEach(id=>{
+    d.listas[id] = (d.listas[id] || []).slice();
+    d.listas[id].shift();
+  });
+  d.ronda = (d.ronda || 1) + 1;
+  // Se acabó cuando se passes de R rondas, o cuando a nadie le queda nada.
+  if((d.rondas && d.ronda > d.rondas) || ids.every(id=> !((d.listas[id] || []).length))){
+    d.terminada = true;
+  }
+}
+// "Siguiente" del anfitrión. En un celular se hace en memoria; en compartido,
+// con una transacción que mueve TODAS las colas de una vez.
+// Candado anti-doble-toque: sin esto, dos toques seguidos avanzaban dos rondas y
+// se saltaba una pareja entera (la ronda solo puede subir UNA vez por "Siguiente").
+let dueloPasando = false;
+async function siguienteDueloJuntos(){
+  if(!jugando || !estado || estado.terminada) return;
+  if(jugandoCompartido && !esAnfitrion()) return;
+  if(dueloPasando) return;
+  // La ronda que ESTE teléfono está mostrando. El candado de abajo evita que un
+  // segundo toque, llegado antes de que el primer avance se refleje en pantalla,
+  // salte una pareja entera.
+  const rondaEsperada = estado.ronda || 1;
+  dueloPasando = true;
+  try{
+    if(!jugandoCompartido){
+      avanzarDueloJuntosLocal(estado);
+      pintarPaso();
+      if(estado.terminada && !finMostrado){ finMostrado = true; finPartida(); }
+      return;
+    }
+    let termino = false, fallo = false;
+    try{
+      await runTransaction(db, async (tx)=>{
+        const ref = sesionRef();
+        const snap = await tx.get(ref);
+        if(!snap.exists()) return;
+        const d = snap.data();
+        if(!d.activa || d.terminada || d.hostUid !== miId) return;
+        // Candado de RONDA: si la sesión ya avanzó (por el toque anterior) y este
+        // teléfono todavía no se enteró, este segundo toque NO avanza otra vez.
+        if((d.ronda || 1) !== rondaEsperada) return;
+        avanzarDueloJuntosLocal(d);
+        if(d.terminada) termino = true;
+        // Ojo: NO se tocan `orden` ni `turno`. En Juntos no gobiernan la partida, pero
+        // `sanearSesion()` los necesita enteros, así que se dejan como están.
+        tx.update(ref, {
+          listas: d.listas, ronda: d.ronda,
+          terminada: !!d.terminada, activa: !d.terminada,
+          actualizadaEn: serverTimestamp()
+        });
+      });
+    }catch(e){ fallo = true; }
+    // Igual que "Siguiente" en Turnos: un botón que escribe avisa cuando falla.
+    if(fallo){ try{ aviso("No se pudo pasar. Revisa conexión."); }catch(x){} return; }
+    if(termino){ try{ await retirarInvitacion(JUEGO_INV); }catch(e){} }
+  }finally{
+    dueloPasando = false;
+  }
+}
 document.getElementById("btnSig").onclick = ()=>{
+  // En el duelo "Juntos" no hay candado de volteo: el anfitrión avanza cuando le
+  // parece, y los que no son anfitrión no tienen botón.
+  if(dueloEsJuntos()){
+    if(!esAnfitrion()) return;
+    siguienteDueloJuntos();
+    return;
+  }
   // Con la carta boca abajo NO se pasa: sale un aviso discreto y no avanza.
   if(bocaAbajo){
     try{ document.getElementById("avisoVoltea").style.display = "block"; }catch(e){}
@@ -1458,6 +1865,23 @@ document.getElementById("infoTarjeta").addEventListener("scroll", function(){
 // Toca CUALQUIER parte de la carta para voltear (respetando el scroll).
 document.getElementById("tarjeta").addEventListener("click", function(){ if(ignoraClick) return; voltear(); });
 document.getElementById("reverso").onclick = function(){ voltear(); };
+// La carta de dos caras del duelo: tocarla voltea al otro personaje. Aquí no hay
+// tapa, así que `bocaAbajo` no se toca y "Siguiente" no depende del volteo.
+// Se respeta el scroll igual que en la carta normal: si la persona estaba
+// desplazando el texto de la acción, el toque final NO debe voltear la carta.
+let tScrollDuelo = null;
+document.getElementById("tarjetaDuelo").addEventListener("scroll", function(e){
+  if(e && e.target && e.target.classList && e.target.classList.contains("info")){
+    ignoraClick = true;
+    clearTimeout(tScrollDuelo);
+    tScrollDuelo = setTimeout(()=>{ ignoraClick = false; }, 320);
+  }
+}, true);
+document.getElementById("tarjetaDuelo").addEventListener("click", function(){
+  if(ignoraClick) return;
+  if(!dueloEsJuntos() || jugandoCompartido) return;
+  voltearDuelo();
+});
 
 // ---------- agregar invitado a media partida ----------
 // El que entra NO juega la ronda en curso: se agrega a las cabezas y a las
@@ -1496,6 +1920,27 @@ function modoBaseDePartida(){
   if(sesionActual && sesionActual.modoBase) return sesionActual.modoBase;
   return MODO_NORMAL;
 }
+// ¿La partida en curso (o la que se está armando) es un duelo?
+function esModoDuelo(){ return modoBaseDePartida() === MODO_DUELO; }
+// El lado cuyas cartas se repartieron y la modalidad. Viven en la SESIÓN, porque
+// durante la selección todavía no hay partida (ahí se leen de las banderas).
+function dueloLadoDePartida(){
+  if(estado && estado.dueloLado) return estado.dueloLado;
+  if(sesionActual && sesionActual.dueloLado) return sesionActual.dueloLado;
+  return null;
+}
+function dueloModalidadDePartida(){
+  if(estado && estado.dueloModalidad) return estado.dueloModalidad;
+  if(sesionActual && sesionActual.dueloModalidad) return sesionActual.dueloModalidad;
+  return null;
+}
+function dueloEsJuntos(){ return esModoDuelo() && dueloModalidadDePartida() === "juntos"; }
+// De qué lado juega una cabeza (el suyo, o el del que lo invitó).
+function ladoDeCabeza(id){
+  const c = ((estado && estado.cabezas) || []).find(x=> x && x.id === id)
+       || ((sesionActual && sesionActual.cabezas) || []).find(x=> x && x.id === id);
+  return (c && c.lado) || null;
+}
 async function agregarInvitado(id){
   const cab = construirCabezas().find(c=>c.id === id);
   if(!cab) return;
@@ -1506,14 +1951,28 @@ async function agregarInvitado(id){
   if(restantes < 1){ aviso("Ya no quedan rondas para que entre."); return; }
   // En modo "seleccionar" no se reparte solo: él mismo escoge sus tarjetas.
   if(mb === MODO_SELECCIONAR){ pedirCartasInvitado(cab, restantes); return; }
-  // Su lista es la del lado con el que juega (`conQuien` ya viene resuelto), y
-  // depende del modo: en Espejo son las contrapartes, no los personajes.
-  const fuente = listaDeLado(cab.lado, mb);
-  if(!fuente.length){ aviso("La lista de ese lado está vacía."); return; }
-  // Se revuelve POR INVITADO: si entran dos, no reciben las mismas cartas.
-  const deck = mezclar(fuente);
-  const pool = [];
-  for(let i = 0; i < restantes; i++) pool.push(deck[i % deck.length]);
+  // Lo que le va a llegar al invitado: su cola de cartas, YA en orden.
+  let pool = [];
+  if(mb === MODO_DUELO){
+    // En DUELO no se reparte una lista al azar: se le dan las PAREJAS que faltan,
+    // en orden. Entra a partir de la SIGUIENTE ronda, así que se toman desde
+    // `ronda` (que es de 1 en 1) hacia adelante: la pareja k de su lado.
+    // Su lado sale de `conQuien` (ya viene resuelto en `construirCabezas`).
+    const pares = (estado && Array.isArray(estado.dueloPares)) ? estado.dueloPares : [];
+    const ladoDuelo = (estado && estado.dueloLado) || "A";
+    pool = pares.slice(ronda)
+      .map(par=> buscarPersonaje(cab.lado === ladoDuelo ? (par && par.o) : (par && par.c)))
+      .filter(Boolean);
+  }else{
+    // Su lista es la del lado con el que juega (`conQuien` ya viene resuelto), y
+    // depende del modo: en Espejo son las contrapartes, no los personajes.
+    const fuente = listaDeLado(cab.lado, mb);
+    if(!fuente.length){ aviso("La lista de ese lado está vacía."); return; }
+    // Se revuelve POR INVITADO: si entran dos, no reciben las mismas cartas.
+    const deck = mezclar(fuente);
+    for(let i = 0; i < restantes; i++) pool.push(deck[i % deck.length]);
+  }
+  if(!pool.length){ aviso("Ya no quedan rondas para que entre."); return; }
   const nuevo = { id: cab.id, nombre: cab.nombre || "Invitado", lado: cab.lado, admin: false, invitado: !!cab.invitado, conQuien: cab.conQuien || null };
   if(jugandoCompartido){
     let fallo = false;
@@ -1723,16 +2182,22 @@ function repartirTarjetas(cabezasIn, fuente, R){
 }
 // Lo que se hace al apretar "Un solo Celular" / "Cada quien en el suyo".
 // Primero se revisa que haya contenido suficiente; si el modo es "seleccionar",
-// en vez de repartir va a la pantalla de selección (T3.2 / T3.3).
-async function preparar(modo, ladoSoloElegido, unCelularFlag){
+// en vez de repartir va a la pantalla de selección (T3.2 / T3.3). Si es "duelo",
+// va a su propia ventana de lado + modalidad y después a su selección.
+// El 2.º argumento son las OPCIONES DEL DUELO ({lado, modalidad}) o `null`: en
+// los otros modos nunca se usaba (siempre `null`), así que nada cambia.
+async function preparar(modo, opcionesDuelo, unCelularFlag){
   await cargarPersonajes();
   try{
     const arr = await cargarUsuarios(db, getDoc, doc, usuariosLista);
     if(Array.isArray(arr) && arr.length) usuariosLista = arr;
   }catch(e){}
   const R = Math.max(2, Math.min(50, parseInt(document.getElementById("rondas").value, 10) || 2));
-  const cabezasIn = construirCabezasModo(modo, ladoSoloElegido);
   const mb = modoBaseCfg;
+  // El DUELO no reparte las listas enteras: reparte parejas (original + contraparte
+  // cruzada), y SIEMPRE pasa por una pantalla de escogimiento, como "Seleccionar".
+  if(mb === MODO_DUELO){ await prepararDuelo(modo, opcionesDuelo, unCelularFlag, R); return; }
+  const cabezasIn = construirCabezasModo(modo);
   const faltan = cabezasIn.filter(c=> listaDeLado(c.lado, mb).length < 2);
   if(faltan.length){ aviso("Cada lista necesita al menos 2 personajes. Configúralos en el engrane ⚙️."); return; }
   let maxR = 50;
@@ -1744,7 +2209,24 @@ async function preparar(modo, ladoSoloElegido, unCelularFlag){
     else abrirSeleccionCompartida(cabezasIn, R);
     return;
   }
-  await iniciar(modo, ladoSoloElegido, unCelularFlag);
+  await iniciar(modo, null, unCelularFlag);
+}
+// Camino del DUELO: se revisa que el lado elegido tenga suficientes parejas y que
+// R quepa en ellas. Lo que NO se hace aquí son las revisiones de `listaDeLado`,
+// porque en duelo el reparto sale de las parejas, no de las listas sueltas.
+async function prepararDuelo(modo, opcionesDuelo, unCelularFlag, R){
+  // Red de seguridad (los botones ya lo revisan): el Duelo lo arma el admin.
+  if(!esAdminFlag){ aviso("El Duelo lo arma el administrador."); return; }
+  const lado = (opcionesDuelo && opcionesDuelo.lado) || "";
+  const modalidad = (opcionesDuelo && opcionesDuelo.modalidad) || "";
+  if((lado !== "A" && lado !== "B") || (modalidad !== "turnos" && modalidad !== "juntos")) return;
+  const pares = paresDisponibles(lado);
+  if(pares.length < 2){ aviso("Ese lado no tiene suficientes personajes con contraparte."); return; }
+  if(R > pares.length){ aviso("El número de rondas no puede pasar de " + pares.length + " (personajes con contraparte)."); return; }
+  if(!revisarEspecial(R)) return;
+  const cabezasIn = construirCabezasModo(modo);
+  if(unCelularFlag) abrirSeleccionDueloLocal(cabezasIn, R, lado, modalidad, modo);
+  else abrirSeleccionDueloCompartida(cabezasIn, R, lado, modalidad, modo);
 }
 // El interruptor de Especial: "no está prendido" siempre pasa. Con el
 // interruptor prendido se revisa que K quepa (1 a R) y que haya variantes.
@@ -1757,7 +2239,10 @@ function revisarEspecial(R){
   if(!listaSegura("ESP").length){ aviso("No tienes variantes especiales. Agrégalas en el engrane ⚙️, pestaña Variantes Picantes."); return false; }
   return true;
 }
-async function iniciar(modo, ladoSoloElegido, unCelularFlag, poolsListos){
+// El 5.º parámetro (`dueloCfg`) es OPCIONAL y solo lo manda la selección del duelo:
+// { duelo:true, lado, modalidad, pares }. Si no viene, `iniciar` se comporta
+// exactamente como antes (las llamadas viejas siguen sirviendo sin cambio).
+async function iniciar(modo, ladoSoloElegido, unCelularFlag, poolsListos, dueloCfg){
   // Se guarda el modo y el "un solo celular": de eso depende que se muestren el
   // QR, "Agregar invitado" y el panel de la sala (solo en Multijugador).
   modoJuego = modo;
@@ -1769,10 +2254,13 @@ async function iniciar(modo, ladoSoloElegido, unCelularFlag, poolsListos){
     if(Array.isArray(arr) && arr.length) usuariosLista = arr;
   }catch(e){}
   const R = Math.max(2, Math.min(50, parseInt(document.getElementById("rondas").value, 10) || 2));
+  const esDuelo = !!(dueloCfg && dueloCfg.duelo);
   const cabezasIn = poolsListos ? selCabezas.slice() : construirCabezasModo(modo, ladoSoloElegido);
-  const mb = modoBaseCfg;
-  // Con el reparto ya hecho (modo seleccionar) no hay nada que revisar: la
-  // pantalla de selección ya dejó R tarjetas a cada quien.
+  // Ojo: en duelo el modo de la partida NO sale de la pestaña (`modoBaseCfg`), que
+  // se puede haber cambiado al cargar o al venir de otra pantalla.
+  const mb = esDuelo ? MODO_DUELO : modoBaseCfg;
+  // Con el reparto ya hecho (modos seleccionar y duelo) no hay nada que revisar:
+  // la pantalla de selección ya dejó R tarjetas a cada quien.
   if(!poolsListos){
     const faltan = cabezasIn.filter(c=> listaDeLado(c.lado, mb).length < 2);
     if(faltan.length){ aviso("Cada lista necesita al menos 2 personajes. Configúralos en el engrane ⚙️."); return; }
@@ -1784,7 +2272,11 @@ async function iniciar(modo, ladoSoloElegido, unCelularFlag, poolsListos){
   const compartido = quiereCompartido && !modoLocal;
   if(quiereCompartido && modoLocal){ try{ aviso("Sin conexión. Se jugará en este celular."); }catch(e){} }
   jugandoCompartido = compartido;
-  const pools = poolsListos || repartirTarjetas(cabezasIn, { A: listaDeLado("A", mb), B: listaDeLado("B", mb) }, R);
+  // En duelo el reparto sale de las parejas escogidas. Si no las mandaras hechas,
+  // se arman aquí de las mismas parejas: nunca se reparte por `listaDeLado`.
+  const pools = poolsListos || (esDuelo
+    ? poolsDuelo(cabezasIn, dueloCfg.pares || [], dueloCfg.lado)
+    : repartirTarjetas(cabezasIn, { A: listaDeLado("A", mb), B: listaDeLado("B", mb) }, R));
   const d = iniciarEstado(cabezasIn, pools);
   const sid = String(Date.now()) + Math.random().toString(36).slice(2, 6);
   // El Especial se sortea UNA vez, al arrancar, y se guarda en la sesión: así
@@ -1800,6 +2292,12 @@ async function iniciar(modo, ladoSoloElegido, unCelularFlag, poolsListos){
     rondas: R, ladoSolo: ladoSoloElegido || null,
     empezadaEn: serverTimestamp(), actualizadaEn: serverTimestamp()
   });
+  if(esDuelo){
+    nueva.dueloLado = dueloCfg.lado || "A";
+    nueva.dueloModalidad = dueloCfg.modalidad || "turnos";
+    // El orden de este arreglo es el orden de las rondas: la pareja k es la ronda k.
+    nueva.dueloPares = Array.isArray(dueloCfg.pares) ? dueloCfg.pares : [];
+  }
   cargarEstado(nueva);
   jugando = true;
   finMostrado = false;
@@ -1861,6 +2359,15 @@ let selUnCelular = false;
 // dos en el mismo aparato.
 let selSoloMia = false;
 let selModo = "pareja";   // pareja | multi (quiénes juegan)
+// ---------- DUELO: la selección es distinta ----------
+// En Duelo la lista es de UN SOLO lado y filtrada (fuera los que no tienen
+// contraparte), y SOLO el administrador marca. Estas banderas son suyas y se
+// limpian al abrir cualquier selección: la normal nunca debe heredar nada de aquí
+// (y al revés: `selDuelo` no se mezcla con `sel[id]`, que es de la normal).
+let selDuelo = false;              // ¿esta selección es la del duelo?
+let selLadoDuelo = "A";            // "A" | "B": de quién son las cartas
+let selModalidadDuelo = "turnos";  // "turnos" | "juntos"
+let selDueloIds = [];              // ids de los ORIGINALES marcados, EN ORDEN
 // Si alguien sale de la selección, no se le vuelve a meter. Se recuerda el `sid`
 // que abandonó: una selección NUEVA trae otro `sid`, así que esa sí lo vuelve a
 // llamar. Sin esto, un doc viejo que se quedó `activa` atrapaba al teléfono en
@@ -1887,8 +2394,148 @@ function selTodosListos(){
   return selCabezas.length > 0 && selCabezas.every(c=> selMarcosDe(c.id).length === selR);
 }
 
-function pintarSeleccion(){
+// ---------- modo DUELO: escoger las parejas ----------
+// La lista es de UN lado y sale FILTRADA (los que no tienen contraparte no se
+// ven). Los dos contadores salen del MISMO arreglo de marcados, así que nunca se
+// descuadran: siempre van iguales.
+function pintarSeleccionDuelo(){
   const tabs = document.getElementById("selTabs");
+  tabs.innerHTML = "";
+  tabs.style.display = "none";   // en duelo no hay pestañas: la lista es una sola
+  const otro = otroLadoDuelo(selLadoDuelo);
+  document.getElementById("selDesc").textContent =
+    (esAdminFlag ? "Marca" : (nombreAdmin() + " marca")) + " exactamente " +
+    selR + " tarjetas de " + nombreLado(selLadoDuelo) + ". " +
+    nombreLado(otro) + " juega las contrapartes.";
+
+  const box = document.getElementById("selBox");
+  box.innerHTML = "";
+  paresDisponibles(selLadoDuelo).forEach(it=>{
+    const fila = document.createElement("div");
+    fila.className = "filaSel";
+    const chk = document.createElement("input");
+    chk.type = "checkbox";
+    chk.checked = selDueloIds.indexOf(it.o.id) >= 0;
+    // En duelo SOLO marca el ADMINISTRADOR de la app (no el anfitrión ocasional):
+    // la pareja y los invitados ven la lista y cómo sube el contador, pero la
+    // casilla no se mueve.
+    chk.disabled = !esAdminFlag;
+    chk.onchange = ()=>{ cambiarMarcaDuelo(it.o.id, chk.checked); };
+    const nom = document.createElement("span");
+    nom.className = "selNombre";
+    nom.textContent = it.o.personaje || "(sin nombre)";
+    const tag = document.createElement("span");
+    tag.className = "selTag";
+    tag.textContent = "Normal";
+    fila.appendChild(chk); fila.appendChild(nom); fila.appendChild(tag);
+    box.appendChild(fila);
+  });
+  if(!box.children.length){
+    const v = document.createElement("div");
+    v.className = "vacio";
+    v.textContent = "No hay personajes con contraparte en esta lista. Configúralo en el engrane ⚙️.";
+    box.appendChild(v);
+  }
+
+  const cuenta = document.getElementById("selCuenta");
+  cuenta.innerHTML = "";
+  const n = selDueloIds.length;
+  [[selLadoDuelo, nombreLado(selLadoDuelo)], [otro, nombreLado(otro)]].forEach((par, i)=>{
+    if(i) cuenta.appendChild(document.createTextNode(" · "));
+    const b = document.createElement("b");
+    b.style.color = (n === selR) ? "var(--teal)" : "var(--coral)";
+    b.textContent = par[1] + " " + n + "/" + selR;
+    cuenta.appendChild(b);
+  });
+
+  // "Jugar" solo cuando llegaron a R y quien mira es el ADMINISTRADOR.
+  const btn = document.getElementById("btnSelJugar");
+  btn.style.display = (esAdminFlag && n === selR) ? "block" : "none";
+  // El INVITADO no tiene salida (regla de la casa), igual que en la selección normal.
+  try{ document.getElementById("btnSelVolver").style.display = esInvitadoFlag ? "none" : ""; }catch(e){}
+  try{ document.getElementById("selNota").style.display = "block"; }catch(e){}
+}
+async function cambiarMarcaDuelo(id, marcado){
+  if(!esAdminFlag) return;   // en duelo solo marca el administrador de la app
+  const k = selDueloIds.indexOf(id);
+  if(marcado){
+    if(k >= 0) return;                                  // ya estaba
+    if(selDueloIds.length >= selR){
+      aviso("Solo puedes marcar " + selR + " tarjetas.");
+      pintarSeleccion();
+      return;
+    }
+    selDueloIds.push(id);                               // el orden marcado es el orden de las rondas
+  }else{
+    if(k < 0) return;
+    selDueloIds.splice(k, 1);
+  }
+  if(selEsCompartida()){
+    // Solo el administrador escribe `dueloSel`; los demás leen.
+    try{ await setDoc(seleccionRef(), { dueloSel: selDueloIds, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+  }
+  pintarSeleccion();
+}
+// ---- DUELO, un solo celular: todo en memoria, nadie escribe ----
+async function abrirSeleccionDueloLocal(cabezasIn, R, lado, modalidad, modo){
+  selCabezas = cabezasIn.slice();
+  selR = R; selTab = 0;
+  selDoc = null; selCompartida = false; selSoyHost = true;
+  selUnCelular = true;
+  selSoloMia = false;
+  selModo = modo || "pareja";
+  selDuelo = true;
+  selLadoDuelo = lado;
+  selModalidadDuelo = modalidad;
+  selDueloIds = [];
+  pintarSeleccion();
+  ver("vistaSeleccion");
+}
+// ---- DUELO, cada quien en el suyo: el MISMO documento de selección, con `modo:"duelo"`
+//      y la lista en `dueloSel` (no en `sel`). Los demás LEEN; no escriben. ----
+async function abrirSeleccionDueloCompartida(cabezasIn, R, lado, modalidad, modo){
+  selCabezas = cabezasIn.slice();
+  selR = R; selTab = 0;
+  selSoyHost = true;
+  selCompartida = true;
+  selUnCelular = false;
+  selSoloMia = true;
+  selModo = modo || "pareja";
+  selDuelo = true;
+  selLadoDuelo = lado;
+  selModalidadDuelo = modalidad;
+  selDueloIds = [];
+  const sid = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+  const hostNombre = (miUsuario && miUsuario.nombre) || nombreAdmin();
+  selDoc = { activa: true, modo: MODO_DUELO, modoJuego: selModo,
+             dueloLado: lado, dueloModalidad: modalidad, dueloSel: [],
+             rondas: selR, cabezas: selCabezas, sid: sid,
+             hostUid: miId, hostNombre: hostNombre };
+  selSidAceptado = sid;   // quien la arma ya "aceptó": no se le pregunta
+  try{
+    await setDoc(seleccionRef(), Object.assign({}, selDoc, { actualizadaEn: serverTimestamp() }));
+  }catch(e){ try{ aviso("No se pudo iniciar la selección. Revisa conexión."); }catch(x){} }
+  // Aviso en la sala: durante la selección TODAVÍA no hay partida, así que el aviso
+  // apunta al documento de la SELECCIÓN (con su mismo `sid`).
+  try{
+    await publicarInvitacion({
+      juego: JUEGO_INV, titulo: JUEGO_TITULO, icono: "🎭", ruta: "Roles",
+      hostUid: miId, hostNombre: hostNombre,
+      participantes: selCabezas.map(c=> c && c.id).filter(Boolean),
+      sesion: "seleccionRoles/actual", sid: sid
+    });
+  }catch(e){}
+  pintarSeleccion();
+  ver("vistaSeleccion");
+  escucharSeleccion();
+}
+
+function pintarSeleccion(){
+  if(selDuelo){ pintarSeleccionDuelo(); return; }
+  const tabs = document.getElementById("selTabs");
+  // La nota de "no tiene contraparte" es SOLO del duelo: si se quedó prendida de
+  // una selección de duelo anterior, aquí se apaga.
+  try{ document.getElementById("selNota").style.display = "none"; }catch(e){}
   tabs.innerHTML = "";
   // En "cada quien en el suyo" cada telefono marca SOLO lo suyo: su pestaña es
   // la única que sale. En "un solo celular" salen todas, porque hay que armar
@@ -1993,6 +2640,7 @@ async function abrirSeleccionLocal(cabezasIn, R){
   selUnCelular = true;
   selSoloMia = false;   // un solo celular: salen las pestañas de todos
   selModo = modoPendiente || "pareja";
+  selDuelo = false; selDueloIds = [];   // no es una selección de duelo
   selLocal = {};
   selCabezas.forEach(c=>{ selLocal[c.id] = []; });
   pintarSeleccion();
@@ -2007,6 +2655,7 @@ async function abrirSeleccionCompartida(cabezasIn, R){
   selUnCelular = false;
   selSoloMia = true;    // cada quien en el suyo: cada telefono marca solo lo suyo
   selModo = modoPendiente || "pareja";
+  selDuelo = false; selDueloIds = [];   // no es una selección de duelo
   const selInicial = {};
   selCabezas.forEach(c=>{ selInicial[c.id] = []; });
   selDoc = { sel: selInicial, activa: true,
@@ -2039,8 +2688,34 @@ async function abrirSeleccionCompartida(cabezasIn, R){
 }
 // Arranca la partida con lo que la gente marcó.
 async function arrancarSeleccion(){
-  // Candado: el botón se ve para todos cuando ya están listos, pero solo quien
-  // inició la selección la arranca.
+  // ---- DUELO: se reparte por PAREJAS, no por listas ----
+  if(selDuelo){
+    // En Duelo arranca el ADMINISTRADOR de la app, que es el único que marca.
+    // Puede no ser quien inició la selección: por eso NO se aplica aquí el
+    // candado de "solo el que la inició".
+    if(selEsCompartida() && !esAdminFlag){ aviso("El Duelo lo arma el administrador."); return; }
+    if(selDueloIds.length !== selR){ aviso("Faltan tarjetas por escoger."); return; }
+    const pares = [];
+    for(let i = 0; i < selDueloIds.length; i++){
+      const id = selDueloIds[i];
+      const o = buscarPersonaje(id);
+      const c = contraparteDe(id, selLadoDuelo);   // tiene que ser exactamente una
+      if(!o || !c){ aviso("Algún personaje ya no tiene contraparte."); return; }
+      pares.push({ o: o.id, c: c.id });            // en el orden en que se marcó
+    }
+    // Cada cabeza recibe las R tarjetas de SU lado, en el mismo orden que el otro.
+    const pools = poolsDuelo(selCabezas, pares, selLadoDuelo);
+    if(selEsCompartida()){
+      try{ await setDoc(seleccionRef(), { activa: false, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+    }
+    // Ojo: se usan `selModo` y `selUnCelular` (lo que se eligió al armar la
+    // selección), NO los globales de la pantalla de inicio: pueden haber cambiado.
+    await iniciar(selModo || "pareja", null, selUnCelular, pools, {
+      duelo: true, lado: selLadoDuelo, modalidad: selModalidadDuelo, pares: pares
+    });
+    return;
+  }
+  // Candado de la selección NORMAL: solo quien la inició la arranca.
   if(selEsCompartida() && !selSoyHost){ aviso("Solo quien inició la selección puede empezar."); return; }
   const pools = {};
   selCabezas.forEach(c=>{
@@ -2079,6 +2754,10 @@ function escucharSeleccion(){
             }catch(e){}
             ver("vistaEspera");
           }
+          // Una selección de duelo que se apaga (se canceló o arrancó la partida)
+          // deja de serlo: sin esto, las banderas del duelo quedarían prendidas y
+          // la siguiente selección normal se pintaría con la lista del duelo.
+          selDuelo = false; selDueloIds = [];
           return;
         }
         const primera = !selDoc;   // se lee ANTES de asignar `selDoc` (abajo)
@@ -2089,6 +2768,37 @@ function escucharSeleccion(){
         // de las dos ramas, porque también aplica al "agregar": si el invitado
         // se sale, no debe caer otra vez en la pantalla de selección.
         if(d.sid && d.sid === selSalioSid) return;
+
+        // ---- rama "duelo": lista de UN lado, y solo marca el administrador ----
+        if(d.modo === MODO_DUELO){
+          if(!Array.isArray(d.cabezas) || !d.cabezas.some(c=> c && c.id === miId)) return;
+          if(jugando) return;   // ya esta en la partida: no se regresa
+          selDuelo = true;
+          selLadoDuelo = d.dueloLado || "A";
+          selModalidadDuelo = d.dueloModalidad || "turnos";
+          if(d.modoJuego) selModo = d.modoJuego;
+          selR = d.rondas || selR;
+          selCabezas = d.cabezas;
+          selSoyHost = (d.hostUid === miId);
+          selDueloIds = Array.isArray(d.dueloSel) ? d.dueloSel.slice() : [];
+          selSoloMia = true;
+          // PRIMERO se le pregunta si entra (igual que en la selección normal):
+          // hasta que acepte NO ve la lista.
+          if(!selSoyHost && d.sid !== selSidAceptado){
+            selInvitando = true;
+            document.getElementById("unirDesc").textContent =
+              (d.hostNombre || "El anfitrión") + " quiere jugar un Duelo de seducción. ¿Entras a escoger los personajes?";
+            abrirModal("modalUnir");
+            return;
+          }
+          // Solo se cambia de vista si el usuario no está en otra parte.
+          const vd = document.querySelector(".vista.ver");
+          const vdId = vd ? vd.id : "";
+          await asegurarPersonajes();   // sin esto, la lista salía vacía
+          pintarSeleccion();
+          if(vdId === "vistaInicio" || vdId === "vistaEspera" || vdId === "vistaSeleccion") ver("vistaSeleccion");
+          return;
+        }
 
         // ---- rama "agregar": un invitado está escogiendo sus tarjetas ----
         if(d.modo === "agregar"){
@@ -2159,6 +2869,7 @@ document.getElementById("btnSelVolver").onclick = ()=>{
     try{ retirarInvitacion(JUEGO_INV); }catch(e){}
   }
   selEsAgregado = false;
+  selDuelo = false; selDueloIds = [];
   ver(vistaDeInicio());
 };
 

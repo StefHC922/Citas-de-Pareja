@@ -1269,32 +1269,90 @@ secciones del Centro, y de ahí se entra a ver todo el catálogo.
   repo (contenido íntimo + repo público). La sesión es
   **`sesionRoles/actual`** y **no tiene `pares{}` ni `eliminadas{}`**: `listas{}`
   es la **cola de tarjetas que le faltan** a cada jugador, y cada elemento es el
-  objeto `personaje` completo. Modes: **Normal** (sale de `U1`/`U2`), **Espejo**
-  (sale de las contrapartes `C1`/`C2`) y **Seleccionar** (la lista completa del
-  lado, escogida a mano). **Especial NO es un modo**: es un interruptor que se
-  prende encima de cualquiera de los tres, con "¿cuántas veces?" (K, máximo una
-  por ronda), y el sorteo se hace **una sola vez al arrancar** y se guarda en la
-  sesión como `especiales[]`. La carta sale **boca abajo** y se revela al
-  tocarla (tocar otra vez la tapa, para poder pasar el celular). **Ojo con dos
+objeto `personaje` completo. Modes: **Clásico** (sale de `U1`/`U2`), **Cambia
+    de Bando** (sale de las contrapartes `C1`/`C2`), **Seleccionar** (la lista
+    completa del lado, escogida a mano) y **Duelo de seducción** (lista de un solo
+    lado, con su contraparte cruzada; ver abajo). **Variantes Picantes NO es un
+    modo**: es un
+    interruptor que se prende encima de cualquiera de los cuatro, con "¿cuántas
+    veces?" (K, máximo una por ronda), y el sorteo se hace **una sola vez al
+    arrancar** y se guarda en la sesión como `especiales[]`. La carta sale **boca
+    abajo** y se revela al tocarla (tocar otra vez la tapa, para poder pasar el
+   celular). **Ojo con dos
   campos parecidos:** `modoJuego` es **quiénes juega** (pareja/multi) y
-  `modoBase` es el modo del juego (normal/espejo/seleccionar). Licencia: item
+`modoBase` es el modo del juego (normal/espejo/seleccionar/duelo). **Ojo con los
+    nombres: lo que se ve y lo que se guarda NO son lo mismo.** En pantalla los
+    modos son **Clásico / Cambia de Bando / Seleccionar / Duelo de seducción** y el
+    interruptor es
+    **Variantes Picantes**, pero en el código y en la base siguen siendo `normal` /
+    `espejo` / `seleccionar` / `duelo` y `especial` / `especialK` / `especiales`. Los
+   nombres se renombraron (oct-2026) **solo en el texto**: no se tocan los
+   valores, o se rompen las partidas ya empezadas. Licencia: item
   **`roles`**. En el catálogo (`packs`): ruta **`Roles`**, sección
   **`juegos`**, y **sin** marcar `oficial` (el menú salta los `oficial:true`).
   Engrane ⚙️ con **una pestaña por usuario** (no cinco): cada quien solo ve su
   lado y el administrador tiene un botón para ver el del otro; dentro, dos
-  sub-pestañas Personajes / Contrapartes; y una tercera, **Especiales**, que es
-    común. En la pantalla de inicio hay **solo dos** botones —**Jugar con Pareja**
-    y **Multijugador**, en el mismo renglón— y una caja **Especial** abajo de todo
-    con el interruptor "Ponle un toque personal a tu juego". El detalle del modelo y de las tres
-    colecciones está en **`General/Modelo-Datos.md`**, sección **1b**.
-  **Reglas que salieron de las pruebas en vivo (oct-2026) — no romper:**
+sub-pestañas Personajes / Contrapartes; y una tercera, **Variantes Picantes**, que
+     es común. **El orden de la pantalla de inicio (decisión de Fredy, oct-2026):**
+arriba **Número de rondas**, luego la caja **"Elige Tu Modo de Juego"** (las
+    cuatro pestañas en 2x2, con la descripción del modo debajo), luego **"¿Cómo vas a jugar
+   hoy?"** con los **solo dos** botones —**Jugar con Pareja** y **Multijugador**,
+   en el mismo renglón—, y al final la caja **"Variantes Picantes, Te atreves ?"**
+   con el interruptor y su "¿Cuántas veces?". Abajo de todo, el botón del QR y el
+   remate del engrane. El detalle del modelo y de las tres
+   colecciones está en **`General/Modelo-Datos.md`**, sección **1b**.
+
+**Los textos de los modos NO son instrucciones, son PERMISOS (decisión de Fredy,
+  oct-2026) — no reescribirlos sin preguntar.** La pestaña dice el nombre y la
+  descripción dice lo que el jugador gana: `Clásico` → *"Interpreta, Aprovecha y
+  ......"* · `Cambia de Bando` → *"La Lealtad y las Intenciones Cambian de
+  Bando"* · `Seleccionar` → *"Selecciona tus personajes favoritos."*
+  · `Duelo de seducción` → *"Sensualidad contra Erotismo, Quién Ganará ?"*
+  **Los puntos suspensivos de "Clásico" son intencionales y NO se completan:** la
+  frase deja la puerta abierta para que cada quien la rellene con su imaginación.
+  Por eso ahí **no** cabe una palabra como "Disfruta": es un verbo de
+  *sentimiento*, dice qué hay que sentir al terminar y **topa** las opciones.
+  `Interpreta` y `Aprovecha` son verbos de *permiso*: abren. **El criterio para
+  estas descripciones es que ABRA, no que diga qué hacer ni qué sentir.** El
+  subtítulo de la pantalla ("Diviértete más") y las etiquetas de cada tarjeta en
+  la selección ("Normal" / "Contraparte") se dejan como están: no tienen nada que
+ver con el nombre de los modos.
+
+**Duelo de seducción: el cuarto modo de `Roles/` (construido 17-oct-2026).** Está
+  en la misma caja de los otros tres, en **2x2** (dos pestañas arriba, dos abajo).
+  Se reparte una lista de **un solo lado** y **de cada carta se toma su contraparte
+  cruzada** (U1 → C2, U2 → C1); los personajes sin contraparte no cuentan ni se ven.
+  El dueño de la lista juega los originales y el otro las contrapartes. Se juega en
+  dos modalidades (**Turnos**, que es el motor de siempre, y **Juntos**, donde no
+  hay turnos: la pareja juega al mismo tiempo y el anfitrión aprieta "Siguiente") y
+  tiene **cuatro caminos** según se juegue con pareja o en multijugador, y en un
+  celular o cada quien en el suyo. Lo que se guarda en la sesión: `modoBase:"duelo"`,
+  `dueloLado`, `dueloModalidad` y **`dueloPares[]`** (las parejas en orden de
+  ronda). En la pantalla de escogimiento del duelo **solo marca el administrador**:
+  la pareja y los invitados ven la lista y el contador, pero no marcan. "Saltar
+  turno" **no existe** en duelo. **El detalle completo de las cuatro ramas, el
+  modelo de datos y las cuatro funciones del reparto están en
+  `General/duelos.md`** — ese es el archivo que se lee, no esta nota. Cómo se
+  construyó y qué falta está en **`General/Plan-Duelo.md`**.
+
+  **Ojo: está construido pero PENDIENTE de la prueba en vivo** (17-oct-2026). El
+  chequeo de sintaxis pasa, pero las ocho combinaciones de la matriz todavía **no se
+  han probado en un celular**: hasta que se prueben, esto vale como código escrito,
+  no como algo verificado. La lista de lo que falta está en `Plan-Duelo.md`,
+  sección 10.
+
+  **Y estas son las reglas del juego en sí (Clásico, Cambia de Bando, Seleccionar y
+  Duelo) que salieron de las pruebas en vivo (oct-2026) — no romper:**
   - **Saltar turno QUEMA la tarjeta** de esa persona: pierde el turno *con*
     tarjeta. Si solo se le saltara el turno, la partida pediría turnos de más, la
     ronda se pasaría de R y **no terminaría**. Usa el mismo `avanzarTarjeta()` que
     "Siguiente", para que un salto y un paso normal no puedan comportarse distinto.
+    (En **Duelo** el botón no existe, así que la regla no aplica.)
   - **No se puede dar "Siguiente" con la carta boca abajo.** El botón se ve
     apagado y, al tocarlo, sale un aviso discreto (*"Voltea la carta para poder
-    seguir."*). No se **deshabilita**: un botón deshabilitado no avisa nada.
+    seguir."*). No se **deshabilita**: un botón deshabilitado no avisa nada. **En el
+    duelo *Juntos* esto NO aplica**: ahí el botón no se apaga, porque todos juegan
+    al mismo tiempo y el anfitrión avanza cuando le parece.
   - **El invitado no sale de la pantalla de selección**: se le oculta el "‹ Volver"
     y el botón atrás del celular queda bloqueado, igual que durante el juego.
   - **El invitado también carga el contenido** (`cargarPersonajes()`); si no, su
@@ -1330,7 +1388,8 @@ secciones del Centro, y de ahí se entra a ver todo el catálogo.
     **SITUACIÓN / ATRACTIVO / DERECHOS / ACCIÓN** y los campos **no** se renombran
     (siguen siendo `situacion`, `gancho`, `derechos`, `si_quieres`); el **mosaico
     va solo en el reverso**; y el **emoji del remate va FUERA** del degradado,
-    porque con `background-clip:text` el emoji también sale transparente.
+    porque con `background-clip:text` el emoji también sale transparente. El bloque
+    de la variante que va dentro de la carta se rotula **"Variante picante"**.
 - **Trampa de la dirección de un juego (oct-2026) — costó dos rondas de
   diagnóstico:** los juegos importan los módulos de la raíz con `../acceso.js` y
   compañía. Eso **solo funciona si la dirección es la CARPETA** (`/Roles/`). Si se
