@@ -1368,11 +1368,18 @@ ver con el nombre de los modos.
   - **El "Volver" de la pantalla de selección va ARRIBA A LA DERECHA**, no
     abajo: el botón de abajo (`#btnSelVolver`) se quedó en el código pero
     **oculto**, porque el enlace de arriba llama a su función para cancelar.
-  - **En el Duelo hay "Sorpréndeme, elige por mí"** (`#btnSelAzar`, 17-oct-2026):
-    el administrador lo toca y se marcan **R parejas al azar** (el orden al azar
-    es el orden de las rondas), suben los dos contadores y se enciende "Jugar".
-    Se puede volver a tocar para re-sortear. Solo lo ve el administrador, y es
-    solo del Duelo (en la selección normal no se muestra).
+  - **En el Duelo hay dos atajos** (17-oct-2026), solo para quien inicia:
+    - **"Sorpréndeme, elige por mí"** (`#btnSelAzar`): marca **R parejas al azar**
+      (el orden al azar es el orden de las rondas), suben los dos contadores y se
+      enciende "Jugar". Se puede repetir para re-sortear.
+    - **"Tentación sin distinciones"** (`#btnSelTentacion`): **ignora lo marcado**
+      y reparte a **cada persona** (usuario 1 y sus invitados; usuario 2 y los
+      suyos) su propia mano de **R cartas al azar de `U+C` de su lado**, distintas
+      entre compañeros si alcanzan y con repetición si no. **No hay parejas**, así
+      que en este modo **no sale "contra ..."**. Sirve en todas las combinaciones
+      **menos Multijugador + un celular** (ahí el botón no se muestra). En Juntos
+      un celular (solo Pareja) la carta de dos caras muestra la de cada quien.
+    Ninguno de los dos sale en la selección normal.
   - **"Pausar y Salir" se puede retomar.** En **"cada quien en su celular"** la
     partida vive en `sesionRoles/actual`. En **"un solo celular"** se guarda en el
     propio teléfono (`localStorage`, clave `roles_partida_local`) y, al volver,

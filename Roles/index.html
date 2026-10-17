@@ -375,10 +375,15 @@
   <!-- Solo en el modo DUELO: los personajes que no tienen contraparte no salen
        en la lista, y sin esta nota parecía un error. Nace oculta. -->
   <div id="selNota" style="display:none; font-size:.75rem; color:var(--fg-muted); text-align:center; margin-top:10px;">¿No ves un personaje? Puede que todavía no tenga contraparte.</div>
-  <!-- Azar del Duelo: elige R al azar y con eso arma las parejas (marca los
-       contadores y enciende "Jugar"). Solo el administrador lo ve, que es el
-       único que marca. Nace oculto. (17-oct-2026) -->
-  <button class="btnSec" id="btnSelAzar" style="display:none; font-size:.85rem; padding:6px; text-decoration:none; color:var(--teal);">Sorpréndeme, elige por mí</button>
+  <!-- Dos atajos del Duelo (solo los ve quien inicia la selección):
+       · "Sorpréndeme": marca R parejas al azar (respeta el emparejamiento).
+       · "Tentación sin distinciones": reparte R al azar de U+C de cada lado,
+         sin importar lo marcado. NO sale en multijugador un celular.
+       Nacen ocultos. (17-oct-2026) -->
+  <div id="filaAzar" style="display:none; width:100%; gap:8px;">
+    <button class="btnSec" id="btnSelAzar" style="display:none; flex:1 1 0; width:auto; font-size:.8rem; padding:6px; text-decoration:none; color:var(--teal);">Sorpréndeme, elige por mí</button>
+    <button class="btnSec" id="btnSelTentacion" style="display:none; flex:1 1 0; width:auto; font-size:.8rem; padding:6px; text-decoration:none; color:var(--coral);">Tentación sin distinciones</button>
+  </div>
   <button class="btnPri" id="btnSelJugar" style="display:none; margin-top:12px;">Jugar ▶</button>
   <!-- El "Volver" de esta pantalla vive ARRIBA A LA DERECHA (el enlace de la app).
        Este botón se queda en el DOM pero OCULTO: ese enlace de arriba llama a su
@@ -1213,6 +1218,7 @@ function cargarEstado(d){
     // Con esto, quien entra o reanuda ve el duelo sin tocar nada más.
     dueloLado: d.dueloLado || null,
     dueloModalidad: d.dueloModalidad || null,
+    dueloTentacion: !!d.dueloTentacion,
     dueloPares: Array.isArray(d.dueloPares) ? d.dueloPares.slice() : []
   };
   // "Quiénes juegan" se lee de la SESIÓN, no de la pantalla de inicio. Hace
@@ -1701,6 +1707,23 @@ function pintarDueloPar(par, ronda){
   caraDuelo = 0;   // cada ronda abre en el original
   mostrarCaraDuelo();
 }
+// "Tentación sin distinciones" en un solo celular (solo Pareja): no hay pareja,
+// así que cada cara es la carta que le tocó a cada quien. Arriba de cada carta va
+// el nombre de esa persona.
+function pintarDueloTentacion(d){
+  const cabezas = (d.cabezas || []).slice();
+  const a = cabezas.find(c=> c && c.lado === "A") || cabezas[0] || null;
+  const b = cabezas.find(c=> c && c.lado === "B" && (!a || c.id !== a.id)) || cabezas[1] || null;
+  const cartaA = a ? ((d.listas[a.id] || [])[0] || null) : null;
+  const cartaB = b ? ((d.listas[b.id] || [])[0] || null) : null;
+  const ronda = d.ronda || 1;
+  pintarCaraDuelo(document.getElementById("tarjetaDueloA"),
+    cartaA, a ? especialDe(ronda, a.id) : null, (a && a.nombre) || "Jugador 1", null);
+  pintarCaraDuelo(document.getElementById("tarjetaDueloB"),
+    cartaB, b ? especialDe(ronda, b.id) : null, (b && b.nombre) || "Jugador 2", null);
+  caraDuelo = 0;
+  mostrarCaraDuelo();
+}
 function mostrarCaraDuelo(){
   const a = document.getElementById("tarjetaDueloA");
   const b = document.getElementById("tarjetaDueloB");
@@ -1752,14 +1775,21 @@ function pintarPasoDueloJuntos(d){
     flipwrap.style.display = "none";
     vacio.style.display = "none";
     duelCard.style.display = "block";
-    const pares = Array.isArray(d.dueloPares) ? d.dueloPares : [];
-    const par = pares[(d.ronda || 1) - 1] || null;
-    if(par) pintarDueloPar(par, d.ronda || 1);
+    if(d.dueloTentacion){
+      // Sin parejas: cada cara es la carta que le tocó a cada quien.
+      pintarDueloTentacion(d);
+    }else{
+      const pares = Array.isArray(d.dueloPares) ? d.dueloPares : [];
+      const par = pares[(d.ronda || 1) - 1] || null;
+      if(par) pintarDueloPar(par, d.ronda || 1);
+    }
     // En un celular no hay tapa: la carta abre de una vez. El indicador dice lo
-    // otro que hay que hacer (voltear para ver la contraparte), no "voltea tu carta".
+    // otro que hay que hacer (voltear para ver la del otro), no "voltea tu carta".
     const f = document.getElementById("faseDuelo");
     f.style.display = "block";
-    f.textContent = "Voltéala para ver la contraparte.";
+    f.textContent = d.dueloTentacion
+      ? "Voltéala para ver la carta del otro."
+      : "Voltéala para ver la contraparte.";
     // El anfitrión es quien tiene el teléfono, así que él avanza.
     btnSig.style.display = esAnfitrion() ? "block" : "none";
     return;
@@ -2084,6 +2114,7 @@ function pintarModoPartida(){
 // debajo del personaje SOLO en las cartas del Duelo ("contra ...").
 function contraDeRonda(headId, ronda){
   if(!esModoDuelo()) return null;
+  if(estado && estado.dueloTentacion) return null;   // sin parejas: no hay "contra"
   const pares = (estado && Array.isArray(estado.dueloPares)) ? estado.dueloPares : [];
   const par = pares[(ronda || 1) - 1];
   if(!par) return null;
@@ -2115,12 +2146,22 @@ async function agregarInvitado(id){
     // en orden. En JUNTOS empieza en la pareja que se está jugando (para que
     // entre alineado); en TURNOS, en la siguiente (no juega la ronda en curso).
     // Su lado sale de `conQuien` (ya viene resuelto en `construirCabezas`).
-    const pares = (estado && Array.isArray(estado.dueloPares)) ? estado.dueloPares : [];
-    const ladoDuelo = (estado && estado.dueloLado) || "A";
-    const desde = esDueloJuntos ? (ronda - 1) : ronda;
-    pool = pares.slice(desde)
-      .map(par=> buscarPersonaje(cab.lado === ladoDuelo ? (par && par.o) : (par && par.c)))
-      .filter(Boolean);
+    if(estado && estado.dueloTentacion){
+      // Tentación: mano propia al azar de U+C de su lado. Repite si no alcanza.
+      const n = (cab.lado === "A") ? "1" : "2";
+      const fuente = listaSegura("U" + n).concat(listaSegura("C" + n));
+      if(!fuente.length){ aviso("La lista de ese lado está vacía."); return; }
+      const cuantas = esDueloJuntos ? (restantes + 1) : restantes;
+      const deck = mezclar(fuente);
+      for(let i = 0; i < cuantas; i++) pool.push(deck[i % deck.length]);
+    }else{
+      const pares = (estado && Array.isArray(estado.dueloPares)) ? estado.dueloPares : [];
+      const ladoDuelo = (estado && estado.dueloLado) || "A";
+      const desde = esDueloJuntos ? (ronda - 1) : ronda;
+      pool = pares.slice(desde)
+        .map(par=> buscarPersonaje(cab.lado === ladoDuelo ? (par && par.o) : (par && par.c)))
+        .filter(Boolean);
+    }
   }else{
     // Su lista es la del lado con el que juega (`conQuien` ya viene resuelto), y
     // depende del modo: en Espejo son las contrapartes, no los personajes.
@@ -2376,9 +2417,9 @@ async function prepararDuelo(modo, opcionesDuelo, unCelularFlag, R){
   const lado = (opcionesDuelo && opcionesDuelo.lado) || "";
   const modalidad = (opcionesDuelo && opcionesDuelo.modalidad) || "";
   if((lado !== "A" && lado !== "B") || (modalidad !== "turnos" && modalidad !== "juntos")) return;
-  const pares = paresDisponibles(lado);
-  if(pares.length < 2){ aviso("Ese lado no tiene suficientes personajes con contraparte."); return; }
-  if(R > pares.length){ aviso("El número de rondas no puede pasar de " + pares.length + " (personajes con contraparte)."); return; }
+  // OJO: ya NO se corta si faltan pares. "Tentación sin distinciones" reparte de
+  // U+C e ignora las contrapartes, así que la selección tiene que abrir aunque no
+  // haya pares suficientes. El modo normal seguirá pidiendo sus R marcas.
   if(!revisarEspecial(R)) return;
   const cabezasIn = construirCabezasModo(modo);
   if(unCelularFlag) abrirSeleccionDueloLocal(cabezasIn, R, lado, modalidad, modo);
@@ -2454,8 +2495,10 @@ async function iniciar(modo, ladoSoloElegido, unCelularFlag, poolsListos, dueloC
   if(esDuelo){
     nueva.dueloLado = dueloCfg.lado || "A";
     nueva.dueloModalidad = dueloCfg.modalidad || "turnos";
+    // "Tentación sin distinciones" NO tiene parejas: cada quien lleva su mano.
+    nueva.dueloTentacion = !!dueloCfg.tentacion;
     // El orden de este arreglo es el orden de las rondas: la pareja k es la ronda k.
-    nueva.dueloPares = Array.isArray(dueloCfg.pares) ? dueloCfg.pares : [];
+    nueva.dueloPares = (dueloCfg.tentacion ? [] : (Array.isArray(dueloCfg.pares) ? dueloCfg.pares : []));
   }
   cargarEstado(nueva);
   jugando = true;
@@ -2635,9 +2678,21 @@ function pintarSeleccionDuelo(){
   // El "Volver" de abajo se ocultó: el de ARRIBA A LA DERECHA es el bueno (ese
   // enlace llama a la función de este botón). Se deja la línea en "none".
   try{ document.getElementById("btnSelVolver").style.display = "none"; }catch(e){}
-  try{ document.getElementById("selNota").style.display = "block"; }catch(e){}
-  // "Sorpréndeme": solo lo ve quien marca (el anfitrión de la selección).
-  try{ document.getElementById("btnSelAzar").style.display = selSoyHost ? "" : "none"; }catch(e){}
+  try{
+    const notaEl = document.getElementById("selNota");
+    notaEl.textContent = (paresDisponibles(selLadoDuelo).length < selR)
+      ? "Faltan personajes con contraparte. Puedes usar “Tentación sin distinciones”."
+      : "¿No ves un personaje? Puede que todavía no tenga contraparte.";
+    notaEl.style.display = "block";
+  }catch(e){}
+  // Los dos atajos los ve quien marca (el anfitrión). "Tentación" NO sale en
+  // multijugador un celular (decisión de Fredy): ahí la dinámica de grupo manda.
+  const tentacionDisponible = !(selModo === "multi" && selUnCelular);
+  try{
+    document.getElementById("btnSelAzar").style.display = selSoyHost ? "" : "none";
+    document.getElementById("btnSelTentacion").style.display = (selSoyHost && tentacionDisponible) ? "" : "none";
+    document.getElementById("filaAzar").style.display = selSoyHost ? "flex" : "none";
+  }catch(e){}
 }
 async function cambiarMarcaDuelo(id, marcado){
   if(!selSoyHost) return;   // en duelo solo marca quien inició la selección
@@ -2661,7 +2716,7 @@ async function cambiarMarcaDuelo(id, marcado){
   pintarSeleccion();
 }
 // "Sorpréndeme, elige por mí": toma R parejas AL AZAR del lado elegido y las
-// deja marcadas. El orden al azar es el orden de las rondas. Solo el admin.
+// deja marcadas. El orden al azar es el orden de las rondas. Solo el anfitrión.
 async function elegirAzarDuelo(){
   if(!selSoyHost) return;
   const disp = paresDisponibles(selLadoDuelo);
@@ -2672,6 +2727,30 @@ async function elegirAzarDuelo(){
     try{ await setDoc(seleccionRef(), { dueloSel: selDueloIds, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
   }
   pintarSeleccion();
+}
+// "Tentación sin distinciones": ignora por completo lo marcado. A CADA persona
+// (usuario 1 y sus invitados; usuario 2 y los suyos) le toca su propia mano de R
+// cartas al azar, tomadas de U+C de SU lado, distintas entre sí y de las de sus
+// compañeros de lado si alcanzan (si no, se repite). No existe el emparejamiento
+// original/contraparte, así que tampoco sale "contra ...". No aplica en
+// multijugador un celular (decisión de Fredy, 17-oct-2026).
+async function elegirTentacion(){
+  if(!selDuelo || !selSoyHost) return;
+  if(selModo === "multi" && selUnCelular) return;
+  const fuenteA = listaSegura("U1").concat(listaSegura("C1"));
+  const fuenteB = listaSegura("U2").concat(listaSegura("C2"));
+  const lados = new Set((selCabezas || []).map(c=> c.lado));
+  if(lados.has("A") && !fuenteA.length){ aviso("El usuario 1 no tiene personajes."); return; }
+  if(lados.has("B") && !fuenteB.length){ aviso("El usuario 2 no tiene personajes."); return; }
+  if(!fuenteA.length && !fuenteB.length){ aviso("No hay personajes para repartir."); return; }
+  const pools = repartirTarjetas(selCabezas, { A: fuenteA, B: fuenteB }, selR);
+  if(selEsCompartida()){
+    try{ await setDoc(seleccionRef(), { activa: false, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+  }
+  await iniciar(selModo || "pareja", null, selUnCelular, pools, {
+    duelo: true, lado: selLadoDuelo, modalidad: selModalidadDuelo,
+    tentacion: true, pares: []
+  });
 }
 // ---- DUELO, un solo celular: todo en memoria, nadie escribe ----
 async function abrirSeleccionDueloLocal(cabezasIn, R, lado, modalidad, modo){
@@ -2808,9 +2887,13 @@ function pintarSeleccion(){
   // El "Volver" de abajo se ocultó: el de ARRIBA A LA DERECHA es el bueno (ese
   // enlace llama a la función de este botón). Se deja la línea en "none".
   try{ document.getElementById("btnSelVolver").style.display = "none"; }catch(e){}
-  // "Sorpréndeme" es SOLO del Duelo (necesita contrapartes): en la selección
-  // normal no se muestra.
-  try{ document.getElementById("btnSelAzar").style.display = "none"; }catch(e){}
+  // Los atajos ("Sorpréndeme" y "Tentación") son SOLO del Duelo: en la
+  // selección normal no se muestran.
+  try{
+    document.getElementById("btnSelAzar").style.display = "none";
+    document.getElementById("btnSelTentacion").style.display = "none";
+    document.getElementById("filaAzar").style.display = "none";
+  }catch(e){}
 }
 async function cambiarMarca(cab, idPersonaje, marcado){
   const actual = selMarcosDe(cab.id).slice();
@@ -3062,6 +3145,7 @@ function escucharSeleccion(){
 }
 document.getElementById("btnSelJugar").onclick = ()=>{ arrancarSeleccion(); };
 document.getElementById("btnSelAzar").onclick = ()=>{ elegirAzarDuelo(); };
+document.getElementById("btnSelTentacion").onclick = ()=>{ elegirTentacion(); };
 // El buscador filtra la lista que se está viendo. Se repinta con `pintarSeleccion`,
 // que sabe si es la selección normal o la del duelo.
 document.getElementById("selBuscar").addEventListener("input", (e)=>{

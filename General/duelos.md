@@ -103,7 +103,7 @@ Seleccionar. Pero es una distinta:
 
 - La lista es **solo del lado elegido**, y **filtrada**: fuera los que no
   tienen contraparte.
-- El administrador marca **tantas como rondas** haya.
+- El anfitrión marca **tantas como rondas** haya.
 - **Al marcar una, su contraparte se busca sola y el CONTADOR DEL OTRO LADO
   también sube.** Por eso los dos contadores **siempre van iguales** y nunca
   queda un "0" colgado.
@@ -115,6 +115,25 @@ Seleccionar. Pero es una distinta:
 > misma lista de R personajes escogidos, así que no se pueden desincronizar.
 > Esa es también la regla de "todos listos": basta con que el contador llegue
 > a R.
+
+### "Tentación sin distinciones" (reparto alterno)
+
+Además de marcar parejas a mano o con **"Sorpréndeme"**, la selección trae un
+segundo atajo: **"Tentación sin distinciones"** (decisión de Fredy, 17-oct-2026).
+
+- **Ignora por completo** lo que se haya marcado (o no).
+- A **cada persona** (usuario 1 y sus invitados; usuario 2 y los suyos) le toca
+  su propia mano de **R cartas al azar**, tomadas de las de **su lado**:
+  `U1+C1` para el lado 1, `U2+C2` para el lado 2.
+- Las manos salen **distintas** entre compañeros de lado si alcanzan las cartas;
+  si no alcanzan, **se permite repetir**.
+- **No hay parejas** original/contraparte: por eso, en este modo, la carta **no
+  muestra "contra ..."** (en el Duelo normal sí).
+- Sirve en **todas las combinaciones** menos **Multijugador + un celular**, donde
+  el botón no se muestra (la dinámica de grupo manda).
+- En **Juntos un celular** (solo Pareja) la carta de dos caras muestra **la de
+  cada quien**: una cara es tu carta y la otra la del otro, y se voltea para verla.
+- En la sesión se guarda `dueloTentacion:true` y **no** se guarda `dueloPares`.
 
 ### Las dos modalidades
 

@@ -913,6 +913,10 @@ escrito, no algo verificado**.
   la **misma ronda** en Duelo/Juntos, mensajes de fase y "Toca para revelar"
   con degradado, encabezado "quiénes · modalidad" arriba de la ronda, y
   **"contra [contraparte]"** en las cartas del Duelo.
+- **"Tentación sin distinciones"**: en Turnos y Juntos (Pareja y Multi cada
+  quien) reparte R por persona de `U+C` de su lado, sin "contra", y **no**
+  aparece en Multijugador un celular; en Juntos un celular (Pareja) cada cara
+  muestra la carta de cada quien.
 - Fin con fuegos y "¡Gracias por jugar!".
 - **Los tres modos viejos siguen funcionando** (Clásico, Cambia de Bando,
   Seleccionar): es la regresión más importante, porque se tocaron sus funciones.
@@ -1283,6 +1287,21 @@ que pide el JS existe en el HTML.
   `cambiarMarcaDuelo`, `elegirAzarDuelo`, `btnSelJugar`, `btnSelAzar`,
   `arrancarSeleccion`). Las entradas anteriores de esta bitácora que dicen
   "solo el admin" quedan como **historia**; **manda esta**.
+
+- **17-oct-2026 — "Tentación sin distinciones" (segundo atajo del Duelo).**
+  Junto a "Sorpréndeme" se agregó `#btnSelTentacion` (fila `#filaAzar`). Al
+  tocarlo **ignora lo marcado** y reparte a **cada persona** (usuario 1 y sus
+  invitados; usuario 2 y los suyos) su propia mano de R cartas al azar de `U+C`
+  de su lado (`repartirTarjetas()`), distintas entre compañeros si alcanzan y con
+  repetición si no. **No hay parejas**: `dueloTentacion:true`, `dueloPares:[]`,
+  y `contraDeRonda()` devuelve null (no sale "contra ..."). No aparece en
+  **Multijugador + un celular**. En **Juntos un celular (Pareja)**,
+  `pintarDueloTentacion()` muestra en las dos caras la carta de cada quien. En
+  `agregarInvitado` de tentación se le da una mano nueva de su lado para las
+  rondas que faltan. `prepararDuelo()` **ya no corta** si faltan pares, para que
+  el atajo se pueda usar aunque el modo normal no alcance. `revisar.py` en verde
+  (23 archivos); `<div>`/`</div>` 116/116; sin ids duplicados. **Falta verlo en
+  el celular.**
 
 **Resumen de las 6 fases:** el código del Duelo está completo en `Roles/index.html`
 y `revisar.py` pasa. **Lo que falta es probarlo** (sección de arriba). No se
