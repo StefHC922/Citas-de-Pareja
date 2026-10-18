@@ -292,6 +292,7 @@
       <input type="text" id="invNuevo" placeholder="Nuevo invitado" maxlength="30" autocomplete="off" style="margin-bottom:0;">
       <button class="btnPri" id="invAgregar" style="width:auto;margin-bottom:0;padding:14px 18px;">＋</button>
     </div>
+    <button class="btnPri" id="invEditar" type="button" style="background:var(--card);color:var(--fg);border:1px solid var(--card-border);margin-top:14px;">✏️ Editar nombres y administrador</button>
   </div>
 
   <!-- ============ OVERLAY: los dos numeros de puntos de un usuario ============ -->
@@ -320,6 +321,24 @@
       <div style="display:flex;gap:10px;">
         <button class="btnPri" id="invPtsCancelar" style="flex:1;background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Cancelar</button>
         <button class="btnPri" id="invPtsGuardar" style="flex:1;">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ OVERLAY: editar nombres y administrador ============ -->
+  <!-- Boton al final de la pantalla de Usuarios. Solo entran los dos perfiles
+       base (admin y pareja): los invitados no se tocan aqui. El que se marque
+       "Admin" queda como lado A en toda la app y el otro como pareja (lado B);
+       cambiar de admin intercambia esos lados. -->
+  <div id="invOverlayUsu" style="display:none;position:fixed;inset:0;background:rgba(9,7,15,.8);z-index:70;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:var(--bg-2);border:1px solid var(--card-border);border-radius:20px;padding:22px;width:100%;max-width:380px;">
+      <h2 style="font-size:1.1rem;margin-bottom:6px;font-family:'Chakra Petch',sans-serif;">Editar usuarios</h2>
+      <p style="font-size:.78rem;color:var(--fg-muted);margin:0 0 14px;">Cambia los nombres y marca quién administra. Solo hay uno.</p>
+      <div id="invEdUsuarios" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <p id="invEdMsg" style="font-size:.82rem;color:var(--rojo);min-height:18px;margin:10px 0;"></p>
+      <div style="display:flex;gap:10px;">
+        <button class="btnPri" id="invEdCancelar" style="flex:1;background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Cancelar</button>
+        <button class="btnPri" id="invEdGuardar" style="flex:1;">Guardar</button>
       </div>
     </div>
   </div>
@@ -1305,6 +1324,97 @@ document.getElementById("invAgregar").onclick = async ()=>{
     guardarUsuariosLocal(arr);
     pintarInvUsuarios();
   }catch(e){ invMsg("No se pudo agregar. Revisa tu conexión."); }
+};
+
+// ====== EDITAR NOMBRES Y ADMINISTRADOR ======
+// Boton al final de la pantalla de Usuarios (nace oculto el overlay). Solo
+// entran los dos perfiles base (admin y pareja): los invitados no se tocan.
+// En toda la app el admin es el lado A y la pareja el lado B, asi que cambiar
+// de admin INTERCAMBIA esos lados (el contenido guardado por lado se ve del
+// otro lado). Se escribe en config/ajustes.usuarios, que es de donde leen todas
+// las pantallas.
+function abrirEdUsuarios(){
+  const db = dbActual();
+  (async ()=>{
+    const us = db ? await usuariosEfectivos(db) : (leerUsuariosLocal() || []);
+    const base = (us || []).filter(u=> u && u.id && !u.invitado);
+    const box = document.getElementById("invEdUsuarios");
+    box.innerHTML = "";
+    document.getElementById("invEdMsg").textContent = "";
+    if(!base.length){
+      document.getElementById("invEdMsg").textContent = "No hay usuarios base para editar.";
+    }
+    base.forEach(u=>{
+      const fila = document.createElement("div");
+      fila.className = "edFila";
+      fila.dataset.id = u.id;
+      fila.style.cssText = "display:flex;gap:8px;align-items:center;";
+      const inp = document.createElement("input");
+      inp.type = "text";
+      inp.className = "edNombre";
+      inp.maxLength = 30;
+      inp.autocomplete = "off";
+      inp.value = u.nombre || "";
+      inp.style.marginBottom = "0";
+      fila.appendChild(inp);
+      const lab = document.createElement("label");
+      lab.style.cssText = "display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--fg-muted);white-space:nowrap;";
+      const rad = document.createElement("input");
+      rad.type = "radio";
+      rad.name = "edAdmin";
+      rad.checked = !!u.admin;
+      rad.style.accentColor = "var(--teal)";
+      lab.appendChild(rad);
+      lab.appendChild(document.createTextNode("Admin"));
+      fila.appendChild(lab);
+      box.appendChild(fila);
+    });
+    document.getElementById("invOverlayUsu").style.display = "flex";
+  })();
+}
+function cerrarEdUsuarios(){
+  document.getElementById("invOverlayUsu").style.display = "none";
+}
+document.getElementById("invEditar").onclick = abrirEdUsuarios;
+document.getElementById("invEdCancelar").onclick = cerrarEdUsuarios;
+document.getElementById("invEdGuardar").onclick = async ()=>{
+  const msgEl = document.getElementById("invEdMsg");
+  msgEl.textContent = "";
+  const filas = Array.from(document.querySelectorAll("#invEdUsuarios .edFila"));
+  const cambios = filas.map(f=>({
+    id: f.dataset.id,
+    nombre: f.querySelector(".edNombre").value.trim(),
+    admin: f.querySelector('input[type="radio"]').checked
+  }));
+  if(!cambios.length){ msgEl.textContent = "No hay usuarios para guardar."; return; }
+  if(cambios.some(c=> !c.nombre)){ msgEl.textContent = "Todos tienen que tener nombre."; return; }
+  if(!cambios.some(c=> c.admin)){ msgEl.textContent = "Marca quién administra."; return; }
+  const db = dbActual();
+  if(!db){ msgEl.textContent = "No hay base de datos."; return; }
+  try{
+    const ref = doc(db, "config", "ajustes");
+    const snap = await getDoc(ref);
+    const arr = (snap.exists() && Array.isArray(snap.data().usuarios)) ? snap.data().usuarios.slice() : [];
+    cambios.forEach(c=>{
+      const i = arr.findIndex(u=> u.id === c.id);
+      if(i >= 0) arr[i] = Object.assign({}, arr[i], { nombre: c.nombre, admin: c.admin });
+    });
+    await setDoc(ref, { usuarios: arr, actualizadoEn: serverTimestamp() }, { merge: true });
+    guardarUsuariosLocal(arr);
+    // Si me cambie a mi mismo (nombre o admin), mi copia local tambien: varias
+    // pantallas leen de ahi el nombre y la bandera admin.
+    try{
+      const yoLoc = leerGuardado();
+      if(yoLoc){
+        const nuevo = arr.find(u=> u.id === yoLoc.id);
+        if(nuevo) localStorage.setItem(CLAVE_LOCAL, JSON.stringify(nuevo));
+      }
+    }catch(e){}
+    cerrarEdUsuarios();
+    pintarInvUsuarios();
+  }catch(e){
+    msgEl.textContent = "No se pudo guardar. Revisa tu conexión.";
+  }
 };
 document.getElementById("invQR").onclick = ()=>{
   let g = null;
