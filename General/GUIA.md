@@ -1277,8 +1277,8 @@ secciones del Centro, y de ahí se entra a ver todo el catálogo.
   - Con la actividad vacía **no baja nada**: avisa con `aviso()`.
   - **Pegar reemplaza**, no agrega: si la actividad ya tenía acciones, sale
     `confirmar()` y solo con "Reemplazar" se carga.
-  - **Trae `tomasSugeridas`, las tomas sí se llenan** (se guardan en
-    `guia_tomas_` del teléfono, que es donde las lee `pintarEditor()`).
+  - **Trae `tomasSugeridas`, las tomas sí se llenan** (se guardan en la base, en
+    el campo `tomas` del documento `nivelesActividad`; ver la nota de tomas abajo).
   - **Tope de 90 letras por acción**, que es el `maxlength` del campo "Nueva
     acción": lo que pasa se corta y se avisa abajo de cuántos se cortaron. También
     quita repetidos (sin mayúsculas) y empalma las líneas sueltas.
@@ -1304,6 +1304,25 @@ secciones del Centro, y de ahí se entra a ver todo el catálogo.
   editor de **Guiadas** (`tomasGrid`) y el modal de MultiActividades de
   **Guiadas** (`multiTomasGrid`). En Encuentros el modal de MultiActividades
   (`tomasGridEncuentros`) usa solo el nombre del nivel: ahí no aplica.
+- **Las tomas viven en la BASE, no en el celular (oct-2026).** Antes se guardaban
+  por celular en `localStorage` (`guia_tomas_<doc>`) y no se sincronizaban. Ahora
+  van en el campo **`tomas`** del mismo documento **`nivelesActividad`** donde
+  están las acciones. **Por qué ahí:** ese documento **ya se lee** en los tres
+  momentos (lista `getDocs`, editor `getDoc`, jugar `getDoc`), así que las tomas
+  llegan "de pilón" y **no cuestan ninguna lectura extra**; se escriben con
+  `setDoc(..., {merge:true})` para **no tocar `n`**. Los ayudantes son
+  `cargarTomasDoc()`, `guardarTomasEnBase()` y `mapaTomas` (copia en memoria de lo
+  ya leído); `tomasGuardadas()` (Guiadas) y `tomasGuardadasEd()` (Encuentros) leen
+  de ahí. **Ya no se lee el celular para las tomas** — la migración fue **de una
+  sola vez**: al leer un documento sin `tomas`, si el celular tenía la copia vieja,
+  se sube a la base y se borra del celular (`migrarTomasDeEsteCelular()`), así que
+  no puede volver a correr. Las **sugeridas** de una oficial se siembran al copiar
+  la actividad (o, si el documento ya existía sin tomas, se migra primero lo del
+  celular y solo si no hay nada se siembran). Las tomas de **MultiActividades** y
+  las de la **lista de Encuentros** son por partida (transitorias): no tienen
+  documento propio y se quedan como estaban. **Ojo:** esto es coherente con que el
+  juego **ya no se puede jugar sin internet** (lee las acciones de Firestore al
+  jugar); por eso no hay copia local de respaldo.
 - **Juego nuevo "Elecciones Peligrosas" (`Opciones/`, oct-2026):** traído de
   "Juego Opciones". Es el "esto o aquello": se muestran 2 opciones y al elegir
   una se elimina (la otra sigue), hasta que a cada quien le queda 1. Los datos

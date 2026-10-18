@@ -930,10 +930,21 @@ async function sincronizarOficiales(){
       try{
         const ref = doc(db, "nivelesActividad", p.id);
         const snap = await getDoc(ref);
+        const sug = p.tomasSugeridas ? normTomasEnc(p.tomasSugeridas) : null;
         if(!snap.exists()){
           const nn = {};
           NIVELES.forEach(nv=>{ nn[nv.id] = normLados((p.niveles || {})[nv.id]); });
-          await setDoc(ref, { n: nn, titulo: p.titulo || p.id, oficial: true, actualizadoEn: serverTimestamp() }, { merge: true });
+          const base = { n: nn, titulo: p.titulo || p.id, oficial: true, actualizadoEn: serverTimestamp() };
+          // Las tomas sugeridas de la oficial se siembran UNA vez, al copiarla.
+          if(sug){ base.tomas = sug; mapaTomas[p.id] = sug; }
+          await setDoc(ref, base, { merge: true });
+        }else if(sug && !snap.data().tomas){
+          // El documento ya existia sin tomas: primero se intenta la migracion del
+          // celular (para no perder lo que la pareja ya tenia); si no hay nada que
+          // migrar, se siembran las sugeridas. Se escribe UNA sola vez.
+          const mig = migrarTomasDeEsteCelular(p.id);
+          if(mig){ mapaTomas[p.id] = mig; }
+          else{ await setDoc(ref, { tomas: sug }, { merge: true }); mapaTomas[p.id] = sug; }
         }
       }catch(e){}
     }
@@ -1046,8 +1057,10 @@ async function pintarLista(boxId){
   try{
     const snap = await getDocs(collection(db, "nivelesActividad"));
     snap.forEach(d=>{
-      const n = d.data().n || {};
+      const data = d.data();
+      const n = data.n || {};
       conteos[d.id] = NIVELES.reduce((t, nv)=>t + contarNivel(n[nv.id]), 0);
+      cargarTomasDoc(d.id, data);   // trae las tomas del mismo documento (0 lecturas extra)
     });
   }catch(e){}
   cacheActs = acts; cacheConteos = conteos;
@@ -1122,19 +1135,50 @@ function nombreLado(lado){
   }catch(e){}
   return "Lado " + lado;
 }
-function tomasGuardadasEd(nombre){
+// Las tomas viven en la BASE, en el campo `tomas` de `nivelesActividad` (el mismo
+// documento donde estan las acciones). Van "de pilon" en el documento que ya se
+// lee para las acciones, asi que no cuestan ninguna lectura extra.
+// `mapaTomas` es solo la copia en memoria de lo que ya se leyo del documento.
+let mapaTomas = {};
+function normTomasEnc(t){
+  const out = {};
+  NIVELES.forEach(nv=>{
+    const v = t ? t[nv.id] : null;
+    out[nv.id] = (typeof v === "number") ? v : ((v && (v.A || v.B)) || 0);
+  });
+  return out;
+}
+// Lee las tomas del documento que se acaba de traer. Si el documento NO trae
+// tomas, intenta la migracion de una sola vez desde el celular.
+function cargarTomasDoc(id, data){
+  if(data && data.tomas){ mapaTomas[id] = normTomasEnc(data.tomas); return; }
+  const mig = migrarTomasDeEsteCelular(id);
+  if(mig) mapaTomas[id] = mig;
+}
+// Migracion de UNA sola vez (oct-2026): las tomas que quedaron guardadas en este
+// celular, de antes de que se pasaran a la base, se suben y se borran del celular.
+// Despues de eso ya no hay copia local, asi que no puede volver a correr.
+function migrarTomasDeEsteCelular(docId){
+  let local = null;
+  try{ local = JSON.parse(localStorage.getItem("guia_tomas_" + docId) || "null"); }catch(e){}
+  if(!local) return null;
+  const norm = normTomasEnc(local);
   try{
-    const t = JSON.parse(localStorage.getItem("guia_tomas_" + nombre) || "null");
-    if(t){
-      const out = {};
-      NIVELES.forEach(nv=>{
-        const v = t[nv.id];
-        out[nv.id] = (typeof v === "number") ? v : ((v && (v.A || v.B)) || 0);
-      });
-      return out;
-    }
+    setDoc(doc(db, "nivelesActividad", docId), { tomas: norm, actualizadoEn: serverTimestamp() }, { merge: true })
+      .then(()=>{ try{ localStorage.removeItem("guia_tomas_" + docId); }catch(e){} })
+      .catch(()=>{});
   }catch(e){}
-  return Object.assign({}, TOMAS_DEF);
+  return norm;
+}
+// Guarda las tomas en la base. Va con `merge` para NO tocar `n` (las acciones).
+function guardarTomasEnBase(id, t){
+  const norm = normTomasEnc(t);
+  mapaTomas[id] = norm;
+  try{ setDoc(doc(db, "nivelesActividad", id), { tomas: norm, actualizadoEn: serverTimestamp() }, { merge: true }).catch(()=>{}); }catch(e){}
+}
+function tomasGuardadasEd(nombre){
+  const t = mapaTomas[nombre];
+  return t ? Object.assign({}, t) : Object.assign({}, TOMAS_DEF);
 }
 async function pintarListaCfg(){
   const acts = await cargarActividades();
@@ -1142,8 +1186,10 @@ async function pintarListaCfg(){
   try{
     const snap = await getDocs(collection(db, "nivelesActividad"));
     snap.forEach(d=>{
-      const n = d.data().n || {};
+      const data = d.data();
+      const n = data.n || {};
       conteos[d.id] = NIVELES.reduce((t, nv)=>t + contarNivel(n[nv.id]), 0);
+      cargarTomasDoc(d.id, data);   // trae las tomas del mismo documento (0 lecturas extra)
     });
   }catch(e){}
   const box = document.getElementById("listaActsCfg");
@@ -1180,10 +1226,12 @@ async function abrirEditor(nombre, empujar){
   NIVELES.forEach(nv=>{ datosEd[nv.id] = { A: [], B: [] }; });
   try{
     const snap = await getDoc(doc(db, "nivelesActividad", docActualEd));
-    if(snap.exists() && snap.data().n){
-      const n = snap.data().n;
+    const data = snap.exists() ? snap.data() : null;
+    if(data && data.n){
+      const n = data.n;
       NIVELES.forEach(nv=>{ datosEd[nv.id] = normLados(n[nv.id]); });
     }
+    cargarTomasDoc(docActualEd, data);
   }catch(e){}
   pintarEditor();
   ver("vistaEditar", empujar !== false);
@@ -1292,7 +1340,7 @@ function leerTomasEd(){
     const el = document.getElementById("encEdToma_" + nv.id);
     t[nv.id] = Math.max(0, Math.min(20, parseInt(el.value, 10) || 0));
   });
-  try{ localStorage.setItem("guia_tomas_" + (docActualEd || actividadEd), JSON.stringify(t)); }catch(e){}
+  guardarTomasEnBase(docActualEd || actividadEd, t);
   return t;
 }
 document.getElementById("btnCfg").onclick = ()=>{

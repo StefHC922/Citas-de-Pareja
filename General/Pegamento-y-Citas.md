@@ -174,7 +174,7 @@ PEGADO ABAJO, y se podia guardar sobre la actividad equivocada. Ahora
 | La actividad | `actividadesExtra` (campo `nombre`) |
 | Sus accesorios | `presetsActividad/{nombre}` |
 | Sus acciones de Guiadas | `nivelesActividad/{nombre}` |
-| Sus tomas | `guia_tomas_{nombre}` (localStorage, de ese telefono) |
+| Sus tomas | Dentro del mismo `nivelesActividad/{nombre}` (campo `tomas`): se mueven con él (oct-2026) |
 | **Las citas ya agendadas** | coleccion `citas`, campo `actividad` |
 
 La ultima es la que se escapa facil: si no se actualiza, esas citas quedan
