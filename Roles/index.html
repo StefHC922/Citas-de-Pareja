@@ -205,7 +205,13 @@
      abajo sin importar cuánto ocupe el texto de la nota. */
   #modalEsp .caja{ display:flex; flex-direction:column; }
   #modalEsp h1{ font-size:1.3rem; margin-bottom:14px; }
-  #modalEsp #inpEspecial{ width:130px; margin-left:auto; margin-right:auto; }
+  /* `margin:0 auto 14px` NO es opcional: los `14px` de abajo son un piso, para
+     que el campo NUNCA quede pegado al botón de Aceptar aunque la ventana no
+     tenga espacio de sobra. El `margin-top:auto` del botón solo reparte lo que
+     sobra; si no hay, sin este margen los dos se tocaban (pasó). El
+     `font-size` va aquí a propósito porque `.rondasInput` trae 1.4rem y en la
+     ventana se quiere el tamaño más chico que se aprobó en la maqueta. */
+#modalEsp #inpEspecial{ width:130px; margin:0 auto 14px; font-size:1.15rem; }
   #modalEsp .btnPri{ margin-top:auto; margin-bottom:1px; }
   #modalEsp .btnSec{ margin-top:1px; }
   #modalEsp #espNota{ font-size:.78rem; line-height:1.5; margin:8px 0 0;
