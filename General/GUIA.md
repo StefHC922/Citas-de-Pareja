@@ -1366,6 +1366,34 @@ es común. **El orden de la pantalla de inicio (decisión de Fredy, oct-2026;
       sorpresa."** (antes decía "a alguien le toca una variante"). El aviso de
       `K > R` en coral se mantiene.
 
+  - **Al acabar la partida se reinicia SOLO el interruptor de Variantes Picantes
+    (decisión de Fredy, 17-oct-2026).** `reiniciarVariantes()` apaga la casilla y
+    vuelve a poner "¿Cuántas veces?" en 1. Se llama en los **dos** caminos donde
+    la partida se acabó de verdad: el **"Aceptar"** del fin y **"Terminar
+    Partida"** del anfitrión.
+    - **El número de rondas y el modo de juego NO se reinician**, a propósito: se
+      dejan como estaban para poder volver a jugar igual de rápido la segunda vez.
+      Antes de esto **no reiniciaba nada**; ahora es el único ajuste que sí vuelve
+      a su valor inicial.
+    - **OJO: NO va en "Pausar y Salir", y esa es la parte que no hay que
+     -meter**: esa partida **se puede retomar** (`roles_partida_local`), así que la
+      casilla tiene que seguir diciendo la verdad sobre lo que quedó guardado. Si
+      se apagara ahí, al retomar se vería apagada **mientras el juego sí tiene
+      variantes**, y el que jugara después creería que no. Ese desajuste es
+      peor que el que se arregla.
+    - Poner `.checked = false` a mano **no** dispara el evento `change`, así que
+      no se abre la ventana sola. `reiniciarVariantes()` llama a `pintarEspecial()`
+      al final, que es lo que limpia el aviso y el texto de la nota.
+
+  > **PROBADO EN VIVO (Fredy, 17-oct-2026):** el rediseño de la pantalla de
+  > inicio y la ventana de "¿Cuántas veces?" quedaron **subidos y probados en el
+  > celular**: la pantalla ya **cabe sin bajar**, la ventana sale con el borde
+  > turquesa y el texto abajo, **Aceptar** cierra y deja el interruptor prendido,
+  > **Cancelar** apaga todo, y al arrancar la partida las variantes caen en las
+  > rondas que se pusieron. **Pendiente por falta de un segundo celular:** que el
+  > interruptor de variantes funcione en una partida **compartida** con invitados
+  > (que reparta las rondas en cada teléfono).
+
 **Los textos de los modos NO son instrucciones, son PERMISOS (decisión de Fredy,
   oct-2026) — no reescribirlos sin preguntar.** La pestaña dice el nombre y la
   descripción dice lo que el jugador gana: `Clásico` → *"Interpreta, Aprovecha y
