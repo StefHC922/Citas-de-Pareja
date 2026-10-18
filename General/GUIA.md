@@ -975,17 +975,29 @@ cancelar, y solo al confirmar recarga — y dice a dónde va.
 
 Las piezas en el código: `modoCambiar`, `CLAVE_IR_USU`, `abrirPanelUsuarios()`.
 
-### Editar nombres y administrador (botón al final de Usuarios, oct-2026)
+### Editar nombres, administrador y puntos (botón al final de Usuarios, oct-2026)
 
 Al final de la pantalla de **Usuarios** (⚙️ → Usuarios) hay un botón **"✏️ Editar
 nombres y administrador"** (`#invEditar`) que abre una **ventana emergente**
-(`#invOverlayUsu`, mismo molde que la de Puntos). Dentro salen **solo los dos
-perfiles base** (admin y pareja, o sea `!invitado`), cada uno con su campo de
-nombre y un **radio "Admin"**; **los invitados no entran ahí**. Guarda en
-`config/ajustes.usuarios` —lo mismo que ya usaban el asistente y "agregar
-invitado"— con `setDoc(..., {merge:true})` y `guardarUsuariosLocal()`. Si alguien
-se renombra a sí mismo (o le cambia el admin), su copia local (`CLAVE_LOCAL`,
-`appPareja_quienSoy`) también se actualiza.
+(`#invOverlayUsu`, mismo molde que la de Puntos). Dentro salen **todos los
+usuarios**, y en cada renglón un **campo de puntos**:
+
+- **Los dos perfiles base** (admin y pareja, o sea `!invitado`): campo de nombre
+  **editable** y un **radio "Admin"**. **Solo hay un administrador.**
+- **Los invitados**: solo salen para editarles los puntos; su nombre se muestra
+  **de solo lectura**.
+
+**Los nombres y el admin** se guardan en `config/ajustes.usuarios` —lo mismo que
+ya usaban el asistente y "agregar invitado"— con `setDoc(..., {merge:true})` y
+`guardarUsuariosLocal()`. Si alguien se renombra a sí mismo (o le cambia el
+admin), su copia local (`CLAVE_LOCAL`, `appPareja_quienSoy`) también se actualiza.
+
+**Los puntos** se escriben **directos** (el número exacto) en el campo **`balance`
+de `puntosUsuarios/{id}`**, que es donde viven (no en `config/ajustes`, y **no**
+son los precios del 🛒). Se leen de una sola vez con `getDocs` y, si el documento
+no existe, el saldo se toma como **0** (igual que `Retos` y `favor.js`). Como esas
+pantallas escuchan la colección, el cambio se refleja solo. Tiene que ser un
+número **de 0 o más**.
 
 **Aviso que hay que recordar:** en toda la app **el admin es el lado A y la pareja
 el lado B** (`nombreLado()`, `armando()`), y hay contenido guardado **por lado**
