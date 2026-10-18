@@ -72,6 +72,12 @@
   .btnPri:active{ transform:scale(.97); }
   .btnSec{ width:100%; padding:12px; background:none; border:none; cursor:pointer;
     color:var(--fg-muted); font-size:.9rem; text-decoration:underline; }
+  /* Pegar la actividad en JSON: mismo molde que el engrane de Opciones/ y que
+     "Pegar actividad" del Panel. */
+  .filaBotones{ display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; }
+  .pegarBox{ margin-top:10px; width:100%; }
+  .pegarBox textarea{ width:100%; min-height:120px; border-radius:12px; border:1px solid var(--card-border);
+    background:var(--bg); color:var(--fg); padding:12px; font-size:.85rem; font-family:'Inter',sans-serif; resize:vertical; }
   .opModo{ display:flex; align-items:center; gap:10px; padding:11px 12px; background:var(--bg-2);
     border:1px solid var(--card-border); border-radius:12px; margin-top:8px; font-size:.9rem; cursor:pointer; }
   .opModo input{ width:auto; accent-color:var(--teal); }
@@ -146,6 +152,14 @@
   <div class="tomas">
     <h3>Define acciones de cada nivel</h3>
     <div class="tomasGrid" id="tomasGrid"></div>
+  </div>
+  <div class="filaBotones">
+    <button class="btnSec" id="btnPegarJSON">Pegar actividad (JSON)</button>
+    <button class="btnSec" id="btnExportarJSON">Exportar actividad</button>
+  </div>
+  <div class="pegarBox" id="pegarBox" style="display:none">
+    <textarea id="pegarTa" placeholder='Pega aquí el JSON de la actividad. Ejemplo: {"niveles":{"basico":{"A":["…"],"B":["…"]}}}'></textarea>
+    <button class="btnPri" id="btnPegarOk" style="margin-top:8px;">Cargar acciones</button>
   </div>
   <div id="msg"></div>
   <button class="btnPri" id="btnJugar">Jugar ▶</button>
@@ -233,7 +247,7 @@ import { miProyecto, appTaq, leerLicencias, guardarLicencia, quitarLicencia, ten
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 // Fuegos de celebracion al acabar la cita (igual que Elecciones Peligrosas).
 import { encenderFuegos, apagarFuegos } from "../fuegos.js";
-import { aviso } from "../confirmar.js";
+import { aviso, confirmar } from "../confirmar.js";
 import { montarFavor } from "../favor.js";
 try{ montarFavor(); }catch(e){}
 
@@ -1092,6 +1106,8 @@ async function abrirEditor(nombre, empujar){
   docActual = docDe(nombre);
   ultimaActividad = nombre;
   document.getElementById("edTitulo").textContent = nombre;
+  document.getElementById("pegarBox").style.display = "none";
+  document.getElementById("pegarTa").value = "";
   datos = {};
   NIVELES.forEach(nv=>{ datos[nv.id] = { A: [], B: [] }; });
   try{
@@ -1211,6 +1227,161 @@ function leerTomas(){
   try{ localStorage.setItem("guia_tomas_" + (docActual || actividad), JSON.stringify(t)); }catch(e){}
   return t;
 }
+
+// ---------- pegar la actividad en JSON (17-oct-2026) ----------
+// Boton pareado con el del Panel ("Exportar actividad" produce justo este JSON).
+// Lo que se pega entra a `datos` y se repinta con la MISMA `pintarEditor()` que
+// corre al abrir la actividad: no se toco como se guardan los datos.
+function mensajeEditor(t, ok){
+  const m = document.getElementById("msg");
+  m.textContent = t;
+  m.style.color = ok ? "var(--teal)" : "var(--rojo)";
+}
+// Lectura TOLERANTE del JSON, copia de la de `Panel/oficiales.html` (se dejo
+// copia a proposito: unificarlo tocaria `Roles/`, que ya fue probado en vivo).
+// Acepta comillas tipograficas y una coma de mas al final; si esta mal, avisa con
+// la pista del navegador (que trae linea y columna) y NO carga nada.
+let errorJSON = "";
+function leerJSONPegado(t){
+  errorJSON = "";
+  const probar = (texto)=>{
+    try{ return { v: JSON.parse(texto) }; }
+    catch(e){ if(!errorJSON) errorJSON = String((e && e.message) || e); return null; }
+  };
+  let r = probar(t); if(r) return r.v;
+  const q = t.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+  if(q !== t){ r = probar(q); if(r) return r.v; }
+  if(q[0] === "{"){ r = probar(q.replace(/,\s*\}\s*$/, "}")); if(r) return r.v; }
+  if(q[0] === "["){ r = probar(q.replace(/,\s*\]\s*$/, "]")); if(r) return r.v; }
+  return null;
+}
+function editorTieneAlgo(){
+  return NIVELES.some(nv=>contarNivel(datos[nv.id]) > 0);
+}
+async function pegarActividad(){
+  const ta = document.getElementById("pegarTa");
+  const txt = (ta.value || "").trim();
+  if(!txt){ mensajeEditor("Pega primero el JSON."); return; }
+  const d = leerJSONPegado(txt);
+  if(d === null){
+    mensajeEditor("El JSON está mal escrito y no se cargó nada."
+      + (errorJSON ? "  Pista: " + errorJSON : "")
+      + "  Revisa comas y comillas.");
+    return;
+  }
+  if(!d || typeof d !== "object" || Array.isArray(d)){
+    mensajeEditor("Eso no es una actividad: se espera un objeto que empiece con {  \"niveles\"… }");
+    return;
+  }
+  // Acepta el JSON del Panel ({niveles:{…}}) y, si no viene envuelto, el mapa de
+  // niveles pelado ({basico:{A,B}, …}). Un nivel puede traer A y B, o una sola
+  // lista: esa se pone en los dos lados (es lo que hace `normLados`).
+  const fuente = d.niveles || d.acciones || d.n
+    || (NIVELES.some(nv=>d[nv.id] !== undefined) ? d : null);
+  if(!fuente || typeof fuente !== "object" || Array.isArray(fuente)){
+    mensajeEditor("No trae acciones: se espera  \"niveles\": { \"basico\": { \"A\": [ … ], \"B\": [ … ] } }");
+    return;
+  }
+  let n = 0, cortadas = 0;
+  const nuevo = {};
+  NIVELES.forEach(nv=>{
+    const lados = normLados(fuente[nv.id]);
+    const out = { A: [], B: [] };
+    ["A", "B"].forEach(lado=>{
+      (lados[lado] || []).forEach(s=>{
+        if(s === null || s === undefined) return;
+        s = String(s).replace(/\s+/g, " ").trim();
+        if(!s) return;
+        if(s.length > 90){ s = s.slice(0, 90); cortadas++; }  // el campo "Nueva accion" tops en 90
+        if(out[lado].some(t=>t.toLowerCase() === s.toLowerCase())) return;
+        out[lado].push(s);
+      });
+      n += out[lado].length;
+    });
+    nuevo[nv.id] = out;
+  });
+  if(!n){ mensajeEditor("El JSON no trae ninguna acción: no se cargó nada."); return; }
+  // Pegar BORRA lo que hubiera. Si hay algo escrito, se pregunta primero
+  // (regla de la casa: preguntar antes de borrar).
+  if(editorTieneAlgo()){
+    const ok = await confirmar({
+      aviso: true,
+      titulo: "¿Reemplazar las acciones de esta actividad?",
+      texto: "Lo que escribiste se borra y queda lo del JSON.",
+      ok: "Reemplazar"
+    });
+    if(!ok) return;
+  }
+  datos = nuevo;
+  await guardar();
+  // Las tomas del JSON se guardan aparte (en el telefono) y las pinta `pintarEditor`.
+  const t = d.tomasSugeridas || d.tomas;
+  if(t && typeof t === "object" && !Array.isArray(t)){
+    try{ localStorage.setItem("guia_tomas_" + (docActual || actividad), JSON.stringify(normTomas(t))); }catch(e){}
+  }
+  ta.value = "";
+  document.getElementById("pegarBox").style.display = "none";
+  pintarEditor();
+  mensajeEditor("Cargado: " + n + " acción(es)."
+    + (cortadas ? " " + cortadas + " se cortaron a 90 letras." : "")
+    + " Revisa y dale Jugar ▶.", true);
+}
+document.getElementById("btnPegarJSON").onclick = ()=>{
+  const b = document.getElementById("pegarBox");
+  b.style.display = (b.style.display === "none") ? "block" : "none";
+};
+document.getElementById("btnPegarOk").onclick = ()=>{ pegarActividad(); };
+
+// ---------- exportar la actividad en JSON (17-oct-2026) ----------
+// El archivo sale con la MISMA forma que acepta "Pegar actividad (JSON)", que es la
+// que produce el Panel: el viaje funciona para los dos lados. Lo que se baja de
+// aqui se puede volver a pegar en este editor, y se puede llevar al Panel.
+function limpiarParaArchivo(s){
+  // Deja solo lo que un nombre de archivo aguanta. El nombre viene de la base, y
+  // un "/" o un ":" ahi romperia la descarga.
+  return String(s || "").replace(/[\\/:*?"<>|\u0000-\u001f]/g, "").trim()
+    .replace(/\s+/g, "-").slice(0, 40);
+}
+// Las tomas que se VEN en los cuadritos, no las guardadas: pueden estar cambiadas
+// a mano sin haber dado todavia "Jugar".
+function tomasDePantalla(){
+  const guardadas = tomasGuardadas(docActual || actividad);
+  const t = {};
+  NIVELES.forEach(nv=>{
+    const el = document.getElementById("toma_" + nv.id);
+    t[nv.id] = el ? Math.max(0, Math.min(20, parseInt(el.value, 10) || 0)) : (guardadas[nv.id] || 0);
+  });
+  return t;
+}
+function exportarActividad(){
+  let n = 0;
+  const niveles = {};
+  NIVELES.forEach(nv=>{
+    const l = normLados(datos[nv.id]);
+    niveles[nv.id] = { A: l.A.slice(), B: l.B.slice() };
+    n += l.A.length + l.B.length;
+  });
+  if(!n){ aviso("Esta actividad todavía no tiene ninguna acción."); return; }
+  const o = {
+    titulo: document.getElementById("edTitulo").textContent,
+    niveles: niveles,
+    tomasSugeridas: tomasDePantalla()
+  };
+  const nombre = "actividad-" + (limpiarParaArchivo(actividad) || "sin-nombre") + ".json";
+  try{
+    const blob = new Blob([JSON.stringify(o, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = nombre; a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); if(a && a.parentNode) a.parentNode.removeChild(a); }, 2000);
+    aviso("Se descargó " + nombre + " (" + n + " acción(es)).");
+  }catch(e){
+    aviso("No se pudo crear el archivo en este navegador.");
+  }
+}
+document.getElementById("btnExportarJSON").onclick = ()=>{ exportarActividad(); };
 
 // ---------- player ----------
 document.getElementById("btnJugar").onclick = ()=>{

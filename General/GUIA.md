@@ -604,6 +604,7 @@ pantalla que escribe**, no solo la que se está tocando. `Autorizar/` era la
 
 | Decision | Detalle |
 |---|---|
+| **No se toca el repo sin que Fredy lo pida** | Ni un archivo ni una línea sin pedido. Si el pedido no está claro, se pregunta antes de escribir; si se ve que falta otra cosa, se dice y se pregunta, no se resuelve de una con un cambio. Es la regla 0 de `AGENTS.md` (18-oct-2026) |
 | Fredy decide, el modelo ejecuta | Si algo es decision de producto, **preguntar antes** de aplicar |
 | Explicar antes de programar | En espanol claro y sin codigo para el usuario |
 | No inventar reglas nuevas de Firestore | Se reutiliza la base y las reglas que ya funcionan |
@@ -1258,6 +1259,33 @@ secciones del Centro, y de ahí se entra a ver todo el catálogo.
      **última acción agregada queda arriba**, pegada al campo.
   El orden guardado **no se toca**: los dos juegos revuelven las acciones al
   armar la ronda (`mezclar`), así que el orden del arreglo no afecta la partida.
+- **El editor de `Guiadas/` tiene "Pegar actividad (JSON)" y "Exportar actividad"**,
+  en la misma línea de dos botones (`.filaBotones`, como en el engrane de `Roles/`):
+  el de pegar abre una cajita de texto y lo que se pega entra a `datos` y se
+  repinta con la **misma `pintarEditor()`** que corre al abrir la actividad. Es
+  para cargar de una vez el JSON que produce **"Exportar actividad"** de
+  `Panel/oficiales.html`, y también acepta el mapa de niveles pelado
+  (`{basico:{A,B}, …}`) o un nivel con una sola lista, que se pone en los dos
+  lados (es lo que hace `normLados`).
+  - **El archivo que baja el editor es de la MISMA forma** (`titulo`, `niveles`,
+    `tomasSugeridas`), así que el viaje sirve para los dos lados: lo que se baja de
+    acá se vuelve a pegar en este editor, y también se lleva al Panel. Lo que
+    **no** hace es renombrar la actividad al pegar: el título del archivo se
+    ignora (el nombre de la actividad es su documento en `actividadesExtra`).
+  - El nombre del archivo es `actividad-<nombre>.json`, con `limpiarParaArchivo()`
+    (quita `\/:*?"<>|` y acorta espacios, porque el nombre viene de la base).
+  - Con la actividad vacía **no baja nada**: avisa con `aviso()`.
+  - **Pegar reemplaza**, no agrega: si la actividad ya tenía acciones, sale
+    `confirmar()` y solo con "Reemplazar" se carga.
+  - **Trae `tomasSugeridas`, las tomas sí se llenan** (se guardan en
+    `guia_tomas_` del teléfono, que es donde las lee `pintarEditor()`).
+  - **Tope de 90 letras por acción**, que es el `maxlength` del campo "Nueva
+    acción": lo que pasa se corta y se avisa abajo de cuántos se cortaron. También
+    quita repetidos (sin mayúsculas) y empalma las líneas sueltas.
+  - El lector del JSON es una **copia** del de `Panel/oficiales.html` (que a su vez
+    es copia del de `Roles/`), **a propósito**: unificarlo tocaría `Roles/`, ya
+    probado en vivo. Si algún día se unifica, que vaya a un módulo de la **raíz**
+    y se registre en `extract.py`.
 - **Borrar acciones es por TEXTO, no por posición (oct-2026) — no cambiar:**
   `quitarItemEd()` (Encuentros) y `quitarItem()` (Guiadas) reciben **el texto** de
   la acción, no su índice. La "✕" lleva pegado el string y se borra con
