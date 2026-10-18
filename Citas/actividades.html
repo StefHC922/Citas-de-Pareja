@@ -201,6 +201,37 @@
     font-family:'Chakra Petch',sans-serif; font-weight:700; }
   .btnChicoOk{ color:var(--bg); background:linear-gradient(90deg, var(--coral), var(--teal)); }
   .btnChicoNo{ background:var(--bg-2); color:var(--fg); border:1px solid var(--card-border) !important; }
+
+  /* ---------- cambiar el nombre: VENTANA, no renglón ----------
+     Antes el campo iba en una renglón adentro de la tarjeta y el aviso de por qué
+     no se guardaba caía en #editorMsg, que está al FINAL de la tarjeta, debajo de
+     todos los accesorios: en el celular no se veía y el botón parecía muerto
+     (oct-2026, lo reportó Fredy). Ahora pregunta en una ventana, con su propio
+     aviso DENTRO, y al cerrar deja al usuario donde estaba. Es el molde
+     `.modal .caja` de la app (el de `#modalEsp` en `Roles/`), no `confirmar()`:
+     ese es de "¿sí o no?" y esto es un formulario. */
+  .modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:60;
+    align-items:center; justify-content:center; padding:20px; }
+  .modal .caja{ max-width:380px; border:1px solid var(--teal); border-radius:18px; padding:22px 20px;
+    text-align:center; margin:0; }
+  #modalRenombrar .caja{ display:flex; flex-direction:column; }
+  #modalRenombrar h1{ font-size:1.3rem; margin:0 0 6px; }
+  #modalRenombrar .sub{ font-size:.85rem; color:var(--fg-muted); margin:0 0 14px; }
+  #modalRenombrar input{ width:100%; border-radius:12px; border:1px solid var(--card-border);
+    background:var(--bg-2); color:var(--fg); padding:12px; font-size:.95rem;
+    font-family:'Inter',sans-serif; margin:0 0 14px; }
+  #modalRenombrar .btnPri{ width:100%; padding:16px; margin:0 0 1px; border:none; border-radius:14px;
+    cursor:pointer; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1rem;
+    color:var(--bg); background:linear-gradient(90deg, var(--coral), var(--teal)); }
+  #modalRenombrar .btnPri:active{ transform:scale(.97); }
+  #modalRenombrar .btnPri:disabled{ opacity:.45; }
+  #modalRenombrar .btnSec{ width:100%; padding:12px; background:none; border:none; cursor:pointer;
+    color:var(--fg-muted); font-size:.9rem; text-decoration:underline; }
+  /* El aviso va ABAJO, debajo de los dos botones, como en `#modalEsp`. */
+  #modalRenombrar #renMsg{ min-height:18px; font-size:.8rem; color:var(--rojo); margin:12px 0 0;
+    padding-top:12px; border-top:1px solid var(--card-border); text-align:left; line-height:1.5; }
+  #modalRenombrar #renMsg.ok{ color:var(--teal); }
+
   .avisoFuerte{ font-size:.85rem; color:var(--fg-muted); background:var(--bg-2);
     border:1px solid var(--rojo); border-radius:12px; padding:12px; line-height:1.5; text-align:left; }
   .avisoFuerte b{ color:var(--rojo); }
@@ -252,11 +283,6 @@
       <!-- de todos los accesorios, y con muchas actividades se perdian de la vista. -->
       <div id="editorExtra">
         <button id="btnRenombrar" type="button">Cambiar nombre</button>
-        <div class="filaInline" id="filaRenombrar">
-          <input id="inputRenombrar" type="text" maxlength="60" autocomplete="off" placeholder="Nuevo nombre">
-          <button class="btnChicoOk" id="btnRenombrarOk" type="button">Guardar nombre</button>
-          <button class="btnChicoNo" id="btnRenombrarNo" type="button">Cancelar</button>
-        </div>
 
         <button id="btnEliminarAct" type="button">Eliminar actividad</button>
         <div class="filaInline" id="filaEliminar" style="flex-direction:column;align-items:stretch;">
@@ -268,8 +294,8 @@
           <input id="inputConfirmar" type="text" autocomplete="off" placeholder="Escribe el nombre para confirmar">
           <button class="btnChicoOk" id="btnEliminarOk" type="button" style="background:var(--rojo);color:#2b0410;">Eliminar definitivamente</button>
           <button class="btnChicoNo" id="btnEliminarNo" type="button">Cancelar</button>
-        </div>
-      </div>
+</div>
+</div>
 
       <h3 id="editorSub">Sus accesorios</h3>
       <div id="checks"></div>
@@ -320,10 +346,11 @@ const btnIrAccesorios = document.getElementById("btnIrAccesorios");
 const btnCerrarEditor = document.getElementById("btnCerrarEditor");
 
 const btnRenombrar = document.getElementById("btnRenombrar");
-const filaRenombrar = document.getElementById("filaRenombrar");
+const modalRenombrar = document.getElementById("modalRenombrar");
 const inputRenombrar = document.getElementById("inputRenombrar");
 const btnRenombrarOk = document.getElementById("btnRenombrarOk");
 const btnRenombrarNo = document.getElementById("btnRenombrarNo");
+const renMsg = document.getElementById("renMsg");
 const btnEliminarAct = document.getElementById("btnEliminarAct");
 const filaEliminar = document.getElementById("filaEliminar");
 const inputConfirmar = document.getElementById("inputConfirmar");
@@ -588,9 +615,8 @@ async function abrirEditor(nombre){
   const esPropia = extrasActs.some(e=>e.nombre === nombre);
   btnRenombrar.style.display = esPropia ? "" : "none";
   btnEliminarAct.style.display = esPropia ? "" : "none";
-  filaRenombrar.classList.remove("ver");
+  cerrarRenombrar();
   filaEliminar.classList.remove("ver");
-  inputRenombrar.value = "";
   inputConfirmar.value = "";
   borrarNombre.textContent = "«" + nombre + "»";
 
@@ -611,7 +637,7 @@ function cerrarEditor(){
   accsGuardados = [];
   editorAbierto = false;
   tabLista.disabled = false;
-  filaRenombrar.classList.remove("ver");
+  cerrarRenombrar();
   filaEliminar.classList.remove("ver");
 }
 
@@ -681,19 +707,39 @@ async function volverDesdeAccesorios(){
 // ====== RENOMBRAR UNA ACTIVIDAD ======
 // El nombre es la llave de los accesorios y de las acciones de Guiadas, asi
 // que al cambiarlo hay que mover las tres cosas juntas. Si no, quedan huerfanas.
+
+// La ventana y su propio aviso. Se abriu aparte porque el aviso de por que no se
+// guardaba caia en `editorAvisar` (#editorMsg), que esta al FINAL de la tarjeta,
+// debajo de todos los accesorios: en el celular no se veia y el boton parecia
+// muerto. Ahora cada razon se dice DENTRO de la ventana, donde si se lee.
+function renAvisar(texto, ok){
+  renMsg.textContent = texto;
+  renMsg.className = ok ? "ok" : "";
+}
+function abrirRenombrar(){
+  renAvisar("", false);
+  modalRenombrar.style.display = "flex";
+  inputRenombrar.focus();
+}
+function cerrarRenombrar(){
+  modalRenombrar.style.display = "none";
+  inputRenombrar.value = "";
+  renAvisar("", false);
+}
+
 async function renombrarActividad(){
   if(!actividadEditando) return;
   const viejo = actividadEditando;
   const nuevo = inputRenombrar.value.trim();
 
-  if(!nuevo){ editorAvisar("Escribe el nombre nuevo."); return; }
-  if(nuevo.includes("/")){ editorAvisar("El nombre no puede contener /."); return; }
-  if(normalizar(nuevo) === normalizar(viejo)){ editorAvisar("Es el mismo nombre."); return; }
+  if(!nuevo){ renAvisar("Escribe el nombre nuevo."); return; }
+  if(nuevo.includes("/")){ renAvisar("El nombre no puede contener /."); return; }
+  if(normalizar(nuevo) === normalizar(viejo)){ renAvisar("Es el mismo nombre."); return; }
   if(listaActividades().some(n=>normalizar(n) === normalizar(nuevo))){
-    editorAvisar("Ya existe una actividad con ese nombre."); return;
+    renAvisar("Ya existe una actividad con ese nombre."); return;
   }
   const extra = extrasActs.find(e=>e.nombre === viejo);
-  if(!extra){ editorAvisar("Esta actividad es de fabrica; no se puede renombrar."); return; }
+  if(!extra){ renAvisar("Esta actividad es de fabrica; no se puede renombrar."); return; }
 
   btnRenombrarOk.disabled = true;
   try{
@@ -737,12 +783,14 @@ async function renombrarActividad(){
     actividadEditando = nuevo;
     editorTitulo.textContent = nuevo;
     borrarNombre.textContent = "«" + nuevo + "»";
-    filaRenombrar.classList.remove("ver");
-    inputRenombrar.value = "";
     pintar();
-    editorAvisar("Nombre cambiado.", true);
+    cerrarRenombrar();
+    // El "listo" va en `avisar()`, que es el mensaje de ARRIBA (junto al campo de
+    // agregar) y sí se ve al volver al editor. Si se dejara en `editorAvisar()`
+    // volvería a caer debajo de todos los accesorios, que es lo que se quejó.
+    avisar("Nombre cambiado.", true);
   }catch(e){
-    editorAvisar("No se pudo cambiar el nombre. Revisa tu conexion.");
+    renAvisar("No se pudo cambiar el nombre. Revisa tu conexion.");
   }
   btnRenombrarOk.disabled = false;
 }
@@ -792,15 +840,18 @@ btnCerrarEditor.onclick = cerrarEditor;
 
 btnRenombrar.onclick = ()=>{
   filaEliminar.classList.remove("ver");
-  filaRenombrar.classList.toggle("ver");
-  if(filaRenombrar.classList.contains("ver")) inputRenombrar.focus();
+  abrirRenombrar();
 };
-btnRenombrarNo.onclick = ()=>{ filaRenombrar.classList.remove("ver"); inputRenombrar.value = ""; };
+btnRenombrarNo.onclick = cerrarRenombrar;
 btnRenombrarOk.onclick = renombrarActividad;
 inputRenombrar.addEventListener("keydown", e=>{ if(e.key === "Enter") renombrarActividad(); });
+// El toque en el fondo oscuro cierra la ventana, como en el resto de la app.
+modalRenombrar.addEventListener("click", e=>{
+  if(e.target === modalRenombrar) cerrarRenombrar();
+});
 
 btnEliminarAct.onclick = ()=>{
-  filaRenombrar.classList.remove("ver");
+  cerrarRenombrar();
   filaEliminar.classList.toggle("ver");
   if(filaEliminar.classList.contains("ver")) inputConfirmar.focus();
 };
@@ -852,6 +903,22 @@ tabLista.onclick();
 inputEl.focus();
 
 </script>
+
+<!-- La ventana de "Cambiar nombre". Va al final del body (y no dentro del
+     editor) para que el toque en su fondo oscuro no confuse al que cierra el
+     editor. Nace oculta por el `.modal` del CSS y la abre `btnRenombrar`;
+     Cancelar y el toque en el fondo la cierran y dejan al usuario exactamente
+     donde estaba. -->
+<div class="modal" id="modalRenombrar">
+  <div class="caja">
+    <h1>Cambiar nombre</h1>
+    <p class="sub">Escribe el nombre nuevo de la actividad.</p>
+    <input id="inputRenombrar" type="text" maxlength="60" autocomplete="off" placeholder="Nuevo nombre">
+    <button class="btnPri" id="btnRenombrarOk" type="button">Guardar nombre</button>
+    <button class="btnSec" id="btnRenombrarNo" type="button">Cancelar</button>
+    <p id="renMsg"></p>
+  </div>
+</div>
 
 </body>
 </html>
