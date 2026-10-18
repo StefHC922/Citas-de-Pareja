@@ -212,10 +212,16 @@
      ese es de "¿sí o no?" y esto es un formulario. */
   .modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:60;
     align-items:center; justify-content:center; padding:20px; }
-  .modal .caja{ max-width:380px; border:1px solid var(--teal); border-radius:18px; padding:22px 20px;
+  /* `width:100%` y `background` son OBLIGATORIOS y no son adorno: esta pantalla no
+     tiene la clase `.caja` suelta (en `Roles/` sí), así que la caja se dibuja
+     COMPLETA aquí. Sin el fondo se veía el editor de atrás y sin el ancho la caja
+     se encogía al texto, que hacía que el aviso del error se partiera en varias
+     líneas (oct-2026). */
+  .modal .caja{ width:100%; max-width:380px; background:var(--card); color:var(--fg);
+    border:1px solid var(--teal); border-radius:18px; padding:22px 20px;
     text-align:center; margin:0; }
   #modalRenombrar .caja{ display:flex; flex-direction:column; }
-  #modalRenombrar h1{ font-size:1.3rem; margin:0 0 6px; }
+  #modalRenombrar h1{ font-size:1.3rem; margin:0 0 6px; width:fit-content; align-self:center; }
   #modalRenombrar .sub{ font-size:.85rem; color:var(--fg-muted); margin:0 0 14px; }
   #modalRenombrar input{ width:100%; border-radius:12px; border:1px solid var(--card-border);
     background:var(--bg-2); color:var(--fg); padding:12px; font-size:.95rem;
@@ -227,8 +233,14 @@
   #modalRenombrar .btnPri:disabled{ opacity:.45; }
   #modalRenombrar .btnSec{ width:100%; padding:12px; background:none; border:none; cursor:pointer;
     color:var(--fg-muted); font-size:.9rem; text-decoration:underline; }
-  /* El aviso va ABAJO, debajo de los dos botones, como en `#modalEsp`. */
-  #modalRenombrar #renMsg{ min-height:18px; font-size:.8rem; color:var(--rojo); margin:12px 0 0;
+  /* El aviso va ABAJO, debajo de los dos botones, como en `#modalEsp`.
+     OJO: el espacio está SIEMPRE reservado (`min-height` de dos renglones) y la
+     línea de arriba también se dibuja siempre. NO es descuido: si el espacio se
+     calculara solo, al salir el error la caja crecería, los botones SUBIRÍAN y el
+     siguiente toque caería en otro botón (en "Cancelar"), y el usuario se salía
+     sin poder corregir el nombre. Con el espacio fijo los botones no se mueven
+     nunca y se puede volver a tocar "Guardar nombre" (oct-2026). */
+  #modalRenombrar #renMsg{ min-height:40px; font-size:.8rem; color:var(--rojo); margin:12px 0 0;
     padding-top:12px; border-top:1px solid var(--card-border); text-align:left; line-height:1.5; }
   #modalRenombrar #renMsg.ok{ color:var(--teal); }
 
