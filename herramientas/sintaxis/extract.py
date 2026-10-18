@@ -37,6 +37,21 @@ targets = [
     # tambien quedaron fuera de la lista; se probaron a mano y pasan, asi que se
     # pueden agregar cuando se toquen.
     ("Panel/oficiales.html", "panel_oficiales"),
+    # Estas cinco se agregaron el 18-oct-2026. NUNCA estaban en la lista, asi que
+    # el chequeo de sintaxis no las habia revisado jamas: se les podia meter un
+    # error de tecleo y nadie se enteraba. Se comprobaron a mano ANTES de
+    # agregarlas (las cinco pasan) para que `revisar.py` siguiera en verde.
+    ("Citas/actividades.html", "actividades"),
+    ("Citas/accesorios.html", "accesorios"),
+    ("Panel/index.html", "panel_index"),
+    ("Panel/catalogo.html", "panel_catalogo"),
+    ("Panel/permisos.html", "panel_permisos"),
+    # Autorizar/ se agrego el 18-oct-2026. Es la pantalla que aprueba y revoca
+    # licencias y SI trae JavaScript (login de Google, aprobar, revocar, negar):
+    # quedaba fuera de la lista, igual que las cinco de arriba. Se comprobo a mano
+    # antes de agregarla (pasa). Con esto ya no queda ninguna pantalla con
+    # JavaScript fuera del chequeo: `Privacidad/` y `Terminos/` no tienen ninguno.
+    ("Autorizar/index.html", "autorizar"),
 ]
 
 pat = re.compile(r'<script([^>]*)>(.*?)</script>', re.S | re.I)

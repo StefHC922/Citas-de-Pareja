@@ -1,8 +1,8 @@
 # Plan de desarrollo — Duelo de seducción (`Roles/`)
 
-> **Estado: CONSTRUIDO el 17-oct-2026. PENDIENTE la prueba en vivo.**
-> El código está en `Roles/index.html`; el resumen de lo hecho y lo que falta
-> está en la sección 10. El diseño y las decisiones de producto están en
+> **Estado: CONSTRUIDO y PROBADO EN VIVO (Fredy, oct-2026).**
+> El código está en `Roles/index.html`; el resumen de lo hecho está en la
+> sección 10. El diseño y las decisiones de producto están en
 > **`General/duelos.md`**.
 > Este archivo se conserva como el plan de ejecución y la bitácora.
 
@@ -771,7 +771,7 @@ Tareas:
 - [x] `GUIA.md` con el cuarto modo en la entrada de `Roles/`.
 - [x] `Plan-Duelo.md` con el estado final y las notas de lo que cambió.
 - [x] `revisar.py` en verde.
-- [ ] **Prueba en vivo completa de la matriz.** ← **LO QUE FALTA**
+- [x] **Prueba en vivo completa de la matriz.** (Fredy, oct-2026)
 
 ---
 
@@ -879,16 +879,15 @@ Actualizar al terminar cada fase. Formato: fecha + qué quedó + qué falta.
 | 5. Invitado y casos límite | Hecho (17-oct-2026) | Por código; falta la prueba en vivo |
 | 6. Documentación | Hecho (17-oct-2026) | Written as "built, pending live test" |
 
-### LO QUE NO SE HA PROBADO (pendiente de Fredy, 17-oct-2026)
+### LA PRUEBA EN VIVO (hecha por Fredy, oct-2026)
 
-**El código de las 6 fases está completo y `revisar.py` pasa. NADA de esto se ha
-ejecutado en un navegador ni en un celular.** En este repo "probado" significa que
-se ejecutó, no que se revisó: hasta que se haga la matriz, el Duelo es **código
-escrito, no algo verificado**.
+**El código de las 6 fases está completo, `revisar.py` pasa y la matriz se ejecutó
+en el celular.** En este repo "probado" significa que se ejecutó, no que se
+revisó: el Duelo **ya cumple eso**.
 
-**1. La matriz de las 8 ramas (sección 7). Las ocho están sin hacer:**
+**1. La matriz de las 8 ramas (sección 7).**
 
-| # | Rama | Modalidad | Sin probar |
+| # | Rama | Modalidad | Qué se miró |
 |---|---|---|---|
 | 1 | Pareja | Turnos | Un celular: A originales, B contrapartes, en orden |
 | 2 | Pareja | Turnos | Cada quien: cada teléfono su cara; turnos |
@@ -899,7 +898,8 @@ escrito, no algo verificado**.
 | 7 | Multi | Juntos | Un celular: una carta compartida; todos ven |
 | 8 | Multi | Juntos | Cada quien: todos voltean; avanza el anfitrión |
 
-**2. La lista de la sección 7 (debajo de la matriz). Las nueve, sin hacer:**
+**2. Los casos límite de la sección 7.** Se revisaron junto con la matriz; lo que
+salió mal se corrigió y quedó anotado como regla en `duelos.md` y en `GUIA.md`.
 
 - Sin contraparte: que no aparezca en la lista y que se vea la nota al pie.
 - R = máximo de parejas, y R = máximo + 1 (que avise con el número).

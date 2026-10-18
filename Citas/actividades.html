@@ -205,6 +205,13 @@
     font-family:'Chakra Petch',sans-serif; font-weight:700; }
   .btnChicoOk{ color:var(--bg); background:linear-gradient(90deg, var(--coral), var(--teal)); }
   .btnChicoNo{ background:var(--bg-2); color:var(--fg); border:1px solid var(--card-border) !important; }
+  /* El aviso del bloque de eliminar. Vive DENTRO del bloque, así que se lee sin
+     bajar hasta el final de la tarjeta. El hueco está siempre reservado: si la
+     caja creciera al salir el error, los botones SUBIRÍAN y el siguiente toque
+     caería en otro (el mismo problema que tenía la ventana de renombrar). */
+  #filaEliminar #elimMsg{ min-height:40px; font-size:.8rem; color:var(--rojo); margin:12px 0 0;
+    padding-top:12px; border-top:1px solid var(--card-border); text-align:left; line-height:1.5; }
+  #filaEliminar #elimMsg.ok{ color:var(--teal); }
 
   /* ---------- cambiar el nombre: VENTANA, no renglón ----------
      Antes el campo iba en una renglón adentro de la tarjeta y el aviso de por qué
@@ -310,6 +317,12 @@
           <input id="inputConfirmar" type="text" autocomplete="off" placeholder="Escribe el nombre para confirmar">
           <button class="btnChicoOk" id="btnEliminarOk" type="button" style="background:var(--rojo);color:#2b0410;">Eliminar definitivamente</button>
           <button class="btnChicoNo" id="btnEliminarNo" type="button">Cancelar</button>
+          <!-- El aviso va AQUÍ, dentro del bloque que se despliega, y no en
+               `#editorMsg`: ese queda hasta abajo de la tarjeta, debajo de todos
+               los accesorios, y en el celular no se veía (oct-2026). El hueco está
+               reservado con `min-height`, como en la ventana de renombrar, para
+               que los botones no se muevan al salir el error. -->
+          <p id="elimMsg"></p>
 </div>
 </div>
 
@@ -372,6 +385,7 @@ const filaEliminar = document.getElementById("filaEliminar");
 const inputConfirmar = document.getElementById("inputConfirmar");
 const btnEliminarOk = document.getElementById("btnEliminarOk");
 const btnEliminarNo = document.getElementById("btnEliminarNo");
+const elimMsg = document.getElementById("elimMsg");
 const borrarNombre = document.getElementById("borrarNombre");
 
 // ====== ESTADO ======
@@ -637,8 +651,7 @@ async function abrirEditor(nombre, empujar){
   btnRenombrar.style.display = esPropia ? "" : "none";
   btnEliminarAct.style.display = esPropia ? "" : "none";
   cerrarRenombrar();
-  filaEliminar.classList.remove("ver");
-  inputConfirmar.value = "";
+  cerrarEliminar();
   borrarNombre.textContent = "«" + nombre + "»";
 
   // El editor REEMPLAZA la lista: así no se ve nada encimado.
@@ -672,7 +685,7 @@ function restaurarLista(){
   editorEsNuestro = false;
   tabLista.disabled = false;
   cerrarRenombrar();
-  filaEliminar.classList.remove("ver");
+  cerrarEliminar();
 }
 
 function cerrarEditor(empujar){
@@ -850,16 +863,29 @@ async function renombrarActividad(){
 }
 
 // ====== ELIMINAR UNA ACTIVIDAD (con todo y sus datos) ======
+// Su aviso va en `#elimMsg`, DENTRO del bloque que se despliega. Antes usaba
+// `editorAvisar` (#editorMsg), que queda al final de la tarjeta y no se veía sin
+// bajar; el mismo rodeo que el de la ventana de renombrar (oct-2026).
+function elimAvisar(texto, ok){
+  elimMsg.textContent = texto;
+  elimMsg.className = ok ? "ok" : "";
+}
+function cerrarEliminar(){
+  filaEliminar.classList.remove("ver");
+  inputConfirmar.value = "";
+  elimAvisar("", false);
+}
+
 async function eliminarActividad(){
   if(!actividadEditando) return;
   const nombre = actividadEditando;
 
   if(normalizar(inputConfirmar.value) !== normalizar(nombre)){
-    editorAvisar("Escribe el nombre para confirmar.");
+    elimAvisar("El nombre no coincide. Escríbelo tal cual aparece arriba.");
     return;
   }
   const extra = extrasActs.find(e=>e.nombre === nombre);
-  if(!extra){ editorAvisar("Esta actividad es de fabrica; no se puede eliminar."); return; }
+  if(!extra){ elimAvisar("Esta actividad es de fabrica; no se puede eliminar."); return; }
 
   btnEliminarOk.disabled = true;
   try{
@@ -874,7 +900,7 @@ async function eliminarActividad(){
     actualizarModo();
     avisar("Actividad eliminada con todo y sus datos.", true);
   }catch(e){
-    editorAvisar("No se pudo eliminar. Revisa tu conexion.");
+    elimAvisar("No se pudo eliminar. Revisa tu conexion.");
   }
   btnEliminarOk.disabled = false;
 }
@@ -907,9 +933,9 @@ modalRenombrar.addEventListener("click", e=>{
 btnEliminarAct.onclick = ()=>{
   cerrarRenombrar();
   filaEliminar.classList.toggle("ver");
-  if(filaEliminar.classList.contains("ver")) inputConfirmar.focus();
+  if(filaEliminar.classList.contains("ver")){ elimAvisar("", false); inputConfirmar.focus(); }
 };
-btnEliminarNo.onclick = ()=>{ filaEliminar.classList.remove("ver"); inputConfirmar.value = ""; };
+btnEliminarNo.onclick = cerrarEliminar;
 btnEliminarOk.onclick = eliminarActividad;
 inputConfirmar.addEventListener("keydown", e=>{ if(e.key === "Enter") eliminarActividad(); });
 editorWrap.addEventListener("click", e=>{

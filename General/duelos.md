@@ -5,9 +5,11 @@
 > (Pareja/Multi × un celular/cada quien en su suyo) y en las dos modalidades
 > (**Turnos** y **Juntos**).
 >
-> **PENDIENTE: la prueba en vivo.** El chequeo de sintaxis pasa, pero **ninguna de
-> las ocho combinaciones se ha probado todavía en un celular**. Lo que falta
-> exacto está en `General/Plan-Duelo.md`, sección 10.
+> **PROBADO EN VIVO (Fredy, oct-2026).** El chequeo de sintaxis pasa y las **ocho
+> combinaciones se ejecutaron en el celular**, junto con los casos límite. Lo que
+> se fue encontrando al probar ya está incorporado aquí y en `GUIA.md`, así que
+> este archivo es lo que rige. La bitácora de la construcción quedó en
+> `General/Plan-Duelo.md`.
 >
 > **Lo que sigue es el diseño**, acordado por Fredy, y se deja como referencia de
 > **por qué** está hecho así. **Cómo se construyó, qué se apartó del plan y qué

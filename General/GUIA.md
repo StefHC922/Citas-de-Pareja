@@ -724,15 +724,17 @@ sección 6.
   ver *El invitado vuelve solo al abrir la app*): un invitado con QR y partida en
   curso NO debe ser expulsado; uno sin partida debe volver solo.
   ~~**PROBADO EN VIVO: las dos pasaron.**~~
-- **Favores Express** — idea de Fredy, oct-2026, **NO está construida**. El plan
-  completo (flujo, decisiones ya tomadas y lo que falta) está en
-  **`General/Plan-Favores-Express.md`**. Ese archivo es **temporal**: cuando la
-  función esté probada se borra y lo que valga pasa aquí.
-- **Los cambios de puntos deben requerir que los dos acepten.** **Hoy NO está
-  hecho**: los números del 🛒 se cambian libremente, que es lo que se usa para
-  probar sin molestar. Cuando se arme, aplica al Centro **y** a los Favores
-  Express.
-- Sala de espera: **falta la prueba con dos telefonos reales** (en vivo).
+- **Favores Express** — **construida y probada en vivo** (Fredy, oct-2026). El modulo
+  es `favor.js` y tiene su propia seccion mas abajo, en
+  **Favores Express (`favor.js`)**. El plan de desarrollo ya **no existe**: se
+  borro al quedar probado, y lo que valia se paso aqui.
+- **Los cambios de puntos se hacen libres, y es A PROPOSITO** (decision de Fredy):
+  los numeros del 🛒 se cambian sin que el otro acepte, que es lo que se usa para
+  probar sin molestar. **No es un pendiente ni un descuido.** Lo que queda es
+  quitarlo cuando llegue el rediseno de arquitectura (login + reglas por correo),
+  y entonces aplicara al Centro **y** a los Favores Express. **No "arreglarlo"
+  antes de eso.**
+- Sala de espera: **PROBADA EN VIVO** con dos telefonos reales (Fredy, oct-2026).
 - Sesion de Encuentros en `sesionEncuentros/actual`: la lista de TODOS los
   participantes (incluidos invitados) vive en un solo documento. Confirmar en la
   consola que ese path no queda abierto a lectura ajena.
@@ -1224,7 +1226,7 @@ importan. **Las 24 llamadas no se tocaron.**
 **Lo que NO cambió:** lo que ve el usuario. Solo se dejó de tener el mismo texto
 cinco veces.
 
-**Pendiente de probar en vivo:** que **sigan llegando** los Telegram desde los
+**PROBADO EN VIVO (Fredy, oct-2026):** los Telegram **siguen llegando** desde los
 5 sitios — un reto nuevo, una cita nueva, una compra en el Centro, el botón
 "Invitar" del Chat y un reto de la IA.
 
@@ -1266,9 +1268,9 @@ secciones del Centro, y de ahí se entra a ver todo el catálogo.
   pastilla de las secciones la pone `marcarSecNuevas()` (en `Tienda/index.html`).
 - Los dos nacen **apagados**: el punto es una clase (`conNuevo`) y la pastilla se
   crea con JavaScript. Nada se ve si no hay algo nuevo.
-- **Pendiente de probar en vivo:** el punto rojo del carrito no se pudo ver desde
-  el entorno (el menú no se dibuja sin una configuración real). La pastilla de
-  las secciones **sí** se comprobó con una captura.
+- **PROBADO EN VIVO:** el punto rojo del carrito **sale** cuando hay algo nuevo sin
+  pedir, y se apaga al pedirlo o al vencer la fecha. La pastilla de las secciones
+  también se comprobó.
 
 ### Notas de mantenimiento
 
@@ -1525,9 +1527,9 @@ es común. **El orden de la pantalla de inicio (decisión de Fredy, oct-2026;
   > celular**: la pantalla ya **cabe sin bajar**, la ventana sale con el borde
   > turquesa y el texto abajo, **Aceptar** cierra y deja el interruptor prendido,
   > **Cancelar** apaga todo, y al arrancar la partida las variantes caen en las
-  > rondas que se pusieron. **Pendiente por falta de un segundo celular:** que el
-  > interruptor de variantes funcione en una partida **compartida** con invitados
-  > (que reparta las rondas en cada teléfono).
+  > rondas que se pusieron. **También probado en una partida COMPARTIDA con
+  > invitados (Fredy, oct-2026):** el interruptor reparte las rondas en cada
+  > teléfono.
 
 **Los textos de los modos NO son instrucciones, son PERMISOS (decisión de Fredy,
   oct-2026) — no reescribirlos sin preguntar.** La pestaña dice el nombre y la
@@ -1562,13 +1564,12 @@ ver con el nombre de los modos.
   turno" **no existe** en duelo. **El detalle completo de las cuatro ramas, el
   modelo de datos y las cuatro funciones del reparto están en
   `General/duelos.md`** — ese es el archivo que se lee, no esta nota. Cómo se
-  construyó y qué falta está en **`General/Plan-Duelo.md`**.
+  construyó está en **`General/Plan-Duelo.md`**.
 
-  **Ojo: está construido pero PENDIENTE de la prueba en vivo** (17-oct-2026). El
-  chequeo de sintaxis pasa, pero las ocho combinaciones de la matriz todavía **no se
-  han probado en un celular**: hasta que se prueben, esto vale como código escrito,
-  no como algo verificado. La lista de lo que falta está en `Plan-Duelo.md`,
-  sección 10.
+  **PROBADO EN VIVO (Fredy, oct-2026):** las **ocho combinaciones de la matriz** y
+  los casos límite **ya se ejecutaron en el celular**. El Duelo **no** es solo
+  código escrito: está verificado. Lo que se fue encontrando al probar está anotado
+  como reglas más abajo y en `General/duelos.md`.
 
   **Y estas son las reglas del juego en sí (Clásico, Cambia de Bando, Seleccionar y
   Duelo) que salieron de las pruebas en vivo (oct-2026) — no romper:**
@@ -1870,6 +1871,88 @@ invitado** era largo y avisaba lo que mas se necesita saber:
 Quedo solo **"¿Salir de modo invitado?"**. El invitado ya **no ve ahi** que
 tambien se le borra de la lista de quien lo invito. Si alguna vez molesta, se
 devuelve con `texto:`.
+
+### Favores Express (`favor.js`)
+
+**Que es:** uno le pide un favor al otro **en el momento**, con un precio en puntos,
+y el otro decide. Se pide desde un **boton flotante 🛎️** que esta en las pantallas
+de la pareja, no desde el menu. Vive en **`favor.js`** (modulo de la raiz, como
+`fuegos.js` y `confirmar.js`): en cada pantalla es un import y
+`try{ montarFavor(); }catch(e){}`.
+
+**La diferencia con los retos de la IA, que es la razon de que exista:**
+el reto de la IA **no se puede rechazar**; el Favor Express **si**. Ese "ella
+decide" es lo que lo hace un favor y no un menu.
+
+| Pieza | Donde |
+|---|---|
+| Las dos ventanas (pedir / responder), el pago y el castigo | `favor.js` |
+| La campana y el bip | `pestana.js`, tipo `"favores"` |
+| La pestana **Favores** del Centro | `Retos/centro.html` |
+| Los numeros del 🛒 | `index.html` (⚙️ → Usuarios) |
+
+**Las colecciones:** `favoresExpress` (un documento por favor) e
+`invitosFavor/{id de quien manda}` (el aviso de campana, **por persona**: con uno
+solo los dos se pisan).
+
+**Los cinco numeros del 🛒** — los tres ultimos son **del que pide** y **se
+congelan al crear el favor**, asi que cambiar el 🛒 despues **no** cambia lo ya
+pactado:
+
+| Campo | Que es | Por omision |
+|---|---|---|
+| `ptsActivar` | Puntos para activar un deseo | 500 |
+| `precioCompra` | Precio para comprar un deseo | 100 |
+| `precioFavor` | Precio de un Favor Express | 15 |
+| `pctCastigo` | % que se cobra si aceptan y no cumplen | 50 |
+| `minutosFavor` | Minutos para cumplirlo | 10 |
+
+**Decisiones que no se rompen (de Fredy) — no "mejorarlas" sin preguntar:**
+
+- **El precio SI se le muestra** al que responde, desde la notificacion. Se
+  discutio ocultarlo y se descarto: aceptar a ciegas y que no le paguen se siente
+  como un engaño.
+- **El reloj arranca al ACEPTAR**, no al pedir. Si arrancara al pedir se venceria
+  por estar ocupada, que es justo lo que pasa.
+- **El saldo nunca queda negativo** (tope cero). Si no le alcanza, **el boton
+  igual aparece** y se le avisa. Es **al contrario** que el "Comprar" del Centro,
+  y es a proposito (ver `Centro-Adquisiciones.md`).
+- **La sancion descuenta hasta donde alcance** y si no da, queda en cero.
+- **El contra-precio es UNA ida y una vuelta, no un ciclo:** ella contraoferta, el
+  acepta, vuelve a ella y **ahi se decide**. Si alguien no acepta en cualquier
+  paso, el favor muere y no pasa nada.
+- **Quien pidio no toca el precio**; **quien cumple si** (hacia arriba, o hasta 0
+  si lo regala). Asi nadie puede bajar el precio y ganar algo.
+- **Un solo favor VIVO a la vez.** Se revisa al abrir el formulario **y otra vez al
+  mandar** (`hayFavorVivo()`), para que no se cuele uno mientras escribes. No es un
+  capricho: el aviso de la campana es **un hueco por persona**
+  (`invitosFavor/{id de quien manda}`), asi que dos favores vivos **se pisarian el
+  aviso** y uno de los dos se quedaria sin ver el suyo. Los ya cerrados no cuentan.
+
+**Dos cosas quedaron SIN decidir** (venian del plan de desarrollo, que ya se borro;
+si algun dia se deciden, se anotan aqui y se quitan de esta lista):
+
+1. **Si el 🛒 debe avisar del precio cuando se acepta un favor**, como pasa al
+   comprar en el Centro.
+2. **Si se avisa cuando el 🛒 cambia con una negociacion viva.** El precio del favor
+   **ya quedo congelado** en su documento, asi que **no la afecta**: lo unico por
+   decidir es si ademas se dice algo.
+
+**El registro NO se borra** (y esto importa): los puntos se mueven con
+`increment()` y **no hay de donde vinieron** (es el P3 de `Modelo-Datos.md`). Por
+eso **el documento de cada favor se queda siempre**. Lo que si se puede es
+**esconder** los resueltos de la lista, y en el Centro hay un **"Borrar
+descartados"** que borra **solo los rechazados y cancelados** (esos no movieron
+puntos) y siempre pregunta antes.
+
+> **El boton flotante es una EXCEPCION a la regla de las esquinas, y es decision,
+> no descuido.** La regla dice que los botones viven en las esquinas y que jamas
+> hay dos en el mismo lado; el 🛎️ va fijo abajo a la derecha, encima de cualquier
+> pantalla, porque el favor se pide sin entrar a buscarlo. Va en **Z60**, debajo
+> de las ventanas (`confirmar.js` 95, el aviso de fin 80, los fuegos 70) para no
+> tapar el "Aceptar". **No lo muevas a una esquina "para cumplir la regla".**
+> **No sale** si eres invitado, si todavia no hay identidad, ni en `Panel/`,
+> `Tienda/`, `Privacidad/` ni `Terminos/`.
 
 ### Los botones de anfitrion tienen que NACER ocultos (oct-2026)
 

@@ -1,5 +1,5 @@
 // ============================================================================
-//  Favores Express — botón flotante y ventana de pedir  (oct-2026)
+//  Favores Express — botón flotante, pedir, responder, pagar y castigo (oct-2026)
 // ----------------------------------------------------------------------------
 //  Un favor se pide SIN entrar a buscarlo: hay un botón flotante que está en
 //  todas las pantallas. Lo abre una ventana: escribes QUÉ favor quieres y se
@@ -9,13 +9,15 @@
 //      import { montarFavor } from "../favor.js";       // en una carpeta
 //      montarFavor(dbActual());
 //
-//  FASE 1 (esto es lo que hay ahora): el botón, la ventana de PEDIR, y que el
-//  aviso llegue. Aceptar / contra-ofertar / pagar todavía NO: es la fase 2.
+//  ESTÁ COMPLETO Y PROBADO EN VIVO (Fredy, oct-2026): el botón, la ventana de
+//  PEDIR, la de RESPONDER (aceptar / contra-ofertar / rechazar), el reloj, el
+//  "Recibí ✓", el pago, el castigo y el vencimiento. El plan de desarrollo que
+//  había se borró al quedar probado; lo que valía quedó en `General/GUIA.md`,
+//  sección "Favores Express (`favor.js`)" — ahí están las reglas del modelo.
 //
-//  El modelo (decisiones de Fredy, oct-2026 — ver General/Plan-Favores-Express.md):
+//  El modelo (decisiones de Fredy, oct-2026):
 //   - El precio lo pone el 🛒 de QUIEN PIDE, y no se puede cambiar al pedir.
 //   - Quien va a CUMPLIR sí puede ajustarlo: para arriba, o hasta 0 si lo regala.
-//     (Eso es la fase 2.)
 //   - El saldo nunca queda negativo: tope cero. Y el botón SIEMPRE aparece, solo
 //     que avisa que no alcanza. OJO: es al revés que en el Centro de
 //     Adquisiciones, donde el botón "Comprar" ni aparece sin saldo.
