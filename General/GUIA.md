@@ -1294,14 +1294,47 @@ objeto `personaje` completo. Modes: **Clásico** (sale de `U1`/`U2`), **Cambia
   Engrane ⚙️ con **una pestaña por usuario** (no cinco): cada quien solo ve su
   lado y el administrador tiene un botón para ver el del otro; dentro, dos
 sub-pestañas Personajes / Contrapartes; y una tercera, **Variantes Picantes**, que
-     es común. **El orden de la pantalla de inicio (decisión de Fredy, oct-2026):**
-arriba **Número de rondas**, luego la caja **"Elige Tu Modo de Juego"** (las
-    cuatro pestañas en 2x2, con la descripción del modo debajo), luego **"¿Cómo vas a jugar
-   hoy?"** con los **solo dos** botones —**Jugar con Pareja** y **Multijugador**,
-   en el mismo renglón—, y al final la caja **"Variantes Picantes, Te atreves ?"**
-   con el interruptor y su "¿Cuántas veces?". Abajo de todo, el botón del QR y el
-   remate del engrane. El detalle del modelo y de las tres
-   colecciones está en **`General/Modelo-Datos.md`**, sección **1b**.
+es común. **El orden de la pantalla de inicio (decisión de Fredy, oct-2026;
+     rediseño completo el 17-oct-2026):** arriba **Número de rondas**, luego la
+     caja **"Elige Tu Modo de Juego"** (las cuatro pestañas en 2x2, con la
+     descripción del modo debajo), **luego en medio el interruptor de
+     Variantes Picantes**, y después **"¿Cómo vas a jugar hoy?"** con los **solo
+    dos** botones —**Jugar con Pareja** y **Multijugador**, en el mismo
+    renglón—. Abajo de todo el remate del engrane y, **debajo de él**, el botón
+    del QR (el orden de esos dos se invirtió el 17-oct-2026: antes el QR iba
+    primero). El detalle del modelo y de las tres
+    colecciones está en **`General/Modelo-Datos.md`**, sección **1b**.
+
+  - **El rediseño de la pantalla de inicio de `Roles/` (17-oct-2026, aprobado por
+    Fredy):** se armó primero en **una maqueta suelta fuera del repo** (una sola
+    página con el CSS copiado, para ver y ajustar sin tocar la app) y después se
+    pasó a `Roles/index.html`. Lo que quedó, todo con su regla en el CSS:
+    - **"Número de rondas"** es una tarjeta de **la mitad de ancho, centrada**
+      (`#cajaRondas`). **El input NO se encoge**: sigue al 100% de la tarjeta, así
+      que el número se ve igual de ancho y lo compacto es el bloque.
+    - **"Elige Tu Modo de juego"** más abajo y más alta por dentro; los cuatro
+      botones crecen (padding `10px` → `14px`, letra `.82` → `.85rem`).
+    - **Variantes Picantes perdió su recuadro** (ni tarjeta ni interruptor con
+      borde) y **se movió a en medio**, entre el modo de juego y "¿Cómo vas a
+      jugar hoy?" (antes iba al final, dentro de una caja). **Ojo con el texto,
+      que se movió de lugar:** la frase **"Variantes Picantes, Te atreves ?"**
+      **dejó de ser el título de arriba y pasó a ser la etiqueta del
+      interruptor**, en coral. Ya **no existe** la frase "Ponle un toque
+      personal a tu juego". El "¿Cuántas veces?" sigue saliendo al prenderlo.
+    - **"¿Cómo vas a jugar hoy?"** más alta, con los **botones más abajo**, y su
+      **título más grande** (`1.1rem`). **Ojo: quedó más grande que los otros
+      dos títulos de caja y eso NO es un descuido** — se dejó así porque a Fredy le
+      gustó más así (se avisó y se dejó). Los otros dos siguen en su tamaño.
+    - **"Diviértete más"** un poco más grande, **pero SOLO en la vista de
+      inicio**: se puso `#vistaInicio p.desc`, porque **`p.desc` a secas es
+      global** y esa misma clase la usan el engrane, la selección y la pantalla
+      de continuar, que **no** se tocaron.
+    - **Trampa de CSS que se pasó por alto y sigue ahí:** se quiso subir el
+      espacio entre los cuatro botones de `gap:8px` a `12px` y **NO se aplicó**,
+      porque la regla que manda es **`.tabs.tabsModos`** (dos clases) y le gana
+      a un `.tabsModos` suelto. **Se dejó en 8px** porque es lo que se aprobó en
+      la maqueta. Para cambiar esa separación hay que editar **`.tabs.tabsModos`**,
+      no `.tabsModos`. Lo mismo aplica para cualquier ajuste de esa fila.
 
 **Los textos de los modos NO son instrucciones, son PERMISOS (decisión de Fredy,
   oct-2026) — no reescribirlos sin preguntar.** La pestaña dice el nombre y la
@@ -1406,8 +1439,12 @@ ver con el nombre de los modos.
     sigue entrando a la ronda siguiente (no tiene turno en la actual).
   - **Mensajes de fase del Duelo** (`#faseDuelo`) y el **"Toca para revelar el
     personaje"** del reverso van con letra más grande y degradado coral→turquesa.
-  - **"Ponle un toque personal a tu juego"** (la etiqueta del interruptor de
+  - **"Variantes Picantes, Te atreves ?"** (la etiqueta del interruptor de
     Variantes Picantes) va en **coral** (`var(--coral)`), para que resalte.
+    **Antes esa frase era el título de la caja** y en coral decía "Ponle un toque
+    personal a tu juego"; el 17-oct-2026 el interruptor se quedo sin recuadro, se
+    movio a en medio y **las dos frases se intercambiaron de lugar**: ahora el
+    titulo es la etiqueta y la frase en coral se fue.
   - **Arriba del reproductor del Duelo** va el **modo de juego y la modalidad**
     ("Pareja · Juntos" / "Multijugador · Turnos") y **debajo** "Ronda X de R".
     Antes estaba al revés y no decía Pareja/Multijugador.

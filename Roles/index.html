@@ -144,6 +144,38 @@
      es lo más importante de la pantalla, porque arriba están "quiénes juegan". */
   .rondasInput{ width:100%; text-align:center; font-size:1.4rem; font-family:'Chakra Petch',sans-serif; font-weight:700;
     background:var(--bg); border:1px solid var(--card-border); border-radius:12px; color:var(--fg); padding:12px; }
+  /* ---------- Pantalla de INICIO: rediseño aprobado (17-oct-2026) ----------
+     Se probó primero en una maqueta suelta (fuera del repo) y después se pasó
+     aquí. Lo que se cambió, en una línea cada cosa:
+       · "Número de rondas" es una tarjeta de la MITAD de ancho, centrada. El
+         input NO se toca: sigue al 100% de la tarjeta, así que el número sale
+         igual de ancho que antes y lo que se encoge es el bloque completo.
+       · "Elige Tu Modo de Juego" baja un poco y se hace más alta por dentro;
+         los cuatro botones crecen (padding 10px -> 14px, letra .82 -> .85rem).
+       · "Variantes Picantes" se quedó SIN recuadro (ni tarjeta ni interruptor)
+         y SIN su título, y se movió a EN MEDA, entre el modo de juego y
+         "¿Cómo vas a jugar hoy?".
+       · "¿Cómo vas a jugar hoy?" es más alta y sus botones, más abajo.
+       · Abajo, el engrane va PRIMERO y el QR queda debajo de él.
+
+     `p.desc` se agranda SOLO en la vista de inicio con `#vistaInicio p.desc`:
+     `p.desc` a secas es GLOBAL y esa misma clase la usan el engrane, la
+     pantalla de selección y la de continuar, que no se Tocaron.
+
+     OJO con `gap`: la separación entre los cuatro botones SIGUE siendo la de
+     `.tabs.tabsModos` (8px). Se quiso subir a 12px y NO se aplicó, porque
+     `.tabs.tabsModos` tiene DOS clases y le gana a un `.tabsModos` suelto. Se
+     dejó en 8px porque es lo que se aprobó en la maqueta. Para cambiarla hay
+     que editar `.tabs.tabsModos`, no `.tabsModos`. */
+  #cajaRondas{ width:50%; margin-left:auto; margin-right:auto; }
+  #cajaModos{ margin-top:24px; padding:20px 16px; }
+  .tabsModos .tab{ padding:14px 10px; font-size:.85rem; }
+  .cajaSinRecuadro{ width:100%; margin:6px 0 20px; }
+  .cajaSinRecuadro .opModo{ background:none; border:none; padding:6px 0; }
+  #cajaComoJugar{ padding:26px 16px 30px; }
+  #cajaComoJugar .filaBotones{ margin-top:30px; }
+  #cajaComoJugar .cajaTitulo{ font-size:1.1rem; }
+  #vistaInicio p.desc{ font-size:1rem; }
   #finTxt{ white-space:pre-line; font-size:1.1rem; }
   /* player */
   #modoPartida{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:.78rem;
@@ -304,39 +336,36 @@
 <div class="vista" id="vistaInicio">
   <h1>Juego de Roles</h1>
   <p class="desc">Diviértete más</p>
-  <!-- El orden de las tres cajas de arriba (decisión de Fredy, oct-2026):
-       primero el NÚMERO DE RONDAS, luego el MODO DE JUEGO, y hasta atrás
-       con QUIÉNES JUEGAN. Antes iba al revés y se veía mal el dinámica. -->
-  <div class="caja">
+  <!-- El ORDEN de arriba hacia abajo (decisión de Fredy; la primera vez oct-2026,
+       el rediseño completo el 17-oct-2026):
+       1. NÚMERO DE RONDAS   (tarjeta de la mitad de ancho, centrada)
+       2. MODO DE JUEGO      (las cuatro pestañas en 2x2 + su descripción)
+       3. VARIANTES PICANTES (EN MEDA: sin recuadro y sin su título)
+       4. ¿CÓMO VAS A JUGAR? (Jugar con Pareja / Multijugador)
+       Abajo: el engrane y, debajo de él, el QR. -->
+  <div class="caja" id="cajaRondas">
     <div class="cajaTitulo">Número de rondas</div>
     <input type="number" id="rondas" class="rondasInput" min="2" max="50" value="3" inputmode="numeric">
   </div>
-  <div class="caja">
+  <div class="caja" id="cajaModos">
     <div class="cajaTitulo">Elige Tu Modo de Juego</div>
-    <div class="tabs tabsModos" style="margin-top:10px;">
+    <div class="tabs tabsModos" style="margin-top:14px;">
       <button class="tab" id="tabNormal">Clásico</button>
       <button class="tab" id="tabEspejo">Cambia de Bando</button>
       <button class="tab" id="tabSeleccionar">Seleccionar</button>
       <button class="tab" id="tabDuelo">Duelo de seducción</button>
     </div>
-    <div id="descModo" style="font-size:.78rem;color:var(--fg-muted);margin-top:10px;text-align:center;"></div>
+    <div id="descModo" style="font-size:.78rem;color:var(--fg-muted);margin-top:14px;text-align:center;"></div>
   </div>
-  <div class="caja">
-    <div class="cajaTitulo">¿Cómo vas a jugar hoy?</div>
-    <!-- Los dos modos de quiénes juegan van en el mismo renglón. "Jugar solo"
-         se quitó (decisión de Fredy, oct-2026). -->
-    <div class="filaBotones" style="margin-top:10px;">
-      <button class="btnPri" id="btnPareja" style="margin-bottom:0;">Jugar con Pareja</button>
-      <button class="btnPri" id="btnMulti" style="margin-bottom:0;">Multijugador</button>
-    </div>
-  </div>
-  <!-- Las variantes NO son un modo: se prenden encima de cualquiera de los tres
-       (decisión de Fredy, oct-2026). Van después de las otras cajas. -->
-  <div class="caja">
-    <div class="cajaTitulo">Variantes Picantes, Te atreves ?</div>
-    <label class="opModo" style="margin-top:10px; justify-content:center;">
+  <!-- Las variantes NO son un modo: se prenden encima de cualquiera de los cuatro.
+       Va EN MEDA (entre el modo de juego y "¿Cómo vas a jugar hoy?") y SIN
+       recuadro: no hay tarjeta ni interruptor con borde. El texto que se quitó
+       de arriba ("Variantes Picantes, Te atreves ?") AHORA es la etiqueta del
+       interruptor, que es donde se lee (17-oct-2026). -->
+  <div class="cajaSinRecuadro">
+    <label class="opModo" style="justify-content:center;">
       <input type="checkbox" id="chkEspecial">
-      <span style="color:var(--coral);">Ponle un toque personal a tu juego</span>
+      <span style="color:var(--coral);">Variantes Picantes, Te atreves ?</span>
     </label>
     <div id="cajaEspecial" style="display:none; margin-top:10px;">
       <div class="cajaTitulo" style="font-size:.7rem;margin-bottom:4px;">¿Cuántas veces?</div>
@@ -345,20 +374,28 @@
     </div>
     <div id="espAviso" style="font-size:.78rem;color:var(--coral);margin-top:10px;"></div>
   </div>
-  <!-- Registrar invitados SIN tener que entrar a la partida: aquí mismo, antes
-       de elegir. Es el mismo botón (y el mismo QR) que está dentro del juego.
-       "Agregar invitado" NO va aquí: en el inicio todavía no hay partida, y los
-       invitados que ya están registrados entran solos al empezar. -->
-  <button class="btnSec" id="btnQRInicio" type="button" style="margin-top:14px;">QR Invita a Alguien</button>
-  <!-- Remate de la pantalla. Es un BOTON (no un enlace): al tocarlo abre el
+  <div class="caja" id="cajaComoJugar">
+    <div class="cajaTitulo">¿Cómo vas a jugar hoy?</div>
+    <div class="filaBotones">
+      <button class="btnPri" id="btnPareja" style="margin-bottom:0;">Jugar con Pareja</button>
+      <button class="btnPri" id="btnMulti" style="margin-bottom:0;">Multijugador</button>
+    </div>
+  </div>
+  <!-- Remate de la pantalla. Va PRIMERO y el QR queda ABAJO de el (se cambió el
+       orden, 17-oct-2026). Es un BOTON (no un enlace): al tocarlo abre el
        engrane de esta misma pantalla. El degradado va SOLO en el texto, porque
        con background-clip:text el emoji tambien sale transparente. -->
-  <button class="btnSec" id="btnIrCfg" type="button" style="margin-top:16px; font-size:.8rem; text-decoration:none; padding:6px;">
+  <button class="btnSec" id="btnIrCfg" type="button" style="margin-top:18px; font-size:.8rem; text-decoration:none; padding:6px;">
     <span style="display:inline-block; font-family:'Chakra Petch',sans-serif; font-weight:600;
       background:linear-gradient(90deg, var(--coral), var(--teal)); -webkit-background-clip:text;
       background-clip:text; color:transparent;">Personaliza tu experiencia en...</span>
     <span>⚙️</span>
   </button>
+  <!-- Registrar invitados SIN tener que entrar a la partida: aquí mismo, antes
+       de elegir. Es el mismo botón (y el mismo QR) que está dentro del juego.
+       "Agregar invitado" NO va aquí: en el inicio todavía no hay partida, y los
+       invitados que ya están registrados entran solos al empezar. -->
+  <button class="btnSec" id="btnQRInicio" type="button" style="margin-top:4px;">QR Invita a Alguien</button>
 </div>
 
 <!-- ============ SELECCIÓN DE TARJETAS (modo "seleccionar") ============ -->
