@@ -982,6 +982,22 @@ nombres y administrador"** (`#invEditar`) que abre una **ventana emergente**
 (`#invOverlayUsu`, mismo molde que la de Puntos). Dentro salen **todos los
 usuarios**, y en cada renglón un **campo de puntos**:
 
+**Candado (decidido por Fredy, oct-2026):** el botón **nace oculto** y solo se
+muestra **si el usuario actual NO es invitado** (o sea, uno de los dos base); a
+los invitados también se les **oculta "Cambiar usuario"** (`#invCambiarUsu`), que
+si no servía para ponerse como la pareja y entrar igual. La visibilidad la
+resuelve `pintarInvUsuarios()` con `soyInvitado()`, y `abrirEdUsuarios()` **vuelve
+a comprobar** que no sea invitado. Además, al tocar el botón **pide una clave** en
+una ventana de la app (`#invOverlayPin`, nada de `prompt()` del sistema).
+
+- La clave está **fija en el código**: en `index.html` se guarda su **hash
+  SHA-256** (`PIN_EDITAR_HASH`), no el PIN. **Para cambiarla** hay que recalcular
+  `sha256("<nuevo pin>")` en hexadecimal y reemplazar la constante. El PIN de
+  pruebas es `9966**`.
+- Esto es **para las pruebas de la pareja**, no es seguridad real: el repo es
+  público y la base está abierta, así que quien lea el código o la base puede
+  saltárselo. La protección de verdad es el login (rediseño de arquitectura).
+
 - **Los dos perfiles base** (admin y pareja, o sea `!invitado`): campo de nombre
   **editable** y un **radio "Admin"**. **Solo hay un administrador.**
 - **Los invitados**: solo salen para editarles los puntos; su nombre se muestra

@@ -284,7 +284,7 @@
   </div>
   <div id="invVistaUsu" style="display:none;width:100%;text-align:left;">
     <button id="invBackDeUsu" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">‹ Invitados</button>
-    <button id="invCambiarUsu" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));left:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">Cambiar usuario</button>
+    <button id="invCambiarUsu" type="button" style="display:none;position:absolute;top:max(20px, env(safe-area-inset-top));left:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">Cambiar usuario</button>
     <h1 style="font-size:1.4rem;text-align:center;">Usuarios 👥</h1>
     <p id="invQuien" style="font-size:.82rem;color:var(--fg-muted);text-align:center;margin:0 0 10px;"></p>
     <div id="invUsuarios" style="display:flex;flex-direction:column;gap:10px;"></div>
@@ -292,7 +292,7 @@
       <input type="text" id="invNuevo" placeholder="Nuevo invitado" maxlength="30" autocomplete="off" style="margin-bottom:0;">
       <button class="btnPri" id="invAgregar" style="width:auto;margin-bottom:0;padding:14px 18px;">＋</button>
     </div>
-    <button class="btnPri" id="invEditar" type="button" style="background:var(--card);color:var(--fg);border:1px solid var(--card-border);margin-top:14px;">✏️ Editar nombres y administrador</button>
+    <button class="btnPri" id="invEditar" type="button" style="display:none;background:var(--card);color:var(--fg);border:1px solid var(--card-border);margin-top:14px;">✏️ Editar nombres y administrador</button>
   </div>
 
   <!-- ============ OVERLAY: los dos numeros de puntos de un usuario ============ -->
@@ -340,6 +340,21 @@
       <div style="display:flex;gap:10px;">
         <button class="btnPri" id="invEdCancelar" style="flex:1;background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Cancelar</button>
         <button class="btnPri" id="invEdGuardar" style="flex:1;">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ OVERLAY: pedir la clave para editar usuarios ============ -->
+  <!-- Nace oculto. Se pide al tocar "Editar nombres y administrador". La clave
+       esta fija en el codigo (su hash), solo para las pruebas de la pareja. -->
+  <div id="invOverlayPin" style="display:none;position:fixed;inset:0;background:rgba(9,7,15,.8);z-index:80;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:var(--bg-2);border:1px solid var(--card-border);border-radius:20px;padding:22px;width:100%;max-width:340px;">
+      <h2 style="font-size:1.1rem;margin-bottom:10px;font-family:'Chakra Petch',sans-serif;">Clave para editar</h2>
+      <input type="password" id="invPinInput" autocomplete="off" placeholder="Clave" style="margin-bottom:8px;">
+      <p id="invPinMsg" style="font-size:.82rem;color:var(--rojo);min-height:18px;margin:0 0 10px;"></p>
+      <div style="display:flex;gap:10px;">
+        <button class="btnPri" id="invPinCancelar" style="flex:1;background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Cancelar</button>
+        <button class="btnPri" id="invPinOk" style="flex:1;">Aceptar</button>
       </div>
     </div>
   </div>
@@ -1243,6 +1258,12 @@ async function pintarInvUsuarios(){
     fila.appendChild(g);
     box.appendChild(fila);
   });
+  // El boton "Editar nombres y administrador" y "Cambiar usuario" son SOLO para
+  // los dos perfiles base: a los invitados no les salen (nacen ocultos en el
+  // HTML; regla de la casa). El de editar, ademas, pide la clave al abrir.
+  const esBase = !soyInvitado();
+  try{ document.getElementById("invEditar").style.display = esBase ? "" : "none"; }catch(e){}
+  try{ document.getElementById("invCambiarUsu").style.display = esBase ? "" : "none"; }catch(e){}
 }
 
 // ====== LOS DOS NUMEROS DE PUNTOS DEL CENTRO DE ADQUISICIONES ======
@@ -1327,16 +1348,60 @@ document.getElementById("invAgregar").onclick = async ()=>{
   }catch(e){ invMsg("No se pudo agregar. Revisa tu conexión."); }
 };
 
+// ====== CLAVE PARA EDITAR USUARIOS (fija, para las pruebas de la pareja) ======
+// Se guarda el HASH (SHA-256) del PIN, no el PIN. Para cambiarlo hay que
+// recalcularlo: sha256("<nuevo pin>") en hexadecimal. El PIN de pruebas es 9966**.
+const PIN_EDITAR_HASH = "3fbfaed2f7ef481f3a197fd8bd4a70e1b0d3f0ce48491142e26692a9511f263a";
+async function hashTexto(t){
+  try{
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+    return Array.from(new Uint8Array(buf)).map(b=> b.toString(16).padStart(2, "0")).join("");
+  }catch(e){ return ""; }
+}
+// Pide la clave en una ventana de la app (nada de prompt() del sistema).
+// Devuelve true solo si es la correcta; false si se cancela.
+function pedirPin(){
+  return new Promise((resolver)=>{
+    const ov = document.getElementById("invOverlayPin");
+    const inp = document.getElementById("invPinInput");
+    const msgEl = document.getElementById("invPinMsg");
+    const ok = document.getElementById("invPinOk");
+    const cancelar = document.getElementById("invPinCancelar");
+    inp.value = "";
+    msgEl.textContent = "";
+    ov.style.display = "flex";
+    try{ inp.focus(); }catch(e){}
+    const cerrar = (resultado)=>{
+      ok.onclick = null; cancelar.onclick = null; inp.onkeydown = null;
+      ov.style.display = "none";
+      resolver(resultado);
+    };
+    const probar = async ()=>{
+      const t = (inp.value || "").trim();
+      if(!t){ msgEl.textContent = "Escribe la clave."; return; }
+      if(await hashTexto(t) === PIN_EDITAR_HASH){ cerrar(true); }
+      else { msgEl.textContent = "Clave incorrecta."; inp.value = ""; try{ inp.focus(); }catch(e){} }
+    };
+    ok.onclick = probar;
+    cancelar.onclick = ()=> cerrar(false);
+    inp.onkeydown = (ev)=>{ if(ev.key === "Enter"){ ev.preventDefault(); probar(); } };
+  });
+}
+
 // ====== EDITAR NOMBRES, ADMINISTRADOR Y PUNTOS ======
-// Boton al final de la pantalla de Usuarios (el overlay nace oculto). Los DOS
-// perfiles base (admin y pareja) se pueden renombrar y ahi se marca quien
-// administra; los invitados solo salen para editarles los puntos.
+// Boton al final de la pantalla de Usuarios (el overlay nace oculto). SOLO para
+// los DOS perfiles base (admin y pareja): a los invitados no les sale el boton
+// (ver pintarInvUsuarios) y ademas aqui se vuelve a comprobar. Pide la clave.
+// Los dos base se pueden renombrar y ahi se marca quien administra; los
+// invitados solo salen para editarles los puntos.
 // En toda la app el admin es el lado A y la pareja el lado B, asi que cambiar
 // de admin INTERCAMBIA esos lados (el contenido guardado por lado se ve del
 // otro lado). Los nombres van a config/ajustes.usuarios y los puntos al campo
 // `balance` de `puntosUsuarios/{id}`, que es de donde leen Retos, el Centro y
 // favor.js.
-function abrirEdUsuarios(){
+async function abrirEdUsuarios(){
+  if(soyInvitado()) return;
+  if(!(await pedirPin())) return;
   const db = dbActual();
   (async ()=>{
     const us = db ? await usuariosEfectivos(db) : (leerUsuariosLocal() || []);
