@@ -31,6 +31,12 @@ targets = [
     # sintaxis (el plan de Roles ya lo tenia anotado como pendiente). Se agrego
     # al tocarlo para meterle el QR y el remate del engrane.
     ("Opciones/index.html", "opciones"),
+    # Panel/oficiales.html se agrego el 17-oct-2026, al agregarle los botones de
+    # "Pegar actividad" y "Exportar actividad". No estaba y por eso no se reviso
+    # de sintaxis NUNCA. Los otros tres del Panel (index, catalogo, permisos)
+    # tambien quedaron fuera de la lista; se probaron a mano y pasan, asi que se
+    # pueden agregar cuando se toquen.
+    ("Panel/oficiales.html", "panel_oficiales"),
 ]
 
 pat = re.compile(r'<script([^>]*)>(.*?)</script>', re.S | re.I)

@@ -363,6 +363,47 @@ nombres duplicados.
 Todo está detallado en `Descargas\Soluciones.txt` y los pendientes en
 `Descargas\Problemas 2.txt`.
 
+#### 8. `Panel/oficiales.html`: pegar y exportar la actividad en JSON (17-oct-2026)
+
+Para dar de alta una actividad oficial hay **7 campos sueltos más los 5 niveles ×
+2 lados de acciones**, y el contenido estaba en documentos sueltos. Ahora la
+pantalla tiene **"Pegar actividad"** y **"Exportar actividad"**, con el mismo
+molde que el engrane de `Roles/` (los dos botones en una línea, y la cajita de
+texto debajo).
+
+| Qué | Cómo funciona |
+|---|---|
+| **Exportar actividad** | Baja un `.json` con el formulario tal como está (`actividad-<id>.json`). Es la forma de tomar **una actividad que ya está bien como plantilla** |
+| **Pegar actividad** | Lee el texto pegado y lo mete al formulario. **Acepta** comillas tipográficas y una coma de más al final; si el JSON está mal, avisa con la pista del navegador y **no carga nada** |
+| La forma del JSON | `{ id, titulo, icono, desc, orden, activo, nuevoHasta, niveles:{basico:{A:[],B:[]}, …}, tomasSugeridas:{…} }` |
+
+Lo importante, y por qué el cambio es chico:
+
+- **Lo que pega termina en `pintarForm()`**, que es **la misma función que ya
+  corría al abrir "editar"** de una actividad guardada. O sea: **el relleno ya
+  estaba probado**; lo único nuevo es leer el texto. Por eso **no se cambió cómo
+  se guardan los datos**: se sigue escribiendo en `packs` con la misma forma.
+- **`niveles` acepta las dos formas**: si en vez de `A` y `B` separadas se pega
+  una sola lista, `normLadosP()` la pone **en los dos lados**.
+- **Si el JSON trae `id`, el campo del ID queda bloqueado**, porque ese campo se
+  bloquea al editar (`pintarForm` hace `fId.disabled = !!f.id`) y el `id` es la
+  licencia, que no se cambia. Se avisa debajo de la cajita; para poner otro,
+  "Limpiar".
+- **Pegar borra lo que haya escrito**, así que si el formulario no está vacío
+  **pregunta primero** con `confirmar()` (nunca `alert()` ni `confirm()` del
+  sistema).
+- **OJO: el lector de JSON es una COPIA del de `Roles/index.html`, no un módulo
+  compartido.** Se dejó así a propósito, porque unificarlo tocaría `Roles/`, que
+  ya fue probado en vivo. Si algún día se unifica: que vaya a un módulo de la
+  **raíz** (y no a `config.js`, que ya trae Firebase) y se registre en
+  `extract.py`.
+
+> **Bug encontrado al agregarlo:** `Panel/oficiales.html` **no estaba en
+> `extract.py`**, así que el chequeo de sintaxis **nunca lo había revisado** (ni
+> `index.html`, ni `catalogo.html`, ni `permisos.html`). Se agregó
+> `Panel/oficiales.html` a la lista al tocarlo. **Los otros tres se probaron a
+> mano y pasan**, así que se pueden agregar a la lista cuando se toquen.
+
 ---
 
 ## `Autorizar/`: aprobar y revocar licencias
