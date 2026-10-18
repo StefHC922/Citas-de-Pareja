@@ -38,8 +38,12 @@
     position:relative;
   }
 
+  /* El "Volver" va arriba a la DERECHA en toda la app (regla de la casa). Aquí
+     sobre todo: en el submenú de Experiencias el ⚙️ de la esquina se mueve a la
+     IZQUIERDA justamente para dejarle este lado libre (`index.html`, `iconoMenu`),
+     y con el "Volver" a la izquierda se tapaban los dos. */
   .back{
-    position:absolute; top:max(20px, env(safe-area-inset-top)); left:20px;
+    position:absolute; top:max(20px, env(safe-area-inset-top)); right:20px;
     font-family:'Chakra Petch', sans-serif;
     font-size:.85rem; font-weight:500;
     color: var(--fg-muted); text-decoration:none;
@@ -263,7 +267,7 @@
 </head>
 <body>
 
-<a class="back" href="../index.html">← Volver</a>
+<a class="back" id="lnkInicio" href="../index.html">← Volver</a>
 
 <div class="eyebrow">Configuración</div>
 <h1 id="tituloCfg">Actividades y Accesorios</h1>
@@ -382,6 +386,11 @@ let actividadEditando = null;
 // esta vacio (el display:none lo pone el CSS), asi que la comparacion daba
 // "abierto" desde el arranque y la lista de actividades NUNCA se mostraba.
 let editorAbierto = false;
+// ¿El paso del historial que dejó abierto el editor es NUESTRO? Si el editor se
+// abrió con el botón "adelante" (o sea, desde el `popstate`), el paso no se puede
+// deshacer: entonces "Volver" cierra sin tocar el historial, porque si lo deshiciera
+// se saltaría a la pantalla anterior (mismo cuidado que el paso "fijo" del menú).
+let editorEsNuestro = false;
 // Lo que hay guardado en Firebase para la actividad que se está editando.
 // Sirve para saber si marcaste algo sin guardar antes de irte a otra pantalla.
 let accsGuardados = [];
@@ -576,7 +585,7 @@ function fuentePreset(nombre, hayNube, hayArchivo){
   return 'Sin accesorios definidos. Marca y guarda.';
 }
 
-async function abrirEditor(nombre){
+async function abrirEditor(nombre, empujar){
   actividadEditando = nombre;
   editorTitulo.textContent = nombre;
   editorAvisar("", false);
@@ -636,22 +645,55 @@ async function abrirEditor(nombre){
   listaEl.hidden = true;
   editorWrap.style.display = "block";
   editorAbierto = true;
+  // Abrir el editor GUARDA UN PASO del historial. Sin esto el editor es
+  // invisible para el botón atrás del celular (una vista que se enciende sin
+  // cambiar la dirección no existe para el navegador) y el botón sacaba de la
+  // pantalla en vez de cerrar el editor. Es el mismo truco que usan `Acompanante/`
+  // y las vistas de los juegos. Cuando el editor se abre desde el `popstate` (el
+  // botón "adelante") NO se guarda paso: ese ya existe (ver `editorEsNuestro`).
+  if(empujar !== false){
+    editorEsNuestro = true;
+    try{ history.pushState({ v:"editor", act:nombre }, ""); }catch(e){}
+  }else{
+    editorEsNuestro = false;
+  }
   // Con el editor abierto la pestana se apaga: si se oprime, la lista y el
   // editor quedaban mezclados y se podia guardar sobre la actividad equivocada.
   tabLista.disabled = true;
   try{ window.scrollTo(0, 0); }catch(e){}
 }
 
-function cerrarEditor(){
+function restaurarLista(){
   editorWrap.style.display = "none";
   listaEl.hidden = false;
   actividadEditando = null;
   accsGuardados = [];
   editorAbierto = false;
+  editorEsNuestro = false;
   tabLista.disabled = false;
   cerrarRenombrar();
   filaEliminar.classList.remove("ver");
 }
+
+function cerrarEditor(empujar){
+  if(!editorAbierto) return;
+  // Si el paso del historial es nuestro, se cierra y se deshace. El cierre va
+  // PRIMERO (es `restaurarLista()` la que apaga `editorAbierto`): al revés, el
+  // `popstate` de este mismo `history.back()` encontraría la bandera apagada y se
+  // quedaría a medio cerrar, con la lista todavía escondida.
+  const deshecho = (empujar !== false && editorEsNuestro);
+  restaurarLista();
+  if(deshecho){ try{ history.back(); }catch(e){} }
+}
+
+// El botón atrás (y el "adelante") del celular. Solo el editor tiene paso propio;
+// la lista es el estado de arranque.
+window.addEventListener("popstate", (e)=>{
+  const v = (e.state && e.state.v) || "lista";
+  if(v === "editor" && e.state.act){ abrirEditor(e.state.act, false); return; }
+  if(!editorAbierto) return;
+  restaurarLista();
+});
 
 async function guardarPreset(){
   if(!actividadEditando) return;
@@ -910,9 +952,36 @@ if(tabAccesorios){
   };
 }
 
+// ====== EL "← VOLVER" ======
+// Va arriba a la DERECHA (regla de la casa) y es CONTEXTUAL, como en `Guiadas/`:
+//   - Con el editor abierto, cierra el editor y deja la lista.
+//   - En la lista, se regresa a la pantalla DE DONDE SE VINO. Se llega aquí por un
+//     enlace: el ⚙️ del submenú de Experiencias o el "Personaliza tus Actividades"
+//     del menú. Con `href` fijo a `../index.html` se caía siempre al menú, y eso NO
+//     era "atrás": era un salto. `history.back()` devuelve a la vista exacta de la
+//     que se salió (el submenú sigue abierto, porque en `index.html` un submenú
+//     abierto ES un paso del historial). Si no hay a dónde atrás (se escribió la
+//     dirección a mano), ahí sí se cae al menú.
+document.getElementById("lnkInicio").addEventListener("click", (e)=>{
+  e.preventDefault();
+  if(editorAbierto){ cerrarEditor(); return; }
+  if(history.length > 1){ history.back(); return; }
+  location.href = "../index.html";
+});
+
+// El paso con el que se ABRE esta página no lo guardamos nosotros (se llega por un
+// enlace), así que se marca "fijo": es el mismo detalle que en el menú, y sirve
+// para saber cuándo el historial es de esta pantalla y cuándo es de antes.
+try{ history.replaceState({ v:"lista", fijo:true }, ""); }catch(e){}
+
 cargar().then(volverDesdeAccesorios);
 tabLista.onclick();
-inputEl.focus();
+// OJO: aquí NO se enfoca el campo de "Nombre de la actividad". Antes se hacía
+// (`inputEl.focus()`) y en el CELULAR eso abre el teclado de una vez al entrar,
+// tapando media pantalla sin que nadie haya pedido escribir nada. No se enfoca NADA
+// al arrancar: la pantalla abre en la lista, que es lo que se vino a ver.
+// El único foco que se pone es el del campo de renombrar, y es a propósito: ahí lo
+// pidió el usuario oprimiendo "Cambiar nombre".
 
 </script>
 
