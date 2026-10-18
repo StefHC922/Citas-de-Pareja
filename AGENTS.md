@@ -144,6 +144,20 @@ inicio de `GUIA.md`). **Que no vuelva a pasar:**
 
 ## Reglas de la casa
 
+0. **No se toca el repo sin que Fredy lo pida.** Ni un archivo, ni una linea: no
+   se "de paso" un arreglo, no se completa algo que se ve que falta y no se
+   anticipa la segunda mitad de un trabajo. **Primero se pregunta, despues se
+   aplica.**
+   - Si el pedido esta claro: se aplica **lo pedido**, nada mas.
+   - Si el pedido no esta claro: **se pregunta antes de escribir.**
+   - Si se ve que falta otra cosa: **se dice y se pregunta.** No se resuelve de
+     una con un cambio.
+
+   *(18-oct-2026: se escribio porque faltaba. Fredy pidio "un boton para jalar
+   todas las acciones con un JSON" y el modelo.anticipo y metio tambien "Exportar",
+   que nadie habia pedido. La regla de mas abajo, "No tocar algo que no tenga que
+   ver con el pedido", no cubria esto: esa habla del alcance, no de si hay pedido.)*
+
 1. Si la decision es de producto (que se ve, quien puede salir, que pasa al
    pausar), **preguntar antes de aplicar**.
 2. Explicar en espanol claro y sin codigo. El usuario no programa.
