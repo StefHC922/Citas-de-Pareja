@@ -1312,16 +1312,18 @@ es común. **El orden de la pantalla de inicio (decisión de Fredy, oct-2026;
     - **"Número de rondas"** es una tarjeta de **la mitad de ancho, centrada**
       (`#cajaRondas`). **El input NO se encoge**: sigue al 100% de la tarjeta, así
       que el número se ve igual de ancho y lo compacto es el bloque.
-    - **"Elige Tu Modo de juego"** más abajo y más alta por dentro; los cuatro
-      botones crecen (padding `10px` → `14px`, letra `.82` → `.85rem`).
+    - **"Elige Tu Modo de juego"** juntada con la de arriba y más chica por
+      dentro; los cuatro botones se quedaron como estaban (`padding:10px`,
+      letra `.82rem`).
     - **Variantes Picantes perdió su recuadro** (ni tarjeta ni interruptor con
       borde) y **se movió a en medio**, entre el modo de juego y "¿Cómo vas a
       jugar hoy?" (antes iba al final, dentro de una caja). **Ojo con el texto,
       que se movió de lugar:** la frase **"Variantes Picantes, Te atreves ?"**
       **dejó de ser el título de arriba y pasó a ser la etiqueta del
       interruptor**, en coral. Ya **no existe** la frase "Ponle un toque
-      personal a tu juego". El "¿Cuántas veces?" sigue saliendo al prenderlo.
-    - **"¿Cómo vas a jugar hoy?"** más alta, con los **botones más abajo**, y su
+      personal a tu juego". El "¿Cuántas veces?" **ya no es un recuadro: es una
+      ventana emergente** (ver la nota siguiente).
+    - **"¿Cómo vas a jugar hoy?"** más chica, con los **botones más arriba**, y su
       **título más grande** (`1.1rem`). **Ojo: quedó más grande que los otros
       dos títulos de caja y eso NO es un descuido** — se dejó así porque a Fredy le
       gustó más así (se avisó y se dejó). Los otros dos siguen en su tamaño.
@@ -1335,6 +1337,34 @@ es común. **El orden de la pantalla de inicio (decisión de Fredy, oct-2026;
       a un `.tabsModos` suelto. **Se dejó en 8px** porque es lo que se aprobó en
       la maqueta. Para cambiar esa separación hay que editar **`.tabs.tabsModos`**,
       no `.tabsModos`. Lo mismo aplica para cualquier ajuste de esa fila.
+
+  - **El "¿Cuántas veces?" pasó a ser una VENTANA EMERGENTE (17-oct-2026).**
+    Antes era un recuadro que se abría **debajo** del interruptor, y en el
+    celular **la pantalla no cabía**: hubo que hacer un **ajuste de alto** (achicar
+    las tres tarjetas, quitar relleno y juntar espacios, con los títulos pegados
+    al borde de arriba de su tarjeta) **y de paso sacar ese recuadro**. Para
+    volver a tocarlo:
+    - La ventana es **`#modalEsp`** y usa el **molde `.modal .caja` de la app**
+      (el mismo del formulario de personajes), **NO** un `confirmar()`: ese es de
+      "¿sí o no?" y esto es un formulario. Se abre y se cierra con los
+      **`abrirModal(id)` / `cerrarModal(id)` que ya existían** — no se redeclaran.
+    - **`#inpEspecial` y `#espNota` se MOVIERON dentro de la ventana, no se
+      duplicaron.** Por eso `especialK()` y `pintarEspecial()` no cambiaron de
+      nombre ni de referencia. **Prohibido crear un segundo campo de K**: serían
+      dos números que se pueden desincronizar.
+    - **`Cancelar` es VOLVER ATRÁS**: apaga el interruptor y cierra la ventana,
+      para no dejar prendido un modo al que nunca se le dijo cuántas veces.
+      **Aceptar** solo cierra. Poner `.checked = false` a mano **no** dispara el
+      evento `change`, así que no hay ciclo.
+    - **El texto va HASTA ABAJO**, debajo de los dos botones, y los botones se
+      van al fondo con **`margin-top:auto`** dentro de una caja en columna: así
+      quedan pegados a la línea de abajo sin importar cuánto ocupe el texto.
+    - **El aviso de "no tienes variantes" (`#espAviso`) NO se movió a la
+      ventana**, y a propósito: habla de la configuración ("agrégalas en el
+      engrane"), no de K, y tiene que verse sin abrir nada.
+    - El texto de la nota pasó a **"En X de las Y rondas, alguien tendrá una
+      sorpresa."** (antes decía "a alguien le toca una variante"). El aviso de
+      `K > R` en coral se mantiene.
 
 **Los textos de los modos NO son instrucciones, son PERMISOS (decisión de Fredy,
   oct-2026) — no reescribirlos sin preguntar.** La pestaña dice el nombre y la
