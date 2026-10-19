@@ -89,7 +89,7 @@
   [hidden]{ display:none !important; }
 
   #alta{
-    width:100%; max-width:420px; margin-bottom:10px;
+    width:100%; max-width:420px; margin-bottom:6px;
   }
   #alta .fila{ display:flex; gap:10px; }
   #alta input{
@@ -110,14 +110,19 @@
   #btnAgregar:disabled{ opacity:.4; }
   #btnAgregar.eliminar{ background: var(--rojo); color:#2b0410; }
 
+  /* Los tres bloques de arriba (campo, mensaje y conteo) van juntos: en el celular
+     sobraba un hueco grande entre el campo de la actividad y la lista. El
+     `min-height` del mensaje se queda para que al salir un aviso la lista NO
+     salte de lugar. Es el mismo ajuste que en `Citas/accesorios.html`, para que
+     las dos pantallas se vean igual. */
   #msg{
     min-height:20px; font-size:.85rem; color:var(--rojo);
-    margin:8px 0 16px; text-align:center; max-width:420px;
+    margin:0 0 8px; text-align:center; max-width:420px;
   }
   #msg.ok{ color: var(--teal); }
 
   #conteo{
-    font-size:.8rem; color:var(--fg-muted); opacity:.8; margin-bottom:10px;
+    font-size:.8rem; color:var(--fg-muted); opacity:.8; margin-bottom:6px;
   }
 
   #lista{
