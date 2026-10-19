@@ -253,3 +253,75 @@ export function unirConFabrica(base, fabrica){
   }
   return salida;
 }
+
+// =====================================================
+//  MIGRACION: ACTIVIDADES POR ID (oct-2026)
+//  Que pasa: nivelesActividad y presetsActividad se guardan con el NOMBRE de
+//  la actividad como id del documento. actividadesExtra, en cambio, ya tiene
+//  un id de verdad (el que da addDoc). Usar el nombre como llave obliga a
+//  mover documentos cada vez que se renombra o se borra una actividad, y si
+//  un nombre borrado se reutiliza, puede heredar datos de una actividad que
+//  no tiene nada que ver.
+//  Que se hace: copiar lo que haya guardado bajo el NOMBRE hacia el mismo
+//  documento bajo el ID, sin borrar el original. Las pantallas (Guiadas,
+//  Encuentros) empiezan a buscar por id; si un dato viejo todavia no se
+//  copio, lo siguen encontrando por nombre como respaldo.
+//  Como no se repite: la banderita config/migracionActividades guarda que
+//  ids ya se revisaron, para no releer en cada carga.
+// =====================================================
+
+// Cuantas actividades se revisan A LA VEZ. No es por cuota (Firestore aguanta
+// de sobra): es para que una pareja con muchas actividades no se quede
+// esperando una por una, una detras de otra, la primera vez que abre la app.
+const LOTE_MIGRACION = 15;
+
+async function migrarUnaActividad(db, col, a){
+  try{
+    const porId = await getDoc(doc(db, col, a.id));
+    if(porId.exists()) return; // ya estaba copiado, no se pisa
+    const porNombre = await getDoc(doc(db, col, a.nombre));
+    if(porNombre.exists()){
+      await setDoc(doc(db, col, a.id), porNombre.data());
+    }
+  }catch(e){}
+}
+
+/**
+ * Copia nivelesActividad y presetsActividad de NOMBRE a ID, una vez por
+ * actividad. Nunca borra el documento viejo (sirve de respaldo y de forma de
+ * volver atras a mano si algo sale mal). Revisa varias actividades a la vez
+ * (de a `LOTE_MIGRACION`), para que la primera corrida no se sienta lenta
+ * aunque haya cientos de actividades.
+ * @param db          Firestore de la pareja
+ * @param actividades [{id, nombre}] ya leido de actividadesExtra
+ * @returns {Promise<boolean>} true si se pudo revisar (o no hacia falta)
+ */
+export async function migrarActividadesAId(db, actividades){
+  try{
+    const bandera = await getDoc(doc(db, "config", "migracionActividades"));
+    const prev = bandera.exists() ? (bandera.data() || {}) : {};
+    const yaMigrados = new Set(comoLista(prev.ids));
+
+    const pendientes = (Array.isArray(actividades) ? actividades : [])
+      .filter(a => a && a.id && a.nombre && !yaMigrados.has(a.id));
+
+    for(let i = 0; i < pendientes.length; i += LOTE_MIGRACION){
+      const lote = pendientes.slice(i, i + LOTE_MIGRACION);
+      await Promise.all(lote.flatMap(a =>
+        ["nivelesActividad", "presetsActividad"].map(col => migrarUnaActividad(db, col, a))
+      ));
+      lote.forEach(a => yaMigrados.add(a.id));
+    }
+
+    if(pendientes.length || !bandera.exists()){
+      await setDoc(doc(db, "config", "migracionActividades"), {
+        version: 1,
+        fecha: serverTimestamp(),
+        ids: Array.from(yaMigrados)
+      });
+    }
+    return true;
+  }catch(e){
+    return false;
+  }
+}

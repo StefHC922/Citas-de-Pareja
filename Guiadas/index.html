@@ -226,7 +226,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, addDoc, updateDoc, onSnapshot, query, where, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, cargarUsuarios, asegurarFabrica, unirConFabrica } from "../config.js";
+import { resolverFirebase, cargarUsuarios, asegurarFabrica, unirConFabrica, migrarActividadesAId } from "../config.js";
 import { verificarCodigo, verificarFirma } from "../taquilla.js";
 // Lógica de licencias compartida con el resto de la app (ver acceso.js).
 import { miProyecto, appTaq, leerLicencias, guardarLicencia, quitarLicencia, tengoAcceso, oficialesAprobados, escucharItem } from "../acceso.js";
@@ -621,19 +621,32 @@ async function cargarActividades(){
   // 2) Una sola vez se copia la fabrica a la base. Despues manda la base.
   const sembrado = await asegurarFabrica(db, { actividades: fabricaActs, accesorios: fabricaAccs });
 
-  // 3) Tu base, que ya incluye lo que se instalo.
-  let mias = [];
+  // 3) Tu base, que ya incluye lo que se instalo. Se guarda el id de Firestore
+  //    de cada una (actividadesExtra ya lo tiene), para poder buscar
+  //    nivelesActividad/presetsActividad por id y no por nombre.
+  let miasConId = [];
   try{
     const snap = await getDocs(collection(db, "actividadesExtra"));
     snap.forEach(d=>{
       const n = (d.data().nombre || "").trim();
-      if(n) mias.push(n);
+      if(n) miasConId.push({ id: d.id, nombre: n });
     });
   }catch(e){}
 
+  // Copia (sin borrar nada) lo que ya estaba guardado por nombre hacia el id.
+  // Solo si hay con que escribir: sin esto, una pareja offline no se queda
+  // trabada esperando esta llamada.
+  if(sembrado){
+    try{ await migrarActividadesAId(db, miasConId); }catch(e){}
+  }
+
+  const mias = miasConId.map(a=>a.nombre);
   // La base manda. El JSON solo se suma si la siembra no pudo ocurrir.
   base = sembrado ? mias : unirConFabrica(mias, fabricaActs);
-  base.forEach(n=>{ mapaDocs[n] = { docId: n, oficial: false }; });
+  base.forEach(n=>{
+    const encontrada = miasConId.find(a=>a.nombre === n);
+    mapaDocs[n] = { docId: encontrada ? encontrada.id : n, oficial: false };
+  });
 
   try{
     const ofs = await oficialesAprobados();
