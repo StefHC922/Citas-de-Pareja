@@ -1546,21 +1546,27 @@ function pintarPaso(){
   }else{
     prog.hidden = true;
   }
-  // En un solo celular "Terminar" solo sale de la cita. Compartida pasa a ser
-  // "Pausar y Salir" (la cita sigue viva) y aparece "Terminar Partida", que sí la
-  // acaba. Los dos los puede apretar cualquiera de los dos (decisión de Fredy).
-  btnTerminar.textContent = jugandoCompartido ? "Pausar y Salir" : "Terminar";
-  btnTerminarPartida.style.display = jugandoCompartido ? "" : "none";
+  // Los DOS modos tienen los mismos dos botones de salida, y el "←" es el mismo:
+  // "Pausar y Salir" deja la cita viva (se retoma), "Terminar" la acaba de verdad.
+  // En compartido el segundo dice "Terminar Partida" porque le avisa al otro; en un
+  // solo celular dice "Terminar" y borra el avance guardado aquí.
+  btnTerminar.textContent = "Pausar y Salir";
+  btnTerminarPartida.style.display = "";
+  btnTerminarPartida.textContent = jugandoCompartido ? "Terminar Partida" : "Terminar";
   if(!p){
     elAct.textContent = "";
     tag.style.display = "none";
     btnSig.style.display = "none";
     btnSaltar.style.display = "none";
+    btnTerminar.style.display = "none";
+    btnTerminarPartida.style.display = "none";
     fin.style.display = "block";
     return;
   }
   fin.style.display = "none";
   tag.style.display = "";
+  btnTerminar.style.display = "";
+  btnTerminarPartida.style.display = "";
 
   // En pausa nadie juega: el que pausó tiene que volver a entrar para seguir
   // (decisión de Fredy: la pareja "se queda esperando").
@@ -1625,34 +1631,43 @@ document.getElementById("btnFinOk").onclick = ()=>{
 };
 document.getElementById("btnSaltar").onclick = ()=>{ saltarTurno(); };
 document.getElementById("btnTerminar").onclick = async ()=>{
-  if(!jugandoCompartido){ entrar(); return; }
-  // PAUSA: la cita sigue viva y se puede retomar donde iban. No se apaga `activa`,
-  // por eso la pareja "se queda esperando" en vez de perder la cita.
-  try{ await setDoc(sesionRef(), { pausada: true, pausadaPor: nombreDe(miLado), actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
-  jugandoCompartido = false;
+  // PAUSA y salir: la cita SIGUE VIVA y se retoma donde iban.
+  //   - Compartida: se marca `pausada` + `pausadaPor`, y la pareja se queda
+  //     esperando. NO se apaga `activa`.
+  //   - Un solo celular: no hay nada que marcar. El avance ya quedó guardado en
+  //     este celular en cada paso (`guardarProg()`), así que al volver a la misma
+  //     actividad sale "¿Continuar?" y sigue donde iba.
+  if(jugandoCompartido){
+    try{ await setDoc(sesionRef(), { pausada: true, pausadaPor: nombreDe(miLado), actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+    jugandoCompartido = false;
+  }
   entrar();
 };
 document.getElementById("btnTerminarPartida").onclick = async ()=>{
-  if(!jugandoCompartido){ entrar(); return; }
-  const quien = nombreDe(miLado);
+  // TERMINA de verdad: aquí no se retoma nunca más.
   const ok = await confirmar({
     aviso: true,
     titulo: "¿Terminar la cita?",
-    texto: "Se acaba para los dos. No se puede volver a continuar.",
+    texto: jugandoCompartido
+      ? "Se acaba para los dos. No se puede volver a continuar."
+      : "Se borra el avance guardado en este celular. No se puede continuar.",
     ok: "Terminar"
   });
   if(!ok) return;
-  // TERMINA de verdad: `activa:false` + `terminada`. A la pareja le llega el fin
-  // con el nombre de quién lo terminó, y al aceptar sale a la lista de esta misma
-  // pantalla. OJO: aquí SÍ se apaga `activa`, que es lo que hacía falta para que
-  // "Terminar" no pareciera pausa.
-  try{
-    await setDoc(sesionRef(), {
-      activa: false, terminada: true, porNombre: quien, pausada: false,
-      actualizadaEn: serverTimestamp()
-    }, { merge: true });
-  }catch(e){}
-  jugandoCompartido = false;
+  if(jugandoCompartido){
+    try{
+      await setDoc(sesionRef(), {
+        activa: false, terminada: true, porNombre: nombreDe(miLado), pausada: false,
+        actualizadaEn: serverTimestamp()
+      }, { merge: true });
+    }catch(e){}
+    jugandoCompartido = false;
+  }else{
+    // En un solo celular "Terminar" sí tiene que BORRAR el avance. Antes solo
+    // salía de la cita y lo dejaba guardado, así que al volver ofrecía
+    // "Continuar": era pausa, no final (oct-2026, lo reportó Fredy).
+    borrarProg();
+  }
   entrar();
 };
 
