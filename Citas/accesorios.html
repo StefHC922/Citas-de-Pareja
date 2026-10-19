@@ -38,8 +38,10 @@
     position:relative;
   }
 
+  /* El "Volver" va arriba a la DERECHA en toda la app (regla de la casa). El ⚙️ del
+     menú y el de Experiencias ocupan la IZQUIERDA, así que el lado libre es este. */
   .back{
-    position:absolute; top:max(20px, env(safe-area-inset-top)); left:20px;
+    position:absolute; top:max(20px, env(safe-area-inset-top)); right:20px;
     font-family:'Chakra Petch', sans-serif;
     font-size:.85rem; font-weight:500;
     color: var(--fg-muted); text-decoration:none;
@@ -82,7 +84,7 @@
   [hidden]{ display:none !important; }
 
   #alta{
-    width:100%; max-width:420px; margin-bottom:10px;
+    width:100%; max-width:420px; margin-bottom:6px;
   }
   #alta .fila{ display:flex; gap:10px; }
   #alta input{
@@ -103,14 +105,17 @@
   #btnAgregar:disabled{ opacity:.4; }
   #btnAgregar.eliminar{ background: var(--rojo); color:#2b0410; }
 
+  /* Los tres bloques de arriba (campo, mensaje y conteo) van juntos: en el celular
+     sobraba un hueco grande entre el campo del accesorio y la lista. El `min-height`
+     del mensaje se queda para que al salir un aviso la lista NO salte de lugar. */
   #msg{
     min-height:20px; font-size:.85rem; color:var(--rojo);
-    margin:8px 0 16px; text-align:center; max-width:420px;
+    margin:0 0 8px; text-align:center; max-width:420px;
   }
   #msg.ok{ color: var(--teal); }
 
   #conteo{
-    font-size:.8rem; color:var(--fg-muted); opacity:.8; margin-bottom:10px;
+    font-size:.8rem; color:var(--fg-muted); opacity:.8; margin-bottom:6px;
   }
 
   #lista{
@@ -148,12 +153,12 @@
   }
   #volverAct.ver{ display:block; }
   #volverAct:active{ transform: scale(.98); }
-  #volverAct b{ color: var(--teal); }
+  #volverAct b{ color: var(--coral); }
 </style>
 </head>
 <body>
 
-<a class="back" href="../index.html">← Volver</a>
+<a class="back" id="lnkInicio" href="../index.html">← Volver</a>
 
 <div class="eyebrow">Configuración</div>
 <h1 id="tituloCfg">Actividades y Accesorios</h1>
@@ -429,7 +434,7 @@ tabLista.onclick = ()=>{
   todosApagados();
   if(!abierto){
     tabLista.classList.add("activo");
-    ponerTitulo("Accesorios", "Agrega accesorios nuevos. Se guardan y aparecen en tus citas.");
+    ponerTitulo("Accesorios", "Agrega tus Accesorios. Los guardas y estás listo para esa cita Especial.");
     listaEl.hidden = false;
     conteoEl.hidden = false;
   }
@@ -447,9 +452,30 @@ tabLista.onclick = ()=>{
   document.getElementById("volverAct").classList.add("ver");
 })();
 
+// ====== EL "← VOLVER" ======
+// Va arriba a la DERECHA (regla de la casa) y se va a la pantalla DE DONDE SE VINO,
+// no al menú. Aquí se llega de dos maneras y el mismo `history.back()` cubre las
+// dos:
+//   - Desde el editor de una actividad ("Administrar accesorios"). Al volver,
+//     `actividades.html` encuentra la nota y reabre ESA misma actividad.
+//   - Desde el ⚙️ del menú o el de Experiencias: se vuelve a esa pantalla.
+// Con el `href` fijo a `../index.html` se caía siempre al menú, y eso no era "atrás".
+// Si no hay a dónde atrás (se escribió la dirección a mano), ahí sí va al menú.
+// OJO: la otra salida de esta pantalla, `#volverAct` ("Volver a la actividad «X»"),
+// NO se toca: es un atajo que además lleva el nombre de la actividad. Ver el aviso
+// de por qué aquí abajo hay dos.
+document.getElementById("lnkInicio").addEventListener("click", (e)=>{
+  e.preventDefault();
+  if(history.length > 1){ history.back(); return; }
+  location.href = "../index.html";
+});
+
 cargar();
 tabLista.onclick();
-inputEl.focus();
+// OJO: aquí NO se enfoca el campo del accesorio, igual que en `actividades.html`.
+// En el CELULAR eso abre el teclado de una vez al entrar y tapa media pantalla sin
+// que nadie haya pedido escribir. Los otros tres `focus()` de esta pantalla SI se
+// quedan: al tocar un accesorio de la lista, y después de agregar o eliminar.
 
 </script>
 

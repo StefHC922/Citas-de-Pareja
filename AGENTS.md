@@ -21,9 +21,10 @@ tenia el contexto a la mano.
 | `General/IA-Acompanante.md` | `Acompanante/`: el tono de la IA, los ajustes y los retos que propone | Solo si la tarea toca `Acompanante/` o los retos de la IA |
 | `General/Campana-Pestana.md` | `pestana.js`: campana, bip y cartelito (Chat y Retos) | Solo si la tarea toca los avisos de la campana |
 | `General/Pegamento-y-Citas.md` | El pegamento, la agenda de `Citas/` y las pantallas de Actividades y Accesorios | Solo si la tarea toca esas pantallas |
+| `General/duelos.md` | El cuarto modo de `Roles/` (Duelo de seducción): las 4 ramas y sus 2 modalidades. **Construido y probado en vivo (oct-2026)** | Solo si la tarea toca el modo de duelo |
+| `General/Plan-Duelo.md` | El plan de desarrollo del Duelo: fases, funciones, modelo de datos y pruebas | Solo si la tarea es **construir** el duelo |
 | `General/Modelo-Datos.md` | Como esta guardada la base y como normalizarla | Antes de migrar datos |
 | `General/HISTORIA.md` | **El por que**: relato con fecha de cada arreglo | **Solo** en los casos de abajo |
-| `General/Plan-Favores-Express.md` | Un plan de desarrollo **que no existe todavia** | Solo si la tarea es sobre Favores Express |
 
 **Los cuatro del medio se partieron del `GUIA.md` el oct-2026** (pasó de 2,274
 a 1,417 líneas). Son **detalle de una sola pantalla o un solo modulo**: se leen
@@ -111,7 +112,50 @@ se atora, **dilo de inmediato** y di qué harás en su lugar.
 **Prefiere menos pruebas y más rápido** antes que una prueba atascada. El valor de
 probarla no justifica el rato perdido.
 
+## Que las pruebas no se coman la sesión (regla dura, oct-2026)
+
+**El trabajo es escribir código, no probarlo.** Ya pasó una vez: se acumularon
+arneses y scripts de prueba, cada cambio disparaba corridas largas, y las
+sesiones se acababan en pruebas en vez de en avance. Se borraron (ver la nota al
+inicio de `GUIA.md`). **Que no vuelva a pasar:**
+
+- **No se deja NINGÚN arnés en el repo.** Ni scripts, ni carpetas, ni páginas de
+  prueba. Lo de probar vive en `Temp\opencode` y se borra al terminar. Si de
+  verdad tiene que ir dentro del repo (porque sus `import` son relativos), se
+  crea, se usa y **se borra en la misma sesión**, y se avisa.
+- **La única prueba automática es `revisar.py`.** Tarda un segundo: se corre
+  después de cada cambio, siempre.
+- **Una sola inspección visual por cambio, y solo si el aspecto importa** (un
+  diseño nuevo, algo que se ve raro). Nunca para comprobar un texto.
+- **No se repite una prueba que ya falló.** Dos intentos por forma de probar y se
+  suelta: se anota como pendiente y se sigue (ya lo dice la sección de arriba).
+- **Si un tema se vuelve caro de comprobar, se avisa ANTES de gastar**, no
+  después.
+- **Lo que solo se puede ver en el celular de Fredy o en su base real, se le pasa
+  a él de una vez**, diciendo qué mirar y por qué. No se simula, y no se le manda
+  una lista larga de tareas.
+- **Trampa conocida (oct-2026):** si se abre una página con Chrome sin ventana
+  (`--virtual-time-budget`), **los `setTimeout` NO se disparan** cuando hay una
+  petición de red pendiente (el SDK de Firebase la deja abierta y el reloj
+  virtual se detiene). Se perdieron 3 intentos con eso. Para probar algo después
+  de que cargue, hay que meter la llamada **sin temporizador**, justo después
+  del punto que interesa.
+
 ## Reglas de la casa
+
+0. **No se toca el repo sin que Fredy lo pida.** Ni un archivo, ni una linea: no
+   se "de paso" un arreglo, no se completa algo que se ve que falta y no se
+   anticipa la segunda mitad de un trabajo. **Primero se pregunta, despues se
+   aplica.**
+   - Si el pedido esta claro: se aplica **lo pedido**, nada mas.
+   - Si el pedido no esta claro: **se pregunta antes de escribir.**
+   - Si se ve que falta otra cosa: **se dice y se pregunta.** No se resuelve de
+     una con un cambio.
+
+   *(18-oct-2026: se escribio porque faltaba. Fredy pidio "un boton para jalar
+   todas las acciones con un JSON" y el modelo.anticipo y metio tambien "Exportar",
+   que nadie habia pedido. La regla de mas abajo, "No tocar algo que no tenga que
+   ver con el pedido", no cubria esto: esa habla del alcance, no de si hay pedido.)*
 
 1. Si la decision es de producto (que se ve, quien puede salir, que pasa al
    pausar), **preguntar antes de aplicar**.
@@ -133,6 +177,12 @@ probarla no justifica el rato perdido.
    a `General/HISTORIA.md`**, no ahi. `GUIA.md` es lo que rige hoy;
    `HISTORIA.md` es el por que. Si se mezclan, `GUIA.md` se vuelve ilegible y
    este repo pierde su memoria otra vez (oct-2026).
+7. **Los ejemplos usan los nombres de verdad: la pareja es `Mary` y el
+   administrador `Fredy`.** En comentarios, documentacion y textos de ejemplo no
+   se inventan nombres (decidio Fredy, 17-oct-2026). Ojo: **eso NO es un dato
+   de la app.** El nombre real de cada quien sale de la base (`nombreLado()`), y
+   ningun nombre se hardcodea en el codigo. Ver `General/GUIA.md`, seccion de
+   decisiones.
 
 ## Estándares de tamaño (no inventar otros)
 
@@ -424,6 +474,11 @@ Ver `General/GUIA.md`, seccion del autorizador.
 solo lo tiene el publicador, y el rediseno de la cola lo necesita. Cambiar
 reglas es **siempre manual, en la consola**, y hay que probar las 4 cosas de la
 seccion 5 de `reglas-firebase-taquilla.txt`.
+
+> **OJO: este permiso esta EN ESPERA (decision de Fredy, oct-2026), no se hace
+> ahora.** Como los cinco pasos de licencias, cuelga del cambio de arquitectura
+> (login + reglas por correo). Ver `General/GUIA.md`, seccion *Pendientes de
+> licencias*.
 
 Ver `General/GUIA.md`, sección "`Autorizar/`: aprobar y revocar licencias".
 

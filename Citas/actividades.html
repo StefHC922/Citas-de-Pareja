@@ -38,8 +38,12 @@
     position:relative;
   }
 
+  /* El "Volver" va arriba a la DERECHA en toda la app (regla de la casa). Aquí
+     sobre todo: en el submenú de Experiencias el ⚙️ de la esquina se mueve a la
+     IZQUIERDA justamente para dejarle este lado libre (`index.html`, `iconoMenu`),
+     y con el "Volver" a la izquierda se tapaban los dos. */
   .back{
-    position:absolute; top:max(20px, env(safe-area-inset-top)); left:20px;
+    position:absolute; top:max(20px, env(safe-area-inset-top)); right:20px;
     font-family:'Chakra Petch', sans-serif;
     font-size:.85rem; font-weight:500;
     color: var(--fg-muted); text-decoration:none;
@@ -85,7 +89,7 @@
   [hidden]{ display:none !important; }
 
   #alta{
-    width:100%; max-width:420px; margin-bottom:10px;
+    width:100%; max-width:420px; margin-bottom:6px;
   }
   #alta .fila{ display:flex; gap:10px; }
   #alta input{
@@ -106,14 +110,19 @@
   #btnAgregar:disabled{ opacity:.4; }
   #btnAgregar.eliminar{ background: var(--rojo); color:#2b0410; }
 
+  /* Los tres bloques de arriba (campo, mensaje y conteo) van juntos: en el celular
+     sobraba un hueco grande entre el campo de la actividad y la lista. El
+     `min-height` del mensaje se queda para que al salir un aviso la lista NO
+     salte de lugar. Es el mismo ajuste que en `Citas/accesorios.html`, para que
+     las dos pantallas se vean igual. */
   #msg{
     min-height:20px; font-size:.85rem; color:var(--rojo);
-    margin:8px 0 16px; text-align:center; max-width:420px;
+    margin:0 0 8px; text-align:center; max-width:420px;
   }
   #msg.ok{ color: var(--teal); }
 
   #conteo{
-    font-size:.8rem; color:var(--fg-muted); opacity:.8; margin-bottom:10px;
+    font-size:.8rem; color:var(--fg-muted); opacity:.8; margin-bottom:6px;
   }
 
   #lista{
@@ -152,7 +161,8 @@
   #origenPreset{
     font-size:.78rem; color:var(--fg-muted); margin-bottom:14px;
   }
-  #origenPreset b{ color: var(--teal); }
+  /* Ya no hay `<b>` en este renglón: el texto es una sola frase (ver
+     `TEXTO_ACCESORIOS`), así que su regla de color quedó sin uso y se quitó. */
   #checks{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
   .checkRow{
     display:flex; align-items:center; gap:10px;
@@ -192,6 +202,12 @@
     font-family:'Chakra Petch',sans-serif; font-weight:600; font-size:.92rem;
   }
   #btnRenombrar:active, #btnEliminarAct:active{ transform:scale(.98); }
+  /* Los dos en un mismo renglón. `min-width:0` para que el texto larga baje de
+     línea en vez de empujar al otro fuera, y el relleno horizontal más corto
+     (8px en vez de 13px) porque ahora cada botón es de media pantalla: con 13px
+     "Eliminar actividad" no cabía en un renglón y se partía en dos. */
+  .filaBotones2{ display:flex; gap:10px; }
+  .filaBotones2 button{ flex:1; min-width:0; padding:13px 8px; }
   #btnEliminarAct{ color:var(--rojo); border-color:var(--rojo); }
   .filaInline{ display:none; gap:8px; flex-wrap:wrap; }
   .filaInline.ver{ display:flex; }
@@ -201,6 +217,56 @@
     font-family:'Chakra Petch',sans-serif; font-weight:700; }
   .btnChicoOk{ color:var(--bg); background:linear-gradient(90deg, var(--coral), var(--teal)); }
   .btnChicoNo{ background:var(--bg-2); color:var(--fg); border:1px solid var(--card-border) !important; }
+  /* El aviso del bloque de eliminar. Vive DENTRO del bloque, así que se lee sin
+     bajar hasta el final de la tarjeta. El hueco está siempre reservado: si la
+     caja creciera al salir el error, los botones SUBIRÍAN y el siguiente toque
+     caería en otro (el mismo problema que tenía la ventana de renombrar). */
+  #filaEliminar #elimMsg{ min-height:40px; font-size:.8rem; color:var(--rojo); margin:12px 0 0;
+    padding-top:12px; border-top:1px solid var(--card-border); text-align:left; line-height:1.5; }
+  #filaEliminar #elimMsg.ok{ color:var(--teal); }
+
+  /* ---------- cambiar el nombre: VENTANA, no renglón ----------
+     Antes el campo iba en una renglón adentro de la tarjeta y el aviso de por qué
+     no se guardaba caía en #editorMsg, que está al FINAL de la tarjeta, debajo de
+     todos los accesorios: en el celular no se veía y el botón parecía muerto
+     (oct-2026, lo reportó Fredy). Ahora pregunta en una ventana, con su propio
+     aviso DENTRO, y al cerrar deja al usuario donde estaba. Es el molde
+     `.modal .caja` de la app (el de `#modalEsp` en `Roles/`), no `confirmar()`:
+     ese es de "¿sí o no?" y esto es un formulario. */
+  .modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:60;
+    align-items:center; justify-content:center; padding:20px; }
+  /* `width:100%` y `background` son OBLIGATORIOS y no son adorno: esta pantalla no
+     tiene la clase `.caja` suelta (en `Roles/` sí), así que la caja se dibuja
+     COMPLETA aquí. Sin el fondo se veía el editor de atrás y sin el ancho la caja
+     se encogía al texto, que hacía que el aviso del error se partiera en varias
+     líneas (oct-2026). */
+  .modal .caja{ width:100%; max-width:380px; background:var(--card); color:var(--fg);
+    border:1px solid var(--teal); border-radius:18px; padding:22px 20px;
+    text-align:center; margin:0; }
+  #modalRenombrar .caja{ display:flex; flex-direction:column; }
+  #modalRenombrar h1{ font-size:1.3rem; margin:0 0 6px; width:fit-content; align-self:center; }
+  #modalRenombrar .sub{ font-size:.85rem; color:var(--fg-muted); margin:0 0 14px; }
+  #modalRenombrar input{ width:100%; border-radius:12px; border:1px solid var(--card-border);
+    background:var(--bg-2); color:var(--fg); padding:12px; font-size:.95rem;
+    font-family:'Inter',sans-serif; margin:0 0 14px; }
+  #modalRenombrar .btnPri{ width:100%; padding:16px; margin:0 0 1px; border:none; border-radius:14px;
+    cursor:pointer; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1rem;
+    color:var(--bg); background:linear-gradient(90deg, var(--coral), var(--teal)); }
+  #modalRenombrar .btnPri:active{ transform:scale(.97); }
+  #modalRenombrar .btnPri:disabled{ opacity:.45; }
+  #modalRenombrar .btnSec{ width:100%; padding:12px; background:none; border:none; cursor:pointer;
+    color:var(--fg-muted); font-size:.9rem; text-decoration:underline; }
+  /* El aviso va ABAJO, debajo de los dos botones, como en `#modalEsp`.
+     OJO: el espacio está SIEMPRE reservado (`min-height` de dos renglones) y la
+     línea de arriba también se dibuja siempre. NO es descuido: si el espacio se
+     calculara solo, al salir el error la caja crecería, los botones SUBIRÍAN y el
+     siguiente toque caería en otro botón (en "Cancelar"), y el usuario se salía
+     sin poder corregir el nombre. Con el espacio fijo los botones no se mueven
+     nunca y se puede volver a tocar "Guardar nombre" (oct-2026). */
+  #modalRenombrar #renMsg{ min-height:40px; font-size:.8rem; color:var(--rojo); margin:12px 0 0;
+    padding-top:12px; border-top:1px solid var(--card-border); text-align:left; line-height:1.5; }
+  #modalRenombrar #renMsg.ok{ color:var(--teal); }
+
   .avisoFuerte{ font-size:.85rem; color:var(--fg-muted); background:var(--bg-2);
     border:1px solid var(--rojo); border-radius:12px; padding:12px; line-height:1.5; text-align:left; }
   .avisoFuerte b{ color:var(--rojo); }
@@ -220,7 +286,7 @@
 </head>
 <body>
 
-<a class="back" href="../index.html">← Volver</a>
+<a class="back" id="lnkInicio" href="../index.html">← Volver</a>
 
 <div class="eyebrow">Configuración</div>
 <h1 id="tituloCfg">Actividades y Accesorios</h1>
@@ -248,17 +314,18 @@
       <h2 id="editorTitulo"></h2>
       <div id="origenPreset"></div>
 
-      <!-- Cambiar nombre y Eliminar van PRIMERO. Antes quedaban al FINAL, debajo
-      <!-- de todos los accesorios, y con muchas actividades se perdian de la vista. -->
-      <div id="editorExtra">
-        <button id="btnRenombrar" type="button">Cambiar nombre</button>
-        <div class="filaInline" id="filaRenombrar">
-          <input id="inputRenombrar" type="text" maxlength="60" autocomplete="off" placeholder="Nuevo nombre">
-          <button class="btnChicoOk" id="btnRenombrarOk" type="button">Guardar nombre</button>
-          <button class="btnChicoNo" id="btnRenombrarNo" type="button">Cancelar</button>
-        </div>
+<!-- Cambiar nombre y Eliminar van PRIMERO. Antes quedaban al FINAL, debajo
+      de todos los accesorios, y con muchas actividades se perdian de la vista.
 
-        <button id="btnEliminarAct" type="button">Eliminar actividad</button>
+      Los dos van en UN RENGLÓN (oct-2026, lo pidió Fredy): cada uno en su propia
+      fila empujaba hacia abajo y había que bajar bastante para ver los accesorios.
+      El bloque de confirmar la eliminación sigue abajo, a lo ancho, porque tiene
+      su campo para escribir el nombre y su aviso. -->
+      <div id="editorExtra">
+        <div class="filaBotones2">
+          <button id="btnRenombrar" type="button">Cambiar nombre</button>
+          <button id="btnEliminarAct" type="button">Eliminar actividad</button>
+        </div>
         <div class="filaInline" id="filaEliminar" style="flex-direction:column;align-items:stretch;">
           <div class="avisoFuerte">
             Vas a eliminar <b id="borrarNombre"></b> <b>PARA SIEMPRE</b>.
@@ -268,8 +335,14 @@
           <input id="inputConfirmar" type="text" autocomplete="off" placeholder="Escribe el nombre para confirmar">
           <button class="btnChicoOk" id="btnEliminarOk" type="button" style="background:var(--rojo);color:#2b0410;">Eliminar definitivamente</button>
           <button class="btnChicoNo" id="btnEliminarNo" type="button">Cancelar</button>
-        </div>
-      </div>
+          <!-- El aviso va AQUÍ, dentro del bloque que se despliega, y no en
+               `#editorMsg`: ese queda hasta abajo de la tarjeta, debajo de todos
+               los accesorios, y en el celular no se veía (oct-2026). El hueco está
+               reservado con `min-height`, como en la ventana de renombrar, para
+               que los botones no se muevan al salir el error. -->
+          <p id="elimMsg"></p>
+</div>
+</div>
 
       <h3 id="editorSub">Sus accesorios</h3>
       <div id="checks"></div>
@@ -320,15 +393,17 @@ const btnIrAccesorios = document.getElementById("btnIrAccesorios");
 const btnCerrarEditor = document.getElementById("btnCerrarEditor");
 
 const btnRenombrar = document.getElementById("btnRenombrar");
-const filaRenombrar = document.getElementById("filaRenombrar");
+const modalRenombrar = document.getElementById("modalRenombrar");
 const inputRenombrar = document.getElementById("inputRenombrar");
 const btnRenombrarOk = document.getElementById("btnRenombrarOk");
 const btnRenombrarNo = document.getElementById("btnRenombrarNo");
+const renMsg = document.getElementById("renMsg");
 const btnEliminarAct = document.getElementById("btnEliminarAct");
 const filaEliminar = document.getElementById("filaEliminar");
 const inputConfirmar = document.getElementById("inputConfirmar");
 const btnEliminarOk = document.getElementById("btnEliminarOk");
 const btnEliminarNo = document.getElementById("btnEliminarNo");
+const elimMsg = document.getElementById("elimMsg");
 const borrarNombre = document.getElementById("borrarNombre");
 
 // ====== ESTADO ======
@@ -343,6 +418,11 @@ let actividadEditando = null;
 // esta vacio (el display:none lo pone el CSS), asi que la comparacion daba
 // "abierto" desde el arranque y la lista de actividades NUNCA se mostraba.
 let editorAbierto = false;
+// ¿El paso del historial que dejó abierto el editor es NUESTRO? Si el editor se
+// abrió con el botón "adelante" (o sea, desde el `popstate`), el paso no se puede
+// deshacer: entonces "Volver" cierra sin tocar el historial, porque si lo deshiciera
+// se saltaría a la pantalla anterior (mismo cuidado que el paso "fijo" del menú).
+let editorEsNuestro = false;
 // Lo que hay guardado en Firebase para la actividad que se está editando.
 // Sirve para saber si marcaste algo sin guardar antes de irte a otra pantalla.
 let accsGuardados = [];
@@ -530,14 +610,17 @@ function editorAvisar(texto, ok){
   editorMsg.className = ok ? "ok" : "";
 }
 
-function fuentePreset(nombre, hayNube, hayArchivo){
-  if(hayNube && hayArchivo) return 'Accesorios <b>guardados</b> (sustituyen a los originales).';
-  if(hayNube) return 'Accesorios <b>guardados</b>.';
-  if(hayArchivo) return 'Accesorios <b>originales</b>. Guárdalos para personalizarlos.';
-  return 'Sin accesorios definidos. Marca y guarda.';
-}
+// El renglón de arriba de la lista de accesorios.
+//
+// ANTES decía DE DÓNDE venían ("Accesorios guardados (sustituyen a los
+// originales)", "Accesorios originales", "Sin accesorios definidos. Marca y
+// guarda."). Era técnico y encima no decía qué hacer: la gente lo leía y no
+// entendía nada. Oct-2026, lo cambió Fredy por una frase que sí dice qué hacer,
+// y es la misma para todos los casos (no hay información que perder: lo de "ya lo
+// guardaste" lo dice `editorAvisar()` cuando se aprieta **Guardar**).
+const TEXTO_ACCESORIOS = "Elige tus accesorios para que no te falte nada.";
 
-async function abrirEditor(nombre){
+async function abrirEditor(nombre, empujar){
   actividadEditando = nombre;
   editorTitulo.textContent = nombre;
   editorAvisar("", false);
@@ -563,7 +646,7 @@ async function abrirEditor(nombre){
 
   const activos = new Set((nube || archivo || []).map(normalizar));
   accsGuardados = Array.from(activos);
-  origenPreset.innerHTML = fuentePreset(nombre, !!nube, !!archivo);
+  origenPreset.textContent = TEXTO_ACCESORIOS;
 
   checksEl.innerHTML = "";
   todos.forEach(n=>{
@@ -588,32 +671,88 @@ async function abrirEditor(nombre){
   const esPropia = extrasActs.some(e=>e.nombre === nombre);
   btnRenombrar.style.display = esPropia ? "" : "none";
   btnEliminarAct.style.display = esPropia ? "" : "none";
-  filaRenombrar.classList.remove("ver");
-  filaEliminar.classList.remove("ver");
-  inputRenombrar.value = "";
-  inputConfirmar.value = "";
+  cerrarRenombrar();
+  cerrarEliminar();
   borrarNombre.textContent = "«" + nombre + "»";
 
   // El editor REEMPLAZA la lista: así no se ve nada encimado.
   listaEl.hidden = true;
+  controlesLista(false);
   editorWrap.style.display = "block";
   editorAbierto = true;
+  // Abrir el editor GUARDA UN PASO del historial. Sin esto el editor es
+  // invisible para el botón atrás del celular (una vista que se enciende sin
+  // cambiar la dirección no existe para el navegador) y el botón sacaba de la
+  // pantalla en vez de cerrar el editor. Es el mismo truco que usan `Acompanante/`
+  // y las vistas de los juegos. Cuando el editor se abre desde el `popstate` (el
+  // botón "adelante") NO se guarda paso: ese ya existe (ver `editorEsNuestro`).
+  if(empujar !== false){
+    editorEsNuestro = true;
+    try{ history.pushState({ v:"editor", act:nombre }, ""); }catch(e){}
+  }else{
+    editorEsNuestro = false;
+  }
   // Con el editor abierto la pestana se apaga: si se oprime, la lista y el
   // editor quedaban mezclados y se podia guardar sobre la actividad equivocada.
   tabLista.disabled = true;
   try{ window.scrollTo(0, 0); }catch(e){}
 }
 
-function cerrarEditor(){
+// Los controles que son de la LISTA: las pestañas (Actividades / Accesorios), el
+// campo para agregar una actividad, su mensaje y el número de actividades.
+//
+// **NO es solo estética (oct-2026, lo reportó Fredy, en dos rondas).** Con el
+// editor de una actividad abierto, esto seguía a la vista ARRIBA del editor: no
+// solo se veía, sino que **se podía oprimir**. Se agregaba o se borraba una
+// actividad a ciegas mientras se editaba otra, y las pestañas inviting a cambiar de
+// pantalla con el editor abierto. Ahora el editor lo tapa todo.
+//
+// Tapar las pestañas **no quita ninguna función**: dentro del editor sigue el
+// botón "Administrar accesorios" (`#btnIrAccesorios`), que hace lo mismo que la
+// pestaña e además guarda lo marcado antes de irse.
+//
+// Se encienden y apagan SIEMPRE los cuatro desde aquí, para que no se queden a
+// medias: si uno se apagara solo, quedaría un hueco raro o un mensaje huérfano.
+function controlesLista(ver){
+  const d = ver ? "" : "none";
+  document.querySelector(".tabs").style.display = d;
+  document.getElementById("alta").style.display = d;
+  msgEl.style.display = d;
+  conteoEl.style.display = d;
+}
+
+function restaurarLista(){
   editorWrap.style.display = "none";
   listaEl.hidden = false;
+  controlesLista(true);
   actividadEditando = null;
   accsGuardados = [];
   editorAbierto = false;
+  editorEsNuestro = false;
   tabLista.disabled = false;
-  filaRenombrar.classList.remove("ver");
-  filaEliminar.classList.remove("ver");
+  cerrarRenombrar();
+  cerrarEliminar();
 }
+
+function cerrarEditor(empujar){
+  if(!editorAbierto) return;
+  // Si el paso del historial es nuestro, se cierra y se deshace. El cierre va
+  // PRIMERO (es `restaurarLista()` la que apaga `editorAbierto`): al revés, el
+  // `popstate` de este mismo `history.back()` encontraría la bandera apagada y se
+  // quedaría a medio cerrar, con la lista todavía escondida.
+  const deshecho = (empujar !== false && editorEsNuestro);
+  restaurarLista();
+  if(deshecho){ try{ history.back(); }catch(e){} }
+}
+
+// El botón atrás (y el "adelante") del celular. Solo el editor tiene paso propio;
+// la lista es el estado de arranque.
+window.addEventListener("popstate", (e)=>{
+  const v = (e.state && e.state.v) || "lista";
+  if(v === "editor" && e.state.act){ abrirEditor(e.state.act, false); return; }
+  if(!editorAbierto) return;
+  restaurarLista();
+});
 
 async function guardarPreset(){
   if(!actividadEditando) return;
@@ -627,7 +766,7 @@ async function guardarPreset(){
     });
     editorAvisar("Accesorios Guardados.", true);
     accsGuardados = marcados.slice();
-    origenPreset.innerHTML = fuentePreset(actividadEditando, true, true);
+    origenPreset.textContent = TEXTO_ACCESORIOS;
   }catch(e){
     editorAvisar("No se pudo guardar. Revisa tu conexión.");
   }
@@ -681,19 +820,39 @@ async function volverDesdeAccesorios(){
 // ====== RENOMBRAR UNA ACTIVIDAD ======
 // El nombre es la llave de los accesorios y de las acciones de Guiadas, asi
 // que al cambiarlo hay que mover las tres cosas juntas. Si no, quedan huerfanas.
+
+// La ventana y su propio aviso. Se abriu aparte porque el aviso de por que no se
+// guardaba caia en `editorAvisar` (#editorMsg), que esta al FINAL de la tarjeta,
+// debajo de todos los accesorios: en el celular no se veia y el boton parecia
+// muerto. Ahora cada razon se dice DENTRO de la ventana, donde si se lee.
+function renAvisar(texto, ok){
+  renMsg.textContent = texto;
+  renMsg.className = ok ? "ok" : "";
+}
+function abrirRenombrar(){
+  renAvisar("", false);
+  modalRenombrar.style.display = "flex";
+  inputRenombrar.focus();
+}
+function cerrarRenombrar(){
+  modalRenombrar.style.display = "none";
+  inputRenombrar.value = "";
+  renAvisar("", false);
+}
+
 async function renombrarActividad(){
   if(!actividadEditando) return;
   const viejo = actividadEditando;
   const nuevo = inputRenombrar.value.trim();
 
-  if(!nuevo){ editorAvisar("Escribe el nombre nuevo."); return; }
-  if(nuevo.includes("/")){ editorAvisar("El nombre no puede contener /."); return; }
-  if(normalizar(nuevo) === normalizar(viejo)){ editorAvisar("Es el mismo nombre."); return; }
+  if(!nuevo){ renAvisar("Escribe el nombre nuevo."); return; }
+  if(nuevo.includes("/")){ renAvisar("El nombre no puede contener /."); return; }
+  if(normalizar(nuevo) === normalizar(viejo)){ renAvisar("Es el mismo nombre."); return; }
   if(listaActividades().some(n=>normalizar(n) === normalizar(nuevo))){
-    editorAvisar("Ya existe una actividad con ese nombre."); return;
+    renAvisar("Ya existe una actividad con ese nombre."); return;
   }
   const extra = extrasActs.find(e=>e.nombre === viejo);
-  if(!extra){ editorAvisar("Esta actividad es de fabrica; no se puede renombrar."); return; }
+  if(!extra){ renAvisar("Esta actividad es de fabrica; no se puede renombrar."); return; }
 
   btnRenombrarOk.disabled = true;
   try{
@@ -737,27 +896,42 @@ async function renombrarActividad(){
     actividadEditando = nuevo;
     editorTitulo.textContent = nuevo;
     borrarNombre.textContent = "«" + nuevo + "»";
-    filaRenombrar.classList.remove("ver");
-    inputRenombrar.value = "";
     pintar();
-    editorAvisar("Nombre cambiado.", true);
+    cerrarRenombrar();
+    // El "listo" va en `avisar()`, que es el mensaje de ARRIBA (junto al campo de
+    // agregar) y sí se ve al volver al editor. Si se dejara en `editorAvisar()`
+    // volvería a caer debajo de todos los accesorios, que es lo que se quejó.
+    avisar("Nombre cambiado.", true);
   }catch(e){
-    editorAvisar("No se pudo cambiar el nombre. Revisa tu conexion.");
+    renAvisar("No se pudo cambiar el nombre. Revisa tu conexion.");
   }
   btnRenombrarOk.disabled = false;
 }
 
 // ====== ELIMINAR UNA ACTIVIDAD (con todo y sus datos) ======
+// Su aviso va en `#elimMsg`, DENTRO del bloque que se despliega. Antes usaba
+// `editorAvisar` (#editorMsg), que queda al final de la tarjeta y no se veía sin
+// bajar; el mismo rodeo que el de la ventana de renombrar (oct-2026).
+function elimAvisar(texto, ok){
+  elimMsg.textContent = texto;
+  elimMsg.className = ok ? "ok" : "";
+}
+function cerrarEliminar(){
+  filaEliminar.classList.remove("ver");
+  inputConfirmar.value = "";
+  elimAvisar("", false);
+}
+
 async function eliminarActividad(){
   if(!actividadEditando) return;
   const nombre = actividadEditando;
 
   if(normalizar(inputConfirmar.value) !== normalizar(nombre)){
-    editorAvisar("Escribe el nombre para confirmar.");
+    elimAvisar("El nombre no coincide. Escríbelo tal cual aparece arriba.");
     return;
   }
   const extra = extrasActs.find(e=>e.nombre === nombre);
-  if(!extra){ editorAvisar("Esta actividad es de fabrica; no se puede eliminar."); return; }
+  if(!extra){ elimAvisar("Esta actividad es de fabrica; no se puede eliminar."); return; }
 
   btnEliminarOk.disabled = true;
   try{
@@ -772,7 +946,7 @@ async function eliminarActividad(){
     actualizarModo();
     avisar("Actividad eliminada con todo y sus datos.", true);
   }catch(e){
-    editorAvisar("No se pudo eliminar. Revisa tu conexion.");
+    elimAvisar("No se pudo eliminar. Revisa tu conexion.");
   }
   btnEliminarOk.disabled = false;
 }
@@ -792,19 +966,22 @@ btnCerrarEditor.onclick = cerrarEditor;
 
 btnRenombrar.onclick = ()=>{
   filaEliminar.classList.remove("ver");
-  filaRenombrar.classList.toggle("ver");
-  if(filaRenombrar.classList.contains("ver")) inputRenombrar.focus();
+  abrirRenombrar();
 };
-btnRenombrarNo.onclick = ()=>{ filaRenombrar.classList.remove("ver"); inputRenombrar.value = ""; };
+btnRenombrarNo.onclick = cerrarRenombrar;
 btnRenombrarOk.onclick = renombrarActividad;
 inputRenombrar.addEventListener("keydown", e=>{ if(e.key === "Enter") renombrarActividad(); });
+// El toque en el fondo oscuro cierra la ventana, como en el resto de la app.
+modalRenombrar.addEventListener("click", e=>{
+  if(e.target === modalRenombrar) cerrarRenombrar();
+});
 
 btnEliminarAct.onclick = ()=>{
-  filaRenombrar.classList.remove("ver");
+  cerrarRenombrar();
   filaEliminar.classList.toggle("ver");
-  if(filaEliminar.classList.contains("ver")) inputConfirmar.focus();
+  if(filaEliminar.classList.contains("ver")){ elimAvisar("", false); inputConfirmar.focus(); }
 };
-btnEliminarNo.onclick = ()=>{ filaEliminar.classList.remove("ver"); inputConfirmar.value = ""; };
+btnEliminarNo.onclick = cerrarEliminar;
 btnEliminarOk.onclick = eliminarActividad;
 inputConfirmar.addEventListener("keydown", e=>{ if(e.key === "Enter") eliminarActividad(); });
 editorWrap.addEventListener("click", e=>{
@@ -832,7 +1009,7 @@ tabLista.onclick = ()=>{
   todosApagados();
   if(!abierto){
     tabLista.classList.add("activo");
-    ponerTitulo("Actividades", "Agrega actividades nuevas. Toca una para elegir sus accesorios.");
+    ponerTitulo("Actividades", "Agrega propias. Selecciónala y elige qué accesorios llevar.");
     listaEl.hidden = false;
     conteoEl.hidden = false;
   }
@@ -847,11 +1024,72 @@ if(tabAccesorios){
   };
 }
 
+// ====== EL "← VOLVER" ======
+// Va arriba a la DERECHA (regla de la casa) y es CONTEXTUAL, como en `Guiadas/`:
+//   - Con el editor abierto, cierra el editor y deja la lista.
+//   - En la lista, se regresa a la pantalla DE DONDE SE VINO. Se llega aquí por un
+//     enlace: el ⚙️ del submenú de Experiencias o el "Personaliza tus Actividades"
+//     del menú. Con `href` fijo a `../index.html` se caía siempre al menú, y eso NO
+//     era "atrás": era un salto. `history.back()` devuelve a la vista exacta de la
+//     que se salió (el submenú sigue abierto, porque en `index.html` un submenú
+//     abierto ES un paso del historial). Si no hay a dónde atrás (se escribió la
+//     dirección a mano), ahí sí se cae al menú.
+//
+// **PERO `history.back()` solo en la entrada (arreglo oct-2026, lo reportó
+// Fredy).** Actividades y Accesorios se van y se vuelven, y CADA viaje deja un paso
+// en el historial. Con varias vueltas, "un paso atrás" ya no era salir: era
+// recorrer hacia atrás las pantallas que uno ya había visto. Por eso salir ya NO
+// camina el historial; distingue los dos casos:
+//
+//   - **Entrada nueva** (el ⚙️ del menú o el de Experiencias, o la dirección a
+//     mano): el paso anterior ES el menú, así que `history.back()` es exacto y
+//     respeta hasta el submenú que estaba abierto.
+//   - **Vuelta desde Accesorios** (o sea, ya se paseó por la zona): salir de
+//     verdad, a donde cuelga esta pantalla, que es el submenú de Experiencias.
+//
+// `location.replace` y no `href` a propósito: `replace` no deja una entrada
+// nueva, así que el botón atrás del navegador tampoco se llena de pantallas de la
+// zona.
+const veniaDeLaZona = /(^|\/)(actividades|accesorios)\.html$/.test(document.referrer || "");
+document.getElementById("lnkInicio").addEventListener("click", (e)=>{
+  e.preventDefault();
+  if(editorAbierto){ cerrarEditor(); return; }
+  if(!veniaDeLaZona && history.length > 1){ history.back(); return; }
+  try{ location.replace("../index.html#experiencias"); }
+  catch(e){ location.href = "../index.html#experiencias"; }
+});
+
+// El paso con el que se ABRE esta página no lo guardamos nosotros (se llega por un
+// enlace), así que se marca "fijo": es el mismo detalle que en el menú, y sirve
+// para saber cuándo el historial es de esta pantalla y cuándo es de antes.
+try{ history.replaceState({ v:"lista", fijo:true }, ""); }catch(e){}
+
 cargar().then(volverDesdeAccesorios);
 tabLista.onclick();
-inputEl.focus();
+// OJO: aquí NO se enfoca el campo de "Nombre de la actividad". Antes se hacía
+// (`inputEl.focus()`) y en el CELULAR eso abre el teclado de una vez al entrar,
+// tapando media pantalla sin que nadie haya pedido escribir nada. No se enfoca NADA
+// al arrancar: la pantalla abre en la lista, que es lo que se vino a ver.
+// El único foco que se pone es el del campo de renombrar, y es a propósito: ahí lo
+// pidió el usuario oprimiendo "Cambiar nombre".
 
 </script>
+
+<!-- La ventana de "Cambiar nombre". Va al final del body (y no dentro del
+     editor) para que el toque en su fondo oscuro no confuse al que cierra el
+     editor. Nace oculta por el `.modal` del CSS y la abre `btnRenombrar`;
+     Cancelar y el toque en el fondo la cierran y dejan al usuario exactamente
+     donde estaba. -->
+<div class="modal" id="modalRenombrar">
+  <div class="caja">
+    <h1>Cambiar nombre</h1>
+    <p class="sub">Escribe el nombre nuevo de la actividad.</p>
+    <input id="inputRenombrar" type="text" maxlength="60" autocomplete="off" placeholder="Nuevo nombre">
+    <button class="btnPri" id="btnRenombrarOk" type="button">Guardar nombre</button>
+    <button class="btnSec" id="btnRenombrarNo" type="button">Cancelar</button>
+    <p id="renMsg"></p>
+  </div>
+</div>
 
 </body>
 </html>

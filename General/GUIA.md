@@ -146,6 +146,7 @@ el módulo, es una sola vez.
 | `escucharItem(item, hooks)` | Escucha **un** item. `hooks.revocado()` / `hooks.aprobado()`. Devuelve la función para cancelar |
 | `escucharCatalogo(hooks)` | Revisa **todo** el catálogo. `hooks.cambio(licencias)` |
 | `graciasDisponibles()` | Mapa `"item\|email"` → `true` de cortesías sin usar |
+| `nuevosSinPedir(packs)` | Mapa `{idDelPack: true}` de lo que está **nuevo Y sin pedir**. Ver *El aviso de "nuevo"* |
 
 ##### Decisión de diseño: los nombres
 
@@ -350,7 +351,13 @@ nombres duplicados.
 
 #### 7. Siguiente paso
 
- Según lo acordado, el orden es:
+> **ACTUALIZADO oct-2026: la lista de abajo YA NO es el siguiente paso.** Los cinco
+> puntos (y el permiso de `borrar`) están **en espera hasta el cambio de
+> arquitectura**, por decisión de Fredy. Ver *Pendientes de licencias — EN ESPERA
+> HASTA EL CAMBIO DE ARQUITECTURA*, donde está la razón de cada uno. **No los
+> arranques por tu cuenta.**
+
+Según lo acordado, el orden era:
 
 1. **Revisar las reglas de Firebase** en la consola — bloqueante, porque el
    rediseño necesita que la app pueda **borrar** en `solicitudes`.
@@ -361,6 +368,47 @@ nombres duplicados.
 
 Todo está detallado en `Descargas\Soluciones.txt` y los pendientes en
 `Descargas\Problemas 2.txt`.
+
+#### 8. `Panel/oficiales.html`: pegar y exportar la actividad en JSON (17-oct-2026)
+
+Para dar de alta una actividad oficial hay **7 campos sueltos más los 5 niveles ×
+2 lados de acciones**, y el contenido estaba en documentos sueltos. Ahora la
+pantalla tiene **"Pegar actividad"** y **"Exportar actividad"**, con el mismo
+molde que el engrane de `Roles/` (los dos botones en una línea, y la cajita de
+texto debajo).
+
+| Qué | Cómo funciona |
+|---|---|
+| **Exportar actividad** | Baja un `.json` con el formulario tal como está (`actividad-<id>.json`). Es la forma de tomar **una actividad que ya está bien como plantilla** |
+| **Pegar actividad** | Lee el texto pegado y lo mete al formulario. **Acepta** comillas tipográficas y una coma de más al final; si el JSON está mal, avisa con la pista del navegador y **no carga nada** |
+| La forma del JSON | `{ id, titulo, icono, desc, orden, activo, nuevoHasta, niveles:{basico:{A:[],B:[]}, …}, tomasSugeridas:{…} }` |
+
+Lo importante, y por qué el cambio es chico:
+
+- **Lo que pega termina en `pintarForm()`**, que es **la misma función que ya
+  corría al abrir "editar"** de una actividad guardada. O sea: **el relleno ya
+  estaba probado**; lo único nuevo es leer el texto. Por eso **no se cambió cómo
+  se guardan los datos**: se sigue escribiendo en `packs` con la misma forma.
+- **`niveles` acepta las dos formas**: si en vez de `A` y `B` separadas se pega
+  una sola lista, `normLadosP()` la pone **en los dos lados**.
+- **Si el JSON trae `id`, el campo del ID queda bloqueado**, porque ese campo se
+  bloquea al editar (`pintarForm` hace `fId.disabled = !!f.id`) y el `id` es la
+  licencia, que no se cambia. Se avisa debajo de la cajita; para poner otro,
+  "Limpiar".
+- **Pegar borra lo que haya escrito**, así que si el formulario no está vacío
+  **pregunta primero** con `confirmar()` (nunca `alert()` ni `confirm()` del
+  sistema).
+- **OJO: el lector de JSON es una COPIA del de `Roles/index.html`, no un módulo
+  compartido.** Se dejó así a propósito, porque unificarlo tocaría `Roles/`, que
+  ya fue probado en vivo. Si algún día se unifica: que vaya a un módulo de la
+  **raíz** (y no a `config.js`, que ya trae Firebase) y se registre en
+  `extract.py`.
+
+> **Bug encontrado al agregarlo:** `Panel/oficiales.html` **no estaba en
+> `extract.py`**, así que el chequeo de sintaxis **nunca lo había revisado** (ni
+> `index.html`, ni `catalogo.html`, ni `permisos.html`). Se agregó
+> `Panel/oficiales.html` a la lista al tocarlo. **Los otros tres se probaron a
+> mano y pasan**, así que se pueden agregar a la lista cuando se toquen.
 
 ---
 
@@ -531,8 +579,23 @@ pantalla que escribe**, no solo la que se está tocando. `Autorizar/` era la
 | Fin de partida igual en los 3 juegos | `Encuentros/` y `Guiadas/` ahora importan `fuegos.js` y usan `encenderFuegos()`/`apagarFuegos()`, con `#modalFin` en `z-index:80` y `background:transparent` para que los fuegos (70) se vean. Todos dicen "¡Gracias por jugar!" + "Aceptar" (se quito la letrita "Toca la pantalla..."). **En `Guiadas/` el modal es NUEVO** (antes no existia: al ultimo paso solo volvia al inicio) y se creo **inline**, porque ese juego no tiene clase `.modal` |
 | **El boton de silencio estaba tapado** | El aviso de fin es `z-index:80` y ocupa TODA la pantalla, y el boton de `fuegos.js` iba en `Z+1` (=71): quedaba debajo y no se podia oprimir. Arreglo en los dos lados: (1) el boton a `Z+20` (=90); (2) **`#modalFin` lleva `pointer-events:none` y `.caja` `pointer-events:auto`**, para que el fondo no se coma los toques y asi "tocar la pantalla" sirva en toda la superficie, no solo fuera del modal |
 | Como se sabe que una cita TERMINO en `Guiadas/` | `avanzarSesion()` ahora escribe `terminada: (np >= lista.length)`. Sin esa bandera el `escucharSesion` no distinguia "se acabo" de una pausa o de "Terminar", y habria fuegos hasta al darle "Terminar". `mostrarPlayer()` reinicia `finMostrado`/`finEnLocal` para que una cita nueva vuelva a celebrar |
+| **"Terminar" de `Guiadas/` no terminaba (arreglado oct-2026)** | Pasaba en los **DOS** modos y por el mismo motivo: "Terminar" no borraba el avance, solo salía de la cita. En compartido apagaba `activa`, pero `jugarDirecto()` al volver a la misma actividad ofrecía "¿Continuar?" mirando **solo** si quedaban pasos, **sin mirar `d.activa`**: daba igual que la cita estuviera terminada, y "Continuar" la resucitaba. En un solo celular era peor: ni siquiera apagaba nada, solo dejaba `guia_prog` ahi. En los dos se sentia como pausa. **Regla: si un documento tiene una bandera de "vivo", TODA consulta que lo use tiene que mirarla; y si un boton dice "terminar", tiene que borrar lo que deja el avance.** El arreglo: `!!d.activa && ...` en `tengoPendientes`, y `borrarProg()` en el "Terminar" de un solo celular |
+| **Pausa, salto de turno y fin de cita en `Guiadas/` (oct-2026)** | En la cita compartida (`modoJuego === "compartido"`) hay tres botones, y el que antes decía "Terminar" ahora se mueve de nombre. Decisiones de Fredy, **no** las de `Encuentros/`, porque la dinamica es distinta (alla hay `cabezas` y anfitrion; aqui la lista ya esta armada): |
+
+| Boton | Que hace | Solo sale |
+|---|---|---|
+| **"Pausar y Salir"** (antes decía "Terminar") | Deja la cita **viva** y se retoma donde iban. **Compartida:** escribe `pausada:true` + `pausadaPor:<nombre>` y la pareja **se queda esperando** (NO se apaga `activa`). **Un solo celular:** no hay nada que marcar, porque el avance ya se guarda en el cel con cada paso (`guardarProg()` → `guia_prog`), y al volver sale "¿Continuar?" | Siempre, en los dos modos |
+| **"Saltar turno de X"** (`#btnSaltar`) | Avanza `paso` un paso **aunque no sea tu turno** (es la unica diferencia con `avanzarSesion()`). La accion del que se salta **se pierde**. Pregunta con `confirmar()` y usa transaccion, como el avance normal | Cuando **NO** es tu turno, y **lo pueden los DOS** (en `Encuentros/` solo el anfitrion) |
+| **"Terminar"** / **"Terminar Partida"** (`#btnTerminarPartida`) | **Termina de verdad, no se retoma.** Compartida: `activa:false, terminada:true, pausada:false, porNombre:<quien>`; a la pareja le llega el fin diciendo **quien** lo termino y al aceptar sale a la lista de esta misma pantalla. Un solo celular: **borra el avance local** (`borrarProg()`). Siempre pregunta con `confirmar()` | Siempre, en los dos modos. El nombre cambia: "Terminar Partida" en compartido, "Terminar" en un solo celular |
+
+| | |
+|---|---|
+| **En pausa no se puede entrar** | Igual que `Encuentros/`: `btnUnirme` avisa "X pausó la cita" y no mete a jugar. Si no, el que llega se metería y los dos a la vez. Quien puede reanudar es el que pausó: al volver a la actividad aparece "¿Continuar?" y `btnContinuar` escribe **`pausada:false`** |
+| **Saltar turno avanza SIEMPRE el contador** | Si se saltara sin avanzar `paso`, la cita pediría un turno que nunca llega y **no terminaría nunca**. Es la misma trampa que se documentó en `Roles/`, pero aqui NO aplica lo de "quemar la carta": la dinamica es una lista de pasos ya armada, y lo que se pierde es la accion del turno saltado |
+| **El nombre de quien pausa** | Se usa `pausadaPor`, **no** `hostNombre`: los dos pueden pausar, y el que espera puede ser el que inicio la cita |
+| **Los dos botones nuevos NACEN ocultos** | `style="display:none"` en el HTML (regla de la casa) y `pintarPaso()` los enciende |
 | **Al agregar un invitado en Encuentros** | Se cuela al **final** de `d.orden` y se le copia la lista del companero de su mismo lado. Dos razones: 1) `avanzarSesion()` avanza con `t+1 < d.cabezas.length`, asi que si se agrega a `cabezas` sin agregar a `orden` los indices se descuadran y `d.orden[d.turno]` sale `undefined`; 2) las acciones son las del encuentro y no hay de donde re-asortear sin romper el ritmo. `largo` **no** cambia: el invitado solo juega las rondas que faltaban |
-| **Guiadas NO lleva nada de esto** (decision oct-2026) | Su sesion es `{lista:[{lado}], paso}`: una secuencia de pasos YA ARMADA con `paso` como indice. **No tiene `cabezas`, no importa `invitado.js` (no publica invitaciones) y no tiene `escucharGrupo()`.** Agregar a alguien a media partida obligaria a rehacer la lista entera y saltaria el turno de todos. Se decidio no portar QR/panel/"agregar invitado" ahi |
+| **Guiadas NO lleva nada de esto** (decision oct-2026) | Su sesion es `{lista:[{lado}], paso}`: una secuencia de pasos YA ARMADA con `paso` como indice. **No tiene `cabezas`, no importa `invitado.js` (no publica invitaciones) y no tiene `escucharGrupo()`.** Agregar a alguien a media partida obligaria a rehacer la lista entera y saltaria el turno de todos. Se decidio no portar QR/panel/"agregar invitado" ahi. **OJO: esto es solo lo de los INVITADOS. La pausa, el salto de turno y el fin de cita SI se agregaron (ver abajo)** |
 | El selector de invitado solo muestra perfiles base | Nunca a otros invitados, para que no haya invitado-de-invitado |
 | Sin caducidad por tiempo para el invitado | Si cierra la app, el chequeo no corre: el vencimiento nunca se aplicaria |
 | La sala es **solo para invitados** | La pareja no la ve ni entra por su cuenta |
@@ -556,11 +619,13 @@ pantalla que escribe**, no solo la que se está tocando. `Autorizar/` era la
 | **Cambiar usuario** tiene **Volver** y al elegir regresa a **Usuarios** | Antes no se podia salir sin cambiar, y caia donde se le antojaba (oct-2026) |
 | Los titulos con degradado llevan `width:fit-content` | Sin eso el color se reparte por toda la pantalla y se ve clarito |
 | Los botones de esquina (engrane, carrito) son **solo del menu principal** | En submenus no salen. El engrane va arriba a la **izquierda** |
+| **Los ejemplos usan los nombres de verdad**: la pareja es **Mary** y el administrador **Fredy** | Decisión de Fredy (17-oct-2026). En comentarios, en la documentación y en los textos de ejemplo se ponen esos dos nombres, no nombres inventados. **OJO: esto NO son datos de la app** — el nombre real de cada quien sale de la base (`nombreLado()` → `usuariosLista`), y el respaldo es el genérico `"Lado A"` / `"Lado B"`. No se hardcodea ningún nombre en el código |
 
 ### De la forma de trabajar
 
 | Decision | Detalle |
 |---|---|
+| **No se toca el repo sin que Fredy lo pida** | Ni un archivo ni una línea sin pedido. Si el pedido no está claro, se pregunta antes de escribir; si se ve que falta otra cosa, se dice y se pregunta, no se resuelve de una con un cambio. Es la regla 0 de `AGENTS.md` (18-oct-2026) |
 | Fredy decide, el modelo ejecuta | Si algo es decision de producto, **preguntar antes** de aplicar |
 | Explicar antes de programar | En espanol claro y sin codigo para el usuario |
 | No inventar reglas nuevas de Firestore | Se reutiliza la base y las reglas que ya funcionan |
@@ -652,15 +717,58 @@ aislar cada cliente en su propia ruta. Requiere el permiso de `borrar`, que
 hoy no esta en las reglas. Ver `GUIA.md`, *Licencias, `acceso.js` y el catálogo*,
 sección 6.
 
-### Pendientes de licencias (`GUIA.md`, *Licencias, `acceso.js` y el catálogo*, "Siguiente paso")
+### Estado de las revocaciones (oct-2026, verificado)
 
-1. ~~Revisar las reglas de Firebase~~ **[HECHO oct-2026: revisadas y cerradas.**
-   Ver `General/reglas-firebase-taquilla.txt`. Falta solo el permiso de `borrar`
-   para el rediseño de la cola.]
-2. Revocacion al entrar en cada pagina (cierra el acceso por URL directo).
-3. Catalogo marcando lo que ya tienes desde local.
-4. Cola con acuse (aprobaciones) + revocaciones persistentes.
-5. Doc por item + cortesia a local.
+**Lo que YA funciona, y funciona "en vivo":** `escucharItem()` / `escucharCatalogo()`
+(`acceso.js`) están conectados en **6 pantallas**: el menú, la tienda y los cuatro
+juegos con licencia (`guiadas`, `encuentros`, `opciones`, `roles`). Cuando en
+`Autorizar/` se aprieta **Revocar**, el documento viaja solo al celular: se borra el
+código local y el juego **enseguida** muestra la pantalla de bloqueo, el menú quita
+la tarjeta y la tienda lo desmarca. Sin que el cliente recargue nada.
+
+**Los dos huecos, y por qué NO se arreglan hoy:**
+
+| Hueco | Por qué no importa / por qué se espera |
+|---|---|
+| **Sin internet**, el código guardado en el celular sigue firmado y válido | **No es un hueco real: el juego NO se puede jugar sin internet.** Las opciones, los personajes y las acciones se leen de Firestore al jugar; en el celular no hay copia. Sin red no hay nada que jugar. |
+| **Alguien a quien revocan puede seguir jugando hasta cerrar y reabrir la app** | Es el único que queda. Al reabrir, el menú lo bloquea. Se cierra en caliente cuando exista login (ver *La base de cada PAREJA*), y hoy no se toca. |
+
+> **OJO, dato que NO hay que suponer (oct-2026):** el escuchador de
+> revocaciones **solo se prende en la pantalla de BLOQUEO** (`escucharAprobacion()`
+> se llama justo después de `ver("vistaBloqueo")`, en los cuatro juegos). **Una vez
+> que entraste, no se queda vigilando.** No se debe decir "le salta al instante
+> mientras juega": no es así.
+
+### Pendientes de licencias — **EN ESPERA HASTA EL CAMBIO DE ARQUITECTURA**
+
+> **Decisión de Fredy (oct-2026): estos CINCO pasos no se hacen ahora.** No son un
+> descuido ni un olvido. Casi todos cuelgan de la **misma pregunta, "¿quién es
+> cada quien?"**, y eso es exactamente lo que responde el cambio de arquitectura
+> (login + reglas por correo). Hacerlos hoy sería tirar el trabajo a la basura:
+> - El **código en el celular** desaparece cuando la licencia se consulta al servidor
+>   con identidad real (pasos 3 y 5).
+> - La **cola de solicitudes** deja de ser una colección pública de correos y pasa a
+>   ser una lista de cuentas (pasos 1 y 4).
+> - **La revocación en caliente** la resuelven las reglas, sin una verificación en
+>   cada pantalla (paso 2).
+>
+> **El permiso de `borrar` en `solicitudes`** va aquí también: es para el rediseño
+> de la cola, o sea, viene después. Es **manual, en la consola de Firebase**, y hay
+> que probar las 4 cosas (pedir, aprobar, revocar, Panel), pidiendo con una cuenta
+> que **no** sea publicador.
+
+| # | Paso | Por qué espera |
+|---|---|---|
+| 1 | ~~Revisar las reglas de Firebase~~ **[HECHO: revisadas y cerradas. Ver `General/reglas-firebase-taquilla.txt`.]** | — |
+| 2 | Revocación al entrar en cada página | La cierran las reglas del login |
+| 3 | Catálogo marcando lo que ya tienes | Se consulta al servidor, no al celular |
+| 4 | Cola con acuse + revocaciones persistentes | Necesita identidad real |
+| 5 | Doc por ítem + cortesía a local | Se borra elalmacén local del celular |
+
+> **ANTES DE VENDER (oct-2026):** con la familia probando esto da igual, pero al
+> vender ya no son conocidos y son clientes. **Hay que revisar el hueco de la
+> revocación** (el de "sigue jugando hasta cerrar y reabrir"). No antes de vender:
+> tampoco urge cambiar la arquitectura todavía.
 
 ### Otros pendientes
 
@@ -680,15 +788,17 @@ sección 6.
   ver *El invitado vuelve solo al abrir la app*): un invitado con QR y partida en
   curso NO debe ser expulsado; uno sin partida debe volver solo.
   ~~**PROBADO EN VIVO: las dos pasaron.**~~
-- **Favores Express** — idea de Fredy, oct-2026, **NO está construida**. El plan
-  completo (flujo, decisiones ya tomadas y lo que falta) está en
-  **`General/Plan-Favores-Express.md`**. Ese archivo es **temporal**: cuando la
-  función esté probada se borra y lo que valga pasa aquí.
-- **Los cambios de puntos deben requerir que los dos acepten.** **Hoy NO está
-  hecho**: los números del 🛒 se cambian libremente, que es lo que se usa para
-  probar sin molestar. Cuando se arme, aplica al Centro **y** a los Favores
-  Express.
-- Sala de espera: **falta la prueba con dos telefonos reales** (en vivo).
+- **Favores Express** — **construida y probada en vivo** (Fredy, oct-2026). El modulo
+  es `favor.js` y tiene su propia seccion mas abajo, en
+  **Favores Express (`favor.js`)**. El plan de desarrollo ya **no existe**: se
+  borro al quedar probado, y lo que valia se paso aqui.
+- **Los cambios de puntos se hacen libres, y es A PROPOSITO** (decision de Fredy):
+  los numeros del 🛒 se cambian sin que el otro acepte, que es lo que se usa para
+  probar sin molestar. **No es un pendiente ni un descuido.** Lo que queda es
+  quitarlo cuando llegue el rediseno de arquitectura (login + reglas por correo),
+  y entonces aplicara al Centro **y** a los Favores Express. **No "arreglarlo"
+  antes de eso.**
+- Sala de espera: **PROBADA EN VIVO** con dos telefonos reales (Fredy, oct-2026).
 - Sesion de Encuentros en `sesionEncuentros/actual`: la lista de TODOS los
   participantes (incluidos invitados) vive en un solo documento. Confirmar en la
   consola que ese path no queda abierto a lectura ajena.
@@ -931,6 +1041,53 @@ cancelar, y solo al confirmar recarga — y dice a dónde va.
 
 Las piezas en el código: `modoCambiar`, `CLAVE_IR_USU`, `abrirPanelUsuarios()`.
 
+### Editar nombres, administrador y puntos (botón al final de Usuarios, oct-2026)
+
+Al final de la pantalla de **Usuarios** (⚙️ → Usuarios) hay un botón **"✏️ Editar
+nombres y administrador"** (`#invEditar`) que abre una **ventana emergente**
+(`#invOverlayUsu`, mismo molde que la de Puntos). Dentro salen **todos los
+usuarios**, y en cada renglón un **campo de puntos**:
+
+**Candado (decidido por Fredy, oct-2026):** el botón **nace oculto** y solo se
+muestra **si el usuario actual NO es invitado** (o sea, uno de los dos base); a
+los invitados también se les **oculta "Cambiar usuario"** (`#invCambiarUsu`), que
+si no servía para ponerse como la pareja y entrar igual. La visibilidad la
+resuelve `pintarInvUsuarios()` con `soyInvitado()`, y `abrirEdUsuarios()` **vuelve
+a comprobar** que no sea invitado. Además, al tocar el botón **pide una clave** en
+una ventana de la app (`#invOverlayPin`, nada de `prompt()` del sistema).
+
+- La clave está **fija en el código**: en `index.html` se guarda su **hash
+  SHA-256** (`PIN_EDITAR_HASH`), no el PIN. **Para cambiarla** hay que recalcular
+  `sha256("<nuevo pin>")` en hexadecimal y reemplazar la constante. El PIN de
+  pruebas es `9966**`.
+- Esto es **para las pruebas de la pareja**, no es seguridad real: el repo es
+  público y la base está abierta, así que quien lea el código o la base puede
+  saltárselo. La protección de verdad es el login (rediseño de arquitectura).
+
+- **Los dos perfiles base** (admin y pareja, o sea `!invitado`): campo de nombre
+  **editable** y un **radio "Admin"**. **Solo hay un administrador.**
+- **Los invitados**: solo salen para editarles los puntos; su nombre se muestra
+  **de solo lectura**.
+
+**Los nombres y el admin** se guardan en `config/ajustes.usuarios` —lo mismo que
+ya usaban el asistente y "agregar invitado"— con `setDoc(..., {merge:true})` y
+`guardarUsuariosLocal()`. Si alguien se renombra a sí mismo (o le cambia el
+admin), su copia local (`CLAVE_LOCAL`, `appPareja_quienSoy`) también se actualiza.
+
+**Los puntos** se escriben **directos** (el número exacto) en el campo **`balance`
+de `puntosUsuarios/{id}`**, que es donde viven (no en `config/ajustes`, y **no**
+son los precios del 🛒). Se leen de una sola vez con `getDocs` y, si el documento
+no existe, el saldo se toma como **0** (igual que `Retos` y `favor.js`). Como esas
+pantallas escuchan la colección, el cambio se refleja solo. Tiene que ser un
+número **de 0 o más**.
+
+**Aviso que hay que recordar:** en toda la app **el admin es el lado A y la pareja
+el lado B** (`nombreLado()`, `armando()`), y hay contenido guardado **por lado**
+(acciones de `nivelesActividad`, `opcionesJuego/actual {A,B}`, `personajesJuego`
+`U1/U2`…). Por eso **cambiar de admin intercambia esos lados**: el contenido que
+estaba de un lado se ve del otro. Se decidió permitirlo así (decisión de Fredy,
+oct-2026). Cualquier usuario puede abrir el botón, porque la app no tiene login.
+
 ### Botones de volver, de esquina y "cambiar usuario"
 
 | Botón | Dónde | Nombre |
@@ -1133,11 +1290,51 @@ importan. **Las 24 llamadas no se tocaron.**
 **Lo que NO cambió:** lo que ve el usuario. Solo se dejó de tener el mismo texto
 cinco veces.
 
-**Pendiente de probar en vivo:** que **sigan llegando** los Telegram desde los
+**PROBADO EN VIVO (Fredy, oct-2026):** los Telegram **siguen llegando** desde los
 5 sitios — un reto nuevo, una cita nueva, una compra en el Centro, el botón
 "Invitar" del Chat y un reto de la IA.
 
 ---
+
+### El aviso de "nuevo" (oct-2026)
+
+**Dos lugares** avisan de que hay algo nuevo, y los dos usan **el mismo
+criterio**, que vive en **un solo lugar** (`acceso.js` → `nuevosSinPedir()`):
+
+| Dónde | Qué se ve |
+|---|---|
+| El **carrito** del menú principal (la 🛒 de arriba a la derecha) | Un **punto rojo** |
+| Las **secciones del Centro** (Experiencias / Juegos / Extras) | La pastilla **`NUEVO`** en la esquina de su botón |
+
+**Y el criterio son DOS condiciones juntas**, no una (decisión de Fredy):
+
+1. el pack trae **fecha "Nuevo" viva** (`nuevoHasta` > hoy, se pone en el Panel), **y**
+2. **todavía no se ha pedido**: no hay solicitud suya en estado `pendiente` ni
+   `aprobado`.
+
+Así que **el aviso se apaga** cuando falla cualquiera de las dos: si se vence la
+fecha (aunque no lo hayas pedido) o si ya lo pediste (aunque siga la fecha).
+Una solicitud **revocada o negada NO cuenta**: eso se puede volver a pedir, así
+que el aviso puede reaparecer.
+
+**Lo que NO se hace, a propósito:** no se meten fichas de lo que no tienes dentro
+de los submenús del menú (Experiencias / Juegos / Retos). Se probó y se descartó:
+llenaría los submenús de cosas ajenas. **Los submenús siguen mostrando solo lo
+que ya tienes**; lo nuevo sin pedir se ve **solo** en el carrito y en las
+secciones del Centro, y de ahí se entra a ver todo el catálogo.
+
+#### Notas de implementación
+
+- El **criterio vive en `acceso.js`**, no copiado en cada página: lo importan
+  `index.html` (el menú) y `Tienda/index.html` (el Centro). Si algún día cambia,
+  **se cambia en un solo lado**.
+- El punto del carrito lo pone `renderPacksDeVerdad()` (en `index.html`), y la
+  pastilla de las secciones la pone `marcarSecNuevas()` (en `Tienda/index.html`).
+- Los dos nacen **apagados**: el punto es una clase (`conNuevo`) y la pastilla se
+  crea con JavaScript. Nada se ve si no hay algo nuevo.
+- **PROBADO EN VIVO:** el punto rojo del carrito **sale** cuando hay algo nuevo sin
+  pedir, y se apaga al pedirlo o al vencer la fecha. La pastilla de las secciones
+  también se comprobó.
 
 ### Notas de mantenimiento
 
@@ -1175,6 +1372,33 @@ cinco veces.
      **última acción agregada queda arriba**, pegada al campo.
   El orden guardado **no se toca**: los dos juegos revuelven las acciones al
   armar la ronda (`mezclar`), así que el orden del arreglo no afecta la partida.
+- **El editor de `Guiadas/` tiene "Pegar actividad (JSON)" y "Exportar actividad"**,
+  en la misma línea de dos botones (`.filaBotones`, como en el engrane de `Roles/`):
+  el de pegar abre una cajita de texto y lo que se pega entra a `datos` y se
+  repinta con la **misma `pintarEditor()`** que corre al abrir la actividad. Es
+  para cargar de una vez el JSON que produce **"Exportar actividad"** de
+  `Panel/oficiales.html`, y también acepta el mapa de niveles pelado
+  (`{basico:{A,B}, …}`) o un nivel con una sola lista, que se pone en los dos
+  lados (es lo que hace `normLados`).
+  - **El archivo que baja el editor es de la MISMA forma** (`titulo`, `niveles`,
+    `tomasSugeridas`), así que el viaje sirve para los dos lados: lo que se baja de
+    acá se vuelve a pegar en este editor, y también se lleva al Panel. Lo que
+    **no** hace es renombrar la actividad al pegar: el título del archivo se
+    ignora (el nombre de la actividad es su documento en `actividadesExtra`).
+  - El nombre del archivo es `actividad-<nombre>.json`, con `limpiarParaArchivo()`
+    (quita `\/:*?"<>|` y acorta espacios, porque el nombre viene de la base).
+  - Con la actividad vacía **no baja nada**: avisa con `aviso()`.
+  - **Pegar reemplaza**, no agrega: si la actividad ya tenía acciones, sale
+    `confirmar()` y solo con "Reemplazar" se carga.
+  - **Trae `tomasSugeridas`, las tomas sí se llenan** (se guardan en la base, en
+    el campo `tomas` del documento `nivelesActividad`; ver la nota de tomas abajo).
+  - **Tope de 90 letras por acción**, que es el `maxlength` del campo "Nueva
+    acción": lo que pasa se corta y se avisa abajo de cuántos se cortaron. También
+    quita repetidos (sin mayúsculas) y empalma las líneas sueltas.
+  - El lector del JSON es una **copia** del de `Panel/oficiales.html` (que a su vez
+    es copia del de `Roles/`), **a propósito**: unificarlo tocaría `Roles/`, ya
+    probado en vivo. Si algún día se unifica, que vaya a un módulo de la **raíz**
+    y se registre en `extract.py`.
 - **Borrar acciones es por TEXTO, no por posición (oct-2026) — no cambiar:**
   `quitarItemEd()` (Encuentros) y `quitarItem()` (Guiadas) reciben **el texto** de
   la acción, no su índice. La "✕" lleva pegado el string y se borra con
@@ -1193,6 +1417,25 @@ cinco veces.
   editor de **Guiadas** (`tomasGrid`) y el modal de MultiActividades de
   **Guiadas** (`multiTomasGrid`). En Encuentros el modal de MultiActividades
   (`tomasGridEncuentros`) usa solo el nombre del nivel: ahí no aplica.
+- **Las tomas viven en la BASE, no en el celular (oct-2026).** Antes se guardaban
+  por celular en `localStorage` (`guia_tomas_<doc>`) y no se sincronizaban. Ahora
+  van en el campo **`tomas`** del mismo documento **`nivelesActividad`** donde
+  están las acciones. **Por qué ahí:** ese documento **ya se lee** en los tres
+  momentos (lista `getDocs`, editor `getDoc`, jugar `getDoc`), así que las tomas
+  llegan "de pilón" y **no cuestan ninguna lectura extra**; se escriben con
+  `setDoc(..., {merge:true})` para **no tocar `n`**. Los ayudantes son
+  `cargarTomasDoc()`, `guardarTomasEnBase()` y `mapaTomas` (copia en memoria de lo
+  ya leído); `tomasGuardadas()` (Guiadas) y `tomasGuardadasEd()` (Encuentros) leen
+  de ahí. **Ya no se lee el celular para las tomas** — la migración fue **de una
+  sola vez**: al leer un documento sin `tomas`, si el celular tenía la copia vieja,
+  se sube a la base y se borra del celular (`migrarTomasDeEsteCelular()`), así que
+  no puede volver a correr. Las **sugeridas** de una oficial se siembran al copiar
+  la actividad (o, si el documento ya existía sin tomas, se migra primero lo del
+  celular y solo si no hay nada se siembran). Las tomas de **MultiActividades** y
+  las de la **lista de Encuentros** son por partida (transitorias): no tienen
+  documento propio y se quedan como estaban. **Ojo:** esto es coherente con que el
+  juego **ya no se puede jugar sin internet** (lee las acciones de Firestore al
+  jugar); por eso no hay copia local de respaldo.
 - **Juego nuevo "Elecciones Peligrosas" (`Opciones/`, oct-2026):** traído de
   "Juego Opciones". Es el "esto o aquello": se muestran 2 opciones y al elegir
   una se elimina (la otra sigue), hasta que a cada quien le queda 1. Los datos
@@ -1217,6 +1460,334 @@ cinco veces.
   **`experiencias`**. El mecanismo de **agregar invitado a media partida**
   (reutilizable para otros juegos) está documentado aparte en
   **`General/Invitado-a-media-partida.md`**.
+- **Juego nuevo "Juego de Roles" (`Roles/`, oct-2026):** hijo de `Opciones/`
+  (misma entrada por catálogo, misma licencia, mismos modos de jugar, mismas
+  salas, mismos invitados, mismos botones). **Lo único que cambia es el turno:**
+  en vez de dos opciones para escoger, **a cada quien le sale una tarjeta de
+  personaje** (situación, atractivo, derechos, acción) que se **lee** y se pasa
+  con **"Siguiente"**. No hay eliminación: cada quien recibe una tarjeta por
+  ronda y las juega todas. El contenido vive en **Firebase**
+  (`personajesJuego/actual` = `{U1,U2,C1,C2,ESP}`), **nunca** en un JSON del
+  repo (contenido íntimo + repo público). La sesión es
+  **`sesionRoles/actual`** y **no tiene `pares{}` ni `eliminadas{}`**: `listas{}`
+  es la **cola de tarjetas que le faltan** a cada jugador, y cada elemento es el
+objeto `personaje` completo. Modes: **Clásico** (sale de `U1`/`U2`), **Cambia
+    de Bando** (sale de las contrapartes `C1`/`C2`), **Seleccionar** (la lista
+    completa del lado, escogida a mano) y **Duelo de seducción** (lista de un solo
+    lado, con su contraparte cruzada; ver abajo). **Variantes Picantes NO es un
+    modo**: es un
+    interruptor que se prende encima de cualquiera de los cuatro, con "¿cuántas
+    veces?" (K, máximo una por ronda), y el sorteo se hace **una sola vez al
+    arrancar** y se guarda en la sesión como `especiales[]`. La carta sale **boca
+    abajo** y se revela al tocarla (tocar otra vez la tapa, para poder pasar el
+   celular). **Ojo con dos
+  campos parecidos:** `modoJuego` es **quiénes juega** (pareja/multi) y
+`modoBase` es el modo del juego (normal/espejo/seleccionar/duelo). **Ojo con los
+    nombres: lo que se ve y lo que se guarda NO son lo mismo.** En pantalla los
+    modos son **Clásico / Cambia de Bando / Seleccionar / Duelo de seducción** y el
+    interruptor es
+    **Variantes Picantes**, pero en el código y en la base siguen siendo `normal` /
+    `espejo` / `seleccionar` / `duelo` y `especial` / `especialK` / `especiales`. Los
+   nombres se renombraron (oct-2026) **solo en el texto**: no se tocan los
+   valores, o se rompen las partidas ya empezadas. Licencia: item
+  **`roles`**. En el catálogo (`packs`): ruta **`Roles`**, sección
+  **`juegos`**, y **sin** marcar `oficial` (el menú salta los `oficial:true`).
+  Engrane ⚙️ con **una pestaña por usuario** (no cinco): cada quien solo ve su
+  lado y el administrador tiene un botón para ver el del otro; dentro, dos
+sub-pestañas Personajes / Contrapartes; y una tercera, **Variantes Picantes**, que
+es común. **El orden de la pantalla de inicio (decisión de Fredy, oct-2026;
+     rediseño completo el 17-oct-2026):** arriba **Número de rondas**, luego la
+     caja **"Elige Tu Modo de Juego"** (las cuatro pestañas en 2x2, con la
+     descripción del modo debajo), **luego en medio el interruptor de
+     Variantes Picantes**, y después **"¿Cómo vas a jugar hoy?"** con los **solo
+    dos** botones —**Jugar con Pareja** y **Multijugador**, en el mismo
+    renglón—. Abajo de todo el remate del engrane y, **debajo de él**, el botón
+    del QR (el orden de esos dos se invirtió el 17-oct-2026: antes el QR iba
+    primero). El detalle del modelo y de las tres
+    colecciones está en **`General/Modelo-Datos.md`**, sección **1b**.
+
+  - **El rediseño de la pantalla de inicio de `Roles/` (17-oct-2026, aprobado por
+    Fredy):** se armó primero en **una maqueta suelta fuera del repo** (una sola
+    página con el CSS copiado, para ver y ajustar sin tocar la app) y después se
+    pasó a `Roles/index.html`. Lo que quedó, todo con su regla en el CSS:
+    - **"Número de rondas"** es una tarjeta de **la mitad de ancho, centrada**
+      (`#cajaRondas`). **El input NO se encoge**: sigue al 100% de la tarjeta, así
+      que el número se ve igual de ancho y lo compacto es el bloque.
+    - **"Elige Tu Modo de juego"** juntada con la de arriba y más chica por
+      dentro; los cuatro botones se quedaron como estaban (`padding:10px`,
+      letra `.82rem`).
+    - **Variantes Picantes perdió su recuadro** (ni tarjeta ni interruptor con
+      borde) y **se movió a en medio**, entre el modo de juego y "¿Cómo vas a
+      jugar hoy?" (antes iba al final, dentro de una caja). **Ojo con el texto,
+      que se movió de lugar:** la frase **"Variantes Picantes, Te atreves ?"**
+      **dejó de ser el título de arriba y pasó a ser la etiqueta del
+      interruptor**, en coral. Ya **no existe** la frase "Ponle un toque
+      personal a tu juego". El "¿Cuántas veces?" **ya no es un recuadro: es una
+      ventana emergente** (ver la nota siguiente).
+    - **"¿Cómo vas a jugar hoy?"** más chica, con los **botones más arriba**, y su
+      **título más grande** (`1.1rem`). **Ojo: quedó más grande que los otros
+      dos títulos de caja y eso NO es un descuido** — se dejó así porque a Fredy le
+      gustó más así (se avisó y se dejó). Los otros dos siguen en su tamaño.
+    - **"Diviértete más"** un poco más grande, **pero SOLO en la vista de
+      inicio**: se puso `#vistaInicio p.desc`, porque **`p.desc` a secas es
+      global** y esa misma clase la usan el engrane, la selección y la pantalla
+      de continuar, que **no** se tocaron.
+    - **Trampa de CSS que se pasó por alto y sigue ahí:** se quiso subir el
+      espacio entre los cuatro botones de `gap:8px` a `12px` y **NO se aplicó**,
+      porque la regla que manda es **`.tabs.tabsModos`** (dos clases) y le gana
+      a un `.tabsModos` suelto. **Se dejó en 8px** porque es lo que se aprobó en
+      la maqueta. Para cambiar esa separación hay que editar **`.tabs.tabsModos`**,
+      no `.tabsModos`. Lo mismo aplica para cualquier ajuste de esa fila.
+
+  - **El "¿Cuántas veces?" pasó a ser una VENTANA EMERGENTE (17-oct-2026).**
+    Antes era un recuadro que se abría **debajo** del interruptor, y en el
+    celular **la pantalla no cabía**: hubo que hacer un **ajuste de alto** (achicar
+    las tres tarjetas, quitar relleno y juntar espacios, con los títulos pegados
+    al borde de arriba de su tarjeta) **y de paso sacar ese recuadro**. Para
+    volver a tocarlo:
+    - La ventana es **`#modalEsp`** y usa el **molde `.modal .caja` de la app**
+      (el mismo del formulario de personajes), **NO** un `confirmar()`: ese es de
+      "¿sí o no?" y esto es un formulario. Se abre y se cierra con los
+      **`abrirModal(id)` / `cerrarModal(id)` que ya existían** — no se redeclaran.
+    - **`#inpEspecial` y `#espNota` se MOVIERON dentro de la ventana, no se
+      duplicaron.** Por eso `especialK()` y `pintarEspecial()` no cambiaron de
+      nombre ni de referencia. **Prohibido crear un segundo campo de K**: serían
+      dos números que se pueden desincronizar.
+    - **`Cancelar` es VOLVER ATRÁS**: apaga el interruptor y cierra la ventana,
+      para no dejar prendido un modo al que nunca se le dijo cuántas veces.
+      **Aceptar** solo cierra. Poner `.checked = false` a mano **no** dispara el
+      evento `change`, así que no hay ciclo.
+    - **El texto va HASTA ABAJO**, debajo de los dos botones, y los botones se
+      van al fondo con **`margin-top:auto`** dentro de una caja en columna: así
+      quedan pegados a la línea de abajo sin importar cuánto ocupe el texto.
+    - **El aviso de "no tienes variantes" (`#espAviso`) NO se movió a la
+      ventana**, y a propósito: habla de la configuración ("agrégalas en el
+      engrane"), no de K, y tiene que verse sin abrir nada.
+    - El texto de la nota pasó a **"En X de las Y rondas, alguien tendrá una
+      sorpresa."** (antes decía "a alguien le toca una variante"). El aviso de
+      `K > R` en coral se mantiene.
+
+  - **Al acabar la partida se reinicia SOLO el interruptor de Variantes Picantes
+    (decisión de Fredy, 17-oct-2026).** `reiniciarVariantes()` apaga la casilla y
+    vuelve a poner "¿Cuántas veces?" en 1. Se llama en los **dos** caminos donde
+    la partida se acabó de verdad: el **"Aceptar"** del fin y **"Terminar
+    Partida"** del anfitrión.
+    - **El número de rondas y el modo de juego NO se reinician**, a propósito: se
+      dejan como estaban para poder volver a jugar igual de rápido la segunda vez.
+      Antes de esto **no reiniciaba nada**; ahora es el único ajuste que sí vuelve
+      a su valor inicial.
+    - **OJO: NO va en "Pausar y Salir", y esa es la parte que no hay que
+     -meter**: esa partida **se puede retomar** (`roles_partida_local`), así que la
+      casilla tiene que seguir diciendo la verdad sobre lo que quedó guardado. Si
+      se apagara ahí, al retomar se vería apagada **mientras el juego sí tiene
+      variantes**, y el que jugara después creería que no. Ese desajuste es
+      peor que el que se arregla.
+    - Poner `.checked = false` a mano **no** dispara el evento `change`, así que
+      no se abre la ventana sola. `reiniciarVariantes()` llama a `pintarEspecial()`
+      al final, que es lo que limpia el aviso y el texto de la nota.
+
+  > **PROBADO EN VIVO (Fredy, 17-oct-2026):** el rediseño de la pantalla de
+  > inicio y la ventana de "¿Cuántas veces?" quedaron **subidos y probados en el
+  > celular**: la pantalla ya **cabe sin bajar**, la ventana sale con el borde
+  > turquesa y el texto abajo, **Aceptar** cierra y deja el interruptor prendido,
+  > **Cancelar** apaga todo, y al arrancar la partida las variantes caen en las
+  > rondas que se pusieron. **También probado en una partida COMPARTIDA con
+  > invitados (Fredy, oct-2026):** el interruptor reparte las rondas en cada
+  > teléfono.
+
+**Los textos de los modos NO son instrucciones, son PERMISOS (decisión de Fredy,
+  oct-2026) — no reescribirlos sin preguntar.** La pestaña dice el nombre y la
+  descripción dice lo que el jugador gana: `Clásico` → *"Interpreta, Aprovecha y
+  ......"* · `Cambia de Bando` → *"La Lealtad y las Intenciones Cambian de
+  Bando"* · `Seleccionar` → *"Selecciona tus personajes favoritos."*
+  · `Duelo de seducción` → *"Sensualidad contra Erotismo, Quién Ganará ?"*
+  **Los puntos suspensivos de "Clásico" son intencionales y NO se completan:** la
+  frase deja la puerta abierta para que cada quien la rellene con su imaginación.
+  Por eso ahí **no** cabe una palabra como "Disfruta": es un verbo de
+  *sentimiento*, dice qué hay que sentir al terminar y **topa** las opciones.
+  `Interpreta` y `Aprovecha` son verbos de *permiso*: abren. **El criterio para
+  estas descripciones es que ABRA, no que diga qué hacer ni qué sentir.** El
+  subtítulo de la pantalla ("Diviértete más") y las etiquetas de cada tarjeta en
+  la selección ("Normal" / "Contraparte") se dejan como están: no tienen nada que
+ver con el nombre de los modos.
+
+**Duelo de seducción: el cuarto modo de `Roles/` (construido 17-oct-2026).** Está
+  en la misma caja de los otros tres, en **2x2** (dos pestañas arriba, dos abajo).
+  Se reparte una lista de **un solo lado** y **de cada carta se toma su contraparte
+  cruzada** (U1 → C2, U2 → C1); los personajes sin contraparte no cuentan ni se ven.
+  El dueño de la lista juega los originales y el otro las contrapartes. Se juega en
+  dos modalidades (**Turnos**, que es el motor de siempre, y **Juntos**, donde no
+  hay turnos: la pareja juega al mismo tiempo y el anfitrión aprieta "Siguiente") y
+  tiene **cuatro caminos** según se juegue con pareja o en multijugador, y en un
+  celular o cada quien en el suyo. Lo que se guarda en la sesión: `modoBase:"duelo"`,
+  `dueloLado`, `dueloModalidad` y **`dueloPares[]`** (las parejas en orden de
+  ronda). En la pantalla de escogimiento del duelo **solo marca el anfitrión**
+  (quien inicia la partida): la pareja y los invitados ven la lista y el
+  contador, pero no marcan. Cualquiera de los dos puede iniciar, también el
+  Duelo; el que inicia es el anfitrión. "Saltar
+  turno" **no existe** en duelo. **El detalle completo de las cuatro ramas, el
+  modelo de datos y las cuatro funciones del reparto están en
+  `General/duelos.md`** — ese es el archivo que se lee, no esta nota. Cómo se
+  construyó está en **`General/Plan-Duelo.md`**.
+
+  **PROBADO EN VIVO (Fredy, oct-2026):** las **ocho combinaciones de la matriz** y
+  los casos límite **ya se ejecutaron en el celular**. El Duelo **no** es solo
+  código escrito: está verificado. Lo que se fue encontrando al probar está anotado
+  como reglas más abajo y en `General/duelos.md`.
+
+  **Y estas son las reglas del juego en sí (Clásico, Cambia de Bando, Seleccionar y
+  Duelo) que salieron de las pruebas en vivo (oct-2026) — no romper:**
+  - **Saltar turno QUEMA la tarjeta** de esa persona: pierde el turno *con*
+    tarjeta. Si solo se le saltara el turno, la partida pediría turnos de más, la
+    ronda se pasaría de R y **no terminaría**. Usa el mismo `avanzarTarjeta()` que
+    "Siguiente", para que un salto y un paso normal no puedan comportarse distinto.
+    (En **Duelo** el botón no existe, así que la regla no aplica.)
+  - **No se puede dar "Siguiente" con la carta boca abajo.** El botón se ve
+    apagado y, al tocarlo, sale un aviso discreto (*"Voltea la carta para poder
+    seguir."*). No se **deshabilita**: un botón deshabilitado no avisa nada. **En el
+    duelo *Juntos* esto NO aplica**: ahí el botón no se apaga, porque todos juegan
+    al mismo tiempo y el anfitrión avanza cuando le parece.
+  - **La carta del personaje tiene tope de alto** (`max-height:min(56dvh,520px)`):
+    la foto es un banner 16/9 (no un cuadro) y lo que sobra de la info se desliza
+    **dentro** de la carta, para que "Siguiente" quede siempre cerca. Es la misma
+    carta en todos los modos de `Roles/` y en las dos caras del duelo. (17-oct-2026)
+  - **El invitado no sale de la pantalla de selección**: se le oculta el "‹ Volver"
+    y el botón atrás del celular queda bloqueado, igual que durante el juego.
+  - **La pantalla de selección tiene buscador** (`#selBuscar`, 17-oct-2026):
+    filtra la lista que se está viendo, sin mayúsculas y sin acentos ("jose"
+    encuentra a "José"). Sirve igual para la selección normal y para la del
+    Duelo, que comparten pantalla.
+  - **El "Volver" de la pantalla de selección va ARRIBA A LA DERECHA**, no
+    abajo: el botón de abajo (`#btnSelVolver`) se quedó en el código pero
+    **oculto**, porque el enlace de arriba llama a su función para cancelar.
+  - **En el Duelo hay dos atajos** (17-oct-2026), solo para quien inicia:
+    - **"Sorpréndeme, elige por mí"** (`#btnSelAzar`): marca **R parejas al azar**
+      (el orden al azar es el orden de las rondas), suben los dos contadores y se
+      enciende "Jugar". Se puede repetir para re-sortear.
+    - **"Tentación sin distinciones"** (`#btnSelTentacion`): **ignora lo marcado**
+      y reparte a **cada persona** (usuario 1 y sus invitados; usuario 2 y los
+      suyos) su propia mano de **R cartas al azar de `U+C` de su lado**, distintas
+      entre compañeros si alcanzan y con repetición si no. **No hay parejas**, así
+      que en este modo **no sale "contra ..."**. Sirve en todas las combinaciones
+      **menos Multijugador + un celular** (ahí el botón no se muestra). En Juntos
+      un celular (solo Pareja) la carta de dos caras muestra la de cada quien.
+    Ninguno de los dos sale en la selección normal.
+  - **"Sorpréndeme" también está en el modo "Seleccionar"** (17-oct-2026): marca
+    **R tarjetas al azar de `U+C` de la lista que se está viendo**, distintas
+    (el pool siempre alcanza). En **"cada quien"** cada teléfono solo lo hace en
+    su propia lista; en **"un solo celular"**, en la pestaña que se esté viendo.
+    "Tentación sin distinciones" sigue siendo solo del Duelo.
+  - **El Duelo "cada quien" espera a la pareja** (17-oct-2026): no arranca hasta
+    que la otra parte entra ("Esperando a que entre …"), y si no entra se puede
+    **"Comenzar igual"**. Espera **solo a la pareja**, no a los invitados, y no
+    aplica en "un solo celular". Si alguien acepta después de que ya arrancó,
+    entra **a la partida**, no a la selección muerta.
+  - **"Pausar y Salir" se puede retomar.** En **"cada quien en su celular"** la
+    partida vive en `sesionRoles/actual`. En **"un solo celular"** se guarda en el
+    propio teléfono (`localStorage`, clave `roles_partida_local`) y, al volver,
+    sale "¿Continuar partida anterior?" con **Continuar / Partida nueva**. Esa
+    copia local **no manda invitación ni se expone a nadie**, y se borra al
+    empezar una partida nueva, al dar "Terminar Partida" o al aceptar el fin.
+    (17-oct-2026)
+  - **La selección del Duelo en solo lectura** (la pareja y los invitados ven,
+    no marcan) usa un **checkbox propio**: teal con check oscuro, también
+    deshabilitado. El nativo pintaba el check blanco sobre blanco y no se veía.
+  - **Invitado a media partida en Duelo/Juntos:** entra en la **misma ronda** que
+    se está jugando y recibe la pareja actual + las que restan. En **Turnos**
+    sigue entrando a la ronda siguiente (no tiene turno en la actual).
+  - **Mensajes de fase del Duelo** (`#faseDuelo`) y el **"Toca para revelar el
+    personaje"** del reverso van con letra más grande y degradado coral→turquesa.
+  - **"Variantes Picantes, Te atreves ?"** (la etiqueta del interruptor de
+    Variantes Picantes) va en **coral** (`var(--coral)`), para que resalte.
+    **Antes esa frase era el título de la caja** y en coral decía "Ponle un toque
+    personal a tu juego"; el 17-oct-2026 el interruptor se quedo sin recuadro, se
+    movio a en medio y **las dos frases se intercambiaron de lugar**: ahora el
+    titulo es la etiqueta y la frase en coral se fue.
+  - **Arriba del reproductor del Duelo** va el **modo de juego y la modalidad**
+    ("Pareja · Juntos" / "Multijugador · Turnos") y **debajo** "Ronda X de R".
+    Antes estaba al revés y no decía Pareja/Multijugador.
+  - **Cartas del Duelo:** debajo del personaje dicen **"contra [la contraparte]"**.
+    En la carta de dos caras, cada cara muestra a la del otro. En los otros modos
+    ese texto no sale. (17-oct-2026)
+  - **El invitado también carga el contenido** (`cargarPersonajes()`); si no, su
+    lista de selección sale **vacía**. Y no se dibuja la selección sin contenido
+    (`asegurarPersonajes()`).
+  - **"Pegar lista completa" es tolerante, pero NO adivina.** Acepta: un arreglo
+    JSON, un objeto suelto, **un pedazo de arreglo sin los corchetes** (`{...}, {...},`
+    — con o sin la coma final), el formato envuelto (`{"U1":[...]}`), **comillas
+    tipográficas** (`“ ”`) y texto, uno por línea. Y si el JSON está **mal escrito,
+    avisa y no pega nada**, con la **pista del navegador** (que trae **la línea y
+    la columna** del error), para poder arreglarlo a mano. Antes, si el texto no
+    empezaba con `[`, se caía a "un renglón = un personaje" **en silencio** y
+    metía cada línea como un personaje, con todo el texto como nombre (le pasó a
+    Fredy al pegar los personajes de un usuario en Contrapartes).
+  - **"Exportar lista" descarga la lista que se está viendo (17-oct-2026).** Va
+    **pareado con "Pegar lista completa"**, en la misma línea de dos botones al
+    final del engrane (`#btnExportar`, función `exportarLista()`). **NO va en la
+    esquina superior derecha**: ahí vive el "‹ Volver" y en toda la app hay **un
+    solo botón por esquina** (ver `AGENTS.md`, regla 1f). Exporta **lo que se
+    tiene seleccionado en ese momento** — la pestaña de usuario + la sub-pestaña
+    (Personajes / Contrapartes), o **Variantes Picantes** — y en esa pestaña el
+    texto se renombra solo ("Exportar variantes"). Tres reglas:
+    - **Lo que se exporta es un arreglo pelado**, el mismo formato que acepta
+      "Pegar lista completa": el archivo se puede volver a pegar tal cual.
+    - **No le hace caso al buscador.** El buscador es para buscar, no para
+      achicar un respaldo: si respetara el filtro, un archivo que dice "todos los
+      personajes" podría salir con la mitad y nadie lo notaría.
+    - El nombre del archivo sale del **nombre real del usuario**
+      (`limpiarParaArchivo()` lo limpia de `/ \ : * ? " < > |` y le acorta los
+      espacios, porque el nombre viene de la base y un `/` rompería la descarga;
+      si queda vacío cae a `usuario1` / `usuario2`). Ejemplo:
+      `roles-Fredy-personajes.json`.
+    Con lista vacía **no baja nada**: avisa con `aviso()`.
+  - **Las contrapartes van CRUZADAS** (decisión de Fredy, oct-2026): la lista de
+    contrapartes de un usuario son las contrapartes de los personajes **del otro**.
+    O sea, **`C1` ↔ `U2`** y **`C2` ↔ `U1`**. Por eso el desplegable "Contraparte
+    de" de una contraparte de `C1` lista los personajes de `U2`, y los avisos de
+    correspondencia van cruzados igual. *(Antes era del mismo dueño —`C1` ↔ `U1`— y
+    estaba al revés; lo reportó Fredy jugando.)*
+  - **Cada quien escoge solo de su lado**: en "cada quien en el suyo" el teléfono
+    muestra **solo su pestaña** (y por eso solo puede escribir sus marcas); en "un
+    solo celular" salen todas. El lado del invitado sale de `conQuien`.
+  - **Mientras se escoge, el aviso de la sala apunta al documento de la
+    SELECCIÓN** (`sesion:"seleccionRoles/actual"` **con el mismo `sid`**), no a la
+    partida. Hace falta porque durante la selección **todavía no hay partida**, y
+    la sala exige que el documento apuntado esté `activa`. Al cancelar se
+    **retira** el aviso; al arrancar, lo reemplaza el de la partida. **Y quien
+    acaba de escoger no recibe "¿Unirse?" otra vez** (`selYaEntre`): entra directo.
+  - **El diseño de la carta vive en el código** (`Roles/index.html`, el CSS de
+    `#tarjeta` y `#reverso`): no se copia aquí para que no se separe de la
+    realidad. Lo que **no** se ve en el CSS: las etiquetas visibles son
+    **SITUACIÓN / ATRACTIVO / DERECHOS / ACCIÓN** y los campos **no** se renombran
+    (siguen siendo `situacion`, `gancho`, `derechos`, `si_quieres`); el **mosaico
+    va solo en el reverso**; y el **emoji del remate va FUERA** del degradado,
+    porque con `background-clip:text` el emoji también sale transparente. El bloque
+    de la variante que va dentro de la carta se rotula **"Variante picante"**.
+- **Trampa de la dirección de un juego (oct-2026) — costó dos rondas de
+  diagnóstico:** los juegos importan los módulos de la raíz con `../acceso.js` y
+  compañía. Eso **solo funciona si la dirección es la CARPETA** (`/Roles/`). Si se
+  abre como `/Roles/index.html`, el `..` **no sube**: quita el nombre del archivo
+  y se queda dentro de `/Roles/`, así que **los ocho imports dan 404, el módulo no
+  carga y la pantalla queda en blanco con todos los botones muertos** — y **sin un
+  solo error de JavaScript** (por eso no se veía la causa). La causa típica es el
+  campo **`Ruta`** del pack mal escrito en el Panel: tiene que ser **`Roles`** a
+  secas, **sin** diagonal y **sin** `index.html` (con `Roles/` el enlace queda
+  `/Roles//`; con `Roles/index.html`, se abre el archivo). Un fallo de carga de
+  módulo **no lo ve `window.onerror`**: hay que escuchar el `error` del elemento
+  `<script>`.
+- **El QR y el remate del engrane, en la pantalla de inicio (oct-2026):** en
+  **`Roles/` y en `Opciones/`** la pantalla de inicio ahora trae, abajo de todo,
+  un botón **"QR Invita a Alguien"** y el remate **"Personaliza tu experiencia
+  en... ⚙️"** (que **abre el engrane de esa misma pantalla**). Sirve para
+  registrar invitados **sin tener que entrar a la partida**. El QR es **una sola
+  función** (`abrirQR()`), la usan el botón de adentro del juego y el del inicio:
+  no está copiada. **"Agregar invitado" NO se puso ahí**: en el inicio todavía no
+  hay partida, y los invitados ya registrados entran solos.
+- **Y `Opciones/` tenía el mismo defecto del blanco (oct-2026):** esperaba a
+  Firebase **antes** de pintar (`await cargarOpciones()`), así que la pantalla se
+  quedaba vacía mientras cargaba. Se le aplicó el **mismo arreglo que a `Roles/`**:
+  primero se pinta, después se carga, y se refresca sola. **`Opciones/` se agregó
+  a `extract.py`** (no estaba: nunca se revisaba de sintaxis).
 - **Quién puede iniciar partida (Encuentros y Elecciones Peligrosas, oct-2026):**
   la pantalla de inicio la ve **cualquier usuario que no sea invitado** (el
   administrador **y** la pareja), cada quien con su **propia identidad**. Antes
@@ -1294,7 +1865,7 @@ import { confirmar, aviso } from "../confirmar.js";   // o "./confirmar.js" en l
 // 1) PREGUNTA: hay algo que confirmar o cancelar. Devuelve una promesa.
 if(!await confirmar({
   aviso:true,                                  // circulito ⚠️ (por omision false)
-  titulo:"¿Eliminar a Ana?",                   // la pregunta, en grande
+  titulo:"¿Eliminar a Mary?",                   // la pregunta, en grande
   texto:"No se puede deshacer.",               // la consecuencia, chica (opcional)
   ok:"Eliminar"                                // el boton de adelante
 })) return;
@@ -1364,6 +1935,88 @@ invitado** era largo y avisaba lo que mas se necesita saber:
 Quedo solo **"¿Salir de modo invitado?"**. El invitado ya **no ve ahi** que
 tambien se le borra de la lista de quien lo invito. Si alguna vez molesta, se
 devuelve con `texto:`.
+
+### Favores Express (`favor.js`)
+
+**Que es:** uno le pide un favor al otro **en el momento**, con un precio en puntos,
+y el otro decide. Se pide desde un **boton flotante 🛎️** que esta en las pantallas
+de la pareja, no desde el menu. Vive en **`favor.js`** (modulo de la raiz, como
+`fuegos.js` y `confirmar.js`): en cada pantalla es un import y
+`try{ montarFavor(); }catch(e){}`.
+
+**La diferencia con los retos de la IA, que es la razon de que exista:**
+el reto de la IA **no se puede rechazar**; el Favor Express **si**. Ese "ella
+decide" es lo que lo hace un favor y no un menu.
+
+| Pieza | Donde |
+|---|---|
+| Las dos ventanas (pedir / responder), el pago y el castigo | `favor.js` |
+| La campana y el bip | `pestana.js`, tipo `"favores"` |
+| La pestana **Favores** del Centro | `Retos/centro.html` |
+| Los numeros del 🛒 | `index.html` (⚙️ → Usuarios) |
+
+**Las colecciones:** `favoresExpress` (un documento por favor) e
+`invitosFavor/{id de quien manda}` (el aviso de campana, **por persona**: con uno
+solo los dos se pisan).
+
+**Los cinco numeros del 🛒** — los tres ultimos son **del que pide** y **se
+congelan al crear el favor**, asi que cambiar el 🛒 despues **no** cambia lo ya
+pactado:
+
+| Campo | Que es | Por omision |
+|---|---|---|
+| `ptsActivar` | Puntos para activar un deseo | 500 |
+| `precioCompra` | Precio para comprar un deseo | 100 |
+| `precioFavor` | Precio de un Favor Express | 15 |
+| `pctCastigo` | % que se cobra si aceptan y no cumplen | 50 |
+| `minutosFavor` | Minutos para cumplirlo | 10 |
+
+**Decisiones que no se rompen (de Fredy) — no "mejorarlas" sin preguntar:**
+
+- **El precio SI se le muestra** al que responde, desde la notificacion. Se
+  discutio ocultarlo y se descarto: aceptar a ciegas y que no le paguen se siente
+  como un engaño.
+- **El reloj arranca al ACEPTAR**, no al pedir. Si arrancara al pedir se venceria
+  por estar ocupada, que es justo lo que pasa.
+- **El saldo nunca queda negativo** (tope cero). Si no le alcanza, **el boton
+  igual aparece** y se le avisa. Es **al contrario** que el "Comprar" del Centro,
+  y es a proposito (ver `Centro-Adquisiciones.md`).
+- **La sancion descuenta hasta donde alcance** y si no da, queda en cero.
+- **El contra-precio es UNA ida y una vuelta, no un ciclo:** ella contraoferta, el
+  acepta, vuelve a ella y **ahi se decide**. Si alguien no acepta en cualquier
+  paso, el favor muere y no pasa nada.
+- **Quien pidio no toca el precio**; **quien cumple si** (hacia arriba, o hasta 0
+  si lo regala). Asi nadie puede bajar el precio y ganar algo.
+- **Un solo favor VIVO a la vez.** Se revisa al abrir el formulario **y otra vez al
+  mandar** (`hayFavorVivo()`), para que no se cuele uno mientras escribes. No es un
+  capricho: el aviso de la campana es **un hueco por persona**
+  (`invitosFavor/{id de quien manda}`), asi que dos favores vivos **se pisarian el
+  aviso** y uno de los dos se quedaria sin ver el suyo. Los ya cerrados no cuentan.
+
+**Dos cosas quedaron SIN decidir** (venian del plan de desarrollo, que ya se borro;
+si algun dia se deciden, se anotan aqui y se quitan de esta lista):
+
+1. **Si el 🛒 debe avisar del precio cuando se acepta un favor**, como pasa al
+   comprar en el Centro.
+2. **Si se avisa cuando el 🛒 cambia con una negociacion viva.** El precio del favor
+   **ya quedo congelado** en su documento, asi que **no la afecta**: lo unico por
+   decidir es si ademas se dice algo.
+
+**El registro NO se borra** (y esto importa): los puntos se mueven con
+`increment()` y **no hay de donde vinieron** (es el P3 de `Modelo-Datos.md`). Por
+eso **el documento de cada favor se queda siempre**. Lo que si se puede es
+**esconder** los resueltos de la lista, y en el Centro hay un **"Borrar
+descartados"** que borra **solo los rechazados y cancelados** (esos no movieron
+puntos) y siempre pregunta antes.
+
+> **El boton flotante es una EXCEPCION a la regla de las esquinas, y es decision,
+> no descuido.** La regla dice que los botones viven en las esquinas y que jamas
+> hay dos en el mismo lado; el 🛎️ va fijo abajo a la derecha, encima de cualquier
+> pantalla, porque el favor se pide sin entrar a buscarlo. Va en **Z60**, debajo
+> de las ventanas (`confirmar.js` 95, el aviso de fin 80, los fuegos 70) para no
+> tapar el "Aceptar". **No lo muevas a una esquina "para cumplir la regla".**
+> **No sale** si eres invitado, si todavia no hay identidad, ni en `Panel/`,
+> `Tienda/`, `Privacidad/` ni `Terminos/`.
 
 ### Los botones de anfitrion tienen que NACER ocultos (oct-2026)
 

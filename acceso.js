@@ -141,6 +141,38 @@ function consultaSolicitudes(){
     where("para", "==", miProyecto()));
 }
 
+// ¿Qué del catálogo está NUEVO y todavía no se ha pedido?
+// Alimenta el punto rojo del carrito (menú) y el distintivo NUEVO de las
+// secciones del Centro. "Nuevo" son DOS condiciones juntas (decidido por Fredy,
+// oct-2026):
+//   1) el pack trae fecha "Nuevo hasta" VIVA, y
+//   2) TODAVÍA no se ha pedido: no hay solicitud suya en estado pendiente ni
+//      aprobado. Revocada o negada NO cuentan, para que se pueda volver a pedir.
+// Recibe la lista de packs (cada uno con id, nuevoHasta y seccion) y devuelve
+// un objeto { idDelPack: true } con los que cumplen las dos.
+// Nunca lanza: sin conexión devuelve vacío (mejor no avisar que romper).
+export async function nuevosSinPedir(packs){
+  const out = {};
+  try{
+    const snap = await getDocs(consultaSolicitudes());
+    const pedidos = {};
+    snap.forEach(dd=>{
+      const s = dd.data() || {};
+      const est = s.estado || "pendiente";
+      if(est === "revocado" || est === "negado") return;
+      if(s.item) pedidos[s.item] = true;
+    });
+    (packs || []).forEach(p=>{
+      if(!p || !p.id) return;
+      if(p.libre || p.oficial) return;          // los fijos no son del catálogo
+      if(pedidos[p.id]) return;                  // ya se pidió
+      const t = p.nuevoHasta && p.nuevoHasta.toDate ? p.nuevoHasta.toDate().getTime() : 0;
+      if(t && Date.now() < t) out[p.id] = true;  // sigue siendo nuevo por fecha
+    });
+  }catch(e){}
+  return out;
+}
+
 // Escucha UN item (el de esta página).
 // Es lo que usan Guiadas y Encuentros: una sola vez que el admin aprueba,
 // la app guarda el código sola; y si te revocan, te lo quita.

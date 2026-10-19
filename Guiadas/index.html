@@ -72,12 +72,26 @@
   .btnPri:active{ transform:scale(.97); }
   .btnSec{ width:100%; padding:12px; background:none; border:none; cursor:pointer;
     color:var(--fg-muted); font-size:.9rem; text-decoration:underline; }
+  /* Pegar la actividad en JSON: mismo molde que el engrane de Opciones/ y que
+     "Pegar actividad" del Panel. */
+  .filaBotones{ display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; }
+  .pegarBox{ margin-top:10px; width:100%; }
+  .pegarBox textarea{ width:100%; min-height:120px; border-radius:12px; border:1px solid var(--card-border);
+    background:var(--bg); color:var(--fg); padding:12px; font-size:.85rem; font-family:'Inter',sans-serif; resize:vertical; }
   .opModo{ display:flex; align-items:center; gap:10px; padding:11px 12px; background:var(--bg-2);
     border:1px solid var(--card-border); border-radius:12px; margin-top:8px; font-size:.9rem; cursor:pointer; }
   .opModo input{ width:auto; accent-color:var(--teal); }
   #msg{ min-height:20px; font-size:.85rem; color:var(--rojo); margin:6px 0; text-align:center; }
   /* player */
   #progreso{ color:var(--fg-muted); font-size:.85rem; margin-bottom:6px; }
+  /* De quién es el turno DE LA ACCIÓN QUE ESTÁ EN PANTALLA (oct-2026, lo pidió
+     Fredy). Antes no se decía: el color de la acción lo insinúa, pero si estás en
+     "un solo celular" no hay forma de saber de quién es la que estás leyendo. Sale
+     con el color de su lado, el mismo que usa el texto de la acción. */
+  #turnoDe{ font-family:'Chakra Petch',sans-serif; font-size:.85rem; font-weight:600;
+    text-align:center; margin-bottom:10px; color:var(--fg-muted); }
+  #turnoDe.a{ color:var(--teal); }
+  #turnoDe.b{ color:var(--coral); }
   #nivelTag{ font-size:.75rem; color:var(--teal); border:1px solid var(--teal); border-radius:8px;
     padding:3px 10px; margin-bottom:16px; text-transform:uppercase; letter-spacing:.15em;
     font-family:'Chakra Petch',sans-serif; }
@@ -115,7 +129,12 @@
   <h1 id="tituloLista">Elige actividad</h1>
   <p class="desc" id="descLista">¿Qué vas a jugar hoy?</p>
   <input class="buscar" id="buscarLista" type="text" placeholder="🔍 Buscar actividad..." autocomplete="off">
-  <div id="cajaActs" style="width:100%;max-height:55dvh;overflow-y:auto;border:1px solid var(--card-border);border-radius:16px;padding:10px;background:var(--bg-2);">
+  <!-- La caja de actividades era tan alta que en el celular había que bajar para
+       ver el botón de jugar. Se le quitaron DOS renglones (oct-2026, lo pidió
+       Fredy) con `calc`, para que el recorte sea el mismo en cualquier celular y
+       no dependa del alto de la pantalla. El `max()` de abajo es el piso: en una
+       pantalla muy baja el recorte nunca deja la caja inservible. -->
+  <div id="cajaActs" style="width:100%;max-height:max(30dvh, calc(55dvh - 128px));overflow-y:auto;border:1px solid var(--card-border);border-radius:16px;padding:10px;background:var(--bg-2);">
     <div id="listaActs" style="width:100%"></div>
   </div>
   <button class="btnPri" id="btnMulti" style="margin-top:12px;">Modo MultiActividades 🔗</button>
@@ -147,6 +166,14 @@
     <h3>Define acciones de cada nivel</h3>
     <div class="tomasGrid" id="tomasGrid"></div>
   </div>
+  <div class="filaBotones">
+    <button class="btnSec" id="btnPegarJSON">Pegar actividad (JSON)</button>
+    <button class="btnSec" id="btnExportarJSON">Exportar actividad</button>
+  </div>
+  <div class="pegarBox" id="pegarBox" style="display:none">
+    <textarea id="pegarTa" placeholder='Pega aquí el JSON de la actividad. Ejemplo: {"niveles":{"basico":{"A":["…"],"B":["…"]}}}'></textarea>
+    <button class="btnPri" id="btnPegarOk" style="margin-top:8px;">Cargar acciones</button>
+  </div>
   <div id="msg"></div>
   <button class="btnPri" id="btnJugar">Jugar ▶</button>
 </div>
@@ -155,11 +182,14 @@
 <div class="vista" id="vistaPlayer">
   <h1 id="plTitulo">En juego</h1>
   <div id="progreso" hidden></div>
+  <div id="turnoDe"></div>
   <div id="nivelTag" hidden></div>
   <div id="actividadAhora"></div>
   <div id="finMsg" style="display:none">¡Gracias por jugar!</div>
   <button class="btnPri" id="btnSig">Siguiente →</button>
+  <button class="btnSec" id="btnSaltar" style="display:none">Saltar turno</button>
   <button class="btnSec" id="btnTerminar">Terminar</button>
+  <button class="btnSec" id="btnTerminarPartida" style="display:none">Terminar Partida</button>
 </div>
 
 <!-- ============ CONTINUAR (ventana emergente) ============ -->
@@ -233,7 +263,7 @@ import { miProyecto, appTaq, leerLicencias, guardarLicencia, quitarLicencia, ten
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 // Fuegos de celebracion al acabar la cita (igual que Elecciones Peligrosas).
 import { encenderFuegos, apagarFuegos } from "../fuegos.js";
-import { aviso } from "../confirmar.js";
+import { aviso, confirmar } from "../confirmar.js";
 import { montarFavor } from "../favor.js";
 try{ montarFavor(); }catch(e){}
 
@@ -490,6 +520,47 @@ async function iniciarSesionCompartida(datosSesion){
 async function cerrarSesion(){
   try{ await setDoc(sesionRef(), { activa: false, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
 }
+
+// ¿La cita compartida está en pausa? La pausa la marca QUIEN APRETA "Pausar y
+// Salir"; mientras dure, la pareja se queda esperando (decisión de Fredy).
+function sesionPausada(){
+  try{ return jugandoCompartido && !!(sesionActual && sesionActual.pausada); }catch(e){ return false; }
+}
+
+// Saltar el turno de QUIEN NO ESTÁ. Los dos pueden apretarlo (decisión de Fredy).
+//
+// Avanza el contador UN paso aunque el turno no sea el mío: esa es toda la
+// diferencia con `avanzarSesion()`, que solo avanza en el turno propio. Saltar
+// SIN avanzar el contador dejaría la cita pidiendo un turno que nunca llega y no
+// terminaría nunca; aquí la acción del que se salta simplemente se pierde (también
+// decisión de Fredy). Avanza con transacción, igual que el avance normal, para que
+// los dos teléfonos no se pisen si aprietan a la vez.
+async function saltarTurno(){
+  if(!jugandoCompartido) return;
+  const de = listaJuego[paso];
+  if(!de) return;
+  const ok = await confirmar({
+    aviso: true,
+    titulo: "¿Saltar el turno de " + nombreDe(de.lado) + "?",
+    texto: "Esa acción no se va a jugar nunca.",
+    ok: "Saltar"
+  });
+  if(!ok) return;
+  try{
+    await runTransaction(db, async (tx)=>{
+      const ref = sesionRef();
+      const snap = await tx.get(ref);
+      if(!snap.exists()) return;
+      const d = snap.data();
+      if(!d.activa || d.pausada) return;
+      const lista = d.lista || [];
+      const p = d.paso || 0;
+      if(!lista[p]) return;
+      const np = p + 1;
+      tx.update(ref, { paso: np, activa: np < lista.length, terminada: np >= lista.length, actualizadaEn: serverTimestamp() });
+    });
+  }catch(e){}
+}
 function aplicaSesion(d){
   listaJuego = Array.isArray(d.lista) ? d.lista : [];
   paso = Math.min(d.paso || 0, Math.max(0, listaJuego.length - 1));
@@ -523,7 +594,13 @@ function escucharSesion(){
           }
         }else if(jugandoCompartido){
           jugandoCompartido = false;
-          if(d && d.terminada){ abrirFin("¡Gracias por jugar!"); return; }
+          // Si la otra persona le dio "Terminar Partida", `porNombre` trae su
+          // nombre y el aviso lo dice (oct-2026, lo pidió Fredy). Si la cita se
+          // acabó sola, es el agradecimiento de siempre.
+          if(d && d.terminada){
+            abrirFin(d.porNombre ? (d.porNombre + " terminó la cita.") : "¡Gracias por jugar!");
+            return;
+          }
           entrar();
         }
       }catch(e){}
@@ -535,6 +612,13 @@ function ver(id, guardar){
   document.querySelectorAll(".vista").forEach(v=>v.classList.remove("ver"));
   document.getElementById(id).classList.add("ver");
   document.getElementById("btnCfg").style.display = (id === "vistaLista") ? "block" : "none";
+  // En la PARTIDA el "← Volver" se esconde (oct-2026, lo decidió Fredy). Antes no
+  // se escondía nunca y, como el manejador del enlace tampoco conocía esta vista,
+  // apretarlo se iba a Experiencias en vez de volver aquí. Se esconde porque para
+  // salir está el botón "Terminar": nadie se sale a medias de una cita, y menos
+  // cuando la pareja está jugando. Es lo mismo que hace `Encuentros/` con
+  // `pintarSalidas()`. Va junto al engrane porque las dos cosas dependen de la vista.
+  document.getElementById("lnkInicio").style.display = (id === "vistaPlayer") ? "none" : "";
   if(guardar !== false){
     try{ history.pushState({ v: id, act: ultimaActividad }, ""); }catch(e){}
   }
@@ -591,16 +675,21 @@ async function sincronizarOficiales(){
       try{
         const ref = doc(db, "nivelesActividad", p.id);
         const snap = await getDoc(ref);
+        const sug = p.tomasSugeridas ? normTomas(p.tomasSugeridas) : null;
         if(!snap.exists()){
           const nn = {};
           NIVELES.forEach(nv=>{ nn[nv.id] = normLados((p.niveles || {})[nv.id]); });
-          await setDoc(ref, { n: nn, titulo: p.titulo || p.id, oficial: true, actualizadoEn: serverTimestamp() }, { merge: true });
-        }
-      }catch(e){}
-      try{
-        const k = "guia_tomas_" + p.id;
-        if(!localStorage.getItem(k) && p.tomasSugeridas){
-          localStorage.setItem(k, JSON.stringify(normTomas(p.tomasSugeridas)));
+          const base = { n: nn, titulo: p.titulo || p.id, oficial: true, actualizadoEn: serverTimestamp() };
+          // Las tomas sugeridas de la oficial se siembran UNA vez, al copiarla.
+          if(sug){ base.tomas = sug; mapaTomas[p.id] = sug; }
+          await setDoc(ref, base, { merge: true });
+        }else if(sug && !snap.data().tomas){
+          // El documento ya existia sin tomas: primero se intenta la migracion del
+          // celular (para no perder lo que la pareja ya tenia); si no hay nada que
+          // migrar, se siembran las sugeridas. Se escribe UNA sola vez.
+          const mig = migrarTomasDeEsteCelular(p.id);
+          if(mig){ mapaTomas[p.id] = mig; }
+          else{ await setDoc(ref, { tomas: sug }, { merge: true }); mapaTomas[p.id] = sug; }
         }
       }catch(e){}
     }
@@ -752,8 +841,10 @@ async function pintarLista(boxId, modo){
   try{
     const snap = await getDocs(collection(db, "nivelesActividad"));
     snap.forEach(d=>{
-      const n = d.data().n || {};
+      const data = d.data();
+      const n = data.n || {};
       conteos[d.id] = NIVELES.reduce((t, nv)=>t + contarNivel(n[nv.id]), 0);
+      cargarTomasDoc(d.id, data);   // trae las tomas del mismo documento (0 lecturas extra)
     });
   }catch(e){}
   if(boxId === "listaActs"){ cacheActs = acts; cacheConteos = conteos; }
@@ -768,7 +859,9 @@ async function jugarDirecto(nombre){
   datos = { basico: [], medio: [], avanzado: [], experto: [], alucinado: [] };
   try{
     const snap = await getDoc(doc(db, "nivelesActividad", docActual));
-    if(snap.exists() && snap.data().n) datos = Object.assign(datos, snap.data().n);
+    const data = snap.exists() ? snap.data() : null;
+    if(data && data.n) datos = Object.assign(datos, data.n);
+    cargarTomasDoc(docActual, data);
   }catch(e){}
   const pendiente = leerProg();
   if(modoJuego === "compartido"){
@@ -777,7 +870,11 @@ async function jugarDirecto(nombre){
       if(sd.exists()){
         const d = sd.data();
         const esMia = d.hostUid === miIdSesion();
-        const tengoPendientes = Array.isArray(d.lista) && d.lista.length && (d.paso || 0) < d.lista.length;
+        // `d.activa` SÍ se mira (arreglo oct-2026, lo reportó Fredy): antes solo
+        // preguntaba si quedaban pasos, así que una cita que ya se había TERMINADO
+        // volvía a ofrecer "¿Continuar?" y "Continuar" la resucitaba (prendía
+        // `activa` otra vez). Por eso "Terminar" parecía pausa.
+        const tengoPendientes = !!d.activa && Array.isArray(d.lista) && d.lista.length && (d.paso || 0) < d.lista.length;
         if(esMia && tengoPendientes){
           pendienteSrc = "sesion";
           seguirEncima("¿Continuar cita anterior?",
@@ -878,7 +975,7 @@ document.getElementById("btnContinuar").onclick = async ()=>{
     try{
       const nsid = String(Date.now()) + Math.random().toString(36).slice(2, 6);
       sidMostrado = nsid;
-      await setDoc(sesionRef(), { sid: nsid, reanudada: true, activa: true, actualizadaEn: serverTimestamp() }, { merge: true });
+      await setDoc(sesionRef(), { sid: nsid, reanudada: true, activa: true, pausada: false, actualizadaEn: serverTimestamp() }, { merge: true });
     }catch(e){}
     aplicaSesion(d);
     ver("vistaPlayer");
@@ -1093,11 +1190,42 @@ document.getElementById("btnMulti3Ok").onclick = async ()=>{
 };
 
 // ---------- editor ----------
-function tomasGuardadas(nombre){
+// Las tomas viven en la BASE, en el campo `tomas` de `nivelesActividad` (el mismo
+// documento donde estan las acciones). Asi no cuestan ninguna lectura extra: van
+// "de pilon" en el documento que ya se lee para las acciones.
+// `mapaTomas` es solo la copia en memoria de lo que ya se leyo del documento.
+let mapaTomas = {};
+// Lee las tomas del documento que se acaba de traer. Si el documento NO trae
+// tomas, intenta la migracion de una sola vez desde el celular.
+function cargarTomasDoc(id, data){
+  if(data && data.tomas){ mapaTomas[id] = normTomas(data.tomas); return; }
+  const mig = migrarTomasDeEsteCelular(id);
+  if(mig) mapaTomas[id] = mig;
+}
+// Migracion de UNA sola vez (oct-2026): las tomas que quedaron guardadas en este
+// celular, de antes de que se pasaran a la base, se suben y se borran del celular.
+// Despues de eso ya no hay copia local, asi que no puede volver a correr.
+function migrarTomasDeEsteCelular(docId){
+  let local = null;
+  try{ local = JSON.parse(localStorage.getItem("guia_tomas_" + docId) || "null"); }catch(e){}
+  if(!local) return null;
+  const norm = normTomas(local);
   try{
-    const t = JSON.parse(localStorage.getItem("guia_tomas_" + nombre) || "null");
-    if(t) return normTomas(Object.assign({}, TOMAS_DEF, t));
+    setDoc(doc(db, "nivelesActividad", docId), { tomas: norm, actualizadoEn: serverTimestamp() }, { merge: true })
+      .then(()=>{ try{ localStorage.removeItem("guia_tomas_" + docId); }catch(e){} })
+      .catch(()=>{});
   }catch(e){}
+  return norm;
+}
+// Guarda las tomas en la base. Va con `merge` para NO tocar `n` (las acciones).
+function guardarTomasEnBase(id, t){
+  const norm = normTomas(t);
+  mapaTomas[id] = norm;
+  try{ setDoc(doc(db, "nivelesActividad", id), { tomas: norm, actualizadoEn: serverTimestamp() }, { merge: true }).catch(()=>{}); }catch(e){}
+}
+function tomasGuardadas(nombre){
+  const t = mapaTomas[nombre];
+  if(t) return normTomas(Object.assign({}, TOMAS_DEF, t));
   return normTomas(TOMAS_DEF);
 }
 async function abrirEditor(nombre, empujar){
@@ -1105,14 +1233,18 @@ async function abrirEditor(nombre, empujar){
   docActual = docDe(nombre);
   ultimaActividad = nombre;
   document.getElementById("edTitulo").textContent = nombre;
+  document.getElementById("pegarBox").style.display = "none";
+  document.getElementById("pegarTa").value = "";
   datos = {};
   NIVELES.forEach(nv=>{ datos[nv.id] = { A: [], B: [] }; });
   try{
     const snap = await getDoc(doc(db, "nivelesActividad", docActual));
-    if(snap.exists() && snap.data().n){
-      const n = snap.data().n;
+    const data = snap.exists() ? snap.data() : null;
+    if(data && data.n){
+      const n = data.n;
       NIVELES.forEach(nv=>{ datos[nv.id] = normLados(n[nv.id]); });
     }
+    cargarTomasDoc(docActual, data);
   }catch(e){}
   pintarEditor();
   ver("vistaEditar", empujar !== false);
@@ -1221,9 +1353,164 @@ function leerTomas(){
     const el = document.getElementById("toma_" + nv.id);
     t[nv.id] = Math.max(0, Math.min(20, parseInt(el.value, 10) || 0));
   });
-  try{ localStorage.setItem("guia_tomas_" + (docActual || actividad), JSON.stringify(t)); }catch(e){}
+  guardarTomasEnBase(docActual || actividad, t);
   return t;
 }
+
+// ---------- pegar la actividad en JSON (17-oct-2026) ----------
+// Boton pareado con el del Panel ("Exportar actividad" produce justo este JSON).
+// Lo que se pega entra a `datos` y se repinta con la MISMA `pintarEditor()` que
+// corre al abrir la actividad: no se toco como se guardan los datos.
+function mensajeEditor(t, ok){
+  const m = document.getElementById("msg");
+  m.textContent = t;
+  m.style.color = ok ? "var(--teal)" : "var(--rojo)";
+}
+// Lectura TOLERANTE del JSON, copia de la de `Panel/oficiales.html` (se dejo
+// copia a proposito: unificarlo tocaria `Roles/`, que ya fue probado en vivo).
+// Acepta comillas tipograficas y una coma de mas al final; si esta mal, avisa con
+// la pista del navegador (que trae linea y columna) y NO carga nada.
+let errorJSON = "";
+function leerJSONPegado(t){
+  errorJSON = "";
+  const probar = (texto)=>{
+    try{ return { v: JSON.parse(texto) }; }
+    catch(e){ if(!errorJSON) errorJSON = String((e && e.message) || e); return null; }
+  };
+  let r = probar(t); if(r) return r.v;
+  const q = t.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+  if(q !== t){ r = probar(q); if(r) return r.v; }
+  if(q[0] === "{"){ r = probar(q.replace(/,\s*\}\s*$/, "}")); if(r) return r.v; }
+  if(q[0] === "["){ r = probar(q.replace(/,\s*\]\s*$/, "]")); if(r) return r.v; }
+  return null;
+}
+function editorTieneAlgo(){
+  return NIVELES.some(nv=>contarNivel(datos[nv.id]) > 0);
+}
+async function pegarActividad(){
+  const ta = document.getElementById("pegarTa");
+  const txt = (ta.value || "").trim();
+  if(!txt){ mensajeEditor("Pega primero el JSON."); return; }
+  const d = leerJSONPegado(txt);
+  if(d === null){
+    mensajeEditor("El JSON está mal escrito y no se cargó nada."
+      + (errorJSON ? "  Pista: " + errorJSON : "")
+      + "  Revisa comas y comillas.");
+    return;
+  }
+  if(!d || typeof d !== "object" || Array.isArray(d)){
+    mensajeEditor("Eso no es una actividad: se espera un objeto que empiece con {  \"niveles\"… }");
+    return;
+  }
+  // Acepta el JSON del Panel ({niveles:{…}}) y, si no viene envuelto, el mapa de
+  // niveles pelado ({basico:{A,B}, …}). Un nivel puede traer A y B, o una sola
+  // lista: esa se pone en los dos lados (es lo que hace `normLados`).
+  const fuente = d.niveles || d.acciones || d.n
+    || (NIVELES.some(nv=>d[nv.id] !== undefined) ? d : null);
+  if(!fuente || typeof fuente !== "object" || Array.isArray(fuente)){
+    mensajeEditor("No trae acciones: se espera  \"niveles\": { \"basico\": { \"A\": [ … ], \"B\": [ … ] } }");
+    return;
+  }
+  let n = 0, cortadas = 0;
+  const nuevo = {};
+  NIVELES.forEach(nv=>{
+    const lados = normLados(fuente[nv.id]);
+    const out = { A: [], B: [] };
+    ["A", "B"].forEach(lado=>{
+      (lados[lado] || []).forEach(s=>{
+        if(s === null || s === undefined) return;
+        s = String(s).replace(/\s+/g, " ").trim();
+        if(!s) return;
+        if(s.length > 90){ s = s.slice(0, 90); cortadas++; }  // el campo "Nueva accion" tops en 90
+        if(out[lado].some(t=>t.toLowerCase() === s.toLowerCase())) return;
+        out[lado].push(s);
+      });
+      n += out[lado].length;
+    });
+    nuevo[nv.id] = out;
+  });
+  if(!n){ mensajeEditor("El JSON no trae ninguna acción: no se cargó nada."); return; }
+  // Pegar BORRA lo que hubiera. Si hay algo escrito, se pregunta primero
+  // (regla de la casa: preguntar antes de borrar).
+  if(editorTieneAlgo()){
+    const ok = await confirmar({
+      aviso: true,
+      titulo: "¿Reemplazar las acciones de esta actividad?",
+      texto: "Lo que escribiste se borra y queda lo del JSON.",
+      ok: "Reemplazar"
+    });
+    if(!ok) return;
+  }
+  datos = nuevo;
+  await guardar();
+  // Las tomas del JSON van a la base (campo `tomas`) y las pinta `pintarEditor`.
+  const t = d.tomasSugeridas || d.tomas;
+  if(t && typeof t === "object" && !Array.isArray(t)){
+    guardarTomasEnBase(docActual || actividad, t);
+  }
+  ta.value = "";
+  document.getElementById("pegarBox").style.display = "none";
+  pintarEditor();
+  mensajeEditor("Cargado: " + n + " acción(es)."
+    + (cortadas ? " " + cortadas + " se cortaron a 90 letras." : "")
+    + " Revisa y dale Jugar ▶.", true);
+}
+document.getElementById("btnPegarJSON").onclick = ()=>{
+  const b = document.getElementById("pegarBox");
+  b.style.display = (b.style.display === "none") ? "block" : "none";
+};
+document.getElementById("btnPegarOk").onclick = ()=>{ pegarActividad(); };
+
+// ---------- exportar la actividad en JSON (17-oct-2026) ----------
+// El archivo sale con la MISMA forma que acepta "Pegar actividad (JSON)", que es la
+// que produce el Panel: el viaje funciona para los dos lados. Lo que se baja de
+// aqui se puede volver a pegar en este editor, y se puede llevar al Panel.
+function limpiarParaArchivo(s){
+  // Deja solo lo que un nombre de archivo aguanta. El nombre viene de la base, y
+  // un "/" o un ":" ahi romperia la descarga.
+  return String(s || "").replace(/[\\/:*?"<>|\u0000-\u001f]/g, "").trim()
+    .replace(/\s+/g, "-").slice(0, 40);
+}
+// Las tomas que se VEN en los cuadritos, no las guardadas: pueden estar cambiadas
+// a mano sin haber dado todavia "Jugar".
+function tomasDePantalla(){
+  const guardadas = tomasGuardadas(docActual || actividad);
+  const t = {};
+  NIVELES.forEach(nv=>{
+    const el = document.getElementById("toma_" + nv.id);
+    t[nv.id] = el ? Math.max(0, Math.min(20, parseInt(el.value, 10) || 0)) : (guardadas[nv.id] || 0);
+  });
+  return t;
+}
+function exportarActividad(){
+  let n = 0;
+  const niveles = {};
+  NIVELES.forEach(nv=>{
+    const l = normLados(datos[nv.id]);
+    niveles[nv.id] = { A: l.A.slice(), B: l.B.slice() };
+    n += l.A.length + l.B.length;
+  });
+  if(!n){ aviso("Esta actividad todavía no tiene ninguna acción."); return; }
+  const o = {
+    titulo: document.getElementById("edTitulo").textContent,
+    niveles: niveles,
+    tomasSugeridas: tomasDePantalla()
+  };
+  const nombre = "actividad-" + (limpiarParaArchivo(actividad) || "sin-nombre") + ".json";
+  try{
+    const blob = new Blob([JSON.stringify(o, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = nombre; a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); if(a && a.parentNode) a.parentNode.removeChild(a); }, 2000);
+    aviso("Se descargó " + nombre + " (" + n + " acción(es)).");
+  }catch(e){
+    aviso("No se pudo crear el archivo en este navegador.");
+  }
+}
+document.getElementById("btnExportarJSON").onclick = ()=>{ exportarActividad(); };
 
 // ---------- player ----------
 document.getElementById("btnJugar").onclick = ()=>{
@@ -1242,11 +1529,27 @@ document.getElementById("btnJugar").onclick = ()=>{
   pintarPaso();
   ver("vistaPlayer");
 };
+// De quién es el turno de la acción que está en pantalla. Sale siempre, también en
+// "un solo celular": ahí no hay a quién esperar, pero sí hay que saber de quién es
+// la acción que se está leyendo. El nombre sale de la base y entra con `textContent`
+// (nunca `innerHTML`, según la regla de la casa).
+function pintarTurnoDe(){
+  const el = document.getElementById("turnoDe");
+  if(!el) return;
+  const de = Array.isArray(listaJuego) ? listaJuego[paso] : null;
+  if(!de){ el.textContent = ""; return; }
+  el.textContent = "Turno de " + nombreDe(de.lado);
+  el.className = (de.lado === "A") ? "a" : (de.lado === "B" ? "b" : "");
+}
+
 function pintarPaso(){
   const total = listaJuego.length;
   const elAct = document.getElementById("actividadAhora");
   const tag = document.getElementById("nivelTag");
   const btnSig = document.getElementById("btnSig");
+  const btnSaltar = document.getElementById("btnSaltar");
+  const btnTerminar = document.getElementById("btnTerminar");
+  const btnTerminarPartida = document.getElementById("btnTerminarPartida");
   const fin = document.getElementById("finMsg");
   const prog = document.getElementById("progreso");
   const p = listaJuego[paso];
@@ -1256,15 +1559,45 @@ function pintarPaso(){
   }else{
     prog.hidden = true;
   }
+  // Los DOS modos tienen los mismos dos botones de salida, y el "←" es el mismo:
+  // "Pausar y Salir" deja la cita viva (se retoma), "Terminar" la acaba de verdad.
+  // En compartido el segundo dice "Terminar Partida" porque le avisa al otro; en un
+  // solo celular dice "Terminar" y borra el avance guardado aquí.
+  btnTerminar.textContent = "Pausar y Salir";
+  btnTerminarPartida.style.display = "";
+  btnTerminarPartida.textContent = jugandoCompartido ? "Terminar Partida" : "Terminar";
   if(!p){
     elAct.textContent = "";
     tag.style.display = "none";
     btnSig.style.display = "none";
+    btnSaltar.style.display = "none";
+    btnTerminar.style.display = "none";
+    btnTerminarPartida.style.display = "none";
     fin.style.display = "block";
     return;
   }
   fin.style.display = "none";
   tag.style.display = "";
+  btnTerminar.style.display = "";
+  btnTerminarPartida.style.display = "";
+
+  // En pausa nadie juega: el que pausó tiene que volver a entrar para seguir
+  // (decisión de Fredy: la pareja "se queda esperando").
+  if(sesionPausada()){
+    // El nombre sale de QUIEN PAUSÓ (`pausadaPor`), no del que inició la cita: los
+    // dos pueden pausar y el que espera puede ser cualquiera de los dos.
+    elAct.textContent = ((sesionActual && sesionActual.pausadaPor) || "Tu pareja") + " está en pausa…";
+    elAct.style.color = "var(--fg-muted)";
+    btnSig.style.display = "";
+    btnSig.disabled = true;
+    btnSig.style.opacity = ".4";
+    btnSig.textContent = "Espera tu turno";
+    btnSaltar.style.display = "none";
+    tag.style.display = "none";
+    pintarTurnoDe();
+    return;
+  }
+
   const mia = !jugandoCompartido || p.lado === miLado;
   if(mia){
     elAct.textContent = p.texto;
@@ -1273,6 +1606,7 @@ function pintarPaso(){
     btnSig.disabled = false;
     btnSig.style.opacity = "1";
     btnSig.textContent = (paso + 1 >= total) ? "Terminar 🔥" : "Siguiente →";
+    btnSaltar.style.display = "none";
   }else{
     elAct.textContent = "Turno de " + nombreDe(p.lado) + "…";
     elAct.style.color = "var(--fg-muted)";
@@ -1280,7 +1614,12 @@ function pintarPaso(){
     btnSig.disabled = true;
     btnSig.style.opacity = ".4";
     btnSig.textContent = "Espera tu turno";
+    // Brincar al que no está: lo pueden los DOS (decisión de Fredy), por eso aquí
+    // no se pregunta quién es el anfitrión como en `Encuentros/`.
+    btnSaltar.style.display = "";
+    btnSaltar.textContent = "Saltar turno de " + nombreDe(p.lado);
   }
+  pintarTurnoDe();
   tag.textContent = p.nivel + (p.lado ? " · Lado " + p.lado : "");
 }
 document.getElementById("btnSig").onclick = ()=>{
@@ -1303,8 +1642,45 @@ document.getElementById("btnFinOk").onclick = ()=>{
   if(finEnLocal){ finEnLocal = false; borrarProg(); }
   entrar();
 };
+document.getElementById("btnSaltar").onclick = ()=>{ saltarTurno(); };
 document.getElementById("btnTerminar").onclick = async ()=>{
-  if(jugandoCompartido){ jugandoCompartido = false; await cerrarSesion(); }
+  // PAUSA y salir: la cita SIGUE VIVA y se retoma donde iban.
+  //   - Compartida: se marca `pausada` + `pausadaPor`, y la pareja se queda
+  //     esperando. NO se apaga `activa`.
+  //   - Un solo celular: no hay nada que marcar. El avance ya quedó guardado en
+  //     este celular en cada paso (`guardarProg()`), así que al volver a la misma
+  //     actividad sale "¿Continuar?" y sigue donde iba.
+  if(jugandoCompartido){
+    try{ await setDoc(sesionRef(), { pausada: true, pausadaPor: nombreDe(miLado), actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+    jugandoCompartido = false;
+  }
+  entrar();
+};
+document.getElementById("btnTerminarPartida").onclick = async ()=>{
+  // TERMINA de verdad: aquí no se retoma nunca más.
+  const ok = await confirmar({
+    aviso: true,
+    titulo: "¿Terminar la cita?",
+    texto: jugandoCompartido
+      ? "Se acaba para los dos. No se puede volver a continuar."
+      : "Se borra el avance guardado en este celular. No se puede continuar.",
+    ok: "Terminar"
+  });
+  if(!ok) return;
+  if(jugandoCompartido){
+    try{
+      await setDoc(sesionRef(), {
+        activa: false, terminada: true, porNombre: nombreDe(miLado), pausada: false,
+        actualizadaEn: serverTimestamp()
+      }, { merge: true });
+    }catch(e){}
+    jugandoCompartido = false;
+  }else{
+    // En un solo celular "Terminar" sí tiene que BORRAR el avance. Antes solo
+    // salía de la cita y lo dejaba guardado, así que al volver ofrecía
+    // "Continuar": era pausa, no final (oct-2026, lo reportó Fredy).
+    borrarProg();
+  }
   entrar();
 };
 
@@ -1317,6 +1693,13 @@ document.getElementById("btnUnirme").onclick = ()=>{
   const d = sesionActual;
   document.getElementById("modalUnir").style.display = "none";
   if(!d || !d.activa) return;
+  // En pausa no se puede entrar (la misma regla de `Encuentros/`): la cita sigue
+  // viva, pero quien tiene que reanudarla es quien la pausó. Si no, el que llega
+  // se metería a jugar y los dos a la vez.
+  if(d.pausada){
+    aviso((d.pausadaPor || "Tu pareja") + " pausó la cita. Espera a que la reanude.");
+    return;
+  }
   jugandoCompartido = true;
   aplicaSesion(d);
   ver("vistaPlayer");

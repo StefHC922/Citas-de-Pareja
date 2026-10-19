@@ -68,6 +68,12 @@
     color:var(--fg); padding:10px; font-size:1rem; width:100%; font-family:'Inter',sans-serif; }
   #msg{ min-height:20px; font-size:.85rem; color:var(--rojo); margin:6px 0; text-align:center; max-width:520px; }
   #msg.ok{ color:var(--teal); }
+  /* Pegar / Exportar la actividad en JSON. Mismo molde que el engrane de
+     `Roles/`: los dos botones en una línea y la cajita de pegado debajo. */
+  .pegarBox{ margin-top:10px; }
+  .pegarBox textarea{ width:100%; min-height:130px; border-radius:12px;
+    border:1px solid var(--card-border); background:var(--bg); color:var(--fg);
+    padding:12px; font-size:.82rem; font-family:'Inter',sans-serif; margin-bottom:8px; }
 </style>
 </head>
 <body>
@@ -94,6 +100,18 @@
   <h3 style="margin-top:6px;">Tomas sugeridas</h3>
   <p class="mini">La pareja las puede cambiar. Solo se aplican la primera vez.</p>
   <div class="tomasGrid" id="tomasGrid"></div>
+  <!-- Pegar y exportar van en la MISMA línea, pareados, igual que en el engrane
+       de `Roles/`. La cajita de pegado NACE OCULTA (regla de la casa: lo que
+       JavaScript tiene que esconder, nace escondido). -->
+  <div class="fila" style="margin-top:12px;">
+    <button class="btn ghost" id="btnPegarJSON" type="button">Pegar actividad</button>
+    <button class="btn ghost" id="btnExportarJSON" type="button">Exportar actividad</button>
+  </div>
+  <div class="pegarBox" id="pegarBox" style="display:none">
+    <textarea id="pegarTa" placeholder='Pega aquí el JSON. Ejemplo: {"titulo":"Noche Sensual","niveles":{"basico":{"A":["…"],"B":["…"]}}}'></textarea>
+    <button class="btn" id="btnPegarOk" type="button" style="width:100%;">Cargar en el formulario</button>
+    <p class="mini" style="margin:8px 0 0;">Si el JSON trae <b>id</b>, el campo del ID queda bloqueado (es la licencia y no se cambia). Usa <b>Limpiar</b> si quieres poner otro.</p>
+  </div>
   <div class="fila">
     <button class="btn" id="btnGuardar">Guardar</button>
     <button class="btn ghost" id="btnLimpiar">Limpiar</button>
@@ -304,6 +322,137 @@ function pintarForm(f){
   validarForm();
 }
 document.getElementById("btnLimpiar").onclick = ()=>{ pintarForm({}); msg(""); };
+
+// ---------- pegar / exportar la actividad en JSON (17-oct-2026) ----------
+// Lo que se pega termina en `pintarForm()`, que es la MISMA función que corre al
+//leer "editar" de una actividad guardada. O sea: el relleno ya estaba probado;
+//lo nuevo es solo leer el texto. Por eso no se toco nada de cómo se guardan los
+// datos: se sigue escribiendo en `packs` con la misma forma de siempre.
+function limpiarParaArchivo(s){
+  return String(s || "").replace(/[\\/:*?"<>|\u0000-\u001f]/g, "").trim()
+    .replace(/\s+/g, "-").slice(0, 40);
+}
+// Acepta el "YYYY-MM-DD" de <input type="date">, y tambien la fecha larga con
+// hora que suelta el navegador al exportar, y un objeto Timestamp de Firestore.
+function aFechaISO(v){
+  if(v === null || v === undefined || v === "") return "";
+  if(typeof v === "object"){
+    if(typeof v.toDate === "function"){ try{ v = v.toDate(); }catch(e){ return ""; } }
+    else if(typeof v.seconds === "number"){ try{ v = new Date(v.seconds * 1000); }catch(e){ return ""; } }
+  }
+  const s = String(v);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return m[1] + "-" + m[2] + "-" + m[3];
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+}
+// El formulario tal como está, en la forma que lo guarda `btnGuardar`.
+function actividadComoObjeto(){
+  const o = {};
+  const id = document.getElementById("fId").value.trim();
+  if(id) o.id = id;   // el id va primero: es lo primero que uno necesita saber
+  o.titulo = document.getElementById("fTitulo").value.trim();
+  o.icono = document.getElementById("fIcono").value.trim() || "🏅";
+  o.desc = document.getElementById("fDesc").value.trim();
+  o.orden = parseInt(document.getElementById("fOrden").value, 10) || 10;
+  o.activo = document.getElementById("fActivo").checked;
+  const fv = document.getElementById("fNuevo").value;
+  if(fv) o.nuevoHasta = fv;   // "YYYY-MM-DD", como lo espera el campo de fecha
+  o.niveles = {};
+  NIVELES.forEach(nv=>{
+    o.niveles[nv.id] = { A: (niveles[nv.id].A || []).slice(), B: (niveles[nv.id].B || []).slice() };
+  });
+  o.tomasSugeridas = leerTomas();
+  return o;
+}
+function exportarActividad(){
+  const o = actividadComoObjeto();
+  if(!o.titulo && !o.desc){ msg("No hay nada que exportar: el formulario está vacío."); return; }
+  const nombre = "actividad-" + (limpiarParaArchivo(o.id || o.titulo) || "sin-nombre") + ".json";
+  try{
+    const blob = new Blob([JSON.stringify(o, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); if(a && a.parentNode) a.parentNode.removeChild(a); }, 2000);
+    msg("Se descargó " + nombre, true);
+  }catch(e){
+    msg("No se pudo crear el archivo en este navegador.");
+  }
+}
+// ¿Hay algo escrito que se vaya a perder al pegar?
+function formularioTieneAlgo(){
+  if(niveles && Object.keys(niveles).some(k => (niveles[k].A || []).length || (niveles[k].B || []).length)) return true;
+  return ["fId","fTitulo","fIcono","fDesc"].some(id => (document.getElementById(id).value || "").trim() !== "");
+}
+// Lectura TOLERANTE del JSON, igual que la del engrane de `Roles/`: acepta
+// comillas tipográficas y una coma de más al final, y avisa con la pista del
+// navegador (que trae línea y columna) si está mal, en vez de fallar en silencio.
+let errorJSON = "";
+function leerJSONPegado(t){
+  errorJSON = "";
+  const probar = (texto)=>{
+    try{ return { v: JSON.parse(texto) }; }
+    catch(e){ if(!errorJSON) errorJSON = String((e && e.message) || e); return null; }
+  };
+  let r = probar(t); if(r) return r.v;
+  const q = t.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+  if(q !== t){ r = probar(q); if(r) return r.v; }
+  if(q[0] === "{"){ r = probar(q.replace(/,\s*\}\s*$/, "}")); if(r) return r.v; }
+  if(q[0] === "["){ r = probar(q.replace(/,\s*\]\s*$/, "]")); if(r) return r.v; }
+  return null;
+}
+async function pegarActividad(){
+  const ta = document.getElementById("pegarTa");
+  const t = (ta.value || "").trim();
+  if(!t){ msg("Pega primero el JSON."); return; }
+  const d = leerJSONPegado(t);
+  if(d === null){
+    msg("El JSON está mal escrito y no se cargó nada."
+      + (errorJSON ? "  Pista: " + errorJSON : "")
+      + "  Revisa comas y comillas.");
+    return;
+  }
+  if(!d || typeof d !== "object" || Array.isArray(d)){
+    msg("Eso no es una actividad: se espera un objeto que empiece con {  \"titulo\":… }");
+    return;
+  }
+  // Pegar BORRA lo que haya en el formulario. Si hay algo escrito, se pregunta
+  // primero (regla de la casa: preguntar antes de borrar).
+  if(formularioTieneAlgo()){
+    const ok = await confirmar({
+      aviso: true,
+      titulo: "¿Reemplazar lo que está en el formulario?",
+      texto: "Lo que escribiste se borra y queda lo del JSON.",
+      ok: "Reemplazar"
+    });
+    if(!ok) return;
+  }
+  pintarForm({
+    id: String(d.id || "").trim(),
+    titulo: d.titulo || d.nombre || d.title || "",
+    icono: d.icono || "",
+    desc: d.desc || d.descripcion || d.description || "",
+    orden: parseInt(d.orden, 10) || 10,
+    activo: d.activo !== false,
+    nuevo: aFechaISO(d.nuevoHasta || d.nuevo || d.fechaNuevo || ""),
+    niveles: d.niveles || d.acciones || {},
+    tomas: d.tomasSugeridas || d.tomas || null
+  });
+  ta.value = "";
+  document.getElementById("pegarBox").style.display = "none";
+  let n = 0;
+  NIVELES.forEach(nv=>{ n += (niveles[nv.id].A || []).length + (niveles[nv.id].B || []).length; });
+  msg("Cargado: " + n + " acción(es). Revisa y dale Guardar.", true);
+}
+document.getElementById("btnPegarJSON").onclick = ()=>{
+  const b = document.getElementById("pegarBox");
+  b.style.display = (b.style.display === "none") ? "block" : "none";
+};
+document.getElementById("btnPegarOk").onclick = ()=>{ pegarActividad(); };
+document.getElementById("btnExportarJSON").onclick = ()=>{ exportarActividad(); };
 document.getElementById("btnGuardar").onclick = async (e)=>{
   msg("");
   const id = document.getElementById("fId").value.trim();

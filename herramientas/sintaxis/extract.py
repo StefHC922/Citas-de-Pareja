@@ -6,6 +6,15 @@ REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 OUT = r"C:\Users\Fred\AppData\Local\Temp\opencode\extracted"
 os.makedirs(OUT, exist_ok=True)
 
+# Se limpia la carpeta antes de sacar nada. Si no, un .js de una corrida vieja
+# se queda y `revisar.py` lo sigue revisando como si fuera el actual: da un
+# conteo equivocado y puede "aprobar" (o acusar) algo que ya no existe.
+# Ya paso el oct-2026 con `roles_2.js`, que sobro cuando un HTML paso de tener
+# dos <script> a uno.
+for _f in os.listdir(OUT):
+    if _f.endswith(".js"):
+        os.remove(os.path.join(OUT, _f))
+
 targets = [
     ("Encuentros/index.html", "encuentros"),
     ("Citas/index.html", "citas"),
@@ -17,6 +26,32 @@ targets = [
     ("Retos/index.html", "retos"),
     ("Retos/centro.html", "centro"),
     ("Diablitos/index.html", "diablitos"),
+    ("Roles/index.html", "roles"),
+    # Opciones/ se agrego en oct-2026: no estaba y por eso NUNCA se revisaba de
+    # sintaxis (el plan de Roles ya lo tenia anotado como pendiente). Se agrego
+    # al tocarlo para meterle el QR y el remate del engrane.
+    ("Opciones/index.html", "opciones"),
+    # Panel/oficiales.html se agrego el 17-oct-2026, al agregarle los botones de
+    # "Pegar actividad" y "Exportar actividad". No estaba y por eso no se reviso
+    # de sintaxis NUNCA. Los otros tres del Panel (index, catalogo, permisos)
+    # tambien quedaron fuera de la lista; se probaron a mano y pasan, asi que se
+    # pueden agregar cuando se toquen.
+    ("Panel/oficiales.html", "panel_oficiales"),
+    # Estas cinco se agregaron el 18-oct-2026. NUNCA estaban en la lista, asi que
+    # el chequeo de sintaxis no las habia revisado jamas: se les podia meter un
+    # error de tecleo y nadie se enteraba. Se comprobaron a mano ANTES de
+    # agregarlas (las cinco pasan) para que `revisar.py` siguiera en verde.
+    ("Citas/actividades.html", "actividades"),
+    ("Citas/accesorios.html", "accesorios"),
+    ("Panel/index.html", "panel_index"),
+    ("Panel/catalogo.html", "panel_catalogo"),
+    ("Panel/permisos.html", "panel_permisos"),
+    # Autorizar/ se agrego el 18-oct-2026. Es la pantalla que aprueba y revoca
+    # licencias y SI trae JavaScript (login de Google, aprobar, revocar, negar):
+    # quedaba fuera de la lista, igual que las cinco de arriba. Se comprobo a mano
+    # antes de agregarla (pasa). Con esto ya no queda ninguna pantalla con
+    # JavaScript fuera del chequeo: `Privacidad/` y `Terminos/` no tienen ninguno.
+    ("Autorizar/index.html", "autorizar"),
 ]
 
 pat = re.compile(r'<script([^>]*)>(.*?)</script>', re.S | re.I)

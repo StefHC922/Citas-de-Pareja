@@ -78,6 +78,12 @@
     padding:8px 10px; border-radius:12px;
   }
   .menu-btn:active{ color: var(--fg); background: var(--card); }
+  /* Punto rojo del carrito: adentro hay algo NUEVO que todavía no pides.
+     El "conNuevo" lo pone renderPacksDeVerdad(). */
+  .menu-btn.conNuevo::after{
+    content:""; position:absolute; top:2px; right:2px; width:10px; height:10px;
+    border-radius:50%; background:var(--rojo); box-shadow:0 0 0 2px var(--bg);
+  }
   /* ---------- identidad ---------- */
   #pantallaUsuario{ display:none; width:100%; max-width:380px; flex-direction:column; align-items:center; text-align:center; }
   #pantallaUsuario h1{ margin-bottom:10px; }
@@ -278,7 +284,7 @@
   </div>
   <div id="invVistaUsu" style="display:none;width:100%;text-align:left;">
     <button id="invBackDeUsu" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));right:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">‹ Invitados</button>
-    <button id="invCambiarUsu" type="button" style="position:absolute;top:max(20px, env(safe-area-inset-top));left:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">Cambiar usuario</button>
+    <button id="invCambiarUsu" type="button" style="display:none;position:absolute;top:max(20px, env(safe-area-inset-top));left:20px;background:none;border:none;color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:'Chakra Petch',sans-serif;padding:4px;">Cambiar usuario</button>
     <h1 style="font-size:1.4rem;text-align:center;">Usuarios 👥</h1>
     <p id="invQuien" style="font-size:.82rem;color:var(--fg-muted);text-align:center;margin:0 0 10px;"></p>
     <div id="invUsuarios" style="display:flex;flex-direction:column;gap:10px;"></div>
@@ -286,6 +292,7 @@
       <input type="text" id="invNuevo" placeholder="Nuevo invitado" maxlength="30" autocomplete="off" style="margin-bottom:0;">
       <button class="btnPri" id="invAgregar" style="width:auto;margin-bottom:0;padding:14px 18px;">＋</button>
     </div>
+    <button class="btnPri" id="invEditar" type="button" style="display:none;background:var(--card);color:var(--fg);border:1px solid var(--card-border);margin-top:14px;">✏️ Editar nombres y administrador</button>
   </div>
 
   <!-- ============ OVERLAY: los dos numeros de puntos de un usuario ============ -->
@@ -314,6 +321,40 @@
       <div style="display:flex;gap:10px;">
         <button class="btnPri" id="invPtsCancelar" style="flex:1;background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Cancelar</button>
         <button class="btnPri" id="invPtsGuardar" style="flex:1;">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ OVERLAY: editar nombres, administrador y puntos ============ -->
+  <!-- Boton al final de la pantalla de Usuarios. Los DOS perfiles base (admin y
+       pareja) se pueden renombrar y ahi se marca quien administra; los invitados
+       solo salen para editarles los puntos. El que se marque "Admin" queda como
+       lado A en toda la app y el otro como pareja (lado B); cambiar de admin
+       intercambia esos lados. Los puntos son el `balance` de `puntosUsuarios/{id}`. -->
+  <div id="invOverlayUsu" style="display:none;position:fixed;inset:0;background:rgba(9,7,15,.8);z-index:70;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:var(--bg-2);border:1px solid var(--card-border);border-radius:20px;padding:22px;width:100%;max-width:380px;">
+      <h2 style="font-size:1.1rem;margin-bottom:6px;font-family:'Chakra Petch',sans-serif;">Editar usuarios</h2>
+      <p style="font-size:.78rem;color:var(--fg-muted);margin:0 0 14px;">Cambia los nombres, marca quién administra y ajusta los puntos. Solo hay un administrador; los invitados solo tienen puntos.</p>
+      <div id="invEdUsuarios" style="display:flex;flex-direction:column;gap:12px;max-height:48dvh;overflow-y:auto;"></div>
+      <p id="invEdMsg" style="font-size:.82rem;color:var(--rojo);min-height:18px;margin:10px 0;"></p>
+      <div style="display:flex;gap:10px;">
+        <button class="btnPri" id="invEdCancelar" style="flex:1;background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Cancelar</button>
+        <button class="btnPri" id="invEdGuardar" style="flex:1;">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ OVERLAY: pedir la clave para editar usuarios ============ -->
+  <!-- Nace oculto. Se pide al tocar "Editar nombres y administrador". La clave
+       esta fija en el codigo (su hash), solo para las pruebas de la pareja. -->
+  <div id="invOverlayPin" style="display:none;position:fixed;inset:0;background:rgba(9,7,15,.8);z-index:80;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:var(--bg-2);border:1px solid var(--card-border);border-radius:20px;padding:22px;width:100%;max-width:340px;">
+      <h2 style="font-size:1.1rem;margin-bottom:10px;font-family:'Chakra Petch',sans-serif;">Clave para editar</h2>
+      <input type="password" id="invPinInput" autocomplete="off" placeholder="Clave" style="margin-bottom:8px;">
+      <p id="invPinMsg" style="font-size:.82rem;color:var(--rojo);min-height:18px;margin:0 0 10px;"></p>
+      <div style="display:flex;gap:10px;">
+        <button class="btnPri" id="invPinCancelar" style="flex:1;background:var(--card);color:var(--fg);border:1px solid var(--card-border);">Cancelar</button>
+        <button class="btnPri" id="invPinOk" style="flex:1;">Aceptar</button>
       </div>
     </div>
   </div>
@@ -443,7 +484,7 @@ import {
   resolverFirebase, guardarUsuariosLocal, leerUsuariosLocal, cargarUsuarios
 } from "./config.js";
 // Lógica de licencias compartida con el resto de la app (ver acceso.js).
-import { miProyecto, appTaq, leerLicencias, graciasDisponibles, escucharCatalogo } from "./acceso.js";
+import { miProyecto, appTaq, leerLicencias, graciasDisponibles, escucharCatalogo, nuevosSinPedir } from "./acceso.js";
 import { confirmar } from "./confirmar.js";
 // Chorro de pegamento: cae en el submenú de Experiencias si alguien se queda
 // mirando la pantalla sin hacer nada. Va en su propio modulo (y no metido en el
@@ -753,6 +794,12 @@ async function renderPacksDeVerdad(){
   }
   if(juegos) btnJ.style.display = "";
   if(retos) btnX.style.display = "";
+  // Punto rojo en el carrito: avisa que adentro hay algo NUEVO sin pedir
+  // (fecha "Nuevo" viva Y sin solicitud). El criterio vive en acceso.js.
+  try{
+    const nuevos = await nuevosSinPedir(packs);
+    document.getElementById("menuBtn").classList.toggle("conNuevo", Object.keys(nuevos).length > 0);
+  }catch(e){}
 }
 // Quita del menú en ese momento si revocan. La escucha vive en acceso.js;
 // aquí solo se redibuja el menú cuando cambian los códigos.
@@ -1211,6 +1258,12 @@ async function pintarInvUsuarios(){
     fila.appendChild(g);
     box.appendChild(fila);
   });
+  // El boton "Editar nombres y administrador" y "Cambiar usuario" son SOLO para
+  // los dos perfiles base: a los invitados no les salen (nacen ocultos en el
+  // HTML; regla de la casa). El de editar, ademas, pide la clave al abrir.
+  const esBase = !soyInvitado();
+  try{ document.getElementById("invEditar").style.display = esBase ? "" : "none"; }catch(e){}
+  try{ document.getElementById("invCambiarUsu").style.display = esBase ? "" : "none"; }catch(e){}
 }
 
 // ====== LOS DOS NUMEROS DE PUNTOS DEL CENTRO DE ADQUISICIONES ======
@@ -1293,6 +1346,198 @@ document.getElementById("invAgregar").onclick = async ()=>{
     guardarUsuariosLocal(arr);
     pintarInvUsuarios();
   }catch(e){ invMsg("No se pudo agregar. Revisa tu conexión."); }
+};
+
+// ====== CLAVE PARA EDITAR USUARIOS (fija, para las pruebas de la pareja) ======
+// Se guarda el HASH (SHA-256) del PIN, no el PIN. Para cambiarlo hay que
+// recalcularlo: sha256("<nuevo pin>") en hexadecimal. El PIN de pruebas es 9966**.
+const PIN_EDITAR_HASH = "3fbfaed2f7ef481f3a197fd8bd4a70e1b0d3f0ce48491142e26692a9511f263a";
+async function hashTexto(t){
+  try{
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+    return Array.from(new Uint8Array(buf)).map(b=> b.toString(16).padStart(2, "0")).join("");
+  }catch(e){ return ""; }
+}
+// Pide la clave en una ventana de la app (nada de prompt() del sistema).
+// Devuelve true solo si es la correcta; false si se cancela.
+function pedirPin(){
+  return new Promise((resolver)=>{
+    const ov = document.getElementById("invOverlayPin");
+    const inp = document.getElementById("invPinInput");
+    const msgEl = document.getElementById("invPinMsg");
+    const ok = document.getElementById("invPinOk");
+    const cancelar = document.getElementById("invPinCancelar");
+    inp.value = "";
+    msgEl.textContent = "";
+    ov.style.display = "flex";
+    try{ inp.focus(); }catch(e){}
+    const cerrar = (resultado)=>{
+      ok.onclick = null; cancelar.onclick = null; inp.onkeydown = null;
+      ov.style.display = "none";
+      resolver(resultado);
+    };
+    const probar = async ()=>{
+      const t = (inp.value || "").trim();
+      if(!t){ msgEl.textContent = "Escribe la clave."; return; }
+      if(await hashTexto(t) === PIN_EDITAR_HASH){ cerrar(true); }
+      else { msgEl.textContent = "Clave incorrecta."; inp.value = ""; try{ inp.focus(); }catch(e){} }
+    };
+    ok.onclick = probar;
+    cancelar.onclick = ()=> cerrar(false);
+    inp.onkeydown = (ev)=>{ if(ev.key === "Enter"){ ev.preventDefault(); probar(); } };
+  });
+}
+
+// ====== EDITAR NOMBRES, ADMINISTRADOR Y PUNTOS ======
+// Boton al final de la pantalla de Usuarios (el overlay nace oculto). SOLO para
+// los DOS perfiles base (admin y pareja): a los invitados no les sale el boton
+// (ver pintarInvUsuarios) y ademas aqui se vuelve a comprobar. Pide la clave.
+// Los dos base se pueden renombrar y ahi se marca quien administra; los
+// invitados solo salen para editarles los puntos.
+// En toda la app el admin es el lado A y la pareja el lado B, asi que cambiar
+// de admin INTERCAMBIA esos lados (el contenido guardado por lado se ve del
+// otro lado). Los nombres van a config/ajustes.usuarios y los puntos al campo
+// `balance` de `puntosUsuarios/{id}`, que es de donde leen Retos, el Centro y
+// favor.js.
+async function abrirEdUsuarios(){
+  if(soyInvitado()) return;
+  if(!(await pedirPin())) return;
+  const db = dbActual();
+  (async ()=>{
+    const us = db ? await usuariosEfectivos(db) : (leerUsuariosLocal() || []);
+    const todos = (us || []).filter(u=> u && u.id);
+    // Los saldos viven aparte, en puntosUsuarios/{id}. Si el documento no
+    // existe, el saldo es 0 (asi lo hacen Retos y favor.js).
+    const saldos = {};
+    if(db){
+      try{
+        const snapPts = await getDocs(collection(db, "puntosUsuarios"));
+        snapPts.forEach(d=>{ saldos[d.id] = parseInt(d.data().balance, 10) || 0; });
+      }catch(e){}
+    }
+    const box = document.getElementById("invEdUsuarios");
+    box.innerHTML = "";
+    document.getElementById("invEdMsg").textContent = "";
+    if(!todos.length){
+      document.getElementById("invEdMsg").textContent = "No hay usuarios para editar.";
+    }
+    todos.forEach(u=>{
+      const esBase = !u.invitado;
+      const fila = document.createElement("div");
+      fila.className = "edFila";
+      fila.dataset.id = u.id;
+      fila.dataset.base = esBase ? "1" : "0";
+      // Arriba: el nombre (editable solo en los base) y, en los base, el radio
+      // de administrador. El invitado solo muestra su nombre.
+      const arriba = document.createElement("div");
+      arriba.style.cssText = "display:flex;gap:8px;align-items:center;";
+      if(esBase){
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.className = "edNombre";
+        inp.maxLength = 30;
+        inp.autocomplete = "off";
+        inp.value = u.nombre || "";
+        inp.style.marginBottom = "0";
+        arriba.appendChild(inp);
+        const lab = document.createElement("label");
+        lab.style.cssText = "display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--fg-muted);white-space:nowrap;";
+        const rad = document.createElement("input");
+        rad.type = "radio";
+        rad.name = "edAdmin";
+        rad.checked = !!u.admin;
+        rad.style.accentColor = "var(--teal)";
+        lab.appendChild(rad);
+        lab.appendChild(document.createTextNode("Admin"));
+        arriba.appendChild(lab);
+      }else{
+        const nom = document.createElement("span");
+        nom.style.cssText = "flex:1;font-size:.9rem;color:var(--fg);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+        nom.textContent = (u.nombre || "") + " (invitado)";
+        arriba.appendChild(nom);
+      }
+      fila.appendChild(arriba);
+      // Abajo: los puntos.
+      const abajo = document.createElement("div");
+      abajo.style.cssText = "display:flex;gap:8px;align-items:center;margin-top:6px;";
+      const eti = document.createElement("span");
+      eti.style.cssText = "font-size:.8rem;color:var(--fg-muted);white-space:nowrap;";
+      eti.textContent = "Puntos";
+      const pts = document.createElement("input");
+      pts.type = "number";
+      pts.className = "edPuntos";
+      pts.min = "0";
+      pts.step = "1";
+      pts.autocomplete = "off";
+      pts.value = saldos[u.id] || 0;
+      pts.style.marginBottom = "0";
+      pts.style.flex = "1";
+      abajo.appendChild(eti);
+      abajo.appendChild(pts);
+      fila.appendChild(abajo);
+      box.appendChild(fila);
+    });
+    document.getElementById("invOverlayUsu").style.display = "flex";
+  })();
+}
+function cerrarEdUsuarios(){
+  document.getElementById("invOverlayUsu").style.display = "none";
+}
+document.getElementById("invEditar").onclick = abrirEdUsuarios;
+document.getElementById("invEdCancelar").onclick = cerrarEdUsuarios;
+document.getElementById("invEdGuardar").onclick = async ()=>{
+  const msgEl = document.getElementById("invEdMsg");
+  msgEl.textContent = "";
+  const filas = Array.from(document.querySelectorAll("#invEdUsuarios .edFila"));
+  const cambios = filas.map(f=>{
+    const esBase = f.dataset.base === "1";
+    const ptsRaw = (f.querySelector(".edPuntos").value || "").trim();
+    return {
+      id: f.dataset.id,
+      base: esBase,
+      nombre: esBase ? f.querySelector(".edNombre").value.trim() : null,
+      admin: esBase ? f.querySelector('input[type="radio"]').checked : false,
+      puntos: ptsRaw === "" ? 0 : parseInt(ptsRaw, 10)
+    };
+  });
+  if(!cambios.length){ msgEl.textContent = "No hay usuarios para guardar."; return; }
+  const bases = cambios.filter(c=> c.base);
+  if(bases.some(c=> !c.nombre)){ msgEl.textContent = "Todos tienen que tener nombre."; return; }
+  if(bases.length && !bases.some(c=> c.admin)){ msgEl.textContent = "Marca quién administra."; return; }
+  if(cambios.some(c=> !isFinite(c.puntos) || c.puntos < 0)){ msgEl.textContent = "Los puntos tienen que ser un número de 0 o más."; return; }
+  const db = dbActual();
+  if(!db){ msgEl.textContent = "No hay base de datos."; return; }
+  try{
+    // 1) Nombres y administrador (solo los base) en config/ajustes.
+    if(bases.length){
+      const ref = doc(db, "config", "ajustes");
+      const snap = await getDoc(ref);
+      const arr = (snap.exists() && Array.isArray(snap.data().usuarios)) ? snap.data().usuarios.slice() : [];
+      bases.forEach(c=>{
+        const i = arr.findIndex(u=> u.id === c.id);
+        if(i >= 0) arr[i] = Object.assign({}, arr[i], { nombre: c.nombre, admin: c.admin });
+      });
+      await setDoc(ref, { usuarios: arr, actualizadoEn: serverTimestamp() }, { merge: true });
+      guardarUsuariosLocal(arr);
+      // Si me cambie a mi mismo (nombre o admin), mi copia local tambien: varias
+      // pantallas leen de ahi el nombre y la bandera admin.
+      try{
+        const yoLoc = leerGuardado();
+        if(yoLoc){
+          const nuevo = arr.find(u=> u.id === yoLoc.id);
+          if(nuevo) localStorage.setItem(CLAVE_LOCAL, JSON.stringify(nuevo));
+        }
+      }catch(e){}
+    }
+    // 2) Los puntos de TODOS (base e invitados) en puntosUsuarios/{id}.
+    for(const c of cambios){
+      await setDoc(doc(db, "puntosUsuarios", c.id), { balance: c.puntos }, { merge: true });
+    }
+    cerrarEdUsuarios();
+    pintarInvUsuarios();
+  }catch(e){
+    msgEl.textContent = "No se pudo guardar. Revisa tu conexión.";
+  }
 };
 document.getElementById("invQR").onclick = ()=>{
   let g = null;

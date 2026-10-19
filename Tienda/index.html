@@ -102,7 +102,7 @@ import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, query, where
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { verificarCodigo, verificarFirma } from "../taquilla.js";
 // Lógica de licencias compartida con el resto de la app (ver acceso.js).
-import { miProyecto, appTaq, leerLicencias, guardarLicencias, tieneCodigoValido, escucharCatalogo } from "../acceso.js";
+import { miProyecto, appTaq, leerLicencias, guardarLicencias, tieneCodigoValido, escucharCatalogo, nuevosSinPedir } from "../acceso.js";
 
 // miProyecto, appTaq, leerLicencias, guardarLicencias, tieneCodigoValido y
 // escucharCatalogo ahora vienen de ../acceso.js (logica compartida).
@@ -185,10 +185,42 @@ async function pintarDeVerdad(){
     return;
   }
   if(!packsCache.length){
+    await marcarSecNuevas();      // sin packs, quita cualquier distintivo viejo
     listaEl.innerHTML = '<p class="desc">Aún no hay nada publicado.</p>';
     return;
   }
+  await marcarSecNuevas();
   await pintarDesdeCache();
+}
+// Distintivo NUEVO en los botones de las secciones, para que se vea DE LEJOS
+// en qué categoría hay algo nuevo sin pedir. El criterio vive en acceso.js
+// (fecha "Nuevo" viva Y sin solicitud).
+async function marcarSecNuevas(){
+  let cuenta = { experiencias: 0, juegos: 0, extras: 0 };
+  try{
+    const nuevos = await nuevosSinPedir(packsCache);
+    Object.keys(nuevos).forEach(id=>{
+      const p = packsCache.find(x=> x.id === id);
+      if(!p) return;
+      const sec = p.seccion || "experiencias";
+      if(cuenta[sec] !== undefined) cuenta[sec]++;
+    });
+  }catch(e){}
+  document.querySelectorAll("#botonesSec button").forEach(b=>{
+    const t = b.querySelector(".title");
+    if(!t) return;
+    const tag = t.querySelector(".nuevo");
+    if(cuenta[b.getAttribute("data-sec")] > 0){
+      if(!tag){
+        const n = document.createElement("span");
+        n.className = "nuevo";
+        n.textContent = "NUEVO";
+        t.appendChild(n);
+      }
+    }else if(tag){
+      tag.remove();
+    }
+  });
 }
 async function pintarDesdeCache(){
   const cont = SEC_NOMBRES[secActual] ? document.getElementById("listaSec") : listaEl;
