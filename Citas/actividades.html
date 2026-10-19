@@ -201,6 +201,12 @@
     font-family:'Chakra Petch',sans-serif; font-weight:600; font-size:.92rem;
   }
   #btnRenombrar:active, #btnEliminarAct:active{ transform:scale(.98); }
+  /* Los dos en un mismo renglón. `min-width:0` para que el texto larga baje de
+     línea en vez de empujar al otro fuera, y el relleno horizontal más corto
+     (8px en vez de 13px) porque ahora cada botón es de media pantalla: con 13px
+     "Eliminar actividad" no cabía en un renglón y se partía en dos. */
+  .filaBotones2{ display:flex; gap:10px; }
+  .filaBotones2 button{ flex:1; min-width:0; padding:13px 8px; }
   #btnEliminarAct{ color:var(--rojo); border-color:var(--rojo); }
   .filaInline{ display:none; gap:8px; flex-wrap:wrap; }
   .filaInline.ver{ display:flex; }
@@ -307,12 +313,18 @@
       <h2 id="editorTitulo"></h2>
       <div id="origenPreset"></div>
 
-      <!-- Cambiar nombre y Eliminar van PRIMERO. Antes quedaban al FINAL, debajo
-      <!-- de todos los accesorios, y con muchas actividades se perdian de la vista. -->
-      <div id="editorExtra">
-        <button id="btnRenombrar" type="button">Cambiar nombre</button>
+<!-- Cambiar nombre y Eliminar van PRIMERO. Antes quedaban al FINAL, debajo
+      de todos los accesorios, y con muchas actividades se perdian de la vista.
 
-        <button id="btnEliminarAct" type="button">Eliminar actividad</button>
+      Los dos van en UN RENGLÓN (oct-2026, lo pidió Fredy): cada uno en su propia
+      fila empujaba hacia abajo y había que bajar bastante para ver los accesorios.
+      El bloque de confirmar la eliminación sigue abajo, a lo ancho, porque tiene
+      su campo para escribir el nombre y su aviso. -->
+      <div id="editorExtra">
+        <div class="filaBotones2">
+          <button id="btnRenombrar" type="button">Cambiar nombre</button>
+          <button id="btnEliminarAct" type="button">Eliminar actividad</button>
+        </div>
         <div class="filaInline" id="filaEliminar" style="flex-direction:column;align-items:stretch;">
           <div class="avisoFuerte">
             Vas a eliminar <b id="borrarNombre"></b> <b>PARA SIEMPRE</b>.
@@ -661,6 +673,7 @@ async function abrirEditor(nombre, empujar){
 
   // El editor REEMPLAZA la lista: así no se ve nada encimado.
   listaEl.hidden = true;
+  controlesLista(false);
   editorWrap.style.display = "block";
   editorAbierto = true;
   // Abrir el editor GUARDA UN PASO del historial. Sin esto el editor es
@@ -681,9 +694,27 @@ async function abrirEditor(nombre, empujar){
   try{ window.scrollTo(0, 0); }catch(e){}
 }
 
+// Los controles que son de la LISTA: el campo para agregar una actividad, su
+// mensaje y el número de actividades.
+//
+// **NO es solo estética (oct-2026, lo reportó Fredy).** Antes, con el editor de una
+// actividad abierto, estos tres seguían a la vista ARRIBA del editor: no solo se
+// veían, sino que **se podían oprimir**, y se agregaba o se borraba una actividad
+// a ciegas mientras se editaba otra. Ahora el editor los tapa.
+//
+// Se encienden y apagan siempre los tres desde aquí, para que no se queden a
+// medias: si uno se apagara solo, quedaría un hueco raro o un mensaje huérfano.
+function controlesLista(ver){
+  const d = ver ? "" : "none";
+  document.getElementById("alta").style.display = d;
+  msgEl.style.display = d;
+  conteoEl.style.display = d;
+}
+
 function restaurarLista(){
   editorWrap.style.display = "none";
   listaEl.hidden = false;
+  controlesLista(true);
   actividadEditando = null;
   accsGuardados = [];
   editorAbierto = false;
@@ -968,7 +999,7 @@ tabLista.onclick = ()=>{
   todosApagados();
   if(!abierto){
     tabLista.classList.add("activo");
-    ponerTitulo("Actividades", "Agrega actividades nuevas. Toca una para elegir sus accesorios.");
+    ponerTitulo("Actividades", "Agrega tus Actividades. Selecciona una y elige sus accesorios.");
     listaEl.hidden = false;
     conteoEl.hidden = false;
   }
