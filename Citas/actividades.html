@@ -161,7 +161,8 @@
   #origenPreset{
     font-size:.78rem; color:var(--fg-muted); margin-bottom:14px;
   }
-  #origenPreset b{ color: var(--teal); }
+  /* Ya no hay `<b>` en este renglón: el texto es una sola frase (ver
+     `TEXTO_ACCESORIOS`), así que su regla de color quedó sin uso y se quitó. */
   #checks{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
   .checkRow{
     display:flex; align-items:center; gap:10px;
@@ -609,12 +610,15 @@ function editorAvisar(texto, ok){
   editorMsg.className = ok ? "ok" : "";
 }
 
-function fuentePreset(nombre, hayNube, hayArchivo){
-  if(hayNube && hayArchivo) return 'Accesorios <b>guardados</b> (sustituyen a los originales).';
-  if(hayNube) return 'Accesorios <b>guardados</b>.';
-  if(hayArchivo) return 'Accesorios <b>originales</b>. Guárdalos para personalizarlos.';
-  return 'Sin accesorios definidos. Marca y guarda.';
-}
+// El renglón de arriba de la lista de accesorios.
+//
+// ANTES decía DE DÓNDE venían ("Accesorios guardados (sustituyen a los
+// originales)", "Accesorios originales", "Sin accesorios definidos. Marca y
+// guarda."). Era técnico y encima no decía qué hacer: la gente lo leía y no
+// entendía nada. Oct-2026, lo cambió Fredy por una frase que sí dice qué hacer,
+// y es la misma para todos los casos (no hay información que perder: lo de "ya lo
+// guardaste" lo dice `editorAvisar()` cuando se aprieta **Guardar**).
+const TEXTO_ACCESORIOS = "Elige tus accesorios para que no te falte nada.";
 
 async function abrirEditor(nombre, empujar){
   actividadEditando = nombre;
@@ -642,7 +646,7 @@ async function abrirEditor(nombre, empujar){
 
   const activos = new Set((nube || archivo || []).map(normalizar));
   accsGuardados = Array.from(activos);
-  origenPreset.innerHTML = fuentePreset(nombre, !!nube, !!archivo);
+  origenPreset.textContent = TEXTO_ACCESORIOS;
 
   checksEl.innerHTML = "";
   todos.forEach(n=>{
@@ -694,18 +698,24 @@ async function abrirEditor(nombre, empujar){
   try{ window.scrollTo(0, 0); }catch(e){}
 }
 
-// Los controles que son de la LISTA: el campo para agregar una actividad, su
-// mensaje y el número de actividades.
+// Los controles que son de la LISTA: las pestañas (Actividades / Accesorios), el
+// campo para agregar una actividad, su mensaje y el número de actividades.
 //
-// **NO es solo estética (oct-2026, lo reportó Fredy).** Antes, con el editor de una
-// actividad abierto, estos tres seguían a la vista ARRIBA del editor: no solo se
-// veían, sino que **se podían oprimir**, y se agregaba o se borraba una actividad
-// a ciegas mientras se editaba otra. Ahora el editor los tapa.
+// **NO es solo estética (oct-2026, lo reportó Fredy, en dos rondas).** Con el
+// editor de una actividad abierto, esto seguía a la vista ARRIBA del editor: no
+// solo se veía, sino que **se podía oprimir**. Se agregaba o se borraba una
+// actividad a ciegas mientras se editaba otra, y las pestañas inviting a cambiar de
+// pantalla con el editor abierto. Ahora el editor lo tapa todo.
 //
-// Se encienden y apagan siempre los tres desde aquí, para que no se queden a
+// Tapar las pestañas **no quita ninguna función**: dentro del editor sigue el
+// botón "Administrar accesorios" (`#btnIrAccesorios`), que hace lo mismo que la
+// pestaña e además guarda lo marcado antes de irse.
+//
+// Se encienden y apagan SIEMPRE los cuatro desde aquí, para que no se queden a
 // medias: si uno se apagara solo, quedaría un hueco raro o un mensaje huérfano.
 function controlesLista(ver){
   const d = ver ? "" : "none";
+  document.querySelector(".tabs").style.display = d;
   document.getElementById("alta").style.display = d;
   msgEl.style.display = d;
   conteoEl.style.display = d;
@@ -756,7 +766,7 @@ async function guardarPreset(){
     });
     editorAvisar("Accesorios Guardados.", true);
     accsGuardados = marcados.slice();
-    origenPreset.innerHTML = fuentePreset(actividadEditando, true, true);
+    origenPreset.textContent = TEXTO_ACCESORIOS;
   }catch(e){
     editorAvisar("No se pudo guardar. Revisa tu conexión.");
   }
@@ -999,7 +1009,7 @@ tabLista.onclick = ()=>{
   todosApagados();
   if(!abierto){
     tabLista.classList.add("activo");
-    ponerTitulo("Actividades", "Agrega tus Actividades. Selecciona una y elige sus accesorios.");
+    ponerTitulo("Actividades", "Agrega propias. Selecciona la y elige qué accesorios llevar.");
     listaEl.hidden = false;
     conteoEl.hidden = false;
   }
