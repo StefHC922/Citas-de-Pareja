@@ -187,7 +187,9 @@
   <div id="actividadAhora"></div>
   <div id="finMsg" style="display:none">¡Gracias por jugar!</div>
   <button class="btnPri" id="btnSig">Siguiente →</button>
+  <button class="btnSec" id="btnSaltar" style="display:none">Saltar turno</button>
   <button class="btnSec" id="btnTerminar">Terminar</button>
+  <button class="btnSec" id="btnTerminarPartida" style="display:none">Terminar Partida</button>
 </div>
 
 <!-- ============ CONTINUAR (ventana emergente) ============ -->
@@ -518,6 +520,47 @@ async function iniciarSesionCompartida(datosSesion){
 async function cerrarSesion(){
   try{ await setDoc(sesionRef(), { activa: false, actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
 }
+
+// ¿La cita compartida está en pausa? La pausa la marca QUIEN APRETA "Pausar y
+// Salir"; mientras dure, la pareja se queda esperando (decisión de Fredy).
+function sesionPausada(){
+  try{ return jugandoCompartido && !!(sesionActual && sesionActual.pausada); }catch(e){ return false; }
+}
+
+// Saltar el turno de QUIEN NO ESTÁ. Los dos pueden apretarlo (decisión de Fredy).
+//
+// Avanza el contador UN paso aunque el turno no sea el mío: esa es toda la
+// diferencia con `avanzarSesion()`, que solo avanza en el turno propio. Saltar
+// SIN avanzar el contador dejaría la cita pidiendo un turno que nunca llega y no
+// terminaría nunca; aquí la acción del que se salta simplemente se pierde (también
+// decisión de Fredy). Avanza con transacción, igual que el avance normal, para que
+// los dos teléfonos no se pisen si aprietan a la vez.
+async function saltarTurno(){
+  if(!jugandoCompartido) return;
+  const de = listaJuego[paso];
+  if(!de) return;
+  const ok = await confirmar({
+    aviso: true,
+    titulo: "¿Saltar el turno de " + nombreDe(de.lado) + "?",
+    texto: "Esa acción no se va a jugar nunca.",
+    ok: "Saltar"
+  });
+  if(!ok) return;
+  try{
+    await runTransaction(db, async (tx)=>{
+      const ref = sesionRef();
+      const snap = await tx.get(ref);
+      if(!snap.exists()) return;
+      const d = snap.data();
+      if(!d.activa || d.pausada) return;
+      const lista = d.lista || [];
+      const p = d.paso || 0;
+      if(!lista[p]) return;
+      const np = p + 1;
+      tx.update(ref, { paso: np, activa: np < lista.length, terminada: np >= lista.length, actualizadaEn: serverTimestamp() });
+    });
+  }catch(e){}
+}
 function aplicaSesion(d){
   listaJuego = Array.isArray(d.lista) ? d.lista : [];
   paso = Math.min(d.paso || 0, Math.max(0, listaJuego.length - 1));
@@ -551,7 +594,13 @@ function escucharSesion(){
           }
         }else if(jugandoCompartido){
           jugandoCompartido = false;
-          if(d && d.terminada){ abrirFin("¡Gracias por jugar!"); return; }
+          // Si la otra persona le dio "Terminar Partida", `porNombre` trae su
+          // nombre y el aviso lo dice (oct-2026, lo pidió Fredy). Si la cita se
+          // acabó sola, es el agradecimiento de siempre.
+          if(d && d.terminada){
+            abrirFin(d.porNombre ? (d.porNombre + " terminó la cita.") : "¡Gracias por jugar!");
+            return;
+          }
           entrar();
         }
       }catch(e){}
@@ -808,7 +857,11 @@ async function jugarDirecto(nombre){
       if(sd.exists()){
         const d = sd.data();
         const esMia = d.hostUid === miIdSesion();
-        const tengoPendientes = Array.isArray(d.lista) && d.lista.length && (d.paso || 0) < d.lista.length;
+        // `d.activa` SÍ se mira (arreglo oct-2026, lo reportó Fredy): antes solo
+        // preguntaba si quedaban pasos, así que una cita que ya se había TERMINADO
+        // volvía a ofrecer "¿Continuar?" y "Continuar" la resucitaba (prendía
+        // `activa` otra vez). Por eso "Terminar" parecía pausa.
+        const tengoPendientes = !!d.activa && Array.isArray(d.lista) && d.lista.length && (d.paso || 0) < d.lista.length;
         if(esMia && tengoPendientes){
           pendienteSrc = "sesion";
           seguirEncima("¿Continuar cita anterior?",
@@ -909,7 +962,7 @@ document.getElementById("btnContinuar").onclick = async ()=>{
     try{
       const nsid = String(Date.now()) + Math.random().toString(36).slice(2, 6);
       sidMostrado = nsid;
-      await setDoc(sesionRef(), { sid: nsid, reanudada: true, activa: true, actualizadaEn: serverTimestamp() }, { merge: true });
+      await setDoc(sesionRef(), { sid: nsid, reanudada: true, activa: true, pausada: false, actualizadaEn: serverTimestamp() }, { merge: true });
     }catch(e){}
     aplicaSesion(d);
     ver("vistaPlayer");
@@ -1481,6 +1534,9 @@ function pintarPaso(){
   const elAct = document.getElementById("actividadAhora");
   const tag = document.getElementById("nivelTag");
   const btnSig = document.getElementById("btnSig");
+  const btnSaltar = document.getElementById("btnSaltar");
+  const btnTerminar = document.getElementById("btnTerminar");
+  const btnTerminarPartida = document.getElementById("btnTerminarPartida");
   const fin = document.getElementById("finMsg");
   const prog = document.getElementById("progreso");
   const p = listaJuego[paso];
@@ -1490,16 +1546,39 @@ function pintarPaso(){
   }else{
     prog.hidden = true;
   }
-  pintarTurnoDe();
+  // En un solo celular "Terminar" solo sale de la cita. Compartida pasa a ser
+  // "Pausar y Salir" (la cita sigue viva) y aparece "Terminar Partida", que sí la
+  // acaba. Los dos los puede apretar cualquiera de los dos (decisión de Fredy).
+  btnTerminar.textContent = jugandoCompartido ? "Pausar y Salir" : "Terminar";
+  btnTerminarPartida.style.display = jugandoCompartido ? "" : "none";
   if(!p){
     elAct.textContent = "";
     tag.style.display = "none";
     btnSig.style.display = "none";
+    btnSaltar.style.display = "none";
     fin.style.display = "block";
     return;
   }
   fin.style.display = "none";
   tag.style.display = "";
+
+  // En pausa nadie juega: el que pausó tiene que volver a entrar para seguir
+  // (decisión de Fredy: la pareja "se queda esperando").
+  if(sesionPausada()){
+    // El nombre sale de QUIEN PAUSÓ (`pausadaPor`), no del que inició la cita: los
+    // dos pueden pausar y el que espera puede ser cualquiera de los dos.
+    elAct.textContent = ((sesionActual && sesionActual.pausadaPor) || "Tu pareja") + " está en pausa…";
+    elAct.style.color = "var(--fg-muted)";
+    btnSig.style.display = "";
+    btnSig.disabled = true;
+    btnSig.style.opacity = ".4";
+    btnSig.textContent = "Espera tu turno";
+    btnSaltar.style.display = "none";
+    tag.style.display = "none";
+    pintarTurnoDe();
+    return;
+  }
+
   const mia = !jugandoCompartido || p.lado === miLado;
   if(mia){
     elAct.textContent = p.texto;
@@ -1508,6 +1587,7 @@ function pintarPaso(){
     btnSig.disabled = false;
     btnSig.style.opacity = "1";
     btnSig.textContent = (paso + 1 >= total) ? "Terminar 🔥" : "Siguiente →";
+    btnSaltar.style.display = "none";
   }else{
     elAct.textContent = "Turno de " + nombreDe(p.lado) + "…";
     elAct.style.color = "var(--fg-muted)";
@@ -1515,7 +1595,12 @@ function pintarPaso(){
     btnSig.disabled = true;
     btnSig.style.opacity = ".4";
     btnSig.textContent = "Espera tu turno";
+    // Brincar al que no está: lo pueden los DOS (decisión de Fredy), por eso aquí
+    // no se pregunta quién es el anfitrión como en `Encuentros/`.
+    btnSaltar.style.display = "";
+    btnSaltar.textContent = "Saltar turno de " + nombreDe(p.lado);
   }
+  pintarTurnoDe();
   tag.textContent = p.nivel + (p.lado ? " · Lado " + p.lado : "");
 }
 document.getElementById("btnSig").onclick = ()=>{
@@ -1538,8 +1623,36 @@ document.getElementById("btnFinOk").onclick = ()=>{
   if(finEnLocal){ finEnLocal = false; borrarProg(); }
   entrar();
 };
+document.getElementById("btnSaltar").onclick = ()=>{ saltarTurno(); };
 document.getElementById("btnTerminar").onclick = async ()=>{
-  if(jugandoCompartido){ jugandoCompartido = false; await cerrarSesion(); }
+  if(!jugandoCompartido){ entrar(); return; }
+  // PAUSA: la cita sigue viva y se puede retomar donde iban. No se apaga `activa`,
+  // por eso la pareja "se queda esperando" en vez de perder la cita.
+  try{ await setDoc(sesionRef(), { pausada: true, pausadaPor: nombreDe(miLado), actualizadaEn: serverTimestamp() }, { merge: true }); }catch(e){}
+  jugandoCompartido = false;
+  entrar();
+};
+document.getElementById("btnTerminarPartida").onclick = async ()=>{
+  if(!jugandoCompartido){ entrar(); return; }
+  const quien = nombreDe(miLado);
+  const ok = await confirmar({
+    aviso: true,
+    titulo: "¿Terminar la cita?",
+    texto: "Se acaba para los dos. No se puede volver a continuar.",
+    ok: "Terminar"
+  });
+  if(!ok) return;
+  // TERMINA de verdad: `activa:false` + `terminada`. A la pareja le llega el fin
+  // con el nombre de quién lo terminó, y al aceptar sale a la lista de esta misma
+  // pantalla. OJO: aquí SÍ se apaga `activa`, que es lo que hacía falta para que
+  // "Terminar" no pareciera pausa.
+  try{
+    await setDoc(sesionRef(), {
+      activa: false, terminada: true, porNombre: quien, pausada: false,
+      actualizadaEn: serverTimestamp()
+    }, { merge: true });
+  }catch(e){}
+  jugandoCompartido = false;
   entrar();
 };
 
@@ -1552,6 +1665,13 @@ document.getElementById("btnUnirme").onclick = ()=>{
   const d = sesionActual;
   document.getElementById("modalUnir").style.display = "none";
   if(!d || !d.activa) return;
+  // En pausa no se puede entrar (la misma regla de `Encuentros/`): la cita sigue
+  // viva, pero quien tiene que reanudarla es quien la pausó. Si no, el que llega
+  // se metería a jugar y los dos a la vez.
+  if(d.pausada){
+    aviso((d.pausadaPor || "Tu pareja") + " pausó la cita. Espera a que la reanude.");
+    return;
+  }
   jugandoCompartido = true;
   aplicaSesion(d);
   ver("vistaPlayer");
