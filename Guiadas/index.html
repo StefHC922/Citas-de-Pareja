@@ -84,23 +84,14 @@
   #msg{ min-height:20px; font-size:.85rem; color:var(--rojo); margin:6px 0; text-align:center; }
   /* player */
   #progreso{ color:var(--fg-muted); font-size:.85rem; margin-bottom:6px; }
-  /* La fila de turnos: un chip por tirada, de quién es, con el de ahora resaltado
-     (oct-2026, lo pidió Fredy). Antes solo se veía el turno EN EL que estás: si
-     había que esperar a tu pareja no había forma de saber cuántos turnos quedaban
-     ni a quién le tocaban después. Se muestra una ventana alrededor del actual y
-     la fila se desplaza sola para que el de ahora siempre esté a la vista. */
-  #turnos{ display:flex; gap:6px; overflow-x:auto; margin-bottom:10px;
-    padding-bottom:2px; scrollbar-width:none; }
-  #turnos::-webkit-scrollbar{ display:none; }
-  #turnos .tTurno{ flex:0 0 auto; font-family:'Chakra Petch',sans-serif; font-weight:600;
-    font-size:.78rem; padding:5px 11px; border-radius:999px; white-space:nowrap;
-    border:1px solid var(--card-border); background:var(--bg-2); color:var(--fg-muted); }
-  /* Cada lado con su color, el mismo que usa el texto de la acción. */
-  #turnos .tTurno.a{ border-color:var(--teal); color:var(--teal); }
-  #turnos .tTurno.b{ border-color:var(--coral); color:var(--coral); }
-  #turnos .tTurno.ya{ opacity:.35; }
-  #turnos .tTurno.ahora{ background:linear-gradient(90deg,var(--coral),var(--teal));
-    color:var(--bg); border-color:transparent; }
+  /* De quién es el turno DE LA ACCIÓN QUE ESTÁ EN PANTALLA (oct-2026, lo pidió
+     Fredy). Antes no se decía: el color de la acción lo insinúa, pero si estás en
+     "un solo celular" no hay forma de saber de quién es la que estás leyendo. Sale
+     con el color de su lado, el mismo que usa el texto de la acción. */
+  #turnoDe{ font-family:'Chakra Petch',sans-serif; font-size:.85rem; font-weight:600;
+    text-align:center; margin-bottom:10px; color:var(--fg-muted); }
+  #turnoDe.a{ color:var(--teal); }
+  #turnoDe.b{ color:var(--coral); }
   #nivelTag{ font-size:.75rem; color:var(--teal); border:1px solid var(--teal); border-radius:8px;
     padding:3px 10px; margin-bottom:16px; text-transform:uppercase; letter-spacing:.15em;
     font-family:'Chakra Petch',sans-serif; }
@@ -191,7 +182,7 @@
 <div class="vista" id="vistaPlayer">
   <h1 id="plTitulo">En juego</h1>
   <div id="progreso" hidden></div>
-  <div id="turnos"></div>
+  <div id="turnoDe"></div>
   <div id="nivelTag" hidden></div>
   <div id="actividadAhora"></div>
   <div id="finMsg" style="display:none">¡Gracias por jugar!</div>
@@ -572,6 +563,13 @@ function ver(id, guardar){
   document.querySelectorAll(".vista").forEach(v=>v.classList.remove("ver"));
   document.getElementById(id).classList.add("ver");
   document.getElementById("btnCfg").style.display = (id === "vistaLista") ? "block" : "none";
+  // En la PARTIDA el "← Volver" se esconde (oct-2026, lo decidió Fredy). Antes no
+  // se escondía nunca y, como el manejador del enlace tampoco conocía esta vista,
+  // apretarlo se iba a Experiencias en vez de volver aquí. Se esconde porque para
+  // salir está el botón "Terminar": nadie se sale a medias de una cita, y menos
+  // cuando la pareja está jugando. Es lo mismo que hace `Encuentros/` con
+  // `pintarSalidas()`. Va junto al engrane porque las dos cosas dependen de la vista.
+  document.getElementById("lnkInicio").style.display = (id === "vistaPlayer") ? "none" : "";
   if(guardar !== false){
     try{ history.pushState({ v: id, act: ultimaActividad }, ""); }catch(e){}
   }
@@ -1465,35 +1463,17 @@ document.getElementById("btnJugar").onclick = ()=>{
   pintarPaso();
   ver("vistaPlayer");
 };
-// La fila de turnos: un chip por tirada con el nombre de a quién le toca, y el de
-// ahora resaltado. Se dibuja en un `textContent`, nunca con `innerHTML`, porque los
-// nombres salen de la base.
-const TURNOS_VENTANA = 12;   // cuántas se dibujan a la vez (el resto, deslizando)
-function pintarTurnos(){
-  const box = document.getElementById("turnos");
-  if(!box) return;
-  box.textContent = "";
-  if(!Array.isArray(listaJuego) || !listaJuego.length) return;
-
-  const ini = Math.max(0, paso - 2);          // dos ya jugados, para ubicar dónde vas
-  const fin = Math.min(listaJuego.length, ini + TURNOS_VENTANA);
-
-  for(let i = ini; i < fin; i++){
-    const de = listaJuego[i];
-    if(!de) continue;
-    const b = document.createElement("span");
-    b.className = "tTurno" + (de.lado === "A" ? " a" : (de.lado === "B" ? " b" : ""));
-    if(i < paso) b.classList.add("ya");
-    else if(i === paso) b.classList.add("ahora");
-    b.textContent = nombreDe(de.lado);
-    box.appendChild(b);
-  }
-
-  // La fila se deja scrolleada con el de ahora a la vista.
-  try{
-    const act = box.querySelector(".tTurno.ahora");
-    if(act) box.scrollLeft = Math.max(0, act.offsetLeft - box.clientWidth / 2 + act.offsetWidth / 2);
-  }catch(e){}
+// De quién es el turno de la acción que está en pantalla. Sale siempre, también en
+// "un solo celular": ahí no hay a quién esperar, pero sí hay que saber de quién es
+// la acción que se está leyendo. El nombre sale de la base y entra con `textContent`
+// (nunca `innerHTML`, según la regla de la casa).
+function pintarTurnoDe(){
+  const el = document.getElementById("turnoDe");
+  if(!el) return;
+  const de = Array.isArray(listaJuego) ? listaJuego[paso] : null;
+  if(!de){ el.textContent = ""; return; }
+  el.textContent = "Turno de " + nombreDe(de.lado);
+  el.className = (de.lado === "A") ? "a" : (de.lado === "B" ? "b" : "");
 }
 
 function pintarPaso(){
@@ -1510,7 +1490,7 @@ function pintarPaso(){
   }else{
     prog.hidden = true;
   }
-  pintarTurnos();
+  pintarTurnoDe();
   if(!p){
     elAct.textContent = "";
     tag.style.display = "none";
