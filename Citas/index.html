@@ -276,6 +276,9 @@ const actsExtraRef = collection(db, "actividadesExtra");
 const CLAVE_LOCAL = "appPareja_quienSoy";
 let usuarios = [];
 let actividades = [];
+// Nombre -> id de actividadesExtra. Se guarda junto con el nombre en cada cita
+// (actividadId), para no depender solo del nombre al buscar sus datos despues.
+let idsActividad = {};
 let accesoriosCatalogo = [];
 let accesoriosPorActividadCache = {};
 let miIdentidad = null; // { id, nombre }
@@ -410,11 +413,15 @@ async function cargarCatalogos(){
   let extrasActs = [];
   let extrasAccs = [];
 
+  idsActividad = {};
   try{
     const snapActs = await conTiempo(getDocs(actsExtraRef), 8000);
     snapActs.forEach(d=>{
       const nombre = (d.data().nombre || "").trim();
-      if(nombre) extrasActs.push(nombre);
+      if(nombre){
+        extrasActs.push(nombre);
+        idsActividad[nombre] = d.id;
+      }
     });
   }catch(e){
     // Sin conexión a la nube: se usa solo la fabrica
@@ -544,7 +551,7 @@ async function obtenerAccesoriosActividad(nombre){
 
   // Primero la nube (pantalla ☰); si no hay, el archivo <actividad>.json
   try{
-    const snap = await conTiempo(getDoc(doc(db, "presetsActividad", nombre)), 8000);
+    const snap = await conTiempo(getDoc(doc(db, "presetsActividad", idsActividad[nombre] || nombre)), 8000);
     if(snap.exists() && Array.isArray(snap.data().accesorios)){
       accesoriosPorActividadCache[nombre] = snap.data().accesorios;
       return accesoriosPorActividadCache[nombre];
@@ -679,6 +686,7 @@ btnGuardarCita.onclick = async ()=>{
       await updateDoc(doc(db, "citas", editandoId), {
         fechaCita: fecha,
         actividad,
+        actividadId: idsActividad[actividad] || null,
         descripcion,
         accesorios,
         actualizadoEn: serverTimestamp(),
@@ -697,6 +705,7 @@ btnGuardarCita.onclick = async ()=>{
         paraNombre: paraUsuario.nombre,
         fechaCita: fecha,
         actividad,
+        actividadId: idsActividad[actividad] || null,
         descripcion,
         accesorios,
         estado: "pendiente",
