@@ -475,6 +475,11 @@ solo lo tiene el publicador, y el rediseno de la cola lo necesita. Cambiar
 reglas es **siempre manual, en la consola**, y hay que probar las 4 cosas de la
 seccion 5 de `reglas-firebase-taquilla.txt`.
 
+> **OJO: este permiso esta EN ESPERA (decision de Fredy, oct-2026), no se hace
+> ahora.** Como los cinco pasos de licencias, cuelga del cambio de arquitectura
+> (login + reglas por correo). Ver `General/GUIA.md`, seccion *Pendientes de
+> licencias*.
+
 Ver `General/GUIA.md`, sección "`Autorizar/`: aprobar y revocar licencias".
 
 ## La base de cada PAREJA: reglas ABIERTAS a proposito

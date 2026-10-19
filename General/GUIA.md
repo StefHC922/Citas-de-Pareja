@@ -351,7 +351,13 @@ nombres duplicados.
 
 #### 7. Siguiente paso
 
- Según lo acordado, el orden es:
+> **ACTUALIZADO oct-2026: la lista de abajo YA NO es el siguiente paso.** Los cinco
+> puntos (y el permiso de `borrar`) están **en espera hasta el cambio de
+> arquitectura**, por decisión de Fredy. Ver *Pendientes de licencias — EN ESPERA
+> HASTA EL CAMBIO DE ARQUITECTURA*, donde está la razón de cada uno. **No los
+> arranques por tu cuenta.**
+
+Según lo acordado, el orden era:
 
 1. **Revisar las reglas de Firebase** en la consola — bloqueante, porque el
    rediseño necesita que la app pueda **borrar** en `solicitudes`.
@@ -696,15 +702,58 @@ aislar cada cliente en su propia ruta. Requiere el permiso de `borrar`, que
 hoy no esta en las reglas. Ver `GUIA.md`, *Licencias, `acceso.js` y el catálogo*,
 sección 6.
 
-### Pendientes de licencias (`GUIA.md`, *Licencias, `acceso.js` y el catálogo*, "Siguiente paso")
+### Estado de las revocaciones (oct-2026, verificado)
 
-1. ~~Revisar las reglas de Firebase~~ **[HECHO oct-2026: revisadas y cerradas.**
-   Ver `General/reglas-firebase-taquilla.txt`. Falta solo el permiso de `borrar`
-   para el rediseño de la cola.]
-2. Revocacion al entrar en cada pagina (cierra el acceso por URL directo).
-3. Catalogo marcando lo que ya tienes desde local.
-4. Cola con acuse (aprobaciones) + revocaciones persistentes.
-5. Doc por item + cortesia a local.
+**Lo que YA funciona, y funciona "en vivo":** `escucharItem()` / `escucharCatalogo()`
+(`acceso.js`) están conectados en **6 pantallas**: el menú, la tienda y los cuatro
+juegos con licencia (`guiadas`, `encuentros`, `opciones`, `roles`). Cuando en
+`Autorizar/` se aprieta **Revocar**, el documento viaja solo al celular: se borra el
+código local y el juego **enseguida** muestra la pantalla de bloqueo, el menú quita
+la tarjeta y la tienda lo desmarca. Sin que el cliente recargue nada.
+
+**Los dos huecos, y por qué NO se arreglan hoy:**
+
+| Hueco | Por qué no importa / por qué se espera |
+|---|---|
+| **Sin internet**, el código guardado en el celular sigue firmado y válido | **No es un hueco real: el juego NO se puede jugar sin internet.** Las opciones, los personajes y las acciones se leen de Firestore al jugar; en el celular no hay copia. Sin red no hay nada que jugar. |
+| **Alguien a quien revocan puede seguir jugando hasta cerrar y reabrir la app** | Es el único que queda. Al reabrir, el menú lo bloquea. Se cierra en caliente cuando exista login (ver *La base de cada PAREJA*), y hoy no se toca. |
+
+> **OJO, dato que NO hay que suponer (oct-2026):** el escuchador de
+> revocaciones **solo se prende en la pantalla de BLOQUEO** (`escucharAprobacion()`
+> se llama justo después de `ver("vistaBloqueo")`, en los cuatro juegos). **Una vez
+> que entraste, no se queda vigilando.** No se debe decir "le salta al instante
+> mientras juega": no es así.
+
+### Pendientes de licencias — **EN ESPERA HASTA EL CAMBIO DE ARQUITECTURA**
+
+> **Decisión de Fredy (oct-2026): estos CINCO pasos no se hacen ahora.** No son un
+> descuido ni un olvido. Casi todos cuelgan de la **misma pregunta, "¿quién es
+> cada quien?"**, y eso es exactamente lo que responde el cambio de arquitectura
+> (login + reglas por correo). Hacerlos hoy sería tirar el trabajo a la basura:
+> - El **código en el celular** desaparece cuando la licencia se consulta al servidor
+>   con identidad real (pasos 3 y 5).
+> - La **cola de solicitudes** deja de ser una colección pública de correos y pasa a
+>   ser una lista de cuentas (pasos 1 y 4).
+> - **La revocación en caliente** la resuelven las reglas, sin una verificación en
+>   cada pantalla (paso 2).
+>
+> **El permiso de `borrar` en `solicitudes`** va aquí también: es para el rediseño
+> de la cola, o sea, viene después. Es **manual, en la consola de Firebase**, y hay
+> que probar las 4 cosas (pedir, aprobar, revocar, Panel), pidiendo con una cuenta
+> que **no** sea publicador.
+
+| # | Paso | Por qué espera |
+|---|---|---|
+| 1 | ~~Revisar las reglas de Firebase~~ **[HECHO: revisadas y cerradas. Ver `General/reglas-firebase-taquilla.txt`.]** | — |
+| 2 | Revocación al entrar en cada página | La cierran las reglas del login |
+| 3 | Catálogo marcando lo que ya tienes | Se consulta al servidor, no al celular |
+| 4 | Cola con acuse + revocaciones persistentes | Necesita identidad real |
+| 5 | Doc por ítem + cortesía a local | Se borra elalmacén local del celular |
+
+> **ANTES DE VENDER (oct-2026):** con la familia probando esto da igual, pero al
+> vender ya no son conocidos y son clientes. **Hay que revisar el hueco de la
+> revocación** (el de "sigue jugando hasta cerrar y reabrir"). No antes de vender:
+> tampoco urge cambiar la arquitectura todavía.
 
 ### Otros pendientes
 
