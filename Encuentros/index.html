@@ -1163,22 +1163,34 @@ function normTomasEnc(t){
 }
 // Lee las tomas del documento que se acaba de traer. Si el documento NO trae
 // tomas, intenta la migracion de una sola vez desde el celular.
-function cargarTomasDoc(id, data){
+function cargarTomasDoc(id, data, nombreRespaldo){
   if(data && data.tomas){ mapaTomas[id] = normTomasEnc(data.tomas); return; }
-  const mig = migrarTomasDeEsteCelular(id);
+  const mig = migrarTomasDeEsteCelular(id, nombreRespaldo);
   if(mig) mapaTomas[id] = mig;
 }
 // Migracion de UNA sola vez (oct-2026): las tomas que quedaron guardadas en este
 // celular, de antes de que se pasaran a la base, se suben y se borran del celular.
 // Despues de eso ya no hay copia local, asi que no puede volver a correr.
-function migrarTomasDeEsteCelular(docId){
+//
+// `nombreRespaldo` (agregado al pasar a buscar por id, ver Modelo-Datos.md): la
+// llave de este celular se escribio hace tiempo con el NOMBRE de la actividad,
+// de cuando nivelesActividad tambien se guardaba por nombre. Si no se encuentra
+// nada bajo el id (lo normal hoy), se intenta bajo el nombre antes de rendirse,
+// para no dejar sin migrar las tomas de quien todavia no abria esta actividad.
+function migrarTomasDeEsteCelular(docId, nombreRespaldo){
+  let clave = "guia_tomas_" + docId;
   let local = null;
-  try{ local = JSON.parse(localStorage.getItem("guia_tomas_" + docId) || "null"); }catch(e){}
+  try{ local = JSON.parse(localStorage.getItem(clave) || "null"); }catch(e){}
+  if(!local && nombreRespaldo && nombreRespaldo !== docId){
+    clave = "guia_tomas_" + nombreRespaldo;
+    try{ local = JSON.parse(localStorage.getItem(clave) || "null"); }catch(e){}
+  }
   if(!local) return null;
   const norm = normTomasEnc(local);
+  const claveEncontrada = clave;
   try{
     setDoc(doc(db, "nivelesActividad", docId), { tomas: norm, actualizadoEn: serverTimestamp() }, { merge: true })
-      .then(()=>{ try{ localStorage.removeItem("guia_tomas_" + docId); }catch(e){} })
+      .then(()=>{ try{ localStorage.removeItem(claveEncontrada); }catch(e){} })
       .catch(()=>{});
   }catch(e){}
   return norm;
@@ -1244,7 +1256,7 @@ async function abrirEditor(nombre, empujar){
       const n = data.n;
       NIVELES.forEach(nv=>{ datosEd[nv.id] = normLados(n[nv.id]); });
     }
-    cargarTomasDoc(docActualEd, data);
+    cargarTomasDoc(docActualEd, data, nombre);
   }catch(e){}
   pintarEditor();
   ver("vistaEditar", empujar !== false);

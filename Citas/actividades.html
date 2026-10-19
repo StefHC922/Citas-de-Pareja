@@ -365,7 +365,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, leerConfigGuardada, cargarUsuarios, asegurarFabrica } from "../config.js";
+import { resolverFirebase, leerConfigGuardada, cargarUsuarios, asegurarFabrica, migrarActividadesAId } from "../config.js";
 import { montarFavor } from "../favor.js";
 try{ montarFavor(); }catch(e){}
 const firebaseConfig = resolverFirebase(firebaseConfigBase);
@@ -429,6 +429,14 @@ let accsGuardados = [];
 
 function normalizar(s){
   return (s || "").trim().toLowerCase();
+}
+
+// El id de actividadesExtra para esta actividad (mismo patron que docDe() en
+// Guiadas/Encuentros). Si no se encuentra (una de fabrica que aun no cargo, o
+// sin conexion), cae al nombre, que es como se buscaba antes.
+function idDe(nombre){
+  const e = extrasActs.find(x=>x.nombre === nombre);
+  return (e && e.id) || nombre;
 }
 
 function listaActividades(){
@@ -556,6 +564,14 @@ async function cargar(){
     extrasActs = [];
   }
 
+  // Copia (sin borrar nada) los accesorios que ya estuvieran guardados por
+  // nombre hacia el id de cada actividad. Esta pantalla puede ser la primera
+  // que abra alguien (antes de entrar nunca a Guiadas o Encuentros), asi que
+  // tiene que poder sembrar esto tambien, no solo depender de que ya paso ahi.
+  if(sembrado){
+    try{ await migrarActividadesAId(db, extrasActs); }catch(e){}
+  }
+
   try{
     const snap = await getDocs(extrasAccRef);
     extrasAcc = [];
@@ -630,7 +646,7 @@ async function abrirEditor(nombre, empujar){
   let nube = null;
   let archivo = null;
   try{
-    const snap = await getDoc(doc(db, "presetsActividad", nombre));
+    const snap = await getDoc(doc(db, "presetsActividad", idDe(nombre)));
     if(snap.exists() && Array.isArray(snap.data().accesorios)){
       nube = snap.data().accesorios;
     }
@@ -760,7 +776,7 @@ async function guardarPreset(){
 
   btnGuardarPreset.disabled = true;
   try{
-    await setDoc(doc(db, "presetsActividad", actividadEditando), {
+    await setDoc(doc(db, "presetsActividad", idDe(actividadEditando)), {
       accesorios: marcados,
       actualizadoEn: serverTimestamp()
     });
@@ -858,21 +874,10 @@ async function renombrarActividad(){
   try{
     await setDoc(doc(db, "actividadesExtra", extra.id), { nombre: nuevo }, { merge: true });
 
-    try{
-      const ps = await getDoc(doc(db, "presetsActividad", viejo));
-      if(ps.exists()){
-        await setDoc(doc(db, "presetsActividad", nuevo), ps.data());
-        await deleteDoc(doc(db, "presetsActividad", viejo));
-      }
-    }catch(e){}
-
-    try{
-      const nv = await getDoc(doc(db, "nivelesActividad", viejo));
-      if(nv.exists()){
-        await setDoc(doc(db, "nivelesActividad", nuevo), nv.data());
-        await deleteDoc(doc(db, "nivelesActividad", viejo));
-      }
-    }catch(e){}
+    // Accesorios y acciones YA NO se mueven: las dos se buscan por el id de la
+    // actividad (extra.id), que no cambia al renombrar. Antes se copiaba cada
+    // documento del nombre viejo al nuevo y se borraba el viejo; ya no hace
+    // falta, porque la llave de verdad ni se entera de que el nombre cambio.
 
     try{
       const t = localStorage.getItem("guia_tomas_" + viejo);
@@ -936,8 +941,11 @@ async function eliminarActividad(){
   btnEliminarOk.disabled = true;
   try{
     await deleteDoc(doc(db, "actividadesExtra", extra.id));                       // la actividad
-    try{ await deleteDoc(doc(db, "presetsActividad", nombre)); }catch(e){}        // sus accesorios
-    try{ await deleteDoc(doc(db, "nivelesActividad", nombre)); }catch(e){}        // sus acciones de Guiadas
+    // Accesorios y acciones ahora viven bajo el ID (ya no por nombre), asi que
+    // se borran por ahi: el comportamiento es el mismo de siempre (nada queda
+    // huerfano), solo cambio la llave.
+    try{ await deleteDoc(doc(db, "presetsActividad", extra.id)); }catch(e){}      // sus accesorios
+    try{ await deleteDoc(doc(db, "nivelesActividad", extra.id)); }catch(e){}      // sus acciones de Guiadas
     try{ localStorage.removeItem("guia_tomas_" + nombre); }catch(e){}             // sus tomas (este telefono)
     extrasActs = extrasActs.filter(e=>e.id !== extra.id);
     cerrarEditor();
