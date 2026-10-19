@@ -1034,11 +1034,29 @@ if(tabAccesorios){
 //     que se salió (el submenú sigue abierto, porque en `index.html` un submenú
 //     abierto ES un paso del historial). Si no hay a dónde atrás (se escribió la
 //     dirección a mano), ahí sí se cae al menú.
+//
+// **PERO `history.back()` solo en la entrada (arreglo oct-2026, lo reportó
+// Fredy).** Actividades y Accesorios se van y se vuelven, y CADA viaje deja un paso
+// en el historial. Con varias vueltas, "un paso atrás" ya no era salir: era
+// recorrer hacia atrás las pantallas que uno ya había visto. Por eso salir ya NO
+// camina el historial; distingue los dos casos:
+//
+//   - **Entrada nueva** (el ⚙️ del menú o el de Experiencias, o la dirección a
+//     mano): el paso anterior ES el menú, así que `history.back()` es exacto y
+//     respeta hasta el submenú que estaba abierto.
+//   - **Vuelta desde Accesorios** (o sea, ya se paseó por la zona): salir de
+//     verdad, a donde cuelga esta pantalla, que es el submenú de Experiencias.
+//
+// `location.replace` y no `href` a propósito: `replace` no deja una entrada
+// nueva, así que el botón atrás del navegador tampoco se llena de pantallas de la
+// zona.
+const veniaDeLaZona = /(^|\/)(actividades|accesorios)\.html$/.test(document.referrer || "");
 document.getElementById("lnkInicio").addEventListener("click", (e)=>{
   e.preventDefault();
   if(editorAbierto){ cerrarEditor(); return; }
-  if(history.length > 1){ history.back(); return; }
-  location.href = "../index.html";
+  if(!veniaDeLaZona && history.length > 1){ history.back(); return; }
+  try{ location.replace("../index.html#experiencias"); }
+  catch(e){ location.href = "../index.html#experiencias"; }
 });
 
 // El paso con el que se ABRE esta página no lo guardamos nosotros (se llega por un
