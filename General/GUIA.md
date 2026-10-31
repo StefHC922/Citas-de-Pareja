@@ -38,7 +38,7 @@ Y los documentos aparte:
 | **Detalle de `Autorizar/` (aprobar y revocar licencias)** | **`General/Autorizar.md`** |
 | **Detalle de Favores Express (`favor.js`)** | **`General/Favores-Express.md`** |
 | **Detalle del juego de Castigos (`Castigos/`)** | **`General/Castigos.md`** |
-| **Detalle de decisiones por pantalla** | **`General/Pantallas.md`** |
+| **Detalle de pantallas, navegación, estándares y moldes A/B** | **`General/Pantallas.md`** |
 | **Detalle del modo invitado** | **`General/Modo-Invitado.md`** |
 | **Detalle de iconos SVG (Diablitos)** | **`General/Diablitos.md`** |
 | **Detalle del módulo `telegram.js`** | **`General/Telegram.md`** |
@@ -524,6 +524,35 @@ pasar por la pantalla inicial.
 > Los botones de anfitrión tienen que NACER ocultos -> ve `General/Opciones.md` (regla de botones de anfitrión en Opciones y Encuentros)
 > La meta de un reto se calcula sola -> ve `General/Retos.md` (detalle del cálculo de metas de Retos)
 > Completar un reto NUNCA descuenta puntos -> ve `General/Retos.md` (detalle de puntuación de Retos)
+
+---
+
+## El contenido de fabrica: los JSON son SOLO el instalador
+
+Antes (oct-2026) `Citas/actividades.json` y `Citas/accesorios.json` se mezclaban con
+lo de la pareja en **cada carga**. Como lo de fabrica no estaba en la base, **no se
+podia renombrar ni borrar**: lo borrabas y volvia en el instante siguiente.
+
+**Ahora los JSON son solo el instalador.** La primera vez, `config.js` los copia a la
+base y a partir de ahi **manda la base**: todo, tambien lo de fabrica, se renombra y
+se borra de verdad.
+
+- `asegurarFabrica(db, {actividades, accesorios})` vive en `config.js`. Corre en las
+  5 pantallas: `Citas/actividades.html`, `Citas/accesorios.html`, `Citas/index.html`,
+  `Guiadas/index.html`, `Encuentros/index.html`. Las 5 leen **los dos** JSON, porque
+  corre una sola vez y la que abra primero debe sembrar todo.
+- La banderita es el doc **`config/fabrica`** y guarda **que nombres** ya se
+  instalaron. Por eso **lo que borras no vuelve** (su nombre sigue anotado como
+  instalado) y en cambio **una actividad nueva que agregues despues al JSON si entra**.
+- Si no se puede escribir (reglas cerradas o sin conexion) devuelve `false` y cada
+  pantalla conserva el JSON como lista de respaldo: se ve igual de antes, no se rompe.
+- `unirConFabrica(base, fabrica)` solo se usa en ese caso de respaldo.
+- Los presets `<Actividad>.json` siguen siendo respaldo de `presetsActividad`
+  (mismo patron que `usuarios.json`). Si el nombre cambia, el JSON ya no aplica.
+- El JSON tambien es el **respaldo**: no lo borres.
+
+Al agregar o quitar algo del JSON de fabrica hay que subir `VERSION_FABRICA` en
+`config.js`, o las instalaciones nuevas no lo reciben.
 
 ---
 

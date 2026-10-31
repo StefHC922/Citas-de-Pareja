@@ -198,260 +198,6 @@ inicio de `GUIA.md`). **Que no vuelva a pasar:**
    ningun nombre se hardcodea en el codigo. Ver `General/GUIA.md`, seccion de
    decisiones.
 
-## Estándares de tamaño (no inventar otros)
-
-Estos numeros son **los de la pantalla inicial** (`index.html`) y son el
-referente. Cuando se agregue un boton, una tarjeta o un titulo en CUALQUIER
-pantalla, se copian de aqui. No se inventan medidas nuevas, y no se pregunta
-por ellas: ya estan decididas.
-
-| Que | Medida |
-|---|---|
-| Ancho maximo del contenido | `max-width:380px` |
-| Boton principal | `width:100%; padding:16px; border-radius:16px; margin-bottom:12px; font-size:1.05rem` |
-| Boton secundario | `padding:12px` |
-| Boton de icono (el circulito de arriba) | `font-size:1.6rem; padding:8px 10px; border-radius:12px` |
-| Tarjeta de menu | `padding:24px 20px; border-radius:20px; margin-bottom:16px; gap:16px` |
-| Icono de tarjeta | `2.4rem` en el menu, `2rem` en otras pantallas |
-| Titulo de tarjeta | `1.25rem` en el menu, `1.1rem` en otras |
-| Subtitulo de tarjeta | `.85rem` |
-| Chevron de la tarjeta | `1.4rem` |
-| Titulo de seccion | `.8rem`, mayusculas, con espacios entre letras |
-| Radio de esquina, general | `12px` (esquinas chicas), `16px` (botones y tarjetas) |
-| Al tocarse un boton | `transform: scale(.97)` |
-
-**Nota honesta:** hoy hay botones viejos con `padding` de 12, 13 y 16px, y
-radios de 12, 14 y 16px. **No es un bug, pero lo nuevo va con la tabla de
-arriba.** Unificar los viejos se hace aparte, pantalla por pantalla, porque
-tocarlos todos de golpe es Riesgoso sin verlos.
-
-## Pantalla nueva = COPIAR una existente (regla dura)
-
-**Antes de escribir una pantalla desde cero, abrir una que ya exista y copiarla.**
-No se diseña nada: se replica. Si la pantalla nueva no se ve igual que las demás,
-es un bug, aunque funcione.
-
-**Hay DOS moldes en la app, y son distintos. El que pide Fredy para las pantallas
-de juego y con varias vistas es el de `Guiadas/index.html` (idéntico al de
-`Encuentros/`).** No confundirlo con el de `Citas/` o `Retos/`, que es otro.
-
-### Molde A — el de `Guiadas/` y `Encuentros/` (el que se usa)
-
-Varias vistas en la misma pantalla, una visible a la vez. **Este es el molde de
-referencia.**
-
-```html
-<body>                                  <!-- una columna, centrada -->
-  <a class="back" id="lnkInicio" href="../index.html#submenu">← Volver</a>
-  <div class="eyebrow">Nombre de la sección</div>
-  <div class="vista ver" id="vistaX">
-    <h1>Título</h1>
-    <p class="desc">Subtítulo centrado.</p>
-    ...
-  </div>
-</body>
-```
-
-Se copia tal cual:
-
-| Que | Medida / clase |
-|---|---|
-| `body` | `display:flex; flex-direction:column; align-items:center; padding:max(66px, calc(env(safe-area-inset-top) + 30px)) 20px max(28px, env(safe-area-inset-bottom));` |
-| **"Volver"** | clase `.back`, `position:absolute; top:max(20px, env(safe-area-inset-top)); right:20px` |
-| `.eyebrow` | `.8rem`, mayúsculas, `letter-spacing:.3em`, apagado |
-| `h1` | `1.8rem`, Chakra Petch, **centrado y con degradado coral→turquesa** |
-| `p.desc` | `.88rem`, apagado, `max-width:360px`, centrado |
-| `.vista` | `display:none; width:100%; max-width:520px; flex-direction:column; align-items:center` |
-| `.vista.ver` | `display:flex` (la vista visible) |
-| Botón principal | `.btnPri` — degradado, `padding:16px`, `border-radius:14px` |
-| Botón secundario | `.btnSec` — sin fondo, apagado, subrayado, `padding:12px` |
-| Recuadro con scroll | `.caja` — `max-height:55dvh; overflow-y:auto; border-radius:16px; background:var(--bg-2)` |
-| Tarjeta | `.ficha` — `background:var(--card); border-radius:16px; padding:16px` |
-
-**Navegación:** se cambian las clases con una función `ver(id)` que quita `.ver` a
-todas y se la pone a una, y el **"Volver" es contextual** con `preventDefault()`:
-regresa a la pantalla anterior, y solo desde la vista principal sale al menú
-(`../index.html#submenu`). Con `history.pushState` + `popstate` para que el botón
-atrás del celular no se salga de la pantalla.
-
-### El estilo de las LISTAS: el del engrane de `Opciones/`
-
-Cuando la pantalla tenga **listas de cosas** (productos, deseos, opciones,
-pedidos), el molde de las listas **no** es el de `Guiadas/` sino el del **engrane de
-`Opciones/`** (Juegos → Elecciones Peligrosas → ⚙️ arriba a la izquierda). Se copian
-estas clases tal cual, con sus medidas:
-
-| Clase | Qué es | Medida |
-|---|---|---|
-| `.tabs` / `.tab` / `.tab.activo` | Pestañas: dos botones en la misma línea | `.tab{flex:1; padding:12px; border-radius:12px; border:1px solid var(--card-border); background:var(--card); color:var(--fg-muted); font-family:'Chakra Petch'; font-weight:600; font-size:.9rem}` — `.activo` es el degradado coral→turquesa con `color:var(--bg)` |
-| **`.tablaBox`** | **El recuadro que delimita la lista** | `width:100%; max-height:48dvh; overflow-y:auto; border:1px solid var(--card-border); border-radius:12px; background:var(--bg-2); padding:8px` |
-| `.fila` + `.celda` + `.x` | Cada renglón | `.fila{display:flex; gap:8px; align-items:center; margin-bottom:6px}` · `.celda{flex:1; min-width:0; border:1px solid var(--card-border); background:var(--card); border-radius:10px; padding:10px; font-size:.85rem}` · `.x{background:none; border:none; color:var(--rojo); cursor:pointer; font-size:1rem; padding:6px 10px}` |
-| `.filaAdd` | Fila de agregar: input + **+** | `display:flex; gap:8px` · input `flex:1; border-radius:12px; background:var(--bg); padding:12px` · botón con el degradado, `padding:12px 16px` |
-| `.buscar` | El buscador | `width:100%; border-radius:12px; background:var(--card); padding:13px 14px; font-size:.95rem` |
-
-**El esqueleto de una vista con lista** es siempre este, en este orden:
-
-```
-h1  +  p.desc
-[ .tablaBox con los renglones ]      ← el recuadro delimita
-[ .filaAdd  o  .btnPri ]             ← opcional
-[ .tabs con las otras vistas ]       ← abajo del recuadro, en la misma línea
-```
-
-**El ✕ no borra de una:** abre el detalle para **editar, activar y borrar**, y ahí
-sí se pregunta con `confirmar()`. Un ✕ que borra sin avisar es una trampa.
-
-### Molde B — el de `Citas/`, `Retos/` y `Opciones/`
-
-Una sola vista, con `#app` + `#encabezado` (saludo con degradado + fecha) +
-`#contenido` (`max-width:560px`). **Solo se usa si la pantalla es de una sola
-vista.** Si tiene varias, es el molde A.
-
-**Antes de decir "listo", chequear en una pantalla nueva:**
-- `<div>` y `</div>` cuadran.
-- No hay `id` repetidos.
-- **Todos los `id` que usa el JS existen en el HTML.**
-- El JS pasa `jscheck.py`.
-
-## Estándar de navegación (botones de volver y esquinas)
-
-**1. El botón "Volver" de un juego se llama `‹ Volver`, nunca "Inicio",** y
-regresa **al submenú del que salió el juego**, no a la pantalla inicial:
-
-| Juego | Va a | Como |
-|---|---|---|
-| Diablitos | Juegos | `../index.html#juegos` |
-| Un juego de Experiencias (Guiadas, Encuentros, Citas) | Experiencias | `../index.html#experiencias` |
-| Retos | Retos | `../index.html#retos` |
-
-**Los `#` tienen que estar soportados** en el `if(location.hash === ...)` de
-`index.html`. Si un juego apunta a un `#` que no está ahí, **no da error**: te
-manda al menú principal sin querer. Ya pasó dos veces con Retos (oct-2026).
-
-**Los tres submenús son de un solo nivel**, todos con la misma forma:
-
-| Submenú | Lleva a | Llena desde |
-|---|---|---|
-| Juegos | Diablitos | `packsJuegos` (catálogo) |
-| Experiencias | Citas, y lo del catálogo | `packsExp` (catálogo) |
-| Retos | Retos | `packsRetos` (catálogo) |
-
-`#extras` **ya no existe**: el submenú se llama Retos (`btnRetos`,
-`vistaRetos`, `packsRetos`). El código acepta `seccion:"retos"` y también
-`"extras"`, igual que los dos `#`, por si hay algo viejo en el catálogo.
-
-**Un juego se pone en UN submenú, no en dos.** Retos estaba como tarjeta fija
-dentro de Experiencias y además tenía su propio submenú vacío (oct-2026). Por eso
-"Volver" lo dejaba en un lugar sin nada.
-
-**1g. Una pantalla que cuelga de un submenú regresa a ESE submenú, no a la
-pantabra hermana.** El Centro de Adquisiciones cuelga del submenú Retos, así que su
-"Volver" va a `../index.html#retos` y **no** a `Retos/index.html`. Lo mismo aplica a
-cualquier pantalla nueva: se pregunta "¿de dónde salí?" y ahí se vuelve.
-
-**1h. El orden de las tarjetas lo manda `orden`, no el alfabeto.** Las tarjetas de
-`packs` se ordenan por `orden` y, si empatan, por título. **Si no se pone `orden`,
-caen en `10` y se ordenan por nombre**: por eso "Centro de Adquisiciones" salía
-**antes** que "Retos" (oct-2026). **Cada tarjeta fija lleva su `orden` explícito y
-único.**
-
-`index.html` lee el `#` al arrancar y abre esa subpantalla directo
-(`abrirJuegos()` / `abrirExp()`). Para agregar otro submenú: se agrega su
-`abrirX()` / `cerrarX()` junto a las demás y se añade su línea en ese `if`.
-
-**1b. El "Volver" de los SUBMENÚS va arriba a la DERECHA**, siempre los tres
-(Juegos, Experiencias, Retos). Clase `.volverSub`, que ya trae la posición. No
-se pone cada uno por su lado: si se agrega un submenú, usa esa misma clase.
-
-**1c. "Cambiar usuario" vive SOLO en la pantalla de Usuarios** (arriba a la
-izquierda, `#invCambiarUsu`). Se quitó de `Citas/` y de `Retos/`, donde solo
-servía para las pruebas del principio (oct-2026). Si aparece en otra pantalla,
-es que se coló otra vez: no pertenece ahí.
-
-**1d. Un flujo SIEMPRE tiene salida.** "Cambiar usuario" abre la lista de
-usuarios y muestra un **"‹ Volver"** (`#idVolverCambiar`). Y al escoger, se
-vuelve a **Usuarios**, no al menú. Lo anterior no cumplía ninguna de las dos: no
-se podía salir sin cambiar, y al cambiar caía en un sitio distinto cada vez
-(fredy, oct-2026).
-
-**Regla que salió de eso:** una acción que cambia la identidad **no borra nada
-antes de tiempo y no recarga a ciegas**. Primero muestra, deja cancelar, y solo
-al confirmar recarga — y avisa a dónde va.
-
-**1e. Los cuatro submenús del menú son iguales:** Experiencias, Juegos,
-Retos y **Comunicaciones** (que trae Chat y Acompañante). Todos abren con un
-botón y se cierran con el mismo `.volverSub`. No hay entradas "sueltas" al
-menú: si algo nuevo entra, entra en un submenú.
-
-**1f. "Volver" SIEMPRE arriba a la DERECHA** en toda la app: submenús del menú y
-pantallas de juego (Encuentros, Guiadas, Diablitos, Citas, Retos, **Chat y
-Acompañante**, que van a `#com`). Lo que viva
-en la esquina **izquierda** es el botón contextual de esa pantalla (el engrane),
-y **jamás hay dos en el mismo lado a la vez**: en cada pantalla se muestra solo
-uno.
-
-En Guiadas y Encuentros el "← Volver" de arriba a la derecha es **contextual**:
-regresa a la pantalla anterior (del editor a la lista de configurar; de ahí a la
-lista de actividades/jugar). Solo desde la lista de actividades sale al menú. El
-único botón de arriba a la izquierda es el engrane ⚙️, y solo en la lista de
-actividades (oct-2026: se quitaron los "← Jugar"/"← Configurar").
-
-**2. Los botones de la esquina (el ⚙️ de invitados y el 🛒 de adquisiciones)
-son del MENÚ PRINCIPAL.** En un submenú no se muestran: ahí solo vive el
-`‹ Volver`. El ⚙️ va arriba a la **izquierda** (a la derecha se encimaba con el
-🛒 en el celular).
-
-**3. El invitado NO tiene ninguna salida.** En `Encuentros/` el enlace "‹
-Volver" se le oculta siempre (`pintarSalidas()`), porque la regla de Fase 1 dice
-que el invitado no se va por su cuenta. La pareja y el anfitrión sí lo ven,
-salvo durante la partida.
-
-**4. Los títulos centrados con degradado llevan `width:fit-content`.** Sin eso
-el degradado se reparte por todo el ancho de la pantalla y sobre las letras solo
-cae una fracción: se ve clarito y sin color.
-
-**4b. Los títulos de los submenús (`.subTitulo`) van CENTRADOS.** Con textos
-largos como "COMUNICACIÓN Y ALGO MÁS" se notaba que se quedaban pegados a la
-izquierda (oct-2026).
-
-**4c. Al agregar o mover un bloque de `<div>` en el HTML: contar que el número
-de `<div>` y de `</div>` cuadre.** Pasó dos veces: un `</div>` de más cerró el
-contenedor `#menu` antes de tiempo y todo se amontonó a la izquierda, y un
-`packsRetos` quedó duplicado (los ids duplicados no dan error, solo hacen
-cosas raras). Se revisa con un conteo de `<div` / `</div>` por página, y
-buscando ids repetidos.
-
-**5. El guardado de cada pantalla es `position:fixed` o `absolute` con
-`top:max(18px, env(safe-area-inset-top))`.** Nunca sin esa protección: en
-celulares con notch los botones se esconden bajo la barra.
-
-## El contenido de fabrica: los JSON son SOLO el instalador
-
-Antes (oct-2026) `Citas/actividades.json` y `Citas/accesorios.json` se mezclaban con
-lo de la pareja en **cada carga**. Como lo de fabrica no estaba en la base, **no se
-podia renombrar ni borrar**: lo borrabas y volvia en el instante siguiente.
-
-**Ahora los JSON son solo el instalador.** La primera vez, `config.js` los copia a la
-base y a partir de ahi **manda la base**: todo, tambien lo de fabrica, se renombra y
-se borra de verdad.
-
-- `asegurarFabrica(db, {actividades, accesorios})` vive en `config.js`. Corre en las
-  5 pantallas: `Citas/actividades.html`, `Citas/accesorios.html`, `Citas/index.html`,
-  `Guiadas/index.html`, `Encuentros/index.html`. Las 5 leen **los dos** JSON, porque
-  corre una sola vez y la que abra primero debe sembrar todo.
-- La banderita es el doc **`config/fabrica`** y guarda **que nombres** ya se
-  instalaron. Por eso **lo que borras no vuelve** (su nombre sigue anotado como
-  instalado) y en cambio **una actividad nueva que agregues despues al JSON si entra**.
-- Si no se puede escribir (reglas cerradas o sin conexion) devuelve `false` y cada
-  pantalla conserva el JSON como lista de respaldo: se ve igual de antes, no se rompe.
-- `unirConFabrica(base, fabrica)` solo se usa en ese caso de respaldo.
-- Los presets `<Actividad>.json` siguen siendo respaldo de `presetsActividad`
-  (mismo patron que `usuarios.json`). Si el nombre cambia, el JSON ya no aplica.
-- El JSON tambien es el **respaldo**: no lo borres.
-
-Al agregar o quitar algo del JSON de fabrica hay que subir `VERSION_FABRICA` en
-`config.js`, o las instalaciones nuevas no lo reciben.
-
 ## La llave del `Panel/` — NUNCA al repo
 
 `Panel/` y `Autorizar/` piden una **llave privada JWK** (`{"kty":"EC",...}`).
@@ -519,3 +265,21 @@ acuerdo.
 Unico cambio que SI es seguro y no afecta la app: limitar las reglas a las rutas
 que la app usa (hoy esta abierto "cualquier ruta"). Eso no protege el contenido,
 solo cierra lo que no se usa. **Aun asi, no se hace sin preguntarle a Fredy.**
+
+---
+
+## 📄 Índice de documentación de detalle
+
+Todo el detalle de **pantallas, navegación, estándares de tamaño y moldes A/B** vive en:
+
+**`General/Pantallas.md`**
+
+Consulta ese archivo para:
+- Estándares de tamaño de la interfaz (botones, tarjetas, títulos, radios)
+- Pantalla nueva = COPIAR una existente (molde A y B, clases CSS)
+- Estándar de navegación (botón Volver, submenús, pushState, popstate, hash)
+- Dónde va cada "Volver"
+- Degradado en los títulos
+- Botones de volver y de esquina
+
+Aquí en `AGENTS.md` solo están las **reglas de trabajo** (no tocar sin pedir, máximo 3 intentos, no inventar reglas de Firestore, etc.).
