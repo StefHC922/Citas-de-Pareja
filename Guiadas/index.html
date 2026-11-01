@@ -225,6 +225,7 @@
 <div id="modalMulti3" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;align-items:center;justify-content:center;padding:20px;">
   <div style="width:100%;max-width:380px;background:var(--card);border:1px solid var(--card-border);border-radius:18px;padding:22px 20px;">
     <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;text-align:center;margin-bottom:10px;">¿Cuántas acciones por nivel?</div>
+    <p class="desc" id="multiTomasAviso" style="max-width:none;margin-bottom:12px;"></p>
     <div class="tomasGrid" id="multiTomasGrid"></div>
     <button class="btnPri" id="btnMulti3Ok" style="margin-top:12px;">Aceptar y jugar ▶</button>
     <button class="btnSec" id="btnMulti3Back">Atrás</button>
@@ -913,7 +914,7 @@ function abrirTomasGuia(nombre){
   const g = document.getElementById("tomasGridGuia");
   g.innerHTML = "";
   const guardadas = tomasGuardadas(nombre);
-  document.getElementById("tomasAvisoGuia").textContent = "Precargado con las guardadas. Edita y acepta.";
+  document.getElementById("tomasAvisoGuia").innerHTML = "Anote cuantas acciones de cada nivel<br>quiere utilizar para su partida";
   NIVELES.forEach(nv=>{
     const lab = document.createElement("label");
     lab.textContent = nv.nombre;
@@ -1166,6 +1167,7 @@ document.getElementById("btnMulti2Ok").onclick = ()=>{
   if(pendienteMultiPrev){
     document.getElementById("btnMulti3Ok").textContent = "Aceptar y jugar ▶";
   }
+  document.getElementById("multiTomasAviso").innerHTML = "Anote cuantas acciones de cada nivel<br>quiere utilizar para su partida";
   multiMostrar("modalMulti2", false);
   multiMostrar("modalMulti3", true);
 };
