@@ -233,8 +233,8 @@
   /* La carta NO puede pasar de 56dvh: asi "Siguiente" siempre queda cerca y no
      hay que bajar toda la pantalla. Lo que sobra de la info se desliza DENTRO de
      la carta (`.info` tiene su propio scroll). Decidido por Fredy, 17-oct-2026. */
-  #tarjeta, .tarjetaCara{ width:100%; max-height:min(56dvh, 520px); overflow:hidden;
-    border-radius:22px; padding:12px; display:flex; flex-direction:column;
+  #tarjeta, .tarjetaCara{ width:100%; height:min(56dvh, 520px); max-height:none;
+    overflow:hidden; border-radius:22px; padding:12px; display:flex; flex-direction:column;
     gap:10px; cursor:pointer; border:2px solid transparent;
     background:linear-gradient(var(--card),var(--card)) padding-box,
                linear-gradient(135deg,var(--coral),var(--teal)) border-box;
@@ -1766,7 +1766,8 @@ function mostrarEstadoCarta(estado){
     tarjeta.style.visibility = "visible";
     reverso.style.display = "none";
     foto.style.display = "";
-    foto.style.maxHeight = "none";   // deja que la imagen crezca dentro del recuadro
+    foto.style.height = "100%";      // llena todo el alto del recuadro
+    foto.style.maxHeight = "none";   // quita el tope de 140px
     nombre.style.display = "none";
     if(contra) contra.style.display = "none";
     if(especial) especial.style.display = "none";
@@ -1779,7 +1780,8 @@ function mostrarEstadoCarta(estado){
     tarjeta.style.visibility = "visible";
     reverso.style.display = "none";
     foto.style.display = "";
-    foto.style.maxHeight = "min(20dvh, 140px)"; // restaura la medida original
+    foto.style.height = "auto";                 // restaura su tamaño natural
+    foto.style.maxHeight = "min(20dvh, 140px)"; // tope original
     nombre.style.display = "";
     if(contra) contra.style.display = "";
     if(especial) especial.style.display = "";
@@ -2303,11 +2305,16 @@ document.getElementById("reverso").onclick = function(){
     voltear();
   }
 };
-// Tocar la imagen del personaje (solo un solo celular, carta boca arriba) abre el
-// modal con la imagen grande. En modo compartido la imagen no hace nada aparte.
+// Tocar la imagen del personaje.
+// Modo compartido: avanza al siguiente estado del ciclo (reverso -> imagen grande -> info -> reverso).
+// Un solo celular (carta boca arriba): abre el modal con la imagen grande.
 document.getElementById("fotoPersonaje").addEventListener("click", function(e){
   e.stopPropagation();
-  if(jugandoCompartido) return;
+  if(jugandoCompartido){
+    estadoCarta = (estadoCarta + 1) % 3;
+    mostrarEstadoCarta(estadoCarta);
+    return;
+  }
   if(bocaAbajo) return;
   const img = document.querySelector("#fotoPersonaje img");
   if(img) abrirModalImagen(img.src);
