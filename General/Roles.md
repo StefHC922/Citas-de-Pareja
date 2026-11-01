@@ -345,6 +345,50 @@ ver con el nombre de los modos.
   El engrane de configuración (⚙️) lo tienen **los dos** (es su app en cada
   teléfono, aunque compartan datos); el "solo administrador" era para el control
   de invitados, no para la pareja.
+## Diseño de la tarjeta de personaje (registro actual)
+
+**Altura fija:** la tarjeta mide `min(56dvh, 520px)` de alto, para que el botón
+"Siguiente" quede siempre cerca y no haya que bajar toda la pantalla. Lo que
+sobra de la información se desliza **dentro** de la carta (`.info` tiene su
+propio scroll).
+
+**Foto del personaje:** es un banner 16/9 (no cuadrada), con `object-fit:contain`
+para que se vea completa dentro del recuadro.
+
+**Bloques de información:** SITUACIÓN / ATRACTIVO / DERECHOS / ACCIÓN (este
+último con borde izquierdo teal). Los textos salen de Firebase y nunca se
+usan `innerHTML` con datos de la base, solo `textContent`.
+
+**Nombre:** con degradado coral→turquesa y `width:fit-content` para que el
+degradado se vea entero.
+
+**"contra [contraparte]":** debajo del nombre, solo sale en las cartas del
+Duelo de seducción. En los otros modos el elemento nace oculto.
+
+**Bloque "Variante picante":** solo se muestra si la ronda tiene una variante
+especial asignada. Vive dentro de la carta, así se voltea con ella.
+
+**Reverso:** la carta arranca boca abajo (reverso visible). Al tocarla se
+revela. El reverso tiene el mismo tamaño que el frente (`visibility` y no
+`display` para que el alto no salte).
+
+**Modo compartido (cada quien en su celular):** la carta avanza por un ciclo
+de 3 estados al tocarla: reverso ("Toca para revelar el personaje") → solo
+imagen grande con el nombre ("Conoce a tu Personaje") → toda la información
+("Voltea tu tarjeta"). Tocar la foto avanza al siguiente estado; no abre
+modal.
+
+**Un solo celular:** volteo normal (boca abajo ↔ boca arriba). Al tocar la
+foto con la carta boca arriba se abre una **ventana emergente** (`modalImagenCarta`)
+con la imagen del personaje a tamaño grande. Si se toca "Siguiente" con la
+carta todavía boca abajo, sale el aviso discreto: "Voltea la carta para poder
+seguir."
+
+**Texto de estado debajo de la carta:** varía según el estado (modo
+compartido) o si está boca abajo/arriba (un solo celular): "Toca para
+revelar el personaje", "Conoce a tu Personaje", "Voltea tu tarjeta",
+"Toca la foto para ampliar".
+
 - **Un resumen de conversacion no lee estos archivos.** Si una sesion se corta
   por limite de tokens, lo que se pierde es el detalle fino. Este archivo es la
   red de seguridad: cualquier sesion nueva debe empezar leyendolo.

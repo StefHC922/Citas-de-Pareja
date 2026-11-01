@@ -79,6 +79,7 @@ documentado en `AGENTS.md`; no se toca aqui.
 | `chat` | col | `texto`, `autorId`, `autorNombre`, `creadoEn` |
 | `presencia` | col (id = usuario) | `nombre`, `visto` |
 | `puntosUsuarios` | col (id = usuario) | `balance` |
+| `puntos/{uid}/movimientos` | subcol (id = usuario) | `monto`, `motivo`, `origen`, `referenciaId`, `referenciaTexto`, `saldoDespues`, `fecha` — el historial de puntos (nov-2026) |
 | `opcionesJuego/actual` | doc | `A[]`, `B[]`, `actualizadoEn` |
 | `sesionEncuentros/actual` | doc | `activa`, `pausada`, `terminada`, `porAdmin`, `sid`, `hostUid`, `hostNombre`, `modo`, `actividades[]`, `titulo`, `cabezas[]`, `listas{}`, `largo`, `ronda`, `turno`, `orden[]`, `empezadaEn`, `actualizadaEn` |
 | `sesionGuiada/actual` | doc | `activa`, `sid`, `hostUid`, `hostNombre`, `modo`, `titulo`, `actividades[]`, `lista[]`, `paso`, `terminada`, `reanudada`, `empezadaEn`, `actualizadaEn` |
@@ -195,15 +196,19 @@ No se nota porque **la app no tiene forma de renombrar a un usuario.** Si se
 agrega, quedan 22 lugares desincronizados y el chatDiría un nombre que el chat ya
 no tiene.
 
-### P3. El saldo de puntos no tiene historial — es irreversible
+### P3. El saldo de puntos no tiene historial — RESUELTO (nov-2026)
 
 `puntosUsuarios/{id}` tiene **un solo campo**: `balance`, y siempre escrito con
-`increment()`. No hay de dónde vino ni a dónde fue.
+`increment()`. **Antes** no había de dónde vino ni a dónde fue.
 
-Consecuencias concretas: si a alguien se le descuenta mal, **no hay forma de
-saber por qué ni de auditarlo**; el arreglo es escribir un numero a mano y se
-pierde el rastro; y borrar el reto que loMappings causo (`Retos:938`) **destruye
-la evidencia**. Es el unico dato de la app donde un error no se puede recuperar.
+**Ahora sí hay historial:** cada movimiento se registra en
+`puntos/{uid}/movimientos/{movId}` (ver `General/Puntos.md`), con el monto, el
+motivo, el origen, la referencia y el saldo que quedó. Con eso se puede auditar
+y corregir un descuento mal hecho sin perder el rastro.
+
+> Nota: el historial arranca en nov-2026; los movimientos de antes no se pueden
+> reconstruir (no quedaron guardados). El saldo actual de cada quien es el punto
+> de partida.
 
 ### P4. Las partidas son un solo documento que crece
 

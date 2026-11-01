@@ -652,13 +652,25 @@ el("mdActivar").onclick = async ()=>{
   });
   if(!ok) return;
   try{
+    const coste = miActivar();
+    const deseo = deseos.find(x=> x.id === id);
     await runTransaction(db, async (t)=>{
       const refSaldo = doc(db, "puntosUsuarios", yo.id);
       const s = await t.get(refSaldo);
       const actual = (s.exists() ? (s.data().balance || 0) : 0);
-      if(actual < miActivar()) throw new Error("saldo");
-      t.update(refSaldo, { balance: increment(-miActivar()) });
+      if(actual < coste) throw new Error("saldo");
+      t.update(refSaldo, { balance: increment(-coste) });
       t.update(doc(db, "deseos", id), { enVenta: true, activadoEn: serverTimestamp() });
+      const idM = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+      t.set(doc(collection(db, "puntos", yo.id), idM), {
+        monto: -coste,
+        motivo: "activar deseo",
+        origen: "centro",
+        referenciaId: id,
+        referenciaTexto: (deseo && deseo.nombre) || "",
+        saldoDespues: actual - coste,
+        fecha: serverTimestamp()
+      });
     });
     avisarTelegram("✨ " + yo.nombre + " activó un deseo para su tienda.", APP_URL + "Retos/centro.html");
     cerrarModal();
@@ -776,23 +788,34 @@ async function comprar(id){
   });
   if(!ok) return;
   try{
+    const coste = miPrecio();
     const refCompra = doc(collection(db, "comprasDeseos"));
     await runTransaction(db, async (t)=>{
       const refSaldo = doc(db, "puntosUsuarios", yo.id);
       const s = await t.get(refSaldo);
       const actual = (s.exists() ? (s.data().balance || 0) : 0);
-      if(actual < miPrecio()) throw new Error("saldo");
-      t.update(refSaldo, { balance: increment(-miPrecio()) });
+      if(actual < coste) throw new Error("saldo");
+      t.update(refSaldo, { balance: increment(-coste) });
       t.set(refCompra, {
         deseoId: id,
         nombreDeseo: d.nombre || "",
         descripcion: d.descripcion || "",
-        precio: miPrecio(),
+        precio: coste,
         comprador: { id: yo.id, nombre: yo.nombre },
         vendedor: pareja ? { id: pareja.id, nombre: pareja.nombre } : null,
         estado: "pendiente",
         creadoEn: serverTimestamp(),
         entregadoEn: null
+      });
+      const idM = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+      t.set(doc(collection(db, "puntos", yo.id), idM), {
+        monto: -coste,
+        motivo: "comprar deseo",
+        origen: "centro",
+        referenciaId: refCompra.id,
+        referenciaTexto: d.nombre || "",
+        saldoDespues: actual - coste,
+        fecha: serverTimestamp()
       });
     });
     avisarTelegram("🛍 " + yo.nombre + " compró un deseo: " + (d.nombre||"") + ". ¡A entregar!", APP_URL + "Retos/centro.html");

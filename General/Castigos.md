@@ -18,6 +18,14 @@ Movido de `General/GUIA.md`. Contiene el detalle completo de la pantalla de cast
 | `vistaPartida` | La partida: Imposición → Castigo → Recibir, con cronómetro, Saltar turno, Pausar, Terminar, QR, Agregar invitado, sala |
 | `vistaEspera` | Sala de espera del invitado / pareja |
 
+## Paso de tomas al iniciar la partida
+
+Cuando se inicia una partida de Castigos, se muestra la vista `vistaTomas` ("Castigos por nivel") con el siguiente texto:
+
+> Elija cuántos castigos de cada nivel quiere utilizar para su partida, considere a sus invitados.
+
+Allí se elige cuántas acciones de cada nivel (básico, medio, avanzado, experto, alucinado) se usarán en la partida. En la modalidad **Multi**, las tomas son de la partida y no se guardan en los castigos.
+
 ## Modales
 
 `modalUnir`, `modalAgregar` (invitado a media partida), `modalQR`, `modalSeguir` (continuar pausada), `modalQuienCastiga`, `modalImposiciones`, `modalPlacer`, `modalMultiConf`, `modalDetalle` (accesorio/medida de una acción).

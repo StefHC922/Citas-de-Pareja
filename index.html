@@ -344,6 +344,19 @@
     </div>
   </div>
 
+  <!-- ============ OVERLAY: historial de movimientos de puntos ============ -->
+  <!-- Cada quien ve SU historial; el administrador ve el de los dos perfiles
+       base. Es de solo lectura: lee `puntos/{id}/movimientos`, los ultimos 50. -->
+  <div id="invOverlayHist" style="display:none;position:fixed;inset:0;background:rgba(9,7,15,.8);z-index:70;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:var(--bg-2);border:1px solid var(--card-border);border-radius:20px;padding:22px;width:100%;max-width:380px;">
+      <h2 id="invHistTitulo" style="font-size:1.1rem;margin-bottom:6px;font-family:'Chakra Petch',sans-serif;">Historial de puntos</h2>
+      <p id="invHistSaldo" style="font-size:.82rem;color:var(--fg-muted);margin:0 0 12px;"></p>
+      <div id="invHistLista" style="display:flex;flex-direction:column;gap:8px;max-height:52dvh;overflow-y:auto;"></div>
+      <p id="invHistMsg" style="font-size:.82rem;color:var(--rojo);min-height:18px;margin:10px 0 0;"></p>
+      <button class="btnPri" id="invHistCerrar" type="button" style="width:100%;background:var(--card);color:var(--fg);border:1px solid var(--card-border);margin-top:14px;">Cerrar</button>
+    </div>
+  </div>
+
   <!-- ============ OVERLAY: pedir la clave para editar usuarios ============ -->
   <!-- Nace oculto. Se pide al tocar "Editar nombres y administrador". La clave
        esta fija en el codigo (su hash), solo para las pruebas de la pareja. -->
@@ -476,7 +489,7 @@
 
 <script type="module">
 import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, query, where, limit, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, query, where, limit, orderBy, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "./firebase-config.js";
 import { verificarCodigo, verificarFirma } from "./taquilla.js";
 import {
@@ -1258,6 +1271,18 @@ async function pintarInvUsuarios(){
     g.style.cssText = "background:var(--card);border:1px solid var(--card-border);border-radius:12px;color:var(--fg);font-size:1.05rem;cursor:pointer;padding:12px;min-width:46px;";
     g.onclick = ()=> abrirPuntos(u);
     fila.appendChild(g);
+    // Historial de puntos: cada quien ve el suyo; el administrador ve el de los
+    // dos perfiles base (admin y pareja), no el de invitados.
+    const verHist = (yo && yo.id === u.id) || (yo && yo.admin && !u.invitado);
+    if(verHist){
+      const h = document.createElement("button");
+      h.type = "button";
+      h.textContent = "📜";
+      h.setAttribute("aria-label", "Historial de " + u.nombre);
+      h.style.cssText = "background:var(--card);border:1px solid var(--card-border);border-radius:12px;color:var(--fg);font-size:1.05rem;cursor:pointer;padding:12px;min-width:46px;";
+      h.onclick = ()=> abrirHistorial(u);
+      fila.appendChild(h);
+    }
     box.appendChild(fila);
   });
   // El boton "Editar nombres y administrador" y "Cambiar usuario" son SOLO para
@@ -1294,6 +1319,80 @@ function cerrarPuntos(){
   usuarioPts = null;
 }
 document.getElementById("invPtsCancelar").onclick = cerrarPuntos;
+
+// ====== HISTORIAL DE MOVIMIENTOS DE PUNTOS ======
+// De solo lectura: muestra los ultimos 50 movimientos de `puntos/{id}/movimientos`.
+// Cada quien ve el suyo; el administrador ve el de los dos perfiles base.
+function formatearFechaMov(t){
+  try{
+    const d = (typeof t.toDate === "function") ? t.toDate() : new Date(t);
+    if(isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("es-MX", { day:"2-digit", month:"short" })
+      + " " + d.toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" });
+  }catch(e){ return ""; }
+}
+let usuarioHist = null;
+async function abrirHistorial(u){
+  usuarioHist = u;
+  const db = dbActual();
+  document.getElementById("invHistTitulo").textContent = "Historial de " + u.nombre;
+  document.getElementById("invHistSaldo").textContent = "";
+  document.getElementById("invHistMsg").textContent = "";
+  const lista = document.getElementById("invHistLista");
+  lista.innerHTML = "";
+  document.getElementById("invOverlayHist").style.display = "flex";
+  if(!db){ document.getElementById("invHistMsg").textContent = "No hay base de datos."; return; }
+  try{
+    const s = await getDoc(doc(db, "puntosUsuarios", u.id));
+    const bal = (s.exists() ? (s.data().balance || 0) : 0);
+    document.getElementById("invHistSaldo").textContent = "Saldo actual: " + bal + " pts";
+    const q = query(collection(db, "puntos", u.id), orderBy("fecha", "desc"), limit(50));
+    const snap = await getDocs(q);
+    if(snap.empty){
+      const v = document.createElement("div");
+      v.style.cssText = "font-size:.82rem;color:var(--fg-muted);text-align:center;padding:16px;";
+      v.textContent = "Todavía no hay movimientos.";
+      lista.appendChild(v);
+      return;
+    }
+    snap.forEach(ds=>{
+      const m = ds.data();
+      const fila = document.createElement("div");
+      fila.style.cssText = "display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border:1px solid var(--card-border);border-radius:12px;padding:10px 12px;";
+      const izq = document.createElement("div");
+      izq.style.cssText = "min-width:0;flex:1;";
+      const motivo = document.createElement("div");
+      motivo.style.cssText = "font-size:.85rem;color:var(--fg);";
+      motivo.textContent = m.motivo || "Movimiento";
+      izq.appendChild(motivo);
+      if(m.referenciaTexto){
+        const ref = document.createElement("div");
+        ref.style.cssText = "font-size:.72rem;color:var(--fg-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+        ref.textContent = m.referenciaTexto;
+        izq.appendChild(ref);
+      }
+      const fe = document.createElement("div");
+      fe.style.cssText = "font-size:.68rem;color:var(--fg-muted);margin-top:2px;";
+      fe.textContent = formatearFechaMov(m.fecha);
+      izq.appendChild(fe);
+      const monto = document.createElement("div");
+      const n = (typeof m.monto === "number") ? m.monto : 0;
+      monto.style.cssText = "font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1rem;" + (n >= 0 ? "color:var(--teal);" : "color:var(--coral);");
+      monto.textContent = (n >= 0 ? "+" : "") + n;
+      fila.appendChild(izq);
+      fila.appendChild(monto);
+      lista.appendChild(fila);
+    });
+  }catch(e){
+    document.getElementById("invHistMsg").textContent = "No se pudo cargar el historial.";
+  }
+}
+function cerrarHistorial(){
+  document.getElementById("invOverlayHist").style.display = "none";
+  usuarioHist = null;
+}
+document.getElementById("invHistCerrar").onclick = cerrarHistorial;
+
 document.getElementById("invPtsGuardar").onclick = async ()=>{
   if(!usuarioPts) return;
   const activar  = parseInt(document.getElementById("invPtsActivar").value, 10);
@@ -1532,8 +1631,28 @@ document.getElementById("invEdGuardar").onclick = async ()=>{
       }catch(e){}
     }
     // 2) Los puntos de TODOS (base e invitados) en puntosUsuarios/{id}.
+    // Se lee el saldo actual y se guarda la DIFERENCIA en el historial, para que
+    // el registro diga cuánto se movió de verdad (no el número absoluto).
     for(const c of cambios){
-      await setDoc(doc(db, "puntosUsuarios", c.id), { balance: c.puntos }, { merge: true });
+      await runTransaction(db, async (t)=>{
+        const refSaldo = doc(db, "puntosUsuarios", c.id);
+        const s = await t.get(refSaldo);
+        const actual = (s.exists() ? (s.data().balance || 0) : 0);
+        const delta = c.puntos - actual;
+        t.set(refSaldo, { balance: c.puntos }, { merge: true });
+        if(delta !== 0){
+          const idM = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+          t.set(doc(collection(db, "puntos", c.id), idM), {
+            monto: delta,
+            motivo: "ajuste manual",
+            origen: "usuarios",
+            referenciaId: "",
+            referenciaTexto: "",
+            saldoDespues: c.puntos,
+            fecha: serverTimestamp()
+          });
+        }
+      });
     }
     cerrarEdUsuarios();
     pintarInvUsuarios();

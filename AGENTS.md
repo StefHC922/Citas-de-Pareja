@@ -28,6 +28,7 @@ tenia el contexto a la mano.
 | `General/duelos.md` | El cuarto modo de `Roles/` (Duelo de seducción): las 4 ramas y sus 2 modalidades. **Construido y probado en vivo (oct-2026)** | Solo si la tarea toca el modo de duelo |
 | `General/Plan-Duelo.md` | El plan de desarrollo del Duelo: fases, funciones, modelo de datos y pruebas | Solo si la tarea es **construir** el duelo |
 | `General/Modelo-Datos.md` | Como esta guardada la base y como normalizarla | Antes de migrar datos |
+| `General/Puntos.md` | El sistema de puntos: saldos, historial de movimientos (`puntos/{id}/movimientos`) y qué registra cada módulo | Solo si la tarea toca puntos, favores, retos o el Centro |
 | `General/HISTORIA.md` | **El por que**: relato con fecha de cada arreglo | **Solo** en los casos de abajo |
 
 **Regla para documentación de pantallas y módulos nuevos:**

@@ -1001,16 +1001,40 @@ async function cumplirRetoIA(reto, id){
   btnProponerReto.disabled = true;
   try{
     suprimir(id);
-    const batch = writeBatch(db);
-    batch.update(doc(db, "retos", id), {
-      estado: "cobrada",
-      conteo: valor,
-      liquidadoEn: serverTimestamp(),
-      ultimaAccionPor: { id: miIdentidad.id, nombre: miIdentidad.nombre }
+    await runTransaction(db, async (t)=>{
+      const ref = doc(db, "retos", id);
+      const snap = await t.get(ref);
+      if(!snap.exists()) return;
+      const actual = snap.data();
+      if(actual.estado !== "enCurso") return;   // evita doble marca
+      // Los puntos van al que CUMPLIÓ, que es el dueño del reto. Se lee el saldo
+      // ANTES de escribir (las lecturas de una transacción van primero).
+      let saldoAntes = 0;
+      if(asig.id){
+        const refSaldo = doc(db, "puntosUsuarios", asig.id);
+        const sSaldo = await t.get(refSaldo);
+        saldoAntes = (sSaldo.exists() ? (sSaldo.data().balance || 0) : 0);
+      }
+      t.update(ref, {
+        estado: "cobrada",
+        conteo: valor,
+        liquidadoEn: serverTimestamp(),
+        ultimaAccionPor: { id: miIdentidad.id, nombre: miIdentidad.nombre }
+      });
+      if(asig.id){
+        t.set(doc(db, "puntosUsuarios", asig.id), { balance: increment(valor) }, { merge: true });
+        const idM = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+        t.set(doc(collection(db, "puntos", asig.id), idM), {
+          monto: valor,
+          motivo: "reto IA cumplido",
+          origen: "retos",
+          referenciaId: id,
+          referenciaTexto: reto.actividad || "",
+          saldoDespues: saldoAntes + valor,
+          fecha: serverTimestamp()
+        });
+      }
     });
-    // Los puntos van al que CUMPLIÓ, que es el dueño del reto.
-    if(asig.id) batch.set(doc(db, "puntosUsuarios", asig.id), { balance: increment(valor) }, { merge: true });
-    await batch.commit();
     avisarTelegram("⭐ " + miIdentidad.nombre + " confirmó el reto de " + (reto.actividad || "") + ": " + valor + " pts para " + (asig.nombre || "su pareja") + ".", APP_URL + "Retos/?reto=" + id);
   }catch(e){
     console.error(e);
@@ -1030,15 +1054,34 @@ async function eliminarReto(reto, id){
   if(!confirmado) return;
   suprimir(id);
   try{
-    const conteo = (reto.estado === "enCurso") ? (reto.conteo || 0) : 0;
-    if(conteo > 0){
-      const batch = writeBatch(db);
-      batch.delete(doc(db, "retos", id));
-      batch.set(doc(db, "puntosUsuarios", reto.asignadoA.id), { balance: increment(-conteo) }, { merge: true });
-      await batch.commit();
-    }else{
-      await deleteDoc(doc(db, "retos", id));
-    }
+    await runTransaction(db, async (t)=>{
+      const ref = doc(db, "retos", id);
+      const snap = await t.get(ref);
+      if(!snap.exists()) return;
+      const actual = snap.data();
+      const conteo = (actual.estado === "enCurso") ? (actual.conteo || 0) : 0;
+      // Se lee el saldo ANTES de escribir (lecturas primero en la transacción).
+      let saldoAntes = 0;
+      if(conteo > 0 && actual.asignadoA && actual.asignadoA.id){
+        const refSaldo = doc(db, "puntosUsuarios", actual.asignadoA.id);
+        const sSaldo = await t.get(refSaldo);
+        saldoAntes = (sSaldo.exists() ? (sSaldo.data().balance || 0) : 0);
+      }
+      t.delete(ref);
+      if(conteo > 0 && actual.asignadoA && actual.asignadoA.id){
+        t.set(doc(db, "puntosUsuarios", actual.asignadoA.id), { balance: increment(-conteo) }, { merge: true });
+        const idM = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+        t.set(doc(collection(db, "puntos", actual.asignadoA.id), idM), {
+          monto: -conteo,
+          motivo: "reto eliminado",
+          origen: "retos",
+          referenciaId: id,
+          referenciaTexto: actual.actividad || "",
+          saldoDespues: saldoAntes - conteo,
+          fecha: serverTimestamp()
+        });
+      }
+    });
     avisarTelegram("🗑️ " + miIdentidad.nombre + " eliminó el reto: " + (reto.actividad || ""), APP_URL + "Retos/");
   }catch(e){
     console.error(e);
@@ -1054,23 +1097,48 @@ async function marcarCumplida(reto, id){
   if(!confirmado) return;
   btnProponerReto.disabled = true;
   try{
+    suprimir(id);
+    await runTransaction(db, async (t)=>{
+      const ref = doc(db, "retos", id);
+      const snap = await t.get(ref);
+      if(!snap.exists()) return;
+      const actual = snap.data();
+      if(actual.estado !== "enCurso") return;   // evita doble marca
+      const nuevoConteo = (actual.conteo || 0) + 1;
+      const metaAlcanzada = nuevoConteo >= (actual.puntosMeta || 0);
+      // Se lee el saldo ANTES de escribir (lecturas primero en la transacción).
+      let saldoAntes = 0;
+      if(actual.asignadoA && actual.asignadoA.id){
+        const refSaldo = doc(db, "puntosUsuarios", actual.asignadoA.id);
+        const sSaldo = await t.get(refSaldo);
+        saldoAntes = (sSaldo.exists() ? (sSaldo.data().balance || 0) : 0);
+      }
+      t.update(ref, {
+        conteo: increment(1),
+        ...(metaAlcanzada ? { estado: "cobrada", cumplidaEn: serverTimestamp() } : {})
+      });
+      // Cada "Cumplida +1" suma un punto y NO se descuenta nada al llegar a la
+      // meta: un reto normal completado deja a quien lo cumplió con `puntosMeta`
+      // puntos (decisión de Fredy, oct-2026). ANTES el último +1 hacía
+      // `1 - meta`, o sea devolvía todos los puntos: un reto completo dejaba en 0
+      // y los puntos no acumulaban (bug reportado por Fredy, oct-2026).
+      const delta = 1;
+      if(actual.asignadoA && actual.asignadoA.id){
+        t.set(doc(db, "puntosUsuarios", actual.asignadoA.id), { balance: increment(delta) }, { merge: true });
+        const idM = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+        t.set(doc(collection(db, "puntos", actual.asignadoA.id), idM), {
+          monto: delta,
+          motivo: "reto cumplido",
+          origen: "retos",
+          referenciaId: id,
+          referenciaTexto: actual.actividad || "",
+          saldoDespues: saldoAntes + delta,
+          fecha: serverTimestamp()
+        });
+      }
+    });
     const nuevoConteo = (reto.conteo || 0) + 1;
     const metaAlcanzada = nuevoConteo >= (reto.puntosMeta || 0);
-
-    suprimir(id);
-    const batch = writeBatch(db);
-    batch.update(doc(db, "retos", id), {
-      conteo: increment(1),
-      ...(metaAlcanzada ? { estado: "cobrada", cumplidaEn: serverTimestamp() } : {})
-    });
-    // Cada "Cumplida +1" suma un punto y NO se descuenta nada al llegar a la
-    // meta: un reto normal completado deja a quien lo cumplió con `puntosMeta`
-    // puntos (decisión de Fredy, oct-2026). ANTES el último +1 hacía
-    // `1 - meta`, o sea devolvía todos los puntos: un reto completo dejaba en 0
-    // y los puntos no acumulaban (bug reportado por Fredy, oct-2026).
-    const delta = 1;
-    batch.set(doc(db, "puntosUsuarios", reto.asignadoA.id), { balance: increment(delta) }, { merge: true });
-    await batch.commit();
     let msg = "⭐ " + miIdentidad.nombre + " dio +1 punto a " + reto.asignadoA.nombre + " en " + reto.actividad + " (" + nuevoConteo + "/" + (reto.puntosMeta || 0) + ")";
     if(metaAlcanzada) msg += "\n🎉 ¡Meta cumplida! Ya puede cobrar" + (reto.recompensa ? ": " + reto.recompensa : ".");
     avisarTelegram(msg, APP_URL + "Retos/?reto=" + id);
@@ -1138,14 +1206,47 @@ async function finalizarRetosVencidos(){
           const valor = Math.max(1, parseInt(data.puntosMeta, 10) || 1);
           const pierde = Math.floor(valor / 2);
           const gana = valor - pierde;
+          const otro = (data.asignadoPor && data.asignadoPor.id) || "";
+          // Se leen los saldos ANTES de escribir (lecturas primero).
+          let saldoAsig = 0;
+          if(data.asignadoA && data.asignadoA.id && pierde > 0){
+            const refSaldo = doc(db, "puntosUsuarios", data.asignadoA.id);
+            const sSaldo = await t.get(refSaldo);
+            saldoAsig = (sSaldo.exists() ? (sSaldo.data().balance || 0) : 0);
+          }
+          let saldoOtro = 0;
+          if(otro && otro !== (data.asignadoA && data.asignadoA.id) && gana > 0){
+            const refOtro = doc(db, "puntosUsuarios", otro);
+            const sOtro = await t.get(refOtro);
+            saldoOtro = (sOtro.exists() ? (sOtro.data().balance || 0) : 0);
+          }
           t.update(ref, { estado: "noCumplido", liquidadoEn: serverTimestamp() });
           if(data.asignadoA && data.asignadoA.id && pierde > 0){
             t.set(doc(db, "puntosUsuarios", data.asignadoA.id), { balance: increment(-pierde) }, { merge: true });
+            const idM = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+            t.set(doc(collection(db, "puntos", data.asignadoA.id), idM), {
+              monto: -pierde,
+              motivo: "reto IA no cumplido",
+              origen: "retos",
+              referenciaId: docSnap.id,
+              referenciaTexto: data.actividad || "",
+              saldoDespues: saldoAsig - pierde,
+              fecha: serverTimestamp()
+            });
           }
           // La diferencia va a quien MANDÓ el reto, que es el otro.
-          const otro = (data.asignadoPor && data.asignadoPor.id) || "";
           if(otro && otro !== (data.asignadoA && data.asignadoA.id) && gana > 0){
             t.set(doc(db, "puntosUsuarios", otro), { balance: increment(gana) }, { merge: true });
+            const idM = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+            t.set(doc(collection(db, "puntos", otro), idM), {
+              monto: gana,
+              motivo: "reto IA no cumplido (diferencia)",
+              origen: "retos",
+              referenciaId: docSnap.id,
+              referenciaTexto: data.actividad || "",
+              saldoDespues: saldoOtro + gana,
+              fecha: serverTimestamp()
+            });
           }
           return;
         }
@@ -1157,8 +1258,27 @@ async function finalizarRetosVencidos(){
           // acumulaban (decisión de Fredy, oct-2026).
           t.update(ref, { estado: "cobrada", liquidadoEn: serverTimestamp() });
         }else{
+          const pen = data.penalizacionPuntos || 0;
+          let saldoAntes = 0;
+          if(data.asignadoA && data.asignadoA.id && pen > 0){
+            const refSaldo = doc(db, "puntosUsuarios", data.asignadoA.id);
+            const sSaldo = await t.get(refSaldo);
+            saldoAntes = (sSaldo.exists() ? (sSaldo.data().balance || 0) : 0);
+          }
           t.update(ref, { estado: "noCumplido", liquidadoEn: serverTimestamp() });
-          t.set(doc(db, "puntosUsuarios", data.asignadoA.id), { balance: increment(-(data.penalizacionPuntos || 0)) }, { merge: true });
+          if(data.asignadoA && data.asignadoA.id && pen > 0){
+            t.set(doc(db, "puntosUsuarios", data.asignadoA.id), { balance: increment(-pen) }, { merge: true });
+            const idM = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+            t.set(doc(collection(db, "puntos", data.asignadoA.id), idM), {
+              monto: -pen,
+              motivo: "reto no cumplido (penalización)",
+              origen: "retos",
+              referenciaId: docSnap.id,
+              referenciaTexto: data.actividad || "",
+              saldoDespues: saldoAntes - pen,
+              fecha: serverTimestamp()
+            });
+          }
         }
       });
     }

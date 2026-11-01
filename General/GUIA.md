@@ -575,6 +575,7 @@ Al agregar o quitar algo del JSON de fabrica hay que subir `VERSION_FABRICA` en
 | `General/Opciones.md` | `Opciones/`: Elecciones Peligrosas, modos, reparto, lista de opciones | Solo si la tarea toca el juego de opciones |
 | `General/Roles.md` | `Roles/`: Juego de Roles, modos, duelo, personajes | Solo si la tarea toca el juego de Roles |
 | `General/duelos.md` | El cuarto modo de `Roles/` (Duelo de seducción): las 4 ramas y sus 2 modalidades | Solo si la tarea toca el modo de duelo |
+| `General/Puntos.md` | El sistema de puntos: saldos, historial de movimientos y qué registra cada módulo | Solo si la tarea toca puntos, favores, retos o el Centro |
 
 ---
 

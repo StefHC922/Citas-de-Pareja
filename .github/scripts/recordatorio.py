@@ -112,51 +112,6 @@ def enviar_telegram(texto):
         return False
 
 
-def liquidar(r, ahora):
-    """Liquida un reto vencido con transaccion optimista. Devuelve
-    ('cobrada'|'noCumplido'|None, detalle)."""
-    rid = r["_id"]
-    conteo = int(r.get("conteo") or 0)
-    meta = int(r.get("puntosMeta") or 0)
-    asig = r.get("asignadoA") or {}
-    aid = asig.get("id", "")
-    cumplido = conteo >= meta
-    estado = "cobrada" if cumplido else "noCumplido"
-    delta = -meta if cumplido else -int(r.get("penalizacionPuntos") or 0)
-    iso = ahora.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
-    try:
-        tx = http("%s:beginTransaction" % BASE, {}, "POST")["transaction"]
-        cuerpo = {
-            "transaction": tx,
-            "writes": [
-                {
-                    "update": {
-                        "name": "%s/retos/%s" % (BASE, rid),
-                        "fields": {
-                            "estado": {"stringValue": estado},
-                            "liquidadoEn": {"timestampValue": iso},
-                        },
-                    },
-                    "updateMask": {"fieldPaths": ["estado", "liquidadoEn"]},
-                    "currentDocument": {"updateTime": r["_ts"]},
-                },
-                {
-                    "transform": {
-                        "document": "%s/puntosUsuarios/%s" % (BASE, aid),
-                        "fieldTransforms": [
-                            {"fieldPath": "balance", "increment": {"integerValue": str(delta)}}
-                        ],
-                    }
-                },
-            ],
-        }
-        http("%s:commit" % BASE, cuerpo, "POST")
-        return estado, {"asignado": nombre(asig), "delta": delta}
-    except Exception as e:
-        print("Liquidacion omitida (%s): %s" % (rid, e))
-        return None, {}
-
-
 def main():
     ahora = datetime.now(TZ)
     hoy = ahora.strftime("%Y-%m-%d")
@@ -182,18 +137,15 @@ def main():
     en_curso = [r for r in retos if r.get("estado") == "enCurso"]
     propuestas = [r for r in retos if r.get("estado") == "propuesta"]
 
-    # --- liquidar vencidos ---
-    liquidados = []
+    # --- retos vencidos (SOLO AVISO: los liquida la app al abrirse) ---
+    # La app es la unica que mueve puntos y cierra retos (oct-2026). Este script
+    # ya no liquida: solo avisa, para no duplicar logica ni tocar saldos.
+    vencidos = []
     for r in en_curso:
         fin = parse_ts(r.get("fechaFin"))
         if not fin or fin.timestamp() > ahora.timestamp():
             continue
-        if DRY:
-            liquidados.append(("cobrada" if int(r.get("conteo") or 0) >= int(r.get("puntosMeta") or 0) else "noCumplido", r))
-            continue
-        est, det = liquidar(r, ahora)
-        if est:
-            liquidados.append((est, dict(r, _det=det)))
+        vencidos.append(("cobrada" if int(r.get("conteo") or 0) >= int(r.get("puntosMeta") or 0) else "noCumplido", r))
 
     # --- mensaje ---
     L = []
@@ -222,12 +174,11 @@ def main():
         L.append("📝 Propuestas sin autorizar (%d):" % len(propuestas))
         for r in propuestas:
             L.append("• %s → %s" % (r.get("actividad"), nombre(r.get("asignadoA"))))
-    if liquidados:
+    if vencidos:
         L.append("")
-        L.append("⚖️ Anoche se liquidó:")
-        for est, r in liquidados:
-            det = r.get("_det", {})
-            asig = det.get("asignado") or nombre(r.get("asignadoA"))
+        L.append("⏳ Retos vencidos (se liquidan al abrir la app):")
+        for est, r in vencidos:
+            asig = nombre(r.get("asignadoA"))
             if est == "cobrada":
                 L.append("🎉 %s cumplió %s. ¡A cobrar!%s" % (
                     asig, r.get("actividad"),

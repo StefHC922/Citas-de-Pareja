@@ -1089,8 +1089,33 @@ async function pagarFavor(db, f){
       const s = await t.get(refMio);
       const mio = (s.exists() ? (s.data().balance || 0) : 0);
       if(mio < aPagar) throw new Error("saldo");
+      const saldoMioDespues = mio - aPagar;
+      const refPara = doc(db, "puntosUsuarios", d.para.id);
+      const sPara = await t.get(refPara);
+      const saldoParaAntes = (sPara.exists() ? (sPara.data().balance || 0) : 0);
+      const saldoParaDespues = saldoParaAntes + aPagar;
       t.update(refMio, { balance: increment(-aPagar) });
       t.set(doc(db, "puntosUsuarios", d.para.id), { balance: increment(aPagar) }, { merge: true });
+      const idM = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+      t.set(doc(collection(db, "puntos", yo.id), idM), {
+        monto: -aPagar,
+        motivo: "favor pagado",
+        origen: "favores",
+        referenciaId: f.id,
+        referenciaTexto: d.texto || "",
+        saldoDespues: saldoMioDespues,
+        fecha: serverTimestamp()
+      });
+      const idP = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+      t.set(doc(collection(db, "puntos", d.para.id), idP), {
+        monto: aPagar,
+        motivo: "favor recibido",
+        origen: "favores",
+        referenciaId: f.id,
+        referenciaTexto: d.texto || "",
+        saldoDespues: saldoParaDespues,
+        fecha: serverTimestamp()
+      });
     });
   }catch(e){
     if(e && e.message === "saldo"){
@@ -1119,14 +1144,40 @@ async function cobrarCastigo(db, f){
         const suyo = (s.exists() ? (s.data().balance || 0) : 0);
         cobrado = Math.min(multa, Math.max(0, suyo));
         if(cobrado > 0){
+          const refMio = doc(db, "puntosUsuarios", yo.id);
+          const sMio = await t.get(refMio);
+          const mio = (sMio.exists() ? (sMio.data().balance || 0) : 0);
           t.update(refSuyo, { balance: increment(-cobrado) });
           t.set(doc(db, "puntosUsuarios", yo.id), { balance: increment(cobrado) }, { merge: true });
+          const idPaga = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+          t.set(doc(collection(db, "puntos", d.para.id), idPaga), {
+            monto: -cobrado,
+            motivo: "castigo cobrado",
+            origen: "favores",
+            referenciaId: f.id,
+            referenciaTexto: d.texto || "",
+            saldoDespues: suyo - cobrado,
+            fecha: serverTimestamp()
+          });
+          const idRecibe = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+          t.set(doc(collection(db, "puntos", yo.id), idRecibe), {
+            monto: cobrado,
+            motivo: "castigo cobrado",
+            origen: "favores",
+            referenciaId: f.id,
+            referenciaTexto: d.texto || "",
+            saldoDespues: mio + cobrado,
+            fecha: serverTimestamp()
+          });
         }
       });
     }catch(e){
       aviso("No se pudo cobrar el castigo. Revisa tu conexi\u00f3n.");
       return false;
     }
+  }
+  if(multa > 0 && cobrado === 0){
+    aviso("No se pudo cobrar el castigo de " + multa + " pts porque no tiene puntos suficientes.");
   }
   return cerrarFavor(dbBase, f, "cobrado", { castigo: multa, cobrado: cobrado });
 }
@@ -1152,7 +1203,14 @@ async function cerrarFavor(db, f, estado, extra){
     if(estado === "cumplido"){
       texto = "\u2B50 " + yo.nombre + " marc\u00f3 tu favor como hecho. " + cents((extra && extra.pagado) || 0) + " para ti.";
     }else if(estado === "cobrado"){
-      texto = "\u26A0 " + yo.nombre + " te cobr\u00f3 el castigo por: " + (d.texto || "");
+      // Si no se pudo cobrar nada por falta de saldo, el mensaje lo dice: no hay
+      // que mandar un "te cobró" que es falso (lo reportó Fredy, oct-2026).
+      if(extra && extra.cobrado === 0 && extra.castigo > 0){
+        texto = "\u26A0 " + yo.nombre + " intent\u00f3 cobrarte el castigo por: " + (d.texto || "")
+          + ". No se pudo porque no tienes puntos suficientes.";
+      }else{
+        texto = "\u26A0 " + yo.nombre + " te cobr\u00f3 el castigo por: " + (d.texto || "");
+      }
     }else if(estado === "perdonado"){
       texto = "\u1F49A " + yo.nombre + " te dej\u00f3 pasar el favor: " + (d.texto || "");
     }else if(estado === "cancelado"){

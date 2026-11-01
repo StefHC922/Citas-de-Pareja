@@ -72,6 +72,15 @@ no existe, el saldo se toma como **0** (igual que `Retos` y `favor.js`). Como es
 pantallas escuchan la colección, el cambio se refleja solo. Tiene que ser un
 número **de 0 o más**.
 
+> **Desde nov-2026, el ajuste de puntos registra la diferencia** (cuánto se movió)
+> en el historial `puntos/{id}/movimientos`, no el número absoluto. Ver
+> `General/Puntos.md`.
+
+**El historial de movimientos (botón 📜):** cada renglón de usuario trae un botón
+**📜** que abre su historial de puntos (de solo lectura, los últimos 50). **Cada
+quien ve el suyo; el administrador ve el de los dos perfiles base.** Ver
+`General/Puntos.md`.
+
 **Aviso que hay que recordar:** en toda la app **el admin es el lado A y la pareja
 el lado B** (`nombreLado()`, `armando()`), y hay contenido guardado **por lado**
 (acciones de `nivelesActividad`, `opcionesJuego/actual {A,B}`, `personajesJuego`

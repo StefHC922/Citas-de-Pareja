@@ -71,6 +71,15 @@ Movido de `General/GUIA.md`. Contiene las decisiones específicas de cada pantal
 | Los botones de esquina (engrane, carrito) son **solo del menu principal** | En submenus no salen. El engrane va arriba a la **izquierda** |
 | **Los ejemplos usan los nombres de verdad**: la pareja es **Mary** y el administrador **Fredy** | Decisión de Fredy (17-oct-2026). En comentarios, en la documentación y en los textos de ejemplo se ponen esos dos nombres, no nombres inventados. **OJO: esto NO son datos de la app** — el nombre real de cada quien sale de la base (`nombreLado()` → `usuariosLista`), y el respaldo es el genérico `"Lado A"` / `"Lado B"`. No se hardcodea ningún nombre en el código |
 
+## Textos de los modales de tomas (Encuentros y Guiadas)
+
+Al iniciar una partida de Encuentros o Guiadas se abre una ventana emergente que pide especificar cuántas acciones de cada nivel quiere usar. Los textos son:
+
+| Juego | Título del modal | Texto del aviso |
+|---|---|---|
+| Encuentros | ¿Cuántas acciones por nivel? | Anote cuántas acciones de cada nivel para su partida, considere a sus invitados |
+| Guiadas | ¿Cuántas acciones por nivel? | Anote cuántas acciones de cada nivel quiere utilizar para su partida |
+
 ### De la forma de trabajar
 
 | Decision | Detalle |
