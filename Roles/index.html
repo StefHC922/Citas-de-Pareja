@@ -516,6 +516,16 @@
       </div>
     </div>
   </div>
+  <!-- Texto de estado de la carta (ciclo de 3 estados, modo compartido) -->
+  <div id="textoEstadoCarta" style="font-size:.85rem;color:var(--fg-muted);text-align:center;margin-top:8px;min-height:1.2em;"></div>
+
+  <!-- ============ MODAL: IMAGEN GRANDE DEL PERSONAJE (un solo celular) ============ -->
+  <div id="modalImagenCarta" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;align-items:center;justify-content:center;padding:20px;">
+    <div style="width:100%;max-width:380px;background:var(--card);border:1px solid var(--teal);border-radius:18px;padding:20px;text-align:center;">
+      <img id="imagenCartaGrande" src="" style="width:100%;height:auto;border-radius:16px;object-fit:contain;cursor:pointer;">
+      <div style="margin-top:14px;font-size:.85rem;color:var(--fg-muted);">Toca para Cerrar</div>
+    </div>
+  </div>
   <!-- La carta de DOS CARAS del duelo "Juntos" en un solo celular: una cara es el
        original y, al tocarla, aparece su contraparte cruzada. Es UN solo objeto que
        se voltea, no dos cartas. Nace oculta: solo se usa en ese camino. -->
@@ -1671,6 +1681,7 @@ function pintarSala(){
 // poder pasar el celular sin que el otro la lea.
 let bocaAbajo = true, ignoraClick = false, tScroll = null;
 let cartaActual = null;
+let estadoCarta = 0;   // 0=reverso, 1=solo imagen, 2=toda la info (modo compartido)
 
 // El indicador de FASE del duelo "Juntos". Son tres estados, y son los mismos en
 // un solo celular y en compartida, que es justo lo que hace que el texto sirva
@@ -1712,6 +1723,73 @@ function pintarVolteo(){
   }catch(e){}
   pintarFaseDuelo();
 }
+// Texto que se muestra debajo de la carta segun el estado (solo modo compartido).
+function actualizarTextoEstadoCarta(){
+  const el = document.getElementById("textoEstadoCarta");
+  if(!el) return;
+  if(estadoCarta === 0){
+    el.textContent = "Toca para revelar el personaje";
+  }else if(estadoCarta === 1){
+    el.textContent = "Conoce a tu Personaje";
+  }else{
+    el.textContent = "Voltea tu tarjeta";
+  }
+}
+// Muestra la carta segun el estado (0=reverso, 1=solo imagen, 2=toda la info).
+// Se usa solo en modo compartido. En un solo celular se sigue usando `voltear()`.
+function mostrarEstadoCarta(estado){
+  const tarjeta = document.getElementById("tarjeta");
+  const reverso = document.getElementById("reverso");
+  const foto = document.getElementById("fotoPersonaje");
+  const nombre = document.getElementById("nombrePersonaje");
+  const contra = document.getElementById("contraPersonaje");
+  const especial = document.getElementById("blqueEspecial");
+  const info = document.getElementById("infoTarjeta");
+  if(estado === 0){
+    tarjeta.style.visibility = "hidden";
+    reverso.style.display = "block";
+    // Todavía no se ve nada: "Siguiente" sigue apagado.
+    try{ document.getElementById("btnSig").style.opacity = ".55"; }catch(e){}
+    try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
+  }else{
+    tarjeta.style.visibility = "visible";
+    reverso.style.display = "none";
+    if(estado === 1){
+      // Solo la imagen grande
+      foto.style.display = "";
+      nombre.style.display = "none";
+      if(contra) contra.style.display = "none";
+      if(especial) especial.style.display = "none";
+      if(info) info.style.display = "none";
+      // Todavía no se ve la info completa: "Siguiente" sigue apagado.
+      try{ document.getElementById("btnSig").style.opacity = ".55"; }catch(e){}
+      try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
+    }else{
+      // Toda la informacion: ya se puede pasar.
+      foto.style.display = "";
+      nombre.style.display = "";
+      if(contra) contra.style.display = "";
+      if(especial) especial.style.display = "";
+      if(info) info.style.display = "";
+      try{ document.getElementById("btnSig").style.opacity = "1"; }catch(e){}
+      try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
+    }
+  }
+  actualizarTextoEstadoCarta();
+}
+// Abre el modal con la imagen grande del personaje (solo un solo celular).
+function abrirModalImagen(src){
+  const modal = document.getElementById("modalImagenCarta");
+  const img = document.getElementById("imagenCartaGrande");
+  if(!modal || !img) return;
+  img.src = src;
+  modal.style.display = "flex";
+}
+// Cierra el modal de imagen grande.
+function cerrarModalImagen(){
+  const modal = document.getElementById("modalImagenCarta");
+  if(modal) modal.style.display = "none";
+}
 // Se llama en CADA repintado, asi que SOLO toca el interruptor cuando la
 // tarjeta cambia de verdad. Si no, cualquier repintado (por ejemplo, lo que
 // llega del otro telefono) volveria a tapar la carta que se esta leyendo.
@@ -1720,7 +1798,9 @@ function resetCarta(nueva){
   if(cartaActual === nueva) return;
   cartaActual = nueva;
   bocaAbajo = true;   // cada turno arranca boca abajo
+  estadoCarta = 0;    // reinicia el ciclo de estados (modo compartido)
   pintarVolteo();
+  actualizarTextoEstadoCarta();
 }
 // La foto vive en una caja que recibe el que llama: la usa la carta normal
 // (`#fotoPersonaje`) y también las dos caras del duelo. Solo se vacía con
@@ -1812,6 +1892,14 @@ function pintarCaraDuelo(cont, p, esp, etiqueta, contra){
   foto.className = "foto";
   pintarFotoEn(foto, p);
   cont.appendChild(foto);
+  // Tocar la foto abre el modal con la imagen grande (solo un solo celular).
+  if(!jugandoCompartido && p && p.imagen){
+    foto.style.cursor = "pointer";
+    foto.addEventListener("click", function(e){
+      e.stopPropagation();
+      abrirModalImagen(p.imagen);
+    });
+  }
   const nom = document.createElement("div");
   nom.className = "nombre";
   nom.textContent = (p && p.personaje) || "";
@@ -2155,6 +2243,16 @@ document.getElementById("btnSig").onclick = ()=>{
     siguienteDueloJuntos();
     return;
   }
+  // Modo compartido: solo se puede avanzar cuando se ha visto toda la info
+  // (estado 2). En los otros estados sale el aviso.
+  if(jugandoCompartido){
+    if(estadoCarta !== 2){
+      try{ document.getElementById("avisoVoltea").style.display = "block"; }catch(e){}
+      return;
+    }
+    siguiente();
+    return;
+  }
   // Con la carta boca abajo NO se pasa: sale un aviso discreto y no avanza.
   if(bocaAbajo){
     try{ document.getElementById("avisoVoltea").style.display = "block"; }catch(e){}
@@ -2172,8 +2270,39 @@ document.getElementById("infoTarjeta").addEventListener("scroll", function(){
   tScroll = setTimeout(function(){ ignoraClick = false; }, 320);
 });
 // Toca CUALQUIER parte de la carta para voltear (respetando el scroll).
-document.getElementById("tarjeta").addEventListener("click", function(){ if(ignoraClick) return; voltear(); });
-document.getElementById("reverso").onclick = function(){ voltear(); };
+// Modo compartido: avanza por el ciclo de 3 estados (reverso -> solo imagen -> toda la info).
+// Un solo celular: volteo normal (boca abajo <-> boca arriba).
+document.getElementById("tarjeta").addEventListener("click", function(){
+  if(ignoraClick) return;
+  if(jugandoCompartido){
+    estadoCarta = (estadoCarta + 1) % 3;
+    mostrarEstadoCarta(estadoCarta);
+  }else{
+    voltear();
+  }
+});
+document.getElementById("reverso").onclick = function(){
+  if(ignoraClick) return;
+  if(jugandoCompartido){
+    estadoCarta = (estadoCarta + 1) % 3;
+    mostrarEstadoCarta(estadoCarta);
+  }else{
+    voltear();
+  }
+};
+// Tocar la imagen del personaje (solo un solo celular, carta boca arriba) abre el
+// modal con la imagen grande. En modo compartido la imagen no hace nada aparte.
+document.getElementById("fotoPersonaje").addEventListener("click", function(e){
+  e.stopPropagation();
+  if(jugandoCompartido) return;
+  if(bocaAbajo) return;
+  const img = document.querySelector("#fotoPersonaje img");
+  if(img) abrirModalImagen(img.src);
+});
+// Cerrar el modal de imagen tocando la imagen misma.
+document.getElementById("imagenCartaGrande").addEventListener("click", function(){
+  cerrarModalImagen();
+});
 // La carta de dos caras del duelo: tocarla voltea al otro personaje. Aquí no hay
 // tapa, así que `bocaAbajo` no se toca y "Siguiente" no depende del volteo.
 // Se respeta el scroll igual que en la carta normal: si la persona estaba

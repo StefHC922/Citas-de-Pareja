@@ -1388,7 +1388,7 @@ function abrirTomas(activities){
     g.appendChild(lab);
   });
   const minLargo = Math.max(2, construirCabezas().length);
-  document.getElementById("tomasAviso").textContent = "Mínimo total " + minLargo + " acciones (2 + invitados).";
+  document.getElementById("tomasAviso").innerHTML = "Anote cuántas acciones de cada nivel<br>para su partida, considere a sus invitados";
   document.getElementById("btnTomasOk").textContent = "Aceptar y jugar ▶";
   abrirModal("modalTomas");
 }

@@ -914,7 +914,7 @@ function abrirTomasGuia(nombre){
   const g = document.getElementById("tomasGridGuia");
   g.innerHTML = "";
   const guardadas = tomasGuardadas(nombre);
-  document.getElementById("tomasAvisoGuia").innerHTML = "Anote cuantas acciones de cada nivel<br>quiere utilizar para su partida";
+  document.getElementById("tomasAvisoGuia").innerHTML = "Anote cuántas acciones de cada nivel<br>quiere utilizar para su partida";
   NIVELES.forEach(nv=>{
     const lab = document.createElement("label");
     lab.textContent = nv.nombre;
@@ -1167,7 +1167,7 @@ document.getElementById("btnMulti2Ok").onclick = ()=>{
   if(pendienteMultiPrev){
     document.getElementById("btnMulti3Ok").textContent = "Aceptar y jugar ▶";
   }
-  document.getElementById("multiTomasAviso").innerHTML = "Anote cuantas acciones de cada nivel<br>quiere utilizar para su partida";
+  document.getElementById("multiTomasAviso").innerHTML = "Anote cuántas acciones de cada nivel<br>quiere utilizar para su partida";
   multiMostrar("modalMulti2", false);
   multiMostrar("modalMulti3", true);
 };
