@@ -353,9 +353,9 @@ sobra de la información se desliza **dentro** de la carta (`.info` tiene su
 propio scroll).
 
 **Foto del personaje:** es un banner 16/9 (no cuadrada), con `object-fit:contain`
-para que se vea completa dentro del recuadro. Sobre la foto sale un **dedo 👆 que
-pulsa** (solo cuando hay imagen): indica que se puede tocar para ampliarla en la
-ventana emergente. Sin imagen no sale.
+para que se vea completa dentro del recuadro. En la esquina de la foto sale un
+**dedo 👆 que pulsa** (solo cuando hay imagen): indica que se puede tocar para
+ampliarla en la ventana emergente, sin tapar la imagen. Sin imagen no sale.
 
 **Bloques de información:** SITUACIÓN / ATRACTIVO / DERECHOS / ACCIÓN (este
 último con borde izquierdo teal). Los textos salen de Firebase y nunca se
