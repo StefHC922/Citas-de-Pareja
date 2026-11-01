@@ -1722,21 +1722,30 @@ function pintarVolteo(){
     if(!bocaAbajo && !dueloEsJuntos()) document.getElementById("avisoVoltea").style.display = "none";
   }catch(e){}
   pintarFaseDuelo();
+  actualizarTextoEstadoCarta();
 }
-// Texto que se muestra debajo de la carta segun el estado (solo modo compartido).
+// Texto que se muestra debajo de la carta segun el estado.
+// Modo compartido: usa el ciclo de 3 estados (estadoCarta).
+// Un solo celular: usa bocaAbajo (reverso = revelar, boca arriba = ampliar foto).
 function actualizarTextoEstadoCarta(){
   const el = document.getElementById("textoEstadoCarta");
   if(!el) return;
-  if(estadoCarta === 0){
-    el.textContent = "Toca para revelar el personaje";
-  }else if(estadoCarta === 1){
-    el.textContent = "Conoce a tu Personaje";
+  if(jugandoCompartido){
+    if(estadoCarta === 0){
+      el.textContent = "Toca para revelar el personaje";
+    }else if(estadoCarta === 1){
+      el.textContent = "Conoce a tu Personaje";
+    }else{
+      el.textContent = "Voltea tu tarjeta";
+    }
   }else{
-    el.textContent = "Voltea tu tarjeta";
+    el.textContent = bocaAbajo ? "Toca para revelar el personaje" : "Toca la foto para ampliar";
   }
 }
 // Muestra la carta segun el estado (0=reverso, 1=solo imagen, 2=toda la info).
 // Se usa solo en modo compartido. En un solo celular se sigue usando `voltear()`.
+// El recuadro de la carta SIEMPRE conserva el mismo tamaño; solo cambian los
+// contenidos que se muestran dentro.
 function mostrarEstadoCarta(estado){
   const tarjeta = document.getElementById("tarjeta");
   const reverso = document.getElementById("reverso");
@@ -1746,34 +1755,38 @@ function mostrarEstadoCarta(estado){
   const especial = document.getElementById("blqueEspecial");
   const info = document.getElementById("infoTarjeta");
   if(estado === 0){
+    // Boca abajo: reverso, recuadro del mismo tamaño.
     tarjeta.style.visibility = "hidden";
     reverso.style.display = "block";
     // Todavía no se ve nada: "Siguiente" sigue apagado.
     try{ document.getElementById("btnSig").style.opacity = ".55"; }catch(e){}
     try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
-  }else{
+  }else if(estado === 1){
+    // Solo la imagen completa dentro del mismo recuadro (sin nombre ni info).
     tarjeta.style.visibility = "visible";
     reverso.style.display = "none";
-    if(estado === 1){
-      // Solo la imagen grande
-      foto.style.display = "";
-      nombre.style.display = "none";
-      if(contra) contra.style.display = "none";
-      if(especial) especial.style.display = "none";
-      if(info) info.style.display = "none";
-      // Todavía no se ve la info completa: "Siguiente" sigue apagado.
-      try{ document.getElementById("btnSig").style.opacity = ".55"; }catch(e){}
-      try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
-    }else{
-      // Toda la informacion: ya se puede pasar.
-      foto.style.display = "";
-      nombre.style.display = "";
-      if(contra) contra.style.display = "";
-      if(especial) especial.style.display = "";
-      if(info) info.style.display = "";
-      try{ document.getElementById("btnSig").style.opacity = "1"; }catch(e){}
-      try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
-    }
+    foto.style.display = "";
+    foto.style.maxHeight = "none";   // deja que la imagen crezca dentro del recuadro
+    nombre.style.display = "none";
+    if(contra) contra.style.display = "none";
+    if(especial) especial.style.display = "none";
+    if(info) info.style.display = "none";
+    // Todavía no se ve la info completa: "Siguiente" sigue apagado.
+    try{ document.getElementById("btnSig").style.opacity = ".55"; }catch(e){}
+    try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
+  }else{
+    // Toda la informacion: imagen pequeña + todo el texto.
+    tarjeta.style.visibility = "visible";
+    reverso.style.display = "none";
+    foto.style.display = "";
+    foto.style.maxHeight = "min(20dvh, 140px)"; // restaura la medida original
+    nombre.style.display = "";
+    if(contra) contra.style.display = "";
+    if(especial) especial.style.display = "";
+    if(info) info.style.display = "";
+    // Ya se puede pasar.
+    try{ document.getElementById("btnSig").style.opacity = "1"; }catch(e){}
+    try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
   }
   actualizarTextoEstadoCarta();
 }
