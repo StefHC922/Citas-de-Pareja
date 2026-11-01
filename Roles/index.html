@@ -1762,13 +1762,14 @@ function mostrarEstadoCarta(estado){
     try{ document.getElementById("btnSig").style.opacity = ".55"; }catch(e){}
     try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
   }else if(estado === 1){
-    // Solo la imagen completa dentro del mismo recuadro (sin nombre ni info).
+    // Imagen grande con el nombre del personaje debajo, todo dentro del mismo recuadro.
     tarjeta.style.visibility = "visible";
     reverso.style.display = "none";
     foto.style.display = "";
-    foto.style.height = "100%";      // llena todo el alto del recuadro
-    foto.style.maxHeight = "none";   // quita el tope de 140px
-    nombre.style.display = "none";
+    foto.style.height = "auto";           // tamaño natural, no forzado al 100%
+    foto.style.maxHeight = "none";        // puede crecer dentro del recuadro
+    foto.style.flex = "1 1 auto";         // crece para llenar el espacio disponible
+    nombre.style.display = "";            // nombre visible con su degradado
     if(contra) contra.style.display = "none";
     if(especial) especial.style.display = "none";
     if(info) info.style.display = "none";
