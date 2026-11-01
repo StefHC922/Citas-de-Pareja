@@ -243,12 +243,27 @@
   /* La foto pasa de cuadrada (1/1) a un banner corto: era lo que mas empujaba
      el alto. Sigue mostrando la imagen completa (object-fit:cover). */
   .foto{ width:100%; aspect-ratio:16/9; max-height:min(20dvh, 140px); flex:0 0 auto;
-    border-radius:16px; overflow:hidden;
+    border-radius:16px; overflow:hidden; position:relative;
     background:linear-gradient(135deg,#2b2144,var(--bg-2)); border:1px dashed var(--card-border);
     display:flex; flex-direction:column; gap:6px; align-items:center; justify-content:center;
     color:var(--fg-muted); }
   .foto span{ font-size:2.2rem; opacity:.5; } .foto small{ font-size:.72rem; }
   .foto img{ width:100%; height:100%; object-fit:contain; border-radius:16px; display:block; }
+  /* Dedo que pulsa en la esquina de la foto (👆): indica que la imagen se puede
+     tocar para ampliarla, sin taparla. Solo lo agrega `pintarFotoEn` cuando HAY
+     imagen; sin imagen no sale. `pointer-events:none` deja pasar el toque. */
+  .dedoToca{ position:absolute; right:6px; bottom:6px; z-index:3;
+    width:34px; height:34px; border-radius:50%;
+    background:rgba(18,14,28,.5);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.3rem; line-height:1;
+    pointer-events:none;
+    filter:drop-shadow(0 2px 5px rgba(0,0,0,.55));
+    animation:dedoTap 1.6s ease-in-out infinite; }
+  @keyframes dedoTap{
+    0%,100%{ transform:translateY(0) scale(1); opacity:.95; }
+    50%{ transform:translateY(4px) scale(.92); opacity:.55; }
+  }
 
   .nombre{ font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:1.45rem; text-align:center;
     background:linear-gradient(90deg,var(--coral),var(--teal)); -webkit-background-clip:text;
@@ -516,10 +531,10 @@
       </div>
     </div>
   </div>
-  <!-- Texto de estado de la carta (ciclo de 3 estados, modo compartido) -->
+  <!-- Texto de estado debajo de la carta (tapada / descubierta) -->
   <div id="textoEstadoCarta" style="font-size:.85rem;color:var(--fg-muted);text-align:center;margin-top:8px;min-height:1.2em;"></div>
 
-  <!-- ============ MODAL: IMAGEN GRANDE DEL PERSONAJE (un solo celular) ============ -->
+  <!-- ============ MODAL: IMAGEN GRANDE DEL PERSONAJE ============ -->
   <div id="modalImagenCarta" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;align-items:center;justify-content:center;padding:20px;">
     <div style="width:100%;max-width:380px;background:var(--card);border:1px solid var(--teal);border-radius:18px;padding:20px;text-align:center;">
       <img id="imagenCartaGrande" src="" style="width:100%;height:auto;border-radius:16px;object-fit:contain;cursor:pointer;">
@@ -1681,7 +1696,6 @@ function pintarSala(){
 // poder pasar el celular sin que el otro la lea.
 let bocaAbajo = true, ignoraClick = false, tScroll = null;
 let cartaActual = null;
-let estadoCarta = 0;   // 0=reverso, 1=solo imagen, 2=toda la info (modo compartido)
 
 // El indicador de FASE del duelo "Juntos". Son tres estados, y son los mismos en
 // un solo celular y en compartida, que es justo lo que hace que el texto sirva
@@ -1724,76 +1738,13 @@ function pintarVolteo(){
   pintarFaseDuelo();
   actualizarTextoEstadoCarta();
 }
-// Texto que se muestra debajo de la carta segun el estado.
-// Modo compartido: usa el ciclo de 3 estados (estadoCarta).
-// Un solo celular: usa bocaAbajo (reverso = revelar, boca arriba = ampliar foto).
+// Texto que se muestra debajo de la carta: tapada = revelar, descubierta = ampliar.
 function actualizarTextoEstadoCarta(){
   const el = document.getElementById("textoEstadoCarta");
   if(!el) return;
-  if(jugandoCompartido){
-    if(estadoCarta === 0){
-      el.textContent = "Toca para revelar el personaje";
-    }else if(estadoCarta === 1){
-      el.textContent = "Conoce a tu Personaje";
-    }else{
-      el.textContent = "Voltea tu tarjeta";
-    }
-  }else{
-    el.textContent = bocaAbajo ? "Toca para revelar el personaje" : "Toca la foto para ampliar";
-  }
+  el.textContent = bocaAbajo ? "Toca para revelar el personaje" : "Toca la foto para ampliar";
 }
-// Muestra la carta segun el estado (0=reverso, 1=solo imagen, 2=toda la info).
-// Se usa solo en modo compartido. En un solo celular se sigue usando `voltear()`.
-// El recuadro de la carta SIEMPRE conserva el mismo tamaño; solo cambian los
-// contenidos que se muestran dentro.
-function mostrarEstadoCarta(estado){
-  const tarjeta = document.getElementById("tarjeta");
-  const reverso = document.getElementById("reverso");
-  const foto = document.getElementById("fotoPersonaje");
-  const nombre = document.getElementById("nombrePersonaje");
-  const contra = document.getElementById("contraPersonaje");
-  const especial = document.getElementById("blqueEspecial");
-  const info = document.getElementById("infoTarjeta");
-  if(estado === 0){
-    // Boca abajo: reverso, recuadro del mismo tamaño.
-    tarjeta.style.visibility = "hidden";
-    reverso.style.display = "block";
-    // Todavía no se ve nada: "Siguiente" sigue apagado.
-    try{ document.getElementById("btnSig").style.opacity = ".55"; }catch(e){}
-    try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
-  }else if(estado === 1){
-    // Imagen grande con el nombre del personaje debajo, todo dentro del mismo recuadro.
-    tarjeta.style.visibility = "visible";
-    reverso.style.display = "none";
-    foto.style.display = "";
-    foto.style.height = "auto";           // tamaño natural, no forzado al 100%
-    foto.style.maxHeight = "none";        // puede crecer dentro del recuadro
-    foto.style.flex = "1 1 auto";         // crece para llenar el espacio disponible
-    nombre.style.display = "";            // nombre visible con su degradado
-    if(contra) contra.style.display = "none";
-    if(especial) especial.style.display = "none";
-    if(info) info.style.display = "none";
-    // Todavía no se ve la info completa: "Siguiente" sigue apagado.
-    try{ document.getElementById("btnSig").style.opacity = ".55"; }catch(e){}
-    try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
-  }else{
-    // Toda la informacion: imagen pequeña + todo el texto.
-    tarjeta.style.visibility = "visible";
-    reverso.style.display = "none";
-    foto.style.display = "";
-    foto.style.height = "auto";                 // restaura su tamaño natural
-    foto.style.maxHeight = "min(20dvh, 140px)"; // tope original
-    nombre.style.display = "";
-    if(contra) contra.style.display = "";
-    if(especial) especial.style.display = "";
-    if(info) info.style.display = "";
-    // Ya se puede pasar.
-    try{ document.getElementById("btnSig").style.opacity = "1"; }catch(e){}
-    try{ document.getElementById("avisoVoltea").style.display = "none"; }catch(e){}
-  }
-  actualizarTextoEstadoCarta();
-}
-// Abre el modal con la imagen grande del personaje (solo un solo celular).
+// Abre el modal con la imagen grande del personaje.
 function abrirModalImagen(src){
   const modal = document.getElementById("modalImagenCarta");
   const img = document.getElementById("imagenCartaGrande");
@@ -1814,7 +1765,6 @@ function resetCarta(nueva){
   if(cartaActual === nueva) return;
   cartaActual = nueva;
   bocaAbajo = true;   // cada turno arranca boca abajo
-  estadoCarta = 0;    // reinicia el ciclo de estados (modo compartido)
   pintarVolteo();
   actualizarTextoEstadoCarta();
 }
@@ -1839,6 +1789,11 @@ function pintarFotoEn(el, p){
     img.onerror = ()=>{ if(el.dataset.foto === url) pintarFotoEn(el, {}); };
     img.src = url;
     el.appendChild(img);
+    // El dedo que indica "toca para ampliar" solo va cuando HAY imagen.
+    const dedo = document.createElement("div");
+    dedo.className = "dedoToca";
+    dedo.textContent = "👆";
+    el.appendChild(dedo);
     return;
   }
   el.innerHTML = "";
@@ -2259,16 +2214,6 @@ document.getElementById("btnSig").onclick = ()=>{
     siguienteDueloJuntos();
     return;
   }
-  // Modo compartido: solo se puede avanzar cuando se ha visto toda la info
-  // (estado 2). En los otros estados sale el aviso.
-  if(jugandoCompartido){
-    if(estadoCarta !== 2){
-      try{ document.getElementById("avisoVoltea").style.display = "block"; }catch(e){}
-      return;
-    }
-    siguiente();
-    return;
-  }
   // Con la carta boca abajo NO se pasa: sale un aviso discreto y no avanza.
   if(bocaAbajo){
     try{ document.getElementById("avisoVoltea").style.display = "block"; }catch(e){}
@@ -2286,36 +2231,17 @@ document.getElementById("infoTarjeta").addEventListener("scroll", function(){
   tScroll = setTimeout(function(){ ignoraClick = false; }, 320);
 });
 // Toca CUALQUIER parte de la carta para voltear (respetando el scroll).
-// Modo compartido: avanza por el ciclo de 3 estados (reverso -> solo imagen -> toda la info).
-// Un solo celular: volteo normal (boca abajo <-> boca arriba).
 document.getElementById("tarjeta").addEventListener("click", function(){
   if(ignoraClick) return;
-  if(jugandoCompartido){
-    estadoCarta = (estadoCarta + 1) % 3;
-    mostrarEstadoCarta(estadoCarta);
-  }else{
-    voltear();
-  }
+  voltear();
 });
 document.getElementById("reverso").onclick = function(){
   if(ignoraClick) return;
-  if(jugandoCompartido){
-    estadoCarta = (estadoCarta + 1) % 3;
-    mostrarEstadoCarta(estadoCarta);
-  }else{
-    voltear();
-  }
+  voltear();
 };
-// Tocar la imagen del personaje.
-// Modo compartido: avanza al siguiente estado del ciclo (reverso -> imagen grande -> info -> reverso).
-// Un solo celular (carta boca arriba): abre el modal con la imagen grande.
+// Tocar la imagen del personaje (con la carta descubierta) abre el modal grande.
 document.getElementById("fotoPersonaje").addEventListener("click", function(e){
   e.stopPropagation();
-  if(jugandoCompartido){
-    estadoCarta = (estadoCarta + 1) % 3;
-    mostrarEstadoCarta(estadoCarta);
-    return;
-  }
   if(bocaAbajo) return;
   const img = document.querySelector("#fotoPersonaje img");
   if(img) abrirModalImagen(img.src);

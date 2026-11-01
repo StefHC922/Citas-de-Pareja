@@ -353,7 +353,9 @@ sobra de la información se desliza **dentro** de la carta (`.info` tiene su
 propio scroll).
 
 **Foto del personaje:** es un banner 16/9 (no cuadrada), con `object-fit:contain`
-para que se vea completa dentro del recuadro.
+para que se vea completa dentro del recuadro. Sobre la foto sale un **dedo 👆 que
+pulsa** (solo cuando hay imagen): indica que se puede tocar para ampliarla en la
+ventana emergente. Sin imagen no sale.
 
 **Bloques de información:** SITUACIÓN / ATRACTIVO / DERECHOS / ACCIÓN (este
 último con borde izquierdo teal). Los textos salen de Firebase y nunca se
@@ -372,22 +374,21 @@ especial asignada. Vive dentro de la carta, así se voltea con ella.
 revela. El reverso tiene el mismo tamaño que el frente (`visibility` y no
 `display` para que el alto no salte).
 
-**Modo compartido (cada quien en su celular):** la carta avanza por un ciclo
-de 3 estados al tocarla: reverso ("Toca para revelar el personaje") → solo
-imagen grande con el nombre ("Conoce a tu Personaje") → toda la información
-("Voltea tu tarjeta"). Tocar la foto avanza al siguiente estado; no abre
-modal.
+**Volteo e imagen grande (igual en todos los modos):** al tocar la carta (boca
+abajo ↔ boca arriba) se revela toda la información. Al tocar la foto con la
+carta boca arriba se abre una **ventana emergente** (`modalImagenCarta`) con la
+imagen del personaje a tamaño grande. Si se toca "Siguiente" con la carta
+todavía boca abajo, sale el aviso discreto: "Voltea la carta para poder
+seguir." (En el duelo *Juntos* el botón no se apaga: el anfitrión avanza cuando
+le parece.)
 
-**Un solo celular:** volteo normal (boca abajo ↔ boca arriba). Al tocar la
-foto con la carta boca arriba se abre una **ventana emergente** (`modalImagenCarta`)
-con la imagen del personaje a tamaño grande. Si se toca "Siguiente" con la
-carta todavía boca abajo, sale el aviso discreto: "Voltea la carta para poder
-seguir."
+**Estandarizado el 1-nov-2026:** antes "cada quien en su celular" usaba un
+ciclo de 3 toques (reverso → solo imagen grande *dentro* de la carta → toda la
+info). Ese paso intermedio se quitó: ahora la imagen grande se ve siempre en la
+ventana emergente, en cualquier modo.
 
-**Texto de estado debajo de la carta:** varía según el estado (modo
-compartido) o si está boca abajo/arriba (un solo celular): "Toca para
-revelar el personaje", "Conoce a tu Personaje", "Voltea tu tarjeta",
-"Toca la foto para ampliar".
+**Texto de estado debajo de la carta:** "Toca para revelar el personaje" (boca
+abajo) y "Toca la foto para ampliar" (boca arriba), en todos los modos.
 
 - **Un resumen de conversacion no lee estos archivos.** Si una sesion se corta
   por limite de tokens, lo que se pierde es el detalle fino. Este archivo es la
