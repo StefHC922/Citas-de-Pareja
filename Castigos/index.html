@@ -585,9 +585,9 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, onSnapshot, query, where, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, addDoc, onSnapshot, query, where, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, cargarUsuarios, leerConfigGuardada } from "../config.js";
+import { resolverFirebase, cargarUsuarios, leerConfigGuardada, migrarCastigosAId } from "../config.js";
 import { confirmar, aviso } from "../confirmar.js";
 import { encenderFuegos, apagarFuegos } from "../fuegos.js";
 // Invitados: este juego solo publica y retira su invitación. No sabe nada de la sala.
@@ -607,6 +607,13 @@ const MAX_TEXTO = 75;
 let usuariosLista = [];
 let castigos = [];
 let accesorios = [];
+// Nombre -> id de accesoriosCastigo. `accesorios` solo guarda nombres (se usa
+// como texto en todo el archivo), asi que al renombrar/borrar el id sale de aqui.
+let idsAccesorio = {};
+// Id viejo (= nombre) -> id nuevo de los castigos ya migrados. Las partidas
+// pausadas guardan el id viejo; idVigente() lo traduce al leer sus acciones.
+let mapaIdsCastigo = {};
+function idVigente(id){ return mapaIdsCastigo[id] || id; }
 let imposiciones = { A: [], B: [] };
 let castigoActivo = null;
 let datos = {};
@@ -718,8 +725,18 @@ async function cargarTodo(){
 async function cargarCastigos(){
   castigos = [];
   try{
-    const snap = await getDocs(collection(db, "castigosExtra"));
+    let snap = await getDocs(collection(db, "castigosExtra"));
+    // Castigos viejos (id = nombre) pasan a id automatico; ver config.js.
+    const lista = [];
+    snap.forEach(d=>{ const x = d.data(); lista.push({ id:d.id, nombre:(x.nombre||"").trim(), creadoEn:x.creadoEn }); });
+    const mig = await migrarCastigosAId(db, lista);
+    mapaIdsCastigo = mig.mapa;
+    if(mig.huboCambios) snap = await getDocs(collection(db, "castigosExtra"));
+    const ids = new Set();
+    snap.forEach(d=>ids.add(d.id));
     snap.forEach(d=>{
+      // Si el viejo sigue ahi pero ya existe su copia nueva, es un borrado a medias.
+      if(mapaIdsCastigo[d.id] && ids.has(mapaIdsCastigo[d.id])) return;
       const data = d.data();
       const n = (data.nombre||"").trim();
       if(n) castigos.push({ nombre:n, id:d.id, oficial:false });
@@ -741,11 +758,12 @@ async function cargarCastigos(){
 
 async function cargarAccesorios(){
   accesorios = [];
+  idsAccesorio = {};
   try{
     const snap = await getDocs(collection(db, "accesoriosCastigo"));
     snap.forEach(d=>{
       const n = (d.data().nombre||"").trim();
-      if(n) accesorios.push(n);
+      if(n){ accesorios.push(n); idsAccesorio[n] = d.id; }
     });
   }catch(e){}
   accesorios.sort((a,b)=>a.localeCompare(b));
@@ -1030,7 +1048,9 @@ document.getElementById("btnCrearCastigo").onclick = async ()=>{
   if(!n){ aviso("Escribe un nombre."); return; }
   if(castigos.some(c=>c.nombre.toLowerCase()===n.toLowerCase())){ aviso("Ese nombre ya existe."); return; }
   try{
-    await setDoc(doc(db, "castigosExtra", n), { nombre:n, creadoEn:serverTimestamp() });
+    // Id real de Firestore (addDoc), no el nombre: igual que actividadesExtra
+    // en Citas/actividades.html. Asi renombrar no mueve nada despues.
+    await addDoc(collection(db, "castigosExtra"), { nombre:n, creadoEn:serverTimestamp() });
     await cargarCastigos();
     pintarCastigos();
   }catch(e){ aviso("No se pudo crear el castigo."); }
@@ -1042,9 +1062,9 @@ async function renombrarCastigo(c){
   const nn = nuevo.trim();
   if(castigos.some(x=>x.id!==c.id && x.nombre.toLowerCase()===nn.toLowerCase())){ aviso("Ese nombre ya existe."); return; }
   try{
-    await setDoc(doc(db, "castigosExtra", nn), { nombre:nn, creadoEn:serverTimestamp() });
-    await deleteDoc(doc(db, "castigosExtra", c.id));
-    await deleteDoc(doc(db, "nivelesCastigo", c.id));
+    // Solo se actualiza el nombre: el id (c.id) no cambia, asi que
+    // nivelesCastigo sigue encontrandose solo, sin mover ni borrar nada.
+    await setDoc(doc(db, "castigosExtra", c.id), { nombre:nn }, { merge:true });
     if(castigoActivo && castigoActivo.id===c.id) castigoActivo = null;
     await cargarCastigos();
     pintarCastigos();
@@ -1490,7 +1510,9 @@ document.getElementById("btnCrearAcc").onclick = async ()=>{
   if(!n){ aviso("Escribe un nombre."); return; }
   if(accesorios.some(x=>x.toLowerCase()===n.toLowerCase())){ aviso("Ese nombre ya existe."); return; }
   try{
-    await setDoc(doc(db, "accesoriosCastigo", n), { nombre:n, creadoEn:serverTimestamp() });
+    // Id real de Firestore (addDoc), no el nombre: mismo motivo que
+    // castigosExtra, por si algun dia algo mas cuelga de este id.
+    await addDoc(collection(db, "accesoriosCastigo"), { nombre:n, creadoEn:serverTimestamp() });
     await cargarAccesorios();
     pintarAccesorios();
   }catch(e){ aviso("No se pudo crear el accesorio."); }
@@ -1519,8 +1541,7 @@ async function renombrarAcceso(viejo){
     if(!ok) return;
   }
   try{
-    await setDoc(doc(db, "accesoriosCastigo", nn), { nombre:nn, creadoEn:serverTimestamp() });
-    if(nn!==viejo) await deleteDoc(doc(db, "accesoriosCastigo", viejo));
+    await setDoc(doc(db, "accesoriosCastigo", idsAccesorio[viejo]), { nombre:nn }, { merge:true });
     if(usado){
       await quitarAccesorioDeTodas(viejo);
     }
@@ -1540,7 +1561,7 @@ async function borrarAcceso(viejo){
   });
   if(!ok) return;
   try{
-    await deleteDoc(doc(db, "accesoriosCastigo", viejo));
+    await deleteDoc(doc(db, "accesoriosCastigo", idsAccesorio[viejo]));
     if(usado) await quitarAccesorioDeTodas(viejo);
     await cargarAccesorios();
     if(castigoActivo) await cargarDatosCastigo(castigoActivo);
@@ -2349,7 +2370,7 @@ document.getElementById("btnTomasAceptar").onclick = async ()=>{
   }
   try{
     if(castigoPartida){
-      const ref = doc(db, "nivelesCastigo", castigoPartida.id);
+      const ref = doc(db, "nivelesCastigo", idVigente(castigoPartida.id));
       await setDoc(ref, { tomas: tomasPartida, actualizadoEn: serverTimestamp() }, { merge:true });
     }
   }catch(e){}
@@ -2550,7 +2571,7 @@ async function iniciarPartidaMulti(){
   accionesMultiCache = {};
   for(const c of multiCastigos){
     try{
-      const snap = await getDoc(doc(db, "nivelesCastigo", c.id));
+      const snap = await getDoc(doc(db, "nivelesCastigo", idVigente(c.id)));
       const data = snap.exists() ? snap.data() : null;
       const n = (data && data.n) || {};
       const nn = {};
@@ -3640,7 +3661,7 @@ function bolsasEnMemoria(){
 async function leerNivelesCastigo(id){
   const nn = vaciaDatos();
   try{
-    const snap = await getDoc(doc(db, "nivelesCastigo", id));
+    const snap = await getDoc(doc(db, "nivelesCastigo", idVigente(id)));
     const data = snap.exists() ? snap.data() : null;
     const n = (data && data.n) || {};
     NIVELES.forEach(nv=>{

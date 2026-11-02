@@ -268,7 +268,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, addDoc, updateDoc, onSnapshot, query, where, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, cargarUsuarios, asegurarFabrica, unirConFabrica, migrarActividadesAId } from "../config.js";
+import { resolverFirebase, cargarUsuarios, asegurarFabrica, unirConFabrica, migrarActividadesAId, leerDocActividad } from "../config.js";
 import { verificarCodigo, verificarFirma } from "../taquilla.js";
 // Lógica de licencias compartida con el resto de la app (ver acceso.js).
 import { miProyecto, appTaq, leerLicencias, guardarLicencia, quitarLicencia, tengoAcceso, oficialesAprobados, escucharItem } from "../acceso.js";
@@ -734,10 +734,11 @@ async function cargarActividades(){
     });
   }catch(e){}
 
-  // Copia (sin borrar nada) lo que ya estaba guardado por nombre hacia el id.
-  // Solo si hay con que escribir: sin esto, una pareja offline no se queda
-  // trabada esperando esta llamada.
-  if(sembrado){
+  // Mueve (mezclando si hace falta) lo que ya estaba guardado por nombre hacia
+  // el id. Solo si la lista se leyo: sin conexion no hay con que trabajar y la
+  // pareja no se queda esperando esta llamada. Mientras algo no se mueva, las
+  // pantallas lo leen por nombre (leerDocActividad).
+  if(miasConId.length){
     try{ await migrarActividadesAId(db, miasConId); }catch(e){}
   }
 
@@ -773,7 +774,7 @@ function dibujarLista(boxId, modo, acts, conteos){
     return oa - ob;
   });
   ordenadas.forEach(nombre=>{
-    const c = conteos[docDe(nombre)] || 0;
+    const c = conteos[docDe(nombre)] || conteos[nombre] || 0;
     const esOf = !!(mapaDocs[nombre] && mapaDocs[nombre].oficial);
     if(boxId === "listaActs" && multiModo){
       const lab = document.createElement("label");
@@ -870,8 +871,7 @@ async function jugarDirecto(nombre){
   try{ multiRefrescar(); }catch(e){}
   datos = { basico: [], medio: [], avanzado: [], experto: [], alucinado: [] };
   try{
-    const snap = await getDoc(doc(db, "nivelesActividad", docActual));
-    const data = snap.exists() ? snap.data() : null;
+    const data = await leerDocActividad(db, "nivelesActividad", docActual, nombre, "n");
     if(data && data.n) datos = Object.assign(datos, data.n);
     cargarTomasDoc(docActual, data, nombre);
   }catch(e){}
@@ -1197,9 +1197,9 @@ document.getElementById("btnMulti3Ok").onclick = async ()=>{
   const bolsas = { basico: {}, medio: {}, avanzado: {}, experto: {}, alucinado: {} };
   for(const nombre of multiSel){
     try{
-      const snap = await getDoc(doc(db, "nivelesActividad", docDe(nombre)));
-      if(snap.exists() && snap.data().n){
-        const n = snap.data().n;
+      const data = await leerDocActividad(db, "nivelesActividad", docDe(nombre), nombre, "n");
+      if(data && data.n){
+        const n = data.n;
         NIVELES.forEach(nv=>{ bolsas[nv.id][nombre] = normLados(n[nv.id]); });
       }else{
         NIVELES.forEach(nv=>{ bolsas[nv.id][nombre] = { A: [], B: [] }; });
@@ -1318,10 +1318,9 @@ function migrarTomasDeEsteCelular(docId, nombreRespaldo){
   }
   if(!local) return null;
   const norm = normTomas(local);
-  const claveEncontrada = clave;
   try{
     setDoc(doc(db, "nivelesActividad", docId), { tomas: norm, actualizadoEn: serverTimestamp() }, { merge: true })
-      .then(()=>{ try{ localStorage.removeItem(claveEncontrada); }catch(e){} })
+      .then(()=>{ try{ localStorage.removeItem(clave); }catch(e){} })
       .catch(()=>{});
   }catch(e){}
   return norm;
@@ -1347,8 +1346,7 @@ async function abrirEditor(nombre, empujar){
   datos = {};
   NIVELES.forEach(nv=>{ datos[nv.id] = { A: [], B: [] }; });
   try{
-    const snap = await getDoc(doc(db, "nivelesActividad", docActual));
-    const data = snap.exists() ? snap.data() : null;
+    const data = await leerDocActividad(db, "nivelesActividad", docActual, nombre, "n");
     if(data && data.n){
       const n = data.n;
       NIVELES.forEach(nv=>{ datos[nv.id] = normLados(n[nv.id]); });

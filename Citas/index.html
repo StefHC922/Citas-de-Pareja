@@ -255,11 +255,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
-  onSnapshot, query, orderBy, serverTimestamp, getDocs, getDoc
+  onSnapshot, query, orderBy, serverTimestamp, getDocs, getDoc, deleteField
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, baseUrl, cargarUsuarios, asegurarFabrica, unirConFabrica } from "../config.js";
+import { resolverFirebase, baseUrl, cargarUsuarios, asegurarFabrica, unirConFabrica, leerDocActividad } from "../config.js";
 import { confirmar } from "../confirmar.js";
 import { avisarTelegram } from "../telegram.js";
 import { montarFavor } from "../favor.js";
@@ -276,9 +276,23 @@ const actsExtraRef = collection(db, "actividadesExtra");
 const CLAVE_LOCAL = "appPareja_quienSoy";
 let usuarios = [];
 let actividades = [];
-// Nombre -> id de actividadesExtra. Se guarda junto con el nombre en cada cita
-// (actividadId), para no depender solo del nombre al buscar sus datos despues.
+// Nombre -> id de actividadesExtra, y al reves. Cada cita guarda el id
+// (actividadId) junto con el nombre; para MOSTRAR la actividad se usa el nombre
+// actual de ese id, asi una cita no se queda con un nombre viejo al renombrar.
 let idsActividad = {};
+let nombresPorId = {};
+// Nombre de la actividad de una cita: el actual (por id) si se conoce; si no
+// (cita vieja sin id, o actividad ya eliminada), el que quedo guardado.
+function nombreDeCita(c){
+  return (c.actividadId && nombresPorId[c.actividadId]) || c.actividad || "";
+}
+// Para guardar: el campo solo se escribe si se encontro el id. Al modificar una
+// cita se borra si ya no hay, para que no quede un id de otra actividad.
+function campoActividadId(nombre, modificando){
+  const id = idsActividad[nombre];
+  if(id) return { actividadId: id };
+  return modificando ? { actividadId: deleteField() } : {};
+}
 let accesoriosCatalogo = [];
 let accesoriosPorActividadCache = {};
 let miIdentidad = null; // { id, nombre }
@@ -414,6 +428,7 @@ async function cargarCatalogos(){
   let extrasAccs = [];
 
   idsActividad = {};
+  nombresPorId = {};
   try{
     const snapActs = await conTiempo(getDocs(actsExtraRef), 8000);
     snapActs.forEach(d=>{
@@ -421,6 +436,7 @@ async function cargarCatalogos(){
       if(nombre){
         extrasActs.push(nombre);
         idsActividad[nombre] = d.id;
+        nombresPorId[d.id] = nombre;
       }
     });
   }catch(e){
@@ -551,9 +567,10 @@ async function obtenerAccesoriosActividad(nombre){
 
   // Primero la nube (pantalla ☰); si no hay, el archivo <actividad>.json
   try{
-    const snap = await conTiempo(getDoc(doc(db, "presetsActividad", idsActividad[nombre] || nombre)), 8000);
-    if(snap.exists() && Array.isArray(snap.data().accesorios)){
-      accesoriosPorActividadCache[nombre] = snap.data().accesorios;
+    // Por id; si ese dato aun no se movio, cae al nombre (leerDocActividad).
+    const data = await conTiempo(leerDocActividad(db, "presetsActividad", idsActividad[nombre] || nombre, nombre, "accesorios"), 8000);
+    if(data && Array.isArray(data.accesorios)){
+      accesoriosPorActividadCache[nombre] = data.accesorios;
       return accesoriosPorActividadCache[nombre];
     }
   }catch(e){}
@@ -629,7 +646,7 @@ async function abrirFormulario(modo, citaExistente){
     // Sin mínimo al modificar: una cita vieja puede estar en el pasado y hay
     // que poder corregirla (cambiarle una palabra) sin que el campo la rechace.
     fCampoFecha.removeAttribute("min");
-    fCampoActividad.value = citaExistente.actividad || (actividades[0] || "");
+    fCampoActividad.value = nombreDeCita(citaExistente) || (actividades[0] || "");
     fCampoDescripcion.value = citaExistente.descripcion || "";
     llenarAccesoriosForm(citaExistente.accesorios || []);
     await aplicarAccesoriosDeActividad(fCampoActividad.value, "unir");
@@ -686,7 +703,7 @@ btnGuardarCita.onclick = async ()=>{
       await updateDoc(doc(db, "citas", editandoId), {
         fechaCita: fecha,
         actividad,
-        actividadId: idsActividad[actividad] || null,
+        ...campoActividadId(actividad, true),
         descripcion,
         accesorios,
         actualizadoEn: serverTimestamp(),
@@ -705,7 +722,7 @@ btnGuardarCita.onclick = async ()=>{
         paraNombre: paraUsuario.nombre,
         fechaCita: fecha,
         actividad,
-        actividadId: idsActividad[actividad] || null,
+        ...campoActividadId(actividad, false),
         descripcion,
         accesorios,
         estado: "pendiente",
@@ -735,7 +752,7 @@ async function confirmarCita(id){
     ultimaAccionPorNombre: miIdentidad.nombre
   });
   const c = citasPorId[id];
-  avisarTelegram("✅ " + miIdentidad.nombre + " confirmó la cita: " + (c ? c.actividad : "") + (c ? " (" + formatearFecha(c.fechaCita) + ")" : ""), APP_URL + "Citas/?cita=" + id);
+  avisarTelegram("✅ " + miIdentidad.nombre + " confirmó la cita: " + (c ? nombreDeCita(c) : "") + (c ? " (" + formatearFecha(c.fechaCita) + ")" : ""), APP_URL + "Citas/?cita=" + id);
 }
 
 async function rechazarCita(id){
@@ -747,7 +764,7 @@ async function rechazarCita(id){
     ultimaAccionPorNombre: miIdentidad.nombre
   });
   const c = citasPorId[id];
-  avisarTelegram("❌ " + miIdentidad.nombre + " rechazó la cita: " + (c ? c.actividad : "") + (c ? " (" + formatearFecha(c.fechaCita) + ")" : ""), APP_URL + "Citas/?cita=" + id);
+  avisarTelegram("❌ " + miIdentidad.nombre + " rechazó la cita: " + (c ? nombreDeCita(c) : "") + (c ? " (" + formatearFecha(c.fechaCita) + ")" : ""), APP_URL + "Citas/?cita=" + id);
 }
 
 async function eliminarCita(id){
@@ -761,7 +778,7 @@ async function eliminarCita(id){
   const c = citasPorId[id];
   suprimir(id);
   await deleteDoc(doc(db, "citas", id));
-  avisarTelegram("🗑️ " + miIdentidad.nombre + " eliminó la cita: " + (c ? c.actividad : ""), APP_URL + "Citas/");
+  avisarTelegram("🗑️ " + miIdentidad.nombre + " eliminó la cita: " + (c ? nombreDeCita(c) : ""), APP_URL + "Citas/");
 }
 
 // ====== RENDER ======
@@ -800,7 +817,7 @@ function renderCitas(docsSnap){
     filaTop.className = "fila-top";
     const actividadEl = document.createElement("div");
     actividadEl.className = "actividad";
-    actividadEl.textContent = c.actividad || "";
+    actividadEl.textContent = nombreDeCita(c);
     const badge = document.createElement("div");
     badge.className = "badge " + (c.estado || "pendiente");
     badge.textContent = c.estado === "confirmada" ? "Confirmada" : (c.estado === "rechazada" ? "Rechazada" : "Pendiente");
@@ -942,20 +959,20 @@ function escucharCitas(){
       const antes = vistosCitas[id];
       if(antes === undefined){
         if(esRelevanteCita(c) && c.proponenteId !== yo){
-          notificar("📅 Nueva cita de " + c.proponenteNombre + " para " + c.paraNombre + ": " + c.actividad, "cita-" + id);
+          notificar("📅 Nueva cita de " + c.proponenteNombre + " para " + c.paraNombre + ": " + nombreDeCita(c), "cita-" + id);
         }
       }else if(antes !== ahora[id]){
         if(esRelevanteCita(c) && c.ultimaAccionPorId !== yo){
-          if(c.estado === "confirmada") notificar("✅ " + (c.ultimaAccionPorNombre || "Alguien") + " confirmó: " + c.actividad, "cita-" + id);
-          else if(c.estado === "rechazada") notificar("❌ " + (c.ultimaAccionPorNombre || "Alguien") + " rechazó: " + c.actividad, "cita-" + id);
-          else notificar("✏️ Cita modificada por " + (c.ultimaAccionPorNombre || "alguien") + ": " + c.actividad, "cita-" + id);
+          if(c.estado === "confirmada") notificar("✅ " + (c.ultimaAccionPorNombre || "Alguien") + " confirmó: " + nombreDeCita(c), "cita-" + id);
+          else if(c.estado === "rechazada") notificar("❌ " + (c.ultimaAccionPorNombre || "Alguien") + " rechazó: " + nombreDeCita(c), "cita-" + id);
+          else notificar("✏️ Cita modificada por " + (c.ultimaAccionPorNombre || "alguien") + ": " + nombreDeCita(c), "cita-" + id);
         }
       }
     });
     Object.keys(vistosCitas).forEach(id=>{
       if(!(id in ahora) && !estaSuprimido(id)){
         const c = citasPorId[id];
-        if(c && esRelevanteCita(c)) notificar("🗑️ Se eliminó la cita: " + c.actividad);
+        if(c && esRelevanteCita(c)) notificar("🗑️ Se eliminó la cita: " + nombreDeCita(c));
       }
     });
     vistosCitas = ahora;

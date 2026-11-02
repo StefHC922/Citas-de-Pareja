@@ -72,9 +72,9 @@ documentado en `AGENTS.md`; no se toca aqui.
 | `config/permisos` | doc (taquilla) | `correos[]`, `actualizadoEn` |
 | `actividadesExtra` | col | `nombre`, `creadoEn`, `origen` |
 | `accesoriosExtra` | col | `nombre`, `creadoEn`, `origen` |
-| `nivelesActividad` | col (id = nombre) | `n{[nivel]:{A[],B[]}}`, `actualizadoEn`, `titulo?`, `oficial?` |
-| `presetsActividad` | col (id = nombre) | `accesorios[]`, `actualizadoEn` |
-| `citas` | col | `proponenteId/Nombre`, `paraId/Nombre`, `fechaCita`(str), `actividad`, `descripcion`, `accesorios[]`(nombres), `estado`, `creadoEn`, `actualizadoEn`, `ultimaAccionPorId/Nombre` |
+| `nivelesActividad` | col (id = el de `actividadesExtra`; ver nota abajo) | `n{[nivel]:{A[],B[]}}`, `actualizadoEn`, `titulo?`, `oficial?` |
+| `presetsActividad` | col (id = el de `actividadesExtra`; ver nota abajo) | `accesorios[]`, `actualizadoEn` |
+| `citas` | col | `proponenteId/Nombre`, `paraId/Nombre`, `fechaCita`(str), `actividad`, `actividadId?`, `descripcion`, `accesorios[]`(nombres), `estado`, `creadoEn`, `actualizadoEn`, `ultimaAccionPorId/Nombre` |
 | `retos` | col | `actividad`, `asignadoPor{}`, `asignadoA{}`, `vecesAlDia`, `duracionDias`, `puntosMeta`, `penalizacionPuntos`, `castigo`, `recompensa`, `conteo`, `estado`, `creadoEn`, `fechaInicio?`, `fechaFin?`, `autorizadaPor?`, `ultimaAccionPor?`, `cumplidaEn?`, `liquidadoEn?`, `recompensaCobrada?`, `castigoAplicado?` |
 | `chat` | col | `texto`, `autorId`, `autorNombre`, `creadoEn` |
 | `presencia` | col (id = usuario) | `nombre`, `visto` |
@@ -397,6 +397,23 @@ clientes/{clienteId}               { email, nombre }      <- SEPARADO (ver abajo
   "arregle" despues.
 
 ---
+
+**Actividades por id (oct-2026).** `nivelesActividad` y `presetsActividad` se
+guardan con el id de `actividadesExtra`, no con el nombre; cada cita guarda
+`actividadId` junto al nombre (solo si se encontró el id). `migrarActividadesAId()`
+(`config.js`) mueve lo que hubiera bajo el nombre: si el del id no existe, copia;
+si ya existe, **mezcla** (el del id manda campo por campo y las acciones del
+nombre que le falten se le suman). El documento viejo se borra solo después de
+volver a leer el del id y confirmar que quedó. Si algo falla, esa actividad no
+se marca como migrada y se reintenta en la siguiente carga. La bandera
+`config/migracionActividades` (versión 2) guarda los ids ya revisados (`ids`) y
+los que la versión 1 ya había copiado (`copiadasV1`; a esos no se les mezcla,
+para no resucitar lo que la pareja borró después). Una marca en `localStorage`
+evita releerla en cada carga. Corre siempre que la lista de actividades se leyó,
+no depende de la siembra de fábrica. Mientras algo no se mueva,
+`leerDocActividad()` lo lee por nombre, así que la actividad no se ve vacía. Las
+citas muestran el nombre actual de su `actividadId`; si no lo tienen, el
+`actividad` guardado.
 
 ## 5. Orden de migracion (de menor a mayor riesgo)
 

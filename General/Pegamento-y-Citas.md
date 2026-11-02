@@ -166,15 +166,42 @@ PEGADO ABAJO, y se podia guardar sobre la actividad equivocada. Ahora
   valor real lo pone una hoja de estilos; usar una variable o `getComputedStyle`.**
 
 
-**LO IMPORTANTE: el nombre de una actividad es la llave de casi todo.** Al
-**renombrar**, hay que mover las cinco cosas juntas o quedan huerfanas:
+**LO IMPORTANTE: la llave de una actividad es su ID, no su nombre** (oct-2026).
+El ID es el del documento de `actividadesExtra`. Esto es lo que cuelga de ella:
 
 | Que | Donde |
 |---|---|
 | La actividad | `actividadesExtra` (campo `nombre`) |
+| Sus accesorios | `presetsActividad/{id de la actividad}` |
+| Sus acciones de Guiadas | `nivelesActividad/{id de la actividad}` |
+| Sus tomas | Dentro del mismo `nivelesActividad/{id}` (campo `tomas`): se mueven con él (oct-2026) |
+| **Las citas ya agendadas** | coleccion `citas`, campos `actividad` (nombre) y `actividadId` |
+
+**Al renombrar** no se mueve ningun documento: el id no cambia. Solo se hace:
+1. Antes de cambiar el nombre, se pasa a su id lo que esa actividad todavia
+   tuviera guardado bajo el nombre viejo (`migrarActividadesAId`). Si eso falla,
+   no se renombra.
+2. Se actualiza `nombre` en `actividadesExtra`.
+3. Las citas **nuevas** (con `actividadId`) muestran el nombre actual de su
+   actividad, asi que no se tocan. Las citas **viejas** (solo con `actividad`) si
+   se reescriben y de paso se les pone `actividadId`.
+
+Si las citas viejas no se actualizaran, quedarian apuntando a un nombre que ya
+no existe, y **al editarlas se cambiarian solas**.
+
+**Al eliminar** se borran accesorios y acciones **por id y tambien por nombre**
+(por si esa actividad nunca se migro), para que nada quede huerfano.
+
+**Mostrar una cita** (`Citas/index.html`, `nombreDeCita`): el nombre actual de
+su `actividadId`; si no se conoce (cita vieja, o actividad eliminada), el
+`actividad` que quedo guardado. `actividadId` solo se escribe si se encontro el
+id, y al modificar una cita se borra si ya no hay.
+
+---|---|
+| La actividad | `actividadesExtra` (campo `nombre`) |
 | Sus accesorios | `presetsActividad/{nombre}` |
-| Sus acciones de Guiadas | `nivelesActividad/{nombre}` |
-| Sus tomas | Dentro del mismo `nivelesActividad/{nombre}` (campo `tomas`): se mueven con él (oct-2026) |
+| Sus acciones de Guiadas | `nivelesActividad/{id de la actividad}` |
+| Sus tomas | Dentro del mismo `nivelesActividad/{id}` (campo `tomas`): se mueven con él (oct-2026) |
 | **Las citas ya agendadas** | coleccion `citas`, campo `actividad` |
 
 La ultima es la que se escapa facil: si no se actualiza, esas citas quedan

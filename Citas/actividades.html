@@ -365,7 +365,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, leerConfigGuardada, cargarUsuarios, asegurarFabrica, migrarActividadesAId } from "../config.js";
+import { resolverFirebase, leerConfigGuardada, cargarUsuarios, asegurarFabrica, migrarActividadesAId, leerDocActividad } from "../config.js";
 import { montarFavor } from "../favor.js";
 try{ montarFavor(); }catch(e){}
 const firebaseConfig = resolverFirebase(firebaseConfigBase);
@@ -564,11 +564,12 @@ async function cargar(){
     extrasActs = [];
   }
 
-  // Copia (sin borrar nada) los accesorios que ya estuvieran guardados por
-  // nombre hacia el id de cada actividad. Esta pantalla puede ser la primera
-  // que abra alguien (antes de entrar nunca a Guiadas o Encuentros), asi que
-  // tiene que poder sembrar esto tambien, no solo depender de que ya paso ahi.
-  if(sembrado){
+  // Mueve (mezclando si hace falta) lo que ya estuviera guardado por nombre
+  // hacia el id de cada actividad. Esta pantalla puede ser la primera que abra
+  // alguien (antes de entrar nunca a Guiadas o Encuentros), asi que tiene que
+  // poder hacerlo tambien, no solo depender de que ya paso ahi. Solo si la
+  // lista se leyo: sin conexion no hay con que trabajar.
+  if(extrasActs.length){
     try{ await migrarActividadesAId(db, extrasActs); }catch(e){}
   }
 
@@ -646,9 +647,10 @@ async function abrirEditor(nombre, empujar){
   let nube = null;
   let archivo = null;
   try{
-    const snap = await getDoc(doc(db, "presetsActividad", idDe(nombre)));
-    if(snap.exists() && Array.isArray(snap.data().accesorios)){
-      nube = snap.data().accesorios;
+    // Por id; si ese dato aun no se movio, cae al nombre (leerDocActividad).
+    const data = await leerDocActividad(db, "presetsActividad", idDe(nombre), nombre, "accesorios");
+    if(data && Array.isArray(data.accesorios)){
+      nube = data.accesorios;
     }
   }catch(e){ nube = null; }
 
@@ -872,12 +874,17 @@ async function renombrarActividad(){
 
   btnRenombrarOk.disabled = true;
   try{
+    // Antes de cambiar el nombre, lo que esta actividad tenga guardado bajo el
+    // nombre viejo se pasa a su id (si ya estaba pasado, no hace nada). Si no
+    // se pudo, no se renombra: despues ya nadie lo encontraria por el nombre.
+    if(!(await migrarActividadesAId(db, [extra], { parcial: true }))){
+      throw new Error("migracion");
+    }
+
     await setDoc(doc(db, "actividadesExtra", extra.id), { nombre: nuevo }, { merge: true });
 
-    // Accesorios y acciones YA NO se mueven: las dos se buscan por el id de la
-    // actividad (extra.id), que no cambia al renombrar. Antes se copiaba cada
-    // documento del nombre viejo al nuevo y se borraba el viejo; ya no hace
-    // falta, porque la llave de verdad ni se entera de que el nombre cambio.
+    // Accesorios y acciones no se mueven al renombrar: se buscan por el id de la
+    // actividad (extra.id), que no cambia.
 
     try{
       const t = localStorage.getItem("guia_tomas_" + viejo);
@@ -887,13 +894,17 @@ async function renombrarActividad(){
       }
     }catch(e){}
 
-    // 4) Las citas ya agendadas guardan el nombre de la actividad en el campo
-    // "actividad". Si no se actualizan, quedarian apuntando a un nombre que ya
-    // no existe y al editarlas se cambiarian solas.
+    // 4) Las citas nuevas guardan `actividadId` y muestran el nombre actual de
+    // esa actividad, asi que no hay nada que reescribir. Las citas VIEJAS solo
+    // tienen el nombre: esas se actualizan y de paso se les pone el id, para que
+    // la proxima vez ya no haga falta.
     try{
       const cs = await getDocs(query(collection(db, "citas"), where("actividad", "==", viejo)));
       const tareas = [];
-      cs.forEach(d=>{ tareas.push(setDoc(doc(db, "citas", d.id), { actividad: nuevo }, { merge: true })); });
+      cs.forEach(d=>{
+        if(d.data().actividadId) return;
+        tareas.push(setDoc(doc(db, "citas", d.id), { actividad: nuevo, actividadId: extra.id }, { merge: true }));
+      });
       await Promise.all(tareas);
     }catch(e){}
 
@@ -941,11 +952,13 @@ async function eliminarActividad(){
   btnEliminarOk.disabled = true;
   try{
     await deleteDoc(doc(db, "actividadesExtra", extra.id));                       // la actividad
-    // Accesorios y acciones ahora viven bajo el ID (ya no por nombre), asi que
-    // se borran por ahi: el comportamiento es el mismo de siempre (nada queda
-    // huerfano), solo cambio la llave.
-    try{ await deleteDoc(doc(db, "presetsActividad", extra.id)); }catch(e){}      // sus accesorios
-    try{ await deleteDoc(doc(db, "nivelesActividad", extra.id)); }catch(e){}      // sus acciones de Guiadas
+    // Accesorios y acciones viven bajo el ID, pero si esta actividad nunca se
+    // migro todavia pueden seguir bajo el NOMBRE: se borran los dos para que
+    // nada quede huerfano (ni heredable por otra actividad con el mismo nombre).
+    for(const col of ["presetsActividad", "nivelesActividad"]){                   // sus accesorios / sus acciones de Guiadas
+      try{ await deleteDoc(doc(db, col, extra.id)); }catch(e){}
+      try{ await deleteDoc(doc(db, col, nombre)); }catch(e){}
+    }
     try{ localStorage.removeItem("guia_tomas_" + nombre); }catch(e){}             // sus tomas (este telefono)
     extrasActs = extrasActs.filter(e=>e.id !== extra.id);
     cerrarEditor();

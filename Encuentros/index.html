@@ -331,7 +331,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs, onSnapshot, query, where, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import firebaseConfigBase from "../firebase-config.js";
-import { resolverFirebase, cargarUsuarios, asegurarFabrica, unirConFabrica, leerConfigGuardada, migrarActividadesAId } from "../config.js";
+import { resolverFirebase, cargarUsuarios, asegurarFabrica, unirConFabrica, leerConfigGuardada, migrarActividadesAId, leerDocActividad } from "../config.js";
 import { verificarCodigo, verificarFirma } from "../taquilla.js";
 // Lógica de licencias compartida con el resto de la app (ver acceso.js).
 import { miProyecto, appTaq, leerLicencias, guardarLicencia, quitarLicencia, tengoAcceso, oficialesAprobados, escucharItem } from "../acceso.js";
@@ -978,10 +978,11 @@ async function cargarActividades(){
     });
   }catch(e){}
 
-  // Copia (sin borrar nada) lo que ya estaba guardado por nombre hacia el id.
-  // Solo si hay con que escribir: sin esto, una pareja offline no se queda
-  // trabada esperando esta llamada.
-  if(sembrado){
+  // Mueve (mezclando si hace falta) lo que ya estaba guardado por nombre hacia
+  // el id. Solo si la lista se leyo: sin conexion no hay con que trabajar y la
+  // pareja no se queda esperando esta llamada. Mientras algo no se mueva, las
+  // pantallas lo leen por nombre (leerDocActividad).
+  if(miasConId.length){
     try{ await migrarActividadesAId(db, miasConId); }catch(e){}
   }
 
@@ -1017,7 +1018,7 @@ function dibujarLista(boxId, acts, conteos){
     return oa - ob;
   });
   ordenadas.forEach(nombre=>{
-    const c = conteos[docDe(nombre)] || 0;
+    const c = conteos[docDe(nombre)] || conteos[nombre] || 0;
     const esOf = !!(mapaDocs[nombre] && mapaDocs[nombre].oficial);
     if(multiModo){
       const lab = document.createElement("label");
@@ -1188,10 +1189,9 @@ function migrarTomasDeEsteCelular(docId, nombreRespaldo){
   }
   if(!local) return null;
   const norm = normTomasEnc(local);
-  const claveEncontrada = clave;
   try{
     setDoc(doc(db, "nivelesActividad", docId), { tomas: norm, actualizadoEn: serverTimestamp() }, { merge: true })
-      .then(()=>{ try{ localStorage.removeItem(claveEncontrada); }catch(e){} })
+      .then(()=>{ try{ localStorage.removeItem(clave); }catch(e){} })
       .catch(()=>{});
   }catch(e){}
   return norm;
@@ -1226,7 +1226,7 @@ async function pintarListaCfg(){
     return oa - ob;
   });
   ordenadas.forEach(nombre=>{
-    const c = conteos[docDe(nombre)] || 0;
+    const c = conteos[docDe(nombre)] || conteos[nombre] || 0;
     const esOf = !!(mapaDocs[nombre] && mapaDocs[nombre].oficial);
     const b = document.createElement("button");
     b.className = "btnAct";
@@ -1251,8 +1251,7 @@ async function abrirEditor(nombre, empujar){
   datosEd = {};
   NIVELES.forEach(nv=>{ datosEd[nv.id] = { A: [], B: [] }; });
   try{
-    const snap = await getDoc(doc(db, "nivelesActividad", docActualEd));
-    const data = snap.exists() ? snap.data() : null;
+    const data = await leerDocActividad(db, "nivelesActividad", docActualEd, nombre, "n");
     if(data && data.n){
       const n = data.n;
       NIVELES.forEach(nv=>{ datosEd[nv.id] = normLados(n[nv.id]); });
@@ -1531,8 +1530,8 @@ async function generarYIniciar(activities, tomas){
   for(const nombre of activities){
     let n = {};
     try{
-      const snap = await getDoc(doc(db, "nivelesActividad", docDe(nombre)));
-      if(snap.exists()) n = snap.data().n || {};
+      const data = await leerDocActividad(db, "nivelesActividad", docDe(nombre), nombre, "n");
+      if(data) n = data.n || {};
     }catch(e){}
     actsData.push({ nombre, n });
   }
@@ -1753,8 +1752,8 @@ async function cargarActsParaInvitado(actividades){
   for(const nombre of (actividades||[])){
     let n = {};
     try{
-      const snap = await getDoc(doc(db, "nivelesActividad", docDe(nombre)));
-      if(snap.exists()) n = snap.data().n || {};
+      const data = await leerDocActividad(db, "nivelesActividad", docDe(nombre), nombre, "n");
+      if(data) n = data.n || {};
     }catch(e){}
     out.push({ nombre, n });
   }

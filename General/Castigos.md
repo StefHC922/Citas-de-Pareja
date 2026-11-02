@@ -34,11 +34,37 @@ Allí se elige cuántas acciones de cada nivel (básico, medio, avanzado, expert
 
 | Colección | Documento | Qué guarda |
 |---|---|---|
-| `castigosExtra` | uno por castigo creado por la pareja | `{ nombre, creadoEn }` |
-| `nivelesCastigo` | id = nombre del castigo (o `ofc_...`) | `{ n: {basico:{A:[],B:[]},…}, titulo, oficial?, tomas, actualizadoEn }` |
-| `accesoriosCastigo` | uno por accesorio | `{ nombre, creadoEn }` |
+| `castigosExtra` | id automático (`addDoc`), ya NO el nombre (oct-2026) | `{ nombre, creadoEn }` |
+| `nivelesCastigo` | id = el de `castigosExtra` (o `ofc_...` para oficiales) | `{ n: {basico:{A:[],B:[]},…}, titulo, oficial?, tomas, actualizadoEn }` |
+| `accesoriosCastigo` | id automático (`addDoc`), ya NO el nombre (oct-2026) | `{ nombre, creadoEn }` |
 | `imposicionesCastigo` | `actual` | `{ A:[…], B:[…] }` |
 | `sesionCastigos` | `actual` | Sesión compartida (cada quien el suyo): cabezas, orden, turnos, ronda, pausa, terminada |
+
+**Renombrar un castigo o un accesorio ya NO mueve ni recrea ningún documento**
+(oct-2026, mismo arreglo que `actividadesExtra` en `Citas/`): solo se actualiza
+el campo `nombre` en el documento existente. Antes se creaba un documento
+nuevo con el nombre como id y se borraba el viejo (incluyendo
+`nivelesCastigo`), lo que **borraba las acciones guardadas del castigo al
+renombrarlo**. `accesoriosCastigo` no tiene hoy ninguna colección que dependa
+de su id, así que ahí el cambio es preventivo (evita repetir la misma trampa
+el día que algo cuelgue de ese id), no corrige una pérdida de datos actual.
+
+**Migración de los castigos viejos (oct-2026).** Los castigos creados antes
+tienen su nombre como id (`castigosExtra/{nombre}`, `nivelesCastigo/{nombre}`).
+`migrarCastigosAId()` (`config.js`) los pasa a id automático al cargar la lista
+de `Castigos/`. Un castigo es "viejo" si su id es igual a su nombre. Por cada uno:
+1. Se reserva el id nuevo en `config/migracionCastigos` (transacción: dos
+   celulares a la vez reciben el mismo id; ahí queda el `mapa` viejo → nuevo).
+2. Las acciones y tomas se mueven de `nivelesCastigo/{nombre}` al id nuevo con
+   la misma función de las actividades (mezcla si ya había algo; borra el viejo
+   solo tras releer el nuevo).
+3. Se crea `castigosExtra/{id nuevo}` con el mismo `nombre` y `creadoEn`.
+4. Se borra el `castigosExtra` viejo.
+
+Si algo falla, ese castigo se reintenta en la siguiente carga. Si queda un viejo
+junto a su copia nueva (borrado a medias), la lista oculta el viejo. Las partidas
+pausadas guardan el id viejo: `idVigente()` lo traduce con el `mapa` al leer
+las acciones o guardar las tomas. Los oficiales (`ofc_...`) no se tocan.
 
 ## Niveles y lados
 
